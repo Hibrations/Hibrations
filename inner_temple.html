@@ -409,6 +409,7 @@ const DEFAULT_LIBRARY = [
     breath: 'Cadence is everything. Whoosh sound on the exhale grounds the practice.',
     progressions: 'Lengthen all counts proportionally (8-14-16). Add to evening wind-down nightly.',
     regressions: 'Halve the counts (2-3.5-4) until the rhythm feels natural.',
+    integrations: 'useful before sleep, and useful BETWEEN heavy sets (1 round) to drop heart rate fast and re-center for the next lift.',
     videoUrl: ytSearch('4-7-8 breath') },
 
   { id: 'box_breath', name: 'Box breath', category: 'breath', defaultDuration: 300, equipment: [],
@@ -418,6 +419,7 @@ const DEFAULT_LIBRARY = [
     breath: 'The pause is the practice — let the held breath be still, not strained.',
     progressions: 'Lengthen sides to 5-5-5-5, then 6-6-6-6. Used by Navy SEALs for nervous-system regulation.',
     regressions: '3-3-3-3 if 4 feels long.',
+    integrations: 'if doing as cooldown after lifts, anchor with a hamstring stretch (leg-up-the-wall) — gives the breath a body to land in.',
     videoUrl: ytSearch('box breathing') },
 
   { id: 'wim_hof', name: 'Wim Hof breath', category: 'breath', defaultDuration: 600, equipment: [],
@@ -427,6 +429,7 @@ const DEFAULT_LIBRARY = [
     breath: 'Tingling and lightheadedness are normal. Stop if you feel faint.',
     progressions: 'Combine with cold exposure post-practice. Add a 4th round.',
     regressions: '20 breaths per round. Skip the second hold.',
+    integrations: 'never before bed. great morning stack with cold exposure or sauna. NOT before legs day — too activating, hijacks the nervous system you want for the bar.',
     videoUrl: ytSearch('wim hof breathing') },
 
   { id: 'microcosmic_orbit', name: 'Microcosmic orbit', category: 'breath', defaultDuration: 900, equipment: [],
@@ -436,6 +439,7 @@ const DEFAULT_LIBRARY = [
     breath: 'Slow, deep, abdominal. The breath carries the orbit.',
     progressions: 'Full 49-cycle session. Pair with morning solar gate.',
     regressions: 'Just trace the path with attention, no breath coordination required at first.',
+    integrations: 'best after a full leg or full-body session — pulls spent yang energy back up the spine, circulates it. don\'t skip this on heavy training days.',
     videoUrl: ytSearch('microcosmic orbit meditation') },
 
   { id: 'alternate_nostril', name: 'Alternate nostril', category: 'breath', defaultDuration: 300, equipment: [],
@@ -473,6 +477,7 @@ const DEFAULT_LIBRARY = [
     breath: 'Natural. No control.',
     progressions: 'Longer durations (20, 40 min).',
     regressions: 'Shorter (5 min). Counted breaths to anchor.',
+    integrations: 'hold 5-10 sec kegels every 3 breaths. trains the perineum to sit ALONGSIDE attention — sacred and primal in the same posture.',
     videoUrl: ytSearch('silent meditation guide') },
 
   { id: 'body_scan', name: 'Body scan', category: 'meditation', defaultDuration: 900, equipment: [],
@@ -547,6 +552,7 @@ const DEFAULT_LIBRARY = [
     breath: 'Diaphragmatic. The hum should feel effortless.',
     progressions: 'Add lip trills. Hum melodies.',
     regressions: 'Single pitch only.',
+    integrations: 'hum DOWN the body — start at crown, slide into chest, into belly, into perineum. each region wakes differently. great pre-training for full-body coordination.',
     videoUrl: ytSearch('humming vocal warmup') },
 
   { id: 'lip_trills', name: 'Lip trills', category: 'vocal', defaultDuration: 180, equipment: [],
@@ -574,6 +580,7 @@ const DEFAULT_LIBRARY = [
     breath: 'Each chant on one breath. Take a full inhale between.',
     progressions: 'Longer sessions. Whispered or silent mantra.',
     regressions: 'Shorter (10 reps). Single syllable (Om).',
+    integrations: 'feel the vibration in the BONES. each chant a mini-cleansing of the throat. great pre-podcast or pre-recording. settles the voice into the body.',
     videoUrl: ytSearch('mantra chanting practice') },
 
   // ===== RITUAL =====
@@ -584,6 +591,7 @@ const DEFAULT_LIBRARY = [
     breath: 'Natural, slow.',
     progressions: 'Extend to 10 min. Add a single intention or question to sit with.',
     regressions: 'Even 1 min counts.',
+    integrations: 'stay still until you feel the body — not the mind. the body is the entry point. notice the spine wake from sacrum to crown before any thought lands.',
     videoUrl: ytSearch('theta brainwaves morning') },
 
   { id: 'intention_setting', name: 'Intention setting', category: 'ritual', defaultDuration: 60, equipment: [],
@@ -620,7 +628,66 @@ const DEFAULT_LIBRARY = [
     breath: 'Natural, between sips.',
     progressions: 'Add a pinch of salt and lemon for electrolyte support.',
     regressions: 'Half a glass if a full one feels like too much.',
-    videoUrl: '' }
+    videoUrl: '' },
+  { id: 'resonance_breath', name: 'Resonance / coherent breath', category: 'breath', defaultDuration: 600, equipment: [],
+    setup: 'Comfortable seated. Phone or watch with a 5.5-sec interval timer.',
+    execution: 'Inhale 5.5 sec. Exhale 5.5 sec. Continue. The 5.5-sec rhythm matches resonance frequency for adults — maximally activates HRV and vagal tone.',
+    mistakes: 'Forcing the count. Tensing the chest. Mouth-breathing (use the nose).',
+    breath: 'Even, smooth, nasal. The cadence IS the practice.',
+    progressions: 'Longer durations (20-30 min). Use as background during work.',
+    regressions: 'Start with 4-second cycles, build to 5.5.',
+    integrations: 'best science-backed breath for HRV training. pair with a Watch HRV reading before and after — see the signal yourself.',
+    videoUrl: ytSearch('resonance frequency breathing') },
+
+  { id: 'standing_meditation', name: 'Zhan zhuang (standing meditation)', category: 'meditation', defaultDuration: 600, equipment: [],
+    setup: 'Stand with feet shoulder-width, knees soft and slightly bent. Tailbone tucked, spine long. Tongue to upper palate. Arms forward as if hugging a tree at chest height — soft elbows, fingers spread.',
+    execution: 'Hold. Don\'t move. Notice tension and let it dissolve. The legs will burn — let them. The mind will wander — let it return. Build from 3 min to 30 min over weeks.',
+    mistakes: 'Locking the knees. Hunching shoulders. Quitting at the first burn.',
+    breath: 'Slow, abdominal, through the nose.',
+    progressions: 'Longer holds. Lower stance. Multiple postures (the eight pillars).',
+    regressions: 'Sit on a chair. Shorter holds. Hands resting at the sides.',
+    integrations: 'this IS body-temple meditation. legs as practice, posture as practice, attention as practice. the qigong masters\' single most-used drill.',
+    videoUrl: ytSearch('zhan zhuang standing meditation') },
+
+  { id: 'walking_meditation', name: 'Walking meditation', category: 'meditation', defaultDuration: 900, equipment: [],
+    setup: 'Outdoors ideally. Slow walking pace, slower than normal.',
+    execution: 'Each step: notice the lift, the swing, the placement. Breath in 4 steps, out 4 steps (or whatever feels natural). Eyes soft, periphery wide. When the mind drifts, return to the foot meeting the ground.',
+    mistakes: 'Walking at normal speed (too fast for the practice). Listening to anything. Looking at the phone.',
+    breath: 'Coordinated with steps. Even count in / out.',
+    progressions: 'Longer durations. Eyes closed for a few steps at a time (in safe space).',
+    regressions: 'Indoor pacing. Shorter sessions.',
+    integrations: 'turns your daily walk into a moving meditation without adding time. the floor of body temple already calls for the walk — make it inner work too.',
+    videoUrl: ytSearch('walking meditation guide') },
+
+  { id: 'witness_consciousness', name: 'Witness consciousness', category: 'meditation', defaultDuration: 1200, equipment: [],
+    setup: 'Sit upright, eyes soft or closed. Comfortable enough to stay still, alert enough to stay present.',
+    execution: 'Notice what arises — thoughts, sensations, sounds, emotions. Don\'t engage them. Don\'t fight them. Simply notice: "I am aware of this thought." "I am aware of this sensation." The witness is the unchanging observer behind every changing experience. Rest as the witness.',
+    mistakes: 'Trying to silence the mind. Identifying with what arises.',
+    breath: 'Natural, no control.',
+    progressions: 'Longer sittings (45-60 min). Witness practice integrated into daily activity.',
+    regressions: 'Shorter sittings. Use a guided audio at first.',
+    integrations: 'the bridge between meditation and self-realization. once stable, you carry the witness into training, conversation, sex, sleep. game-changing.',
+    videoUrl: ytSearch('witness consciousness meditation') },
+
+  { id: 'tonglen', name: 'Tonglen (sending and taking)', category: 'meditation', defaultDuration: 600, equipment: [],
+    setup: 'Sit comfortably. Hand on heart if helpful.',
+    execution: 'Inhale: take in someone\'s suffering as dark, hot, heavy smoke. Let it touch and dissolve a knot of self-protection in your own heart. Exhale: send out cool, light, healing — to that same person. Start with someone easy to love. Move to a neutral person. Then to a difficult person. Then to all beings.',
+    mistakes: 'Performing the feeling. Avoiding the discomfort of taking IN suffering.',
+    breath: 'Slow, heart-centered.',
+    progressions: 'Longer with each category. For specific people in your life.',
+    regressions: 'Just self → loved one. Don\'t force the difficult person until ready.',
+    integrations: 'opens the heart in a way silent meditation can\'t. essential for the healer arc — you cannot heal what you cannot let touch you.',
+    videoUrl: ytSearch('tonglen meditation pema chodron') },
+
+  { id: 'overtone_singing', name: 'Overtone singing', category: 'vocal', defaultDuration: 300, equipment: [],
+    setup: 'Stand or sit upright. Relaxed jaw, tongue lifted slightly.',
+    execution: 'Sing a steady low note ("oh" or "ah"). Slowly shift the mouth shape — lips, tongue, jaw — to amplify different harmonics in the throat. The overtone (a high whistle-like pitch above the fundamental) emerges from the same breath.',
+    mistakes: 'Forcing the overtone. Tightening the throat.',
+    breath: 'Steady diaphragmatic support, just like sustained singing.',
+    progressions: 'Throat singing styles (Mongolian, Tuvan). Multi-overtone control.',
+    regressions: 'Just hum and listen for harmonics first — no overtone goal.',
+    integrations: 'expands the voice in directions normal singing doesn\'t. great for sound healing work and the deeper vocal arc.',
+    videoUrl: ytSearch('overtone singing tutorial') },
 ];
 
 // ============================================================
@@ -984,6 +1051,7 @@ function renderLibDetail() {
     { label: 'execution', value: ex.execution },
     { label: 'common mistakes', value: ex.mistakes },
     { label: 'breath', value: ex.breath },
+    { label: 'integration', value: ex.integrations },
     { label: 'progressions', value: ex.progressions },
     { label: 'regressions', value: ex.regressions }
   ];
@@ -1035,7 +1103,7 @@ function openImageModal(ex) {
 
 function openWikiEditModal(ex) {
   const modal = document.getElementById('modal');
-  const fields = ['setup','execution','mistakes','breath','progressions','regressions'];
+  const fields = ['setup','execution','mistakes','breath','integrations','progressions','regressions'];
   modal.innerHTML = `
     <div class="modal-header"><div class="modal-title">edit wiki — ${escapeHtml(ex.name)}</div><button class="modal-close" id="mclose">×</button></div>
     ${fields.map(f => `<div class="editor-field"><div class="editor-label">${f}</div><textarea id="wk-${f}" rows="3">${escapeHtml(ex[f] || '')}</textarea></div>`).join('')}
@@ -1298,6 +1366,7 @@ function renderStepCard(step, idx, isActive) {
     if (lib.execution) html += `<div class="form-section"><div class="form-label">execution</div><div class="form-text">${escapeHtml(lib.execution)}</div></div>`;
     if (lib.mistakes) html += `<div class="form-section"><div class="form-label">common mistakes</div><div class="form-text muted">${escapeHtml(lib.mistakes)}</div></div>`;
     if (lib.breath) html += `<div class="form-section"><div class="form-label">breath</div><div class="form-text muted">${escapeHtml(lib.breath)}</div></div>`;
+    if (lib.integrations) html += `<div class="form-section"><div class="form-label">integration</div><div class="form-text">${escapeHtml(lib.integrations)}</div></div>`;
     formPanel.innerHTML = html;
     body.appendChild(formPanel);
   }
