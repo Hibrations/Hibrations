@@ -1,0 +1,1713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0a0908">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>Inner Temple</title>
+<style>
+:root {
+  --bg: #0a0908;
+  --bg-elev: #14110f;
+  --bg-card: #1a1614;
+  --border: #2a2420;
+  --border-soft: #1f1a17;
+  --ink: #e8e1d4;
+  --ink-dim: #9a8f80;
+  --ink-faint: #5e554a;
+  --gold: #c89060;
+  --gold-dim: #8a6543;
+  --crimson: #9a4435;
+  --crimson-dim: #6e2d22;
+  --emerald: #3d7d63;
+  --breath: #8fb8c7;
+  --meditation: #b08fc7;
+  --movement: #6ba879;
+  --vocal: #c78f8f;
+  --ritual: #c89060;
+  --r-sm: 8px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --shadow: 0 1px 0 rgba(255,255,255,0.02), 0 8px 24px rgba(0,0,0,0.4);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  background: var(--bg); color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font-size: 16px; line-height: 1.55; min-height: 100vh;
+  overscroll-behavior-y: contain; -webkit-font-smoothing: antialiased;
+}
+body {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) calc(env(safe-area-inset-bottom) + 80px) env(safe-area-inset-left);
+  max-width: 720px; margin: 0 auto;
+}
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; padding: 0; }
+input, textarea, select {
+  font: inherit; color: inherit;
+  background: var(--bg-elev); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 12px 14px; width: 100%;
+  outline: none; transition: border-color 0.15s ease;
+}
+input:focus, textarea:focus, select:focus { border-color: var(--gold); }
+textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+::placeholder { color: var(--ink-faint); }
+
+header.app-header {
+  padding: 28px 22px 18px;
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.app-back { font-size: 11px; letter-spacing: 0.1em; text-transform: lowercase; color: var(--ink-dim); padding: 7px 12px; border: 1px solid var(--border); border-radius: 999px; cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
+.app-back:active { color: var(--ink); border-color: var(--ink-dim); }
+.app-titleblock { flex: 1; text-align: center; }
+.app-title { font-size: 13px; font-weight: 400; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-dim); }
+.app-date { font-size: 12px; color: var(--ink-faint); letter-spacing: 0.05em; }
+
+nav.tab-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: rgba(10, 9, 8, 0.92);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-top: 1px solid var(--border-soft);
+  padding: 12px max(env(safe-area-inset-left), 0px) calc(env(safe-area-inset-bottom) + 12px) max(env(safe-area-inset-right), 0px);
+  display: flex; justify-content: space-around; z-index: 50;
+}
+.tab-btn {
+  flex: 1; padding: 8px 6px; font-size: 10px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ink-faint); text-align: center; transition: color 0.15s;
+}
+.tab-btn.active { color: var(--ink); }
+
+main { padding: 0 22px; }
+.view { display: none; padding-top: 24px; padding-bottom: 32px; }
+.view.active { display: block; animation: fade 0.25s ease-out; }
+@keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+.today-eyebrow { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 10px; }
+
+.today-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 28px 24px;
+  margin-bottom: 18px; position: relative; overflow: hidden;
+}
+.today-card::before {
+  content: ''; position: absolute; top: 0; left: 0;
+  width: 3px; height: 100%; background: var(--gold); opacity: 0.7;
+}
+.today-name { font-size: 32px; font-weight: 300; letter-spacing: -0.01em; margin-bottom: 4px; line-height: 1.15; }
+.today-sub { color: var(--ink-dim); font-size: 14px; margin-bottom: 18px; }
+.today-meta { display: flex; gap: 16px; font-size: 12px; color: var(--ink-faint); letter-spacing: 0.05em; margin-bottom: 24px; }
+
+.btn-primary {
+  width: 100%; background: var(--gold); color: var(--bg);
+  font-weight: 500; padding: 16px 20px; border-radius: var(--r-md);
+  font-size: 15px; letter-spacing: 0.04em; transition: background 0.15s;
+}
+.btn-primary:active { background: var(--gold-dim); }
+.btn-secondary {
+  width: 100%; background: transparent; color: var(--ink);
+  border: 1px solid var(--border); padding: 14px 20px; border-radius: var(--r-md);
+  font-size: 14px; letter-spacing: 0.03em; transition: border-color 0.15s, background 0.15s;
+}
+.btn-secondary:active { border-color: var(--ink-dim); background: var(--bg-elev); }
+
+.quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+.quick-card {
+  background: var(--bg-elev); border: 1px solid var(--border-soft);
+  border-radius: var(--r-md); padding: 16px 14px;
+  text-align: left; transition: border-color 0.15s;
+}
+.quick-card:active { border-color: var(--ink-dim); }
+.quick-card-name { font-size: 15px; margin-bottom: 4px; }
+.quick-card-sub { font-size: 12px; color: var(--ink-faint); line-height: 1.4; }
+
+/* SESSION */
+.session-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.session-title { font-size: 26px; font-weight: 300; letter-spacing: -0.01em; }
+.session-progress { font-size: 12px; color: var(--ink-faint); letter-spacing: 0.08em; }
+.session-sub { color: var(--ink-dim); font-size: 13px; margin-bottom: 22px; }
+
+.intro-block, .closing-block {
+  background: var(--bg-elev); border: 1px solid var(--border-soft);
+  border-radius: var(--r-md); padding: 16px 18px; margin-bottom: 18px;
+}
+.intro-block summary, .closing-block summary {
+  font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ink-dim); cursor: pointer; outline: none; list-style: none;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.intro-block summary::-webkit-details-marker, .closing-block summary::-webkit-details-marker { display: none; }
+.intro-block summary::after, .closing-block summary::after { content: '+'; font-size: 18px; color: var(--ink-faint); font-weight: 300; }
+.intro-block[open] summary::after, .closing-block[open] summary::after { content: '−'; }
+.intro-block .text, .closing-block .text {
+  margin-top: 12px; color: var(--ink-dim); font-size: 14px;
+  font-style: italic; line-height: 1.6;
+}
+
+/* STEP CARD */
+.step-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--r-md); padding: 18px 18px 14px;
+  margin-bottom: 12px; transition: opacity 0.2s;
+}
+.step-card.done { opacity: 0.45; }
+.step-card.done .step-name { text-decoration: line-through; text-decoration-color: var(--ink-faint); }
+.step-card.active { border-color: var(--gold); }
+
+.step-row { display: flex; align-items: flex-start; gap: 14px; }
+.step-check {
+  flex: 0 0 28px; height: 28px; border-radius: 50%;
+  border: 1.5px solid var(--border); background: transparent;
+  margin-top: 2px; transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center;
+}
+.step-check.checked { background: var(--gold); border-color: var(--gold); }
+.step-check.checked::after { content: '✓'; color: var(--bg); font-size: 14px; font-weight: 600; }
+.step-body { flex: 1; min-width: 0; }
+.step-letter { display: inline-block; font-size: 11px; letter-spacing: 0.12em; color: var(--ink-faint); text-transform: uppercase; margin-bottom: 2px; }
+.step-name { font-size: 17px; font-weight: 400; margin-bottom: 4px; line-height: 1.3; }
+.step-prescription {
+  display: flex; gap: 14px; font-size: 13px;
+  color: var(--ink-dim); margin-bottom: 10px; flex-wrap: wrap;
+}
+.step-prescription span strong { color: var(--ink); font-weight: 500; }
+.step-cues { font-size: 12px; color: var(--ink-faint); font-style: italic; margin-bottom: 10px; line-height: 1.5; }
+.step-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.step-action-btn {
+  font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-dim); padding: 7px 12px;
+  border: 1px solid var(--border); border-radius: 999px;
+  transition: border-color 0.15s, color 0.15s;
+}
+.step-action-btn:active { border-color: var(--ink); color: var(--ink); }
+.step-action-btn.accent { color: var(--gold); border-color: var(--gold-dim); }
+.step-notes, .step-form { margin-top: 12px; display: none; }
+.step-notes.open, .step-form.open { display: block; }
+.step-notes textarea { font-size: 14px; background: var(--bg); min-height: 70px; margin-bottom: 6px; }
+.step-notes-prompt { font-size: 11px; color: var(--ink-faint); font-style: italic; margin-bottom: 6px; }
+
+.step-form { background: var(--bg-elev); border: 1px solid var(--border-soft); border-radius: var(--r-md); padding: 14px 16px; }
+.form-section { margin-bottom: 12px; }
+.form-section:last-child { margin-bottom: 0; }
+.form-label { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 4px; }
+.form-text { font-size: 13.5px; color: var(--ink); line-height: 1.55; }
+.form-text.muted { color: var(--ink-dim); }
+.form-image-wrap { margin: 12px 0; border-radius: var(--r-sm); overflow: hidden; background: var(--bg); text-align: center; }
+.form-image-wrap img { max-width: 100%; max-height: 240px; display: block; margin: 0 auto; }
+
+/* TIMER */
+#timer-overlay {
+  position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+  background: var(--bg-card); border: 1px solid var(--gold);
+  border-radius: 999px; padding: 12px 22px;
+  display: none; align-items: center; gap: 14px; z-index: 40;
+  box-shadow: var(--shadow);
+}
+#timer-overlay.active { display: flex; }
+.timer-label { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint); }
+.timer-display {
+  font-variant-numeric: tabular-nums; font-size: 22px; font-weight: 300;
+  color: var(--ink); min-width: 56px; text-align: center;
+}
+.timer-display.flash { color: var(--crimson); }
+.timer-stop { font-size: 11px; color: var(--ink-dim); letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 8px; }
+
+.session-complete {
+  background: var(--bg-card); border: 1px solid var(--gold-dim);
+  border-radius: var(--r-lg); padding: 28px 24px; text-align: center; margin-top: 24px;
+}
+.session-complete-msg { font-size: 17px; color: var(--ink); margin-bottom: 8px; font-weight: 300; letter-spacing: 0.02em; }
+.session-complete-sub { font-size: 13px; color: var(--ink-dim); font-style: italic; margin-bottom: 22px; }
+.session-final-notes textarea { background: var(--bg); }
+
+.plans-list { display: flex; flex-direction: column; gap: 10px; }
+.plan-row {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--r-md); padding: 16px 18px;
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+}
+.plan-row-info { flex: 1; min-width: 0; }
+.plan-row-name { font-size: 16px; margin-bottom: 2px; }
+.plan-row-sub { font-size: 12px; color: var(--ink-faint); }
+.plan-row-actions { display: flex; gap: 6px; }
+.icon-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ink-dim); font-size: 14px;
+  transition: border-color 0.15s, color 0.15s;
+}
+.icon-btn:active { border-color: var(--ink); color: var(--ink); }
+.section-header {
+  font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-faint); margin: 24px 0 10px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--border-soft);
+}
+
+.editor-field { margin-bottom: 16px; }
+.editor-label { display: block; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-dim); margin-bottom: 6px; }
+.editor-list-block { background: var(--bg-elev); border: 1px solid var(--border-soft); border-radius: var(--r-md); padding: 14px; margin-bottom: 14px; }
+.editor-list-item { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+.editor-list-item input { flex: 1; padding: 10px 12px; font-size: 14px; }
+.editor-step { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-md); padding: 14px; margin-bottom: 10px; }
+.editor-step.linked { border-left: 3px solid var(--gold); }
+.editor-link-info { font-size: 11px; color: var(--gold); margin-bottom: 8px; letter-spacing: 0.05em; }
+.editor-step-grid { display: grid; grid-template-columns: 1fr 100px; gap: 8px; margin-bottom: 8px; }
+.editor-step-grid input { padding: 10px 10px; font-size: 13px; }
+.editor-step-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; padding-top: 8px; border-top: 1px solid var(--border-soft); }
+.move-btns { display: flex; gap: 4px; }
+.editor-add-btn {
+  width: 100%; padding: 12px;
+  border: 1px dashed var(--border); border-radius: var(--r-md);
+  color: var(--ink-dim); font-size: 13px; letter-spacing: 0.05em;
+  transition: border-color 0.15s, color 0.15s; margin-bottom: 8px;
+}
+.editor-add-btn:active { border-color: var(--ink); color: var(--ink); border-style: solid; }
+.editor-add-btn.accent { color: var(--gold); border-color: var(--gold-dim); }
+.editor-actions { display: flex; gap: 10px; margin-top: 24px; }
+.editor-actions button { flex: 1; }
+.btn-danger { color: var(--crimson); background: transparent; border: 1px solid var(--crimson-dim); padding: 14px 20px; border-radius: var(--r-md); font-size: 13px; letter-spacing: 0.05em; }
+.btn-danger:active { background: rgba(154, 68, 53, 0.08); }
+
+.history-list { display: flex; flex-direction: column; gap: 10px; }
+.history-item { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-md); padding: 14px 16px; }
+.history-date { font-size: 12px; color: var(--ink-faint); letter-spacing: 0.05em; margin-bottom: 4px; }
+.history-name { font-size: 15px; margin-bottom: 6px; }
+.history-stats { font-size: 12px; color: var(--ink-dim); letter-spacing: 0.04em; }
+.history-notes { font-size: 13px; color: var(--ink-dim); font-style: italic; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-soft); line-height: 1.5; }
+
+/* LIBRARY */
+.library-search-wrap { margin-bottom: 14px; position: relative; }
+.library-search-wrap input { padding-left: 40px; font-size: 14px; }
+.library-search-wrap::before { content: '⌕'; position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--ink-faint); font-size: 18px; pointer-events: none; }
+.lib-filter-row { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+.lib-filter-pill {
+  font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 6px 12px; border-radius: 999px;
+  border: 1px solid var(--border); color: var(--ink-faint);
+  transition: all 0.15s;
+}
+.lib-filter-pill.active { color: var(--ink); border-color: var(--ink-dim); background: var(--bg-elev); }
+.lib-grid { display: flex; flex-direction: column; gap: 8px; }
+.lib-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--r-md); padding: 14px 16px;
+  display: flex; align-items: center; gap: 12px;
+  text-align: left; transition: border-color 0.15s;
+}
+.lib-card:active { border-color: var(--ink-dim); }
+.lib-cat-tag {
+  flex: 0 0 auto; padding: 4px 8px; border-radius: var(--r-sm);
+  font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 500;
+}
+.lib-cat-breath { background: rgba(143,184,199,0.15); color: var(--breath); }
+.lib-cat-meditation { background: rgba(176,143,199,0.15); color: var(--meditation); }
+.lib-cat-movement { background: rgba(107,168,121,0.15); color: var(--movement); }
+.lib-cat-vocal { background: rgba(199,143,143,0.15); color: var(--vocal); }
+.lib-cat-ritual { background: rgba(200,144,96,0.15); color: var(--ritual); }
+.lib-card-info { flex: 1; min-width: 0; }
+.lib-card-name { font-size: 15px; margin-bottom: 2px; }
+.lib-card-meta { font-size: 11px; color: var(--ink-faint); letter-spacing: 0.03em; }
+.lib-empty { padding: 40px 0; text-align: center; color: var(--ink-faint); font-size: 14px; }
+
+.detail-back { background: none; color: var(--ink-faint); font-size: 13px; margin-bottom: 14px; cursor: pointer; }
+.detail-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 24px; }
+.detail-name { font-size: 28px; font-weight: 300; letter-spacing: -0.01em; margin-bottom: 6px; }
+.detail-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 18px; }
+.detail-meta-row { display: flex; flex-direction: column; gap: 14px; margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid var(--border-soft); }
+.detail-meta-row .form-section { margin: 0; }
+.detail-image { margin: 14px 0 18px; border-radius: var(--r-md); overflow: hidden; background: var(--bg); text-align: center; }
+.detail-image img { max-width: 100%; max-height: 320px; display: block; margin: 0 auto; }
+.detail-image-empty { padding: 32px 18px; border: 1px dashed var(--border); border-radius: var(--r-md); color: var(--ink-faint); font-size: 13px; text-align: center; line-height: 1.6; }
+.detail-image-paste { display: block; margin-top: 8px; font-size: 12px; color: var(--ink-dim); }
+.detail-section { margin-bottom: 18px; }
+.detail-section h3 { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-faint); font-weight: 500; margin-bottom: 6px; }
+.detail-section p { font-size: 14px; color: var(--ink); line-height: 1.6; }
+.detail-actions { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
+.detail-actions button { flex: 1; min-width: 130px; }
+
+.empty { text-align: center; padding: 48px 20px; color: var(--ink-faint); }
+.empty-msg { font-size: 15px; font-style: italic; margin-bottom: 8px; }
+.empty-sub { font-size: 13px; }
+.subtle { color: var(--ink-faint); font-size: 12px; }
+.row-spread { display: flex; justify-content: space-between; align-items: center; }
+
+#toast {
+  position: fixed; bottom: 100px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--bg-card); border: 1px solid var(--border); color: var(--ink);
+  padding: 12px 20px; border-radius: 999px;
+  font-size: 13px; letter-spacing: 0.04em;
+  opacity: 0; pointer-events: none;
+  transition: all 0.25s ease; z-index: 100;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: flex-end; justify-content: center; z-index: 200; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--bg-card); border-top: 1px solid var(--border); border-radius: var(--r-lg) var(--r-lg) 0 0; width: 100%; max-width: 720px; max-height: 85vh; overflow-y: auto; padding: 20px 22px calc(env(safe-area-inset-bottom) + 20px); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.modal-title { font-size: 18px; font-weight: 400; }
+.modal-close { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elev); display: flex; align-items: center; justify-content: center; color: var(--ink-dim); }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <button class="app-back" id="app-back" onclick="if(window.parent!==window){window.parent.postMessage('close-temple','*');}else{var b=window.location.href.split('/').slice(0,-1).join('/');window.location.assign(b+'/index.html');}">← portal</button>
+  <div class="app-titleblock">
+    <div class="app-title">inner temple</div>
+    <div class="app-date" id="header-date"></div>
+  </div>
+</header>
+
+<main id="app"></main>
+
+<div id="timer-overlay">
+  <div>
+    <div class="timer-label" id="timer-label">step</div>
+    <div class="timer-display" id="timer-display">00:00</div>
+  </div>
+  <button class="timer-stop" id="timer-stop">stop</button>
+</div>
+
+<div id="toast"></div>
+<div id="modal-overlay" class="modal-overlay"><div class="modal" id="modal"></div></div>
+
+<nav class="tab-bar">
+  <button class="tab-btn active" data-view="home">today</button>
+  <button class="tab-btn" data-view="library">library</button>
+  <button class="tab-btn" data-view="practices">practices</button>
+  <button class="tab-btn" data-view="history">history</button>
+</nav>
+
+<script>
+// ============================================================
+// INNER TEMPLE — v1
+// ============================================================
+const STORAGE_KEY = 'inner_temple_v1';
+const SCHEMA_VERSION = 1;
+const TODAY = () => new Date().toISOString().slice(0, 10);
+const ytSearch = q => 'https://www.youtube.com/results?search_query=' + encodeURIComponent(q + ' technique demonstration');
+
+// ============================================================
+// LIBRARY — protocols, techniques, practices
+// ============================================================
+const DEFAULT_LIBRARY = [
+  // ===== BREATH =====
+  { id: 'breath_478', name: '4-7-8 breath', category: 'breath', defaultDuration: 300, equipment: [],
+    setup: 'Sit upright. Tongue tip on the ridge behind the upper teeth. Exhale fully through the mouth around the tongue.',
+    execution: 'Inhale through the nose for 4. Hold for 7. Exhale through the mouth (whoosh) for 8. One round = one cycle. Build to 4–8 rounds.',
+    mistakes: 'Forcing the count too long too early. Tensing the shoulders. Skipping the breath retention.',
+    breath: 'Cadence is everything. Whoosh sound on the exhale grounds the practice.',
+    progressions: 'Lengthen all counts proportionally (8-14-16). Add to evening wind-down nightly.',
+    regressions: 'Halve the counts (2-3.5-4) until the rhythm feels natural.',
+    videoUrl: ytSearch('4-7-8 breath') },
+
+  { id: 'box_breath', name: 'Box breath', category: 'breath', defaultDuration: 300, equipment: [],
+    setup: 'Sit upright, spine long. Eyes soft or closed. Hands on lap or one on belly, one on chest.',
+    execution: 'Inhale 4 → hold 4 → exhale 4 → hold 4. Equal sides of the box. Continue.',
+    mistakes: 'Counting in the head instead of feeling the breath. Forcing the holds.',
+    breath: 'The pause is the practice — let the held breath be still, not strained.',
+    progressions: 'Lengthen sides to 5-5-5-5, then 6-6-6-6. Used by Navy SEALs for nervous-system regulation.',
+    regressions: '3-3-3-3 if 4 feels long.',
+    videoUrl: ytSearch('box breathing') },
+
+  { id: 'wim_hof', name: 'Wim Hof breath', category: 'breath', defaultDuration: 600, equipment: [],
+    setup: 'Lie down or sit comfortably. Empty stomach. Best done in the morning — energizing, not for sleep.',
+    execution: '30–40 deep breaths, full inhale through nose or mouth, passive exhale (let it fall out). After the last exhale, hold the breath out as long as comfortable. Inhale and hold for 15 seconds. Repeat 3 rounds.',
+    mistakes: 'Pushing through dizziness — listen to the body. Doing it before sleep (too activating).',
+    breath: 'Tingling and lightheadedness are normal. Stop if you feel faint.',
+    progressions: 'Combine with cold exposure post-practice. Add a 4th round.',
+    regressions: '20 breaths per round. Skip the second hold.',
+    videoUrl: ytSearch('wim hof breathing') },
+
+  { id: 'microcosmic_orbit', name: 'Microcosmic orbit', category: 'breath', defaultDuration: 900, equipment: [],
+    setup: 'Sit upright with spine long. Tongue tip touching the upper palate (this completes the energetic circuit). Eyes soft or closed.',
+    execution: 'Inhale: visualize energy rising up the back from perineum → tailbone → spine → crown. Exhale: energy descends down the front from crown → third eye → throat → heart → navel → perineum. One full cycle per breath. Build slowly — 3 cycles, then 7, then 14, then 49.',
+    mistakes: 'Forcing the visualization. Trying to feel sensations rather than allowing them. Rushing.',
+    breath: 'Slow, deep, abdominal. The breath carries the orbit.',
+    progressions: 'Full 49-cycle session. Pair with morning solar gate.',
+    regressions: 'Just trace the path with attention, no breath coordination required at first.',
+    videoUrl: ytSearch('microcosmic orbit meditation') },
+
+  { id: 'alternate_nostril', name: 'Alternate nostril', category: 'breath', defaultDuration: 300, equipment: [],
+    setup: 'Sit upright. Right hand: thumb to right nostril, ring + pinky to left nostril, index + middle resting between brows.',
+    execution: 'Close right nostril, inhale through left for 4. Close left, open right, exhale right for 4. Inhale right for 4. Close right, exhale left for 4. That is one round. Build to 5–10 rounds.',
+    mistakes: 'Forcing the breath. Switching nostrils too fast.',
+    breath: 'Balances the two hemispheres. Calming and clarifying.',
+    progressions: 'Add a hold (4-4-4 or 4-7-4-7).',
+    regressions: '2-2 cadence. Half rounds.',
+    videoUrl: ytSearch('nadi shodhana alternate nostril') },
+
+  { id: 'kapalabhati', name: 'Kapalabhati', category: 'breath', defaultDuration: 180, equipment: [],
+    setup: 'Sit upright. Hands on knees. Empty stomach.',
+    execution: 'Sharp, forced exhales through the nose, drawing the navel toward the spine on each. Inhale is passive — happens on its own. Aim for 1 exhale per second. Round = 30–60 exhales. Then one full deep breath. Rest. Repeat for 3 rounds.',
+    mistakes: 'Forcing the inhale. Pumping the shoulders. Doing on a full stomach.',
+    breath: 'Rapid, percussive. Should feel like the diaphragm is the engine.',
+    progressions: 'Longer rounds (100+ exhales). Faster pace.',
+    regressions: 'Slower pace (one exhale every 2 seconds). Shorter rounds.',
+    videoUrl: ytSearch('kapalabhati breath of fire') },
+
+  { id: 'breath_of_fire', name: 'Breath of fire', category: 'breath', defaultDuration: 180, equipment: [],
+    setup: 'Sit upright. Spine long.',
+    execution: 'Equal-length rapid breaths through the nose, both inhale and exhale powered by the diaphragm. Faster than kapalabhati, lighter pull on the navel. Steady rhythm — 2–3 breaths per second.',
+    mistakes: 'Hyperventilating. Tightening the upper chest.',
+    breath: 'Steady, even, energizing.',
+    progressions: 'Build duration to 3–5 min sustained.',
+    regressions: 'Slower pace. Shorter sets.',
+    videoUrl: ytSearch('breath of fire kundalini') },
+
+  // ===== MEDITATION =====
+  { id: 'silent_sit', name: 'Silent sitting', category: 'meditation', defaultDuration: 600, equipment: [],
+    setup: 'Sit upright on a cushion or chair. Spine long, shoulders soft. Eyes closed or soft gaze.',
+    execution: 'Just sit. Notice breath, body, sounds, thoughts arising. Don\'t fight them. Don\'t follow them. Return to the body when you notice you\'ve drifted.',
+    mistakes: 'Trying to "empty the mind". Judging yourself for thinking.',
+    breath: 'Natural. No control.',
+    progressions: 'Longer durations (20, 40 min).',
+    regressions: 'Shorter (5 min). Counted breaths to anchor.',
+    videoUrl: ytSearch('silent meditation guide') },
+
+  { id: 'body_scan', name: 'Body scan', category: 'meditation', defaultDuration: 900, equipment: [],
+    setup: 'Lying down or seated comfortably. Eyes closed.',
+    execution: 'Bring attention to crown of head. Slowly move attention down through every body region — face, neck, shoulders, arms, hands, chest, belly, hips, thighs, knees, calves, feet. Notice without changing. Linger where there\'s tension or numbness.',
+    mistakes: 'Rushing. Trying to "fix" what you find.',
+    breath: 'Natural, deepening into the body.',
+    progressions: 'Full 30+ min scan. Add second pass upward.',
+    regressions: '5-min top-to-toe quick scan.',
+    videoUrl: ytSearch('body scan meditation') },
+
+  { id: 'loving_kindness', name: 'Loving-kindness (metta)', category: 'meditation', defaultDuration: 600, equipment: [],
+    setup: 'Sit comfortably. Hands on heart if helpful.',
+    execution: 'Direct phrases inward: "May I be happy. May I be safe. May I be free from suffering. May I live with ease." Then to a loved one. Then a neutral person. Then a difficult person. Then all beings.',
+    mistakes: 'Performing the feeling instead of generating it. Skipping the difficult person.',
+    breath: 'Slow, heart-centered.',
+    progressions: 'Hold each category longer. Specific people.',
+    regressions: 'Just self + loved one.',
+    videoUrl: ytSearch('metta loving kindness meditation') },
+
+  { id: 'visualization', name: 'Visualization', category: 'meditation', defaultDuration: 600, equipment: [],
+    setup: 'Comfortable seated or lying position. Eyes closed.',
+    execution: 'Choose an image — the version of yourself you\'re becoming, a healing light at the heart, a deity form, a place of safety. Hold the image vividly. Engage all senses — what does it look like, sound like, feel like, smell like?',
+    mistakes: 'Trying too hard to "see clearly". Visualization is felt as much as seen.',
+    breath: 'Slow, supporting the image.',
+    progressions: 'Longer holds. Specific deity work.',
+    regressions: 'Single sense (just the feeling, not the image).',
+    videoUrl: ytSearch('guided visualization meditation') },
+
+  // ===== MOVEMENT OPENERS =====
+  { id: 'sun_salutation_a', name: 'Sun salutation A', category: 'movement', defaultDuration: 300, equipment: [],
+    setup: 'Stand at the top of a mat. Feet together, palms together at heart center. Steady the breath.',
+    execution: 'Inhale: arms up overhead. Exhale: forward fold. Inhale: half-lift. Exhale: step or jump back to plank, lower to chaturanga. Inhale: upward dog. Exhale: downward dog (hold 5 breaths). Inhale: jump or step forward, half-lift. Exhale: forward fold. Inhale: arms up. Exhale: hands to heart. One round. Repeat 3–5 times.',
+    mistakes: 'Rushing the breath. Skipping the chaturanga lower.',
+    breath: 'One movement per breath (except the down dog hold).',
+    progressions: 'Sun salutation B (with warriors). 10+ rounds.',
+    regressions: 'Modified — knees down on chaturanga. Skip the lower entirely.',
+    videoUrl: ytSearch('sun salutation A') },
+
+  { id: 'sun_salutation_b', name: 'Sun salutation B', category: 'movement', defaultDuration: 360, equipment: [],
+    setup: 'Stand at top of mat, feet together, palms at heart.',
+    execution: 'Like A but adds chair pose at the start, warrior I on each leg in the middle, and ends with arms up to release. Heat-building, fuller-body sequence. 3–5 rounds.',
+    mistakes: 'Cutting warrior I short. Sloppy chair pose.',
+    breath: 'One breath per movement. Hold warriors and down dog for 5 breaths.',
+    progressions: '10 rounds. Add jumps between movements.',
+    regressions: 'Skip the warriors, do A only.',
+    videoUrl: ytSearch('sun salutation B') },
+
+  { id: 'qigong_opening', name: 'Qigong opening', category: 'movement', defaultDuration: 600, equipment: [],
+    setup: 'Stand with feet shoulder-width, knees soft, spine long. Tailbone slightly tucked. Tongue tip on upper palate.',
+    execution: 'Begin with 8 silk-reeling movements — slow circles of arms, hips, knees. Then "lift the sky" (8x) — palms up from sides to overhead, sink back down. Then "embrace the moon" (8x) — hold ball at navel, rotate side to side. Move slowly, breath-led.',
+    mistakes: 'Rushing. Holding tension in the shoulders.',
+    breath: 'Long, slow, deep. Breath leads movement.',
+    progressions: 'Full Eight Pieces of Brocade. 18 movements form.',
+    regressions: 'Just lift the sky 8x as a mini-practice.',
+    videoUrl: ytSearch('qigong morning routine') },
+
+  { id: 'lower_body_flow', name: 'Lower body flow', category: 'movement', defaultDuration: 480, equipment: [],
+    setup: 'Mat or open space. Bare feet.',
+    execution: 'Cat-cow × 8 → child\'s pose → down dog → low lunge each side → 90/90 hip stretch each side → pigeon each side → seated forward fold → twist each side. Hold each 30–45 seconds. Long exhales.',
+    mistakes: 'Forcing depth. Holding the breath.',
+    breath: 'Long exhales into each stretch.',
+    progressions: 'Add couch stretch and frog pose.',
+    regressions: 'Just cat-cow + child\'s pose + down dog.',
+    videoUrl: ytSearch('lower body mobility flow morning') },
+
+  // ===== VOCAL =====
+  { id: 'vocal_humming', name: 'Humming warmup', category: 'vocal', defaultDuration: 180, equipment: [],
+    setup: 'Stand or sit upright. Soft jaw, tongue resting on the floor of the mouth.',
+    execution: 'Hum at a comfortable mid-pitch. Feel the buzz on the lips. Slide up and down a fifth, finding the resonance. 2–3 min.',
+    mistakes: 'Pushing volume. Tightening the throat.',
+    breath: 'Diaphragmatic. The hum should feel effortless.',
+    progressions: 'Add lip trills. Hum melodies.',
+    regressions: 'Single pitch only.',
+    videoUrl: ytSearch('humming vocal warmup') },
+
+  { id: 'lip_trills', name: 'Lip trills', category: 'vocal', defaultDuration: 180, equipment: [],
+    setup: 'Relaxed lips, slightly pursed. Stand or sit upright.',
+    execution: 'Blow air through the lips so they vibrate. Add tone — slide up and down across your range. 2–3 min.',
+    mistakes: 'Tensing the lips (then they won\'t vibrate). Going too high too fast.',
+    breath: 'Steady support from the diaphragm.',
+    progressions: 'Lip trill scales and arpeggios.',
+    regressions: 'Just trill without pitch first.',
+    videoUrl: ytSearch('lip trills vocal warmup') },
+
+  { id: 'vocal_scales', name: 'Vocal scales', category: 'vocal', defaultDuration: 300, equipment: [],
+    setup: 'Stand upright, ribs lifted, shoulders relaxed.',
+    execution: 'Sing 5-note scales (do-re-mi-fa-sol) on a vowel — "ah" or "oh". Move up by half-steps until comfortable max, then back down. Use a tuning app or piano if available.',
+    mistakes: 'Pushing past comfortable range. Tightening throat for high notes.',
+    breath: 'Support each note from the diaphragm, not the throat.',
+    progressions: 'Octave scales. Different vowels. Different consonants ("ma", "na", "lah").',
+    regressions: 'Just one comfortable scale, no transposing.',
+    videoUrl: ytSearch('vocal scales beginner') },
+
+  { id: 'mantra_chant', name: 'Mantra chanting', category: 'vocal', defaultDuration: 600, equipment: [],
+    setup: 'Sit upright. Eyes soft or closed.',
+    execution: 'Choose a mantra (Om, So Hum, Om Mani Padme Hum, or your own). Chant it aloud at a comfortable pitch and pace. Feel the vibration in the chest, throat, head. 108 repetitions traditional (use a mala or count loosely).',
+    mistakes: 'Mechanical repetition without attention. Pushing volume.',
+    breath: 'Each chant on one breath. Take a full inhale between.',
+    progressions: 'Longer sessions. Whispered or silent mantra.',
+    regressions: 'Shorter (10 reps). Single syllable (Om).',
+    videoUrl: ytSearch('mantra chanting practice') },
+
+  // ===== RITUAL =====
+  { id: 'theta_wake', name: 'Theta wake window', category: 'ritual', defaultDuration: 300, equipment: [],
+    setup: 'Just woke up. Don\'t reach for the phone. Stay in bed or move to a window.',
+    execution: 'Sit or lie still. Eyes closed or softly open. Notice what\'s there — body sensations, thoughts, the room. The brain is in theta state for the first 5–10 minutes after waking — a portal to the deep mind. Don\'t fill it with input. Just be there.',
+    mistakes: 'Reaching for the phone. Mentally planning the day.',
+    breath: 'Natural, slow.',
+    progressions: 'Extend to 10 min. Add a single intention or question to sit with.',
+    regressions: 'Even 1 min counts.',
+    videoUrl: ytSearch('theta brainwaves morning') },
+
+  { id: 'intention_setting', name: 'Intention setting', category: 'ritual', defaultDuration: 60, equipment: [],
+    setup: 'After breath or movement. Before the day proper begins.',
+    execution: 'Ask the body: *what does this day ask?* Or: *what do I want to embody today?* Wait for the answer to arise — not from the head, from the gut. Speak it aloud or write it down. One sentence is enough.',
+    mistakes: 'Setting "shoulds" instead of asking. Mind-led intentions.',
+    breath: 'Slow exhale before listening.',
+    progressions: 'Pair with morning journal entry.',
+    regressions: 'Just one word.',
+    videoUrl: ytSearch('daily intention setting practice') },
+
+  { id: 'gratitude', name: 'Gratitude', category: 'ritual', defaultDuration: 120, equipment: [],
+    setup: 'Sitting or lying down. Eyes closed or soft.',
+    execution: 'Bring to mind three things you\'re grateful for — one big, one small, one body. Feel each one in the body, not just the head. Linger.',
+    mistakes: 'Listing without feeling. Generic gratitude.',
+    breath: 'Slow, into the heart.',
+    progressions: 'Five things. Specific to today.',
+    regressions: 'Just one thing, deeply felt.',
+    videoUrl: ytSearch('gratitude practice meditation') },
+
+  { id: 'morning_journal', name: 'Morning journal', category: 'ritual', defaultDuration: 600, equipment: ['journal'],
+    setup: 'Pen and paper, or notes app. Coffee or water nearby.',
+    execution: 'Write three pages — stream of consciousness, no editing. What\'s on the mind, what came up in dreams, what the day asks. Or use prompts: *what am I avoiding? what wants to be said? what does the body know?*',
+    mistakes: 'Trying to write well. Performing.',
+    breath: 'Natural.',
+    progressions: 'Specific daily prompts. Voice memo if writing is slow.',
+    regressions: 'One paragraph. Single prompt.',
+    videoUrl: ytSearch('morning pages journal practice') },
+
+  { id: 'water_glass', name: 'Glass of water', category: 'ritual', defaultDuration: 30, equipment: ['water'],
+    setup: 'On waking, before anything else.',
+    execution: 'Drink a full glass of water (room temperature ideal, lemon optional). Slow sips. Feel it move through the body. Rehydrates after the night and signals to the system that the day is starting.',
+    mistakes: 'Skipping it. Cold water on an empty stomach (less ideal).',
+    breath: 'Natural, between sips.',
+    progressions: 'Add a pinch of salt and lemon for electrolyte support.',
+    regressions: 'Half a glass if a full one feels like too much.',
+    videoUrl: '' }
+];
+
+// ============================================================
+// DEFAULT PRACTICES
+// ============================================================
+const DEFAULT_DATA = {
+  schemaVersion: SCHEMA_VERSION,
+  library: DEFAULT_LIBRARY,
+  practices: [
+    {
+      id: 'solar_gate',
+      name: 'Solar Gate',
+      subtitle: 'morning ritual — the foundation layer',
+      type: 'morning',
+      duration: '~30 min',
+      intro: "The first 30 minutes write the whole day. Phone stays away. Body, breath, intention, then the world.",
+      steps: [
+        { id: 'sg-a', libraryId: 'water_glass', letter: 'A', name: 'Glass of water', duration: 60, cues: 'slow sips. feel it land.' },
+        { id: 'sg-b', libraryId: 'theta_wake', letter: 'B', name: 'Theta wake window', duration: 300, cues: 'no phone. just be here.' },
+        { id: 'sg-c', libraryId: 'box_breath', letter: 'C', name: 'Breath — box or 4-7-8', duration: 600, cues: 'pick what the body wants today.' },
+        { id: 'sg-d', libraryId: 'qigong_opening', letter: 'D', name: 'Movement — qigong or sun salutation', duration: 300, cues: 'slow. breath leads.' },
+        { id: 'sg-e', libraryId: 'silent_sit', letter: 'E', name: 'Silent sit', duration: 300, cues: 'just sit. nothing to do.' },
+        { id: 'sg-f', libraryId: 'intention_setting', letter: 'F', name: 'Intention', duration: 60, cues: 'what does this day ask?' }
+      ],
+      closing: 'phone, breakfast, the world.'
+    },
+    {
+      id: 'evening_winddown',
+      name: 'Evening Wind-Down',
+      subtitle: 'pre-sleep practice — drop into the parasympathetic',
+      type: 'evening',
+      duration: '~15 min',
+      intro: 'Drop the day. Long exhales. The nervous system needs the signal that it\'s safe to sleep.',
+      steps: [
+        { id: 'ew-a', libraryId: 'lower_body_flow', letter: 'A', name: 'Light mobility', duration: 300, cues: 'gentle. nothing intense.' },
+        { id: 'ew-b', libraryId: 'breath_478', letter: 'B', name: '4-7-8 breath', duration: 300, cues: '4 rounds. let the exhale carry you down.' },
+        { id: 'ew-c', libraryId: 'gratitude', letter: 'C', name: 'Gratitude', duration: 120, cues: 'three things — feel each.' },
+        { id: 'ew-d', libraryId: 'body_scan', letter: 'D', name: 'Body scan', duration: 300, cues: 'top to toe. release where you find tension.' }
+      ],
+      closing: 'lights out. phone away.'
+    },
+    {
+      id: 'quick_reset',
+      name: 'Quick Breath Reset',
+      subtitle: '5 min — between meetings, between worlds',
+      type: 'reset',
+      duration: '5 min',
+      intro: 'Mid-day re-set. Drop in, drop down, return.',
+      steps: [
+        { id: 'qr-a', libraryId: 'box_breath', letter: 'A', name: 'Box breath', duration: 240, cues: '4-4-4-4. let the pauses be still.' },
+        { id: 'qr-b', libraryId: 'intention_setting', letter: 'B', name: 'Re-arrive', duration: 60, cues: 'what wants attention next?' }
+      ],
+      closing: 'back to the world with breath in the body.'
+    },
+    {
+      id: 'orbit_practice',
+      name: 'Microcosmic Orbit',
+      subtitle: 'focused energy practice — 15 min',
+      type: 'energy',
+      duration: '~15 min',
+      intro: 'Tongue to upper palate. Spine long. Energy moves where attention goes.',
+      steps: [
+        { id: 'op-a', libraryId: 'box_breath', letter: 'A', name: 'Settle the breath', duration: 180, cues: 'box 4-4-4-4 to arrive.' },
+        { id: 'op-b', libraryId: 'microcosmic_orbit', letter: 'B', name: 'Orbit cycles', duration: 600, cues: 'up the back, down the front. breath carries the loop.' },
+        { id: 'op-c', libraryId: 'silent_sit', letter: 'C', name: 'Rest in the field', duration: 120, cues: 'no doing. just notice what was moved.' }
+      ],
+      closing: 'water. note what you noticed.'
+    },
+    {
+      id: 'vocal_warmup',
+      name: 'Vocal Warmup',
+      subtitle: 'before singing, recording, or vocal work',
+      type: 'vocal',
+      duration: '~12 min',
+      intro: 'Wake the instrument. Open the throat. Find the resonance.',
+      steps: [
+        { id: 'vw-a', libraryId: 'breath_of_fire', letter: 'A', name: 'Activate the diaphragm', duration: 120, cues: 'short rounds. feel the pump.' },
+        { id: 'vw-b', libraryId: 'vocal_humming', letter: 'B', name: 'Hum slides', duration: 180, cues: 'find the buzz on the lips.' },
+        { id: 'vw-c', libraryId: 'lip_trills', letter: 'C', name: 'Lip trills', duration: 180, cues: 'across the range, no force.' },
+        { id: 'vw-d', libraryId: 'vocal_scales', letter: 'D', name: 'Scales', duration: 240, cues: '5-note scales. up by half-steps.' }
+      ],
+      closing: 'sip warm water. the voice is open.'
+    }
+  ],
+  schedule: { morning: 'solar_gate', evening: 'evening_winddown' },
+  sessions: []
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let state = loadState();
+let currentView = 'home';
+let activeSession = null;
+let timerInterval = null;
+let timerEnd = 0;
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return JSON.parse(JSON.stringify(DEFAULT_DATA));
+    const parsed = JSON.parse(raw);
+    if (!parsed.library) parsed.library = JSON.parse(JSON.stringify(DEFAULT_LIBRARY));
+    // Merge in any new default library entries non-destructively
+    const existingIds = new Set(parsed.library.map(e => e.id));
+    DEFAULT_LIBRARY.forEach(e => { if (!existingIds.has(e.id)) parsed.library.push(JSON.parse(JSON.stringify(e))); });
+    if (!parsed.practices) parsed.practices = JSON.parse(JSON.stringify(DEFAULT_DATA.practices));
+    if (!parsed.schedule) parsed.schedule = JSON.parse(JSON.stringify(DEFAULT_DATA.schedule));
+    if (!parsed.sessions) parsed.sessions = [];
+    return parsed;
+  } catch (e) {
+    console.warn('state load failed, using defaults', e);
+    return JSON.parse(JSON.stringify(DEFAULT_DATA));
+  }
+}
+
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch (e) { toast('could not save'); }
+}
+
+function resetToDefaults() {
+  if (!confirm('Reset library, practices, and history? Custom edits will be lost.')) return;
+  state = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  saveState();
+  render();
+  toast('reset');
+}
+
+function formatDate(iso) {
+  const d = new Date(iso + 'T00:00');
+  return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+}
+function getPractice(id) { return state.practices.find(p => p.id === id); }
+function getLibEntry(id) { return id ? state.library.find(e => e.id === id) : null; }
+function uid(prefix = 'x') { return prefix + '-' + Math.random().toString(36).slice(2, 9); }
+
+function el(tag, className, text) {
+  const e = document.createElement(tag);
+  if (className) e.className = className;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function formatDuration(sec) {
+  if (!sec) return 'open';
+  if (sec < 60) return sec + 's';
+  if (sec % 60 === 0) return (sec / 60) + ' min';
+  return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ============================================================
+// HEADER + NAV
+// ============================================================
+function setHeaderDate() {
+  const d = new Date();
+  document.getElementById('header-date').textContent = d.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' }).toLowerCase();
+}
+document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => setView(btn.dataset.view)));
+function setView(name) {
+  currentView = name;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.view === name));
+  render();
+}
+
+// ============================================================
+// RENDER ROUTER
+// ============================================================
+function render() {
+  const main = document.getElementById('app');
+  main.innerHTML = '';
+  const view = document.createElement('div');
+  view.className = 'view active';
+
+  if (activeSession && !activeSession.__paused) view.appendChild(renderSession());
+  else if (currentView === 'home') view.appendChild(renderHome());
+  else if (currentView === 'library') view.appendChild(renderLibraryView());
+  else if (currentView === 'libdetail') view.appendChild(renderLibDetail());
+  else if (currentView === 'practices') view.appendChild(renderPractices());
+  else if (currentView === 'history') view.appendChild(renderHistory());
+  else if (currentView === 'editor') view.appendChild(renderEditor());
+
+  main.appendChild(view);
+  window.scrollTo(0, 0);
+}
+
+// ============================================================
+// HOME — morning + evening + quick access
+// ============================================================
+function renderHome() {
+  const wrap = document.createElement('div');
+  wrap.appendChild(el('div', 'today-eyebrow', 'today'));
+
+  // Morning
+  const morningId = state.schedule.morning;
+  const morning = getPractice(morningId);
+  if (morning) {
+    const card = document.createElement('div');
+    card.className = 'today-card';
+    card.innerHTML = `
+      <div class="today-name">${escapeHtml(morning.name)}</div>
+      <div class="today-sub">${escapeHtml(morning.subtitle || '')}</div>
+      <div class="today-meta"><span>${morning.steps.length} steps</span><span>${escapeHtml(morning.duration || '')}</span></div>`;
+    const btn = el('button', 'btn-primary', 'begin');
+    btn.addEventListener('click', () => startSession(morning.id));
+    card.appendChild(btn);
+    wrap.appendChild(card);
+  }
+
+  // Other quick-access practices
+  const others = state.practices.filter(p => p.id !== morningId);
+  if (others.length) {
+    const sub = el('div', 'today-eyebrow', 'or pick a different practice');
+    sub.style.marginTop = '20px';
+    wrap.appendChild(sub);
+
+    const grid = document.createElement('div');
+    grid.className = 'quick-grid';
+    others.forEach(p => {
+      const c = document.createElement('button');
+      c.className = 'quick-card';
+      c.innerHTML = `<div class="quick-card-name">${escapeHtml(p.name)}</div><div class="quick-card-sub">${escapeHtml(p.subtitle || '')}</div>`;
+      c.addEventListener('click', () => startSession(p.id));
+      grid.appendChild(c);
+    });
+    wrap.appendChild(grid);
+  }
+
+  return wrap;
+}
+
+// ============================================================
+// LIBRARY
+// ============================================================
+let libraryFilter = { category: 'all', search: '' };
+
+function renderLibraryView() {
+  const wrap = document.createElement('div');
+  wrap.appendChild(el('div', 'today-eyebrow', 'library'));
+  wrap.appendChild(el('div', 'session-sub', `${state.library.length} protocols. tap any for the wiki.`));
+
+  const searchWrap = document.createElement('div');
+  searchWrap.className = 'library-search-wrap';
+  const search = document.createElement('input');
+  search.type = 'text';
+  search.placeholder = 'search…';
+  search.value = libraryFilter.search;
+  search.addEventListener('input', e => { libraryFilter.search = e.target.value; updateLibraryGrid(); });
+  searchWrap.appendChild(search);
+  wrap.appendChild(searchWrap);
+
+  const filterRow = document.createElement('div');
+  filterRow.className = 'lib-filter-row';
+  const cats = [
+    { id: 'all', label: 'all' },
+    { id: 'breath', label: 'breath' },
+    { id: 'meditation', label: 'meditation' },
+    { id: 'movement', label: 'movement' },
+    { id: 'vocal', label: 'vocal' },
+    { id: 'ritual', label: 'ritual' }
+  ];
+  cats.forEach(c => {
+    const pill = el('button', 'lib-filter-pill', c.label);
+    if (libraryFilter.category === c.id) pill.classList.add('active');
+    pill.addEventListener('click', () => { libraryFilter.category = c.id; render(); });
+    filterRow.appendChild(pill);
+  });
+  wrap.appendChild(filterRow);
+
+  const newBtn = el('button', 'editor-add-btn accent', '+ add custom protocol');
+  newBtn.style.marginBottom = '14px';
+  newBtn.addEventListener('click', openCustomLibModal);
+  wrap.appendChild(newBtn);
+
+  const grid = document.createElement('div');
+  grid.className = 'lib-grid';
+  grid.id = 'lib-grid';
+  wrap.appendChild(grid);
+  setTimeout(updateLibraryGrid, 0);
+  return wrap;
+}
+
+function filteredLibrary() {
+  const q = libraryFilter.search.toLowerCase().trim();
+  return state.library.filter(e => {
+    if (libraryFilter.category !== 'all' && e.category !== libraryFilter.category) return false;
+    if (q && !e.name.toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function updateLibraryGrid() {
+  const grid = document.getElementById('lib-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  const items = filteredLibrary();
+  if (!items.length) { grid.innerHTML = `<div class="lib-empty">no matches — clear filters?</div>`; return; }
+  items.forEach(ex => {
+    const card = document.createElement('button');
+    card.className = 'lib-card';
+    card.innerHTML = `
+      <span class="lib-cat-tag lib-cat-${ex.category}">${escapeHtml(ex.category)}</span>
+      <div class="lib-card-info">
+        <div class="lib-card-name">${escapeHtml(ex.name)}</div>
+        <div class="lib-card-meta">${formatDuration(ex.defaultDuration)}</div>
+      </div>`;
+    card.addEventListener('click', () => { window.__detailId = ex.id; currentView = 'libdetail'; render(); });
+    grid.appendChild(card);
+  });
+}
+
+function renderLibDetail() {
+  const wrap = document.createElement('div');
+  const ex = getLibEntry(window.__detailId);
+  if (!ex) return wrap;
+
+  const fromSession = activeSession && activeSession.__paused;
+  const back = el('button', 'detail-back', fromSession ? '← back to practice' : '← back to library');
+  back.addEventListener('click', () => {
+    if (fromSession) {
+      activeSession.__paused = false;
+      render();
+    } else {
+      setView('library');
+    }
+  });
+  wrap.appendChild(back);
+
+  const card = document.createElement('div');
+  card.className = 'detail-card';
+  const tags = `<div class="detail-tags">
+    <span class="lib-cat-tag lib-cat-${ex.category}">${escapeHtml(ex.category)}</span>
+    <span class="lib-cat-tag" style="background:rgba(255,255,255,0.04); color: var(--ink-faint)">${formatDuration(ex.defaultDuration)}</span>
+    ${(ex.equipment||[]).map(e => `<span class="lib-cat-tag" style="background:rgba(255,255,255,0.04); color: var(--ink-faint)">${escapeHtml(e)}</span>`).join('')}
+  </div>`;
+  card.innerHTML = `<div class="detail-name">${escapeHtml(ex.name)}</div>${tags}`;
+
+  const imgWrap = document.createElement('div');
+  if (ex.imageUrl) {
+    imgWrap.className = 'detail-image';
+    imgWrap.innerHTML = `<img src="${escapeHtml(ex.imageUrl)}" alt="${escapeHtml(ex.name)}">`;
+  } else {
+    imgWrap.className = 'detail-image-empty';
+    imgWrap.innerHTML = `no demo yet<small class="detail-image-paste">paste a GIF or image URL below to add one</small>`;
+  }
+  card.appendChild(imgWrap);
+
+  const sections = [
+    { label: 'setup', value: ex.setup },
+    { label: 'execution', value: ex.execution },
+    { label: 'common mistakes', value: ex.mistakes },
+    { label: 'breath', value: ex.breath },
+    { label: 'progressions', value: ex.progressions },
+    { label: 'regressions', value: ex.regressions }
+  ];
+  sections.forEach(s => {
+    if (!s.value) return;
+    const div = document.createElement('div');
+    div.className = 'detail-section';
+    div.innerHTML = `<h3>${escapeHtml(s.label)}</h3><p>${escapeHtml(s.value)}</p>`;
+    card.appendChild(div);
+  });
+
+  const actions = document.createElement('div');
+  actions.className = 'detail-actions';
+  if (ex.videoUrl) {
+    const watchBtn = el('button', 'btn-secondary', 'watch on YouTube ▶');
+    watchBtn.addEventListener('click', () => window.open(ex.videoUrl, '_blank', 'noopener'));
+    actions.appendChild(watchBtn);
+  }
+  const pasteBtn = el('button', 'btn-secondary', ex.imageUrl ? 'replace image link' : 'paste image link');
+  pasteBtn.addEventListener('click', () => openImageModal(ex));
+  actions.appendChild(pasteBtn);
+  const editBtn = el('button', 'btn-secondary', 'edit wiki');
+  editBtn.addEventListener('click', () => openWikiEditModal(ex));
+  actions.appendChild(editBtn);
+  card.appendChild(actions);
+  wrap.appendChild(card);
+  return wrap;
+}
+
+function openImageModal(ex) {
+  const modal = document.getElementById('modal');
+  modal.innerHTML = `
+    <div class="modal-header"><div class="modal-title">paste image / GIF URL</div><button class="modal-close" id="mclose">×</button></div>
+    <div class="editor-field"><div class="editor-label">URL</div><input type="url" id="mimg" placeholder="https://..." value="${escapeHtml(ex.imageUrl || '')}"></div>
+    <div class="subtle" style="margin-bottom:14px; line-height:1.5;">Imgur, Giphy, Tenor direct links work best.</div>
+    <div class="editor-actions"><button class="btn-primary" id="msave">save</button><button class="btn-danger" id="mclear">clear</button></div>`;
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('mclose').onclick = closeModal;
+  document.getElementById('msave').onclick = () => {
+    const v = document.getElementById('mimg').value.trim();
+    const e = getLibEntry(ex.id); if (e) e.imageUrl = v;
+    saveState(); closeModal(); render(); toast(v ? 'saved' : 'cleared');
+  };
+  document.getElementById('mclear').onclick = () => {
+    const e = getLibEntry(ex.id); if (e) e.imageUrl = '';
+    saveState(); closeModal(); render(); toast('cleared');
+  };
+}
+
+function openWikiEditModal(ex) {
+  const modal = document.getElementById('modal');
+  const fields = ['setup','execution','mistakes','breath','progressions','regressions'];
+  modal.innerHTML = `
+    <div class="modal-header"><div class="modal-title">edit wiki — ${escapeHtml(ex.name)}</div><button class="modal-close" id="mclose">×</button></div>
+    ${fields.map(f => `<div class="editor-field"><div class="editor-label">${f}</div><textarea id="wk-${f}" rows="3">${escapeHtml(ex[f] || '')}</textarea></div>`).join('')}
+    <div class="editor-field"><div class="editor-label">YouTube URL</div><input type="url" id="wk-vid" value="${escapeHtml(ex.videoUrl || '')}"></div>
+    <div class="editor-field"><div class="editor-label">default duration (seconds, 0 for open)</div><input type="number" min="0" id="wk-dur" value="${ex.defaultDuration || 0}"></div>
+    <div class="editor-actions"><button class="btn-primary" id="msave">keep</button></div>`;
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('mclose').onclick = closeModal;
+  document.getElementById('msave').onclick = () => {
+    const e = getLibEntry(ex.id);
+    if (e) {
+      fields.forEach(f => e[f] = document.getElementById('wk-'+f).value.trim());
+      e.videoUrl = document.getElementById('wk-vid').value.trim();
+      e.defaultDuration = parseInt(document.getElementById('wk-dur').value) || 0;
+    }
+    saveState(); closeModal(); render(); toast('kept');
+  };
+}
+
+function openCustomLibModal() {
+  const modal = document.getElementById('modal');
+  modal.innerHTML = `
+    <div class="modal-header"><div class="modal-title">add custom protocol</div><button class="modal-close" id="mclose">×</button></div>
+    <div class="editor-field"><div class="editor-label">name</div><input id="cl-name" placeholder="e.g. Coherent breath"></div>
+    <div class="editor-field"><div class="editor-label">category</div><select id="cl-cat">
+      <option value="breath">breath</option><option value="meditation">meditation</option>
+      <option value="movement">movement</option><option value="vocal">vocal</option><option value="ritual">ritual</option>
+    </select></div>
+    <div class="editor-field"><div class="editor-label">default duration (seconds)</div><input type="number" min="0" id="cl-dur" value="300"></div>
+    <div class="editor-field"><div class="editor-label">setup</div><textarea id="cl-setup" rows="2"></textarea></div>
+    <div class="editor-field"><div class="editor-label">execution</div><textarea id="cl-execution" rows="2"></textarea></div>
+    <div class="editor-field"><div class="editor-label">common mistakes</div><textarea id="cl-mistakes" rows="2"></textarea></div>
+    <div class="editor-actions"><button class="btn-primary" id="msave">add to library</button></div>`;
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('mclose').onclick = closeModal;
+  document.getElementById('msave').onclick = () => {
+    const name = document.getElementById('cl-name').value.trim();
+    if (!name) { toast('name needed'); return; }
+    state.library.push({
+      id: uid('lib'), name, category: document.getElementById('cl-cat').value,
+      defaultDuration: parseInt(document.getElementById('cl-dur').value) || 0,
+      equipment: [],
+      setup: document.getElementById('cl-setup').value.trim(),
+      execution: document.getElementById('cl-execution').value.trim(),
+      mistakes: document.getElementById('cl-mistakes').value.trim(),
+      videoUrl: ytSearch(name), imageUrl: ''
+    });
+    saveState(); closeModal(); render(); toast('added');
+  };
+}
+
+function openSwapModal(step, idx) {
+  const lib = getLibEntry(step.libraryId);
+  const cat = lib ? lib.category : null;
+  const candidates = state.library.filter(e => (!cat || e.category === cat) && e.id !== step.libraryId);
+  const modal = document.getElementById('modal');
+  modal.innerHTML = `
+    <div class="modal-header">
+      <div class="modal-title">swap${cat ? ' — same ' + escapeHtml(cat) : ''}</div>
+      <button class="modal-close" id="mclose">×</button>
+    </div>
+    <div class="subtle" style="margin-bottom:14px; line-height:1.5;">
+      pick an alternative${cat ? ' (same kind of practice)' : ''}. duration and cues stay the same.
+    </div>
+    <div class="library-search-wrap"><input id="swap-search" placeholder="search…"></div>
+    <div class="lib-grid" id="swap-grid"></div>`;
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('mclose').onclick = closeModal;
+  const fillGrid = (q) => {
+    const grid = document.getElementById('swap-grid');
+    grid.innerHTML = '';
+    const qq = (q || '').toLowerCase().trim();
+    candidates.forEach(c => {
+      if (qq && !c.name.toLowerCase().includes(qq)) return;
+      const card = document.createElement('button');
+      card.className = 'lib-card';
+      card.innerHTML = `
+        <span class="lib-cat-tag lib-cat-${c.category}">${escapeHtml(c.category)}</span>
+        <div class="lib-card-info">
+          <div class="lib-card-name">${escapeHtml(c.name)}</div>
+          <div class="lib-card-meta">${formatDuration(c.defaultDuration)}</div>
+        </div>`;
+      card.addEventListener('click', () => {
+        const target = activeSession.steps[idx];
+        target.libraryId = c.id;
+        target.name = c.name;
+        // duration & cues preserved
+        closeModal();
+        render();
+        toast('swapped to ' + c.name);
+      });
+      grid.appendChild(card);
+    });
+  };
+  document.getElementById('swap-search').addEventListener('input', e => fillGrid(e.target.value));
+  fillGrid('');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.getElementById('modal').innerHTML = '';
+}
+document.getElementById('modal-overlay').addEventListener('click', e => { if (e.target.id === 'modal-overlay') closeModal(); });
+
+// ============================================================
+// SESSION
+// ============================================================
+function startSession(practiceId) {
+  const p = getPractice(practiceId);
+  if (!p) return;
+  activeSession = {
+    date: TODAY(),
+    practiceId: p.id,
+    practiceName: p.name,
+    steps: p.steps.map(s => ({
+      id: s.id, libraryId: s.libraryId, name: s.name, letter: s.letter,
+      duration: s.duration, cues: s.cues,
+      done: false, notes: '', notesOpen: false, formOpen: false
+    })),
+    intro: p.intro, closing: p.closing, duration: p.duration,
+    finalNotes: ''
+  };
+  render();
+}
+
+function renderSession() {
+  const wrap = document.createElement('div');
+  const s = activeSession;
+
+  const exitRow = document.createElement('div');
+  exitRow.className = 'row-spread';
+  exitRow.style.marginBottom = '14px';
+  const exitBtn = el('button', 'subtle', '← exit (progress saved)');
+  exitBtn.style.cursor = 'pointer';
+  exitBtn.addEventListener('click', () => { activeSession = null; render(); });
+  exitRow.appendChild(exitBtn);
+  wrap.appendChild(exitRow);
+
+  const header = document.createElement('div');
+  header.className = 'session-header';
+  const done = s.steps.filter(e => e.done).length;
+  header.innerHTML = `<div class="session-title">${escapeHtml(s.practiceName)}</div><div class="session-progress">${done}/${s.steps.length}</div>`;
+  wrap.appendChild(header);
+  wrap.appendChild(el('div', 'session-sub', formatDate(s.date) + (s.duration ? ' · ' + s.duration : '')));
+
+  if (s.intro) {
+    const introBlock = document.createElement('details');
+    introBlock.className = 'intro-block';
+    introBlock.open = true;
+    introBlock.innerHTML = `<summary>intention</summary><div class="text">${escapeHtml(s.intro)}</div>`;
+    wrap.appendChild(introBlock);
+  }
+
+  // Find next un-done step for active highlight
+  const nextIdx = s.steps.findIndex(st => !st.done);
+  s.steps.forEach((step, i) => wrap.appendChild(renderStepCard(step, i, i === nextIdx)));
+
+  if (s.closing) {
+    const closingBlock = document.createElement('details');
+    closingBlock.className = 'closing-block';
+    closingBlock.innerHTML = `<summary>closing</summary><div class="text">${escapeHtml(s.closing)}</div>`;
+    wrap.appendChild(closingBlock);
+  }
+
+  const allDone = s.steps.every(e => e.done);
+  const complete = document.createElement('div');
+  complete.className = 'session-complete';
+  complete.innerHTML = allDone
+    ? `<div class="session-complete-msg">complete. the day is yours now.</div><div class="session-complete-sub">how did it land?</div>`
+    : `<div class="session-complete-msg">close when ready.</div><div class="session-complete-sub">finish steps above, or close it here.</div>`;
+
+  const finalField = document.createElement('div');
+  finalField.className = 'session-final-notes';
+  finalField.style.textAlign = 'left';
+  finalField.style.marginBottom = '16px';
+  finalField.innerHTML = `<div class="step-notes-prompt">what moved? what was alive? where is the body now?</div>`;
+  const finalTA = document.createElement('textarea');
+  finalTA.value = s.finalNotes;
+  finalTA.placeholder = 'session notes…';
+  finalTA.addEventListener('input', e => { s.finalNotes = e.target.value; });
+  finalField.appendChild(finalTA);
+  complete.appendChild(finalField);
+
+  const closeBtn = el('button', 'btn-primary', 'close session — keep');
+  closeBtn.addEventListener('click', closeSession);
+  complete.appendChild(closeBtn);
+  wrap.appendChild(complete);
+
+  return wrap;
+}
+
+function renderStepCard(step, idx, isActive) {
+  const card = document.createElement('div');
+  card.className = 'step-card' + (step.done ? ' done' : '') + (isActive ? ' active' : '');
+
+  const row = document.createElement('div');
+  row.className = 'step-row';
+
+  const check = document.createElement('button');
+  check.className = 'step-check' + (step.done ? ' checked' : '');
+  check.addEventListener('click', () => {
+    step.done = !step.done;
+    render();
+  });
+  row.appendChild(check);
+
+  const body = document.createElement('div');
+  body.className = 'step-body';
+  body.innerHTML = `
+    ${step.letter ? `<div class="step-letter">${escapeHtml(step.letter)}</div>` : ''}
+    <div class="step-name">${escapeHtml(step.name)}</div>
+    <div class="step-prescription"><span><strong>${formatDuration(step.duration)}</strong></span></div>
+    ${step.cues ? `<div class="step-cues">${escapeHtml(step.cues)}</div>` : ''}`;
+
+  const actions = document.createElement('div');
+  actions.className = 'step-actions';
+
+  const lib = getLibEntry(step.libraryId);
+  if (lib) {
+    const formBtn = el('button', 'step-action-btn accent', step.formOpen ? 'hide form' : 'form');
+    formBtn.addEventListener('click', () => { step.formOpen = !step.formOpen; render(); });
+    actions.appendChild(formBtn);
+  }
+  if (lib && lib.videoUrl) {
+    const watchBtn = el('button', 'step-action-btn', 'watch ▶');
+    watchBtn.addEventListener('click', () => window.open(lib.videoUrl, '_blank', 'noopener'));
+    actions.appendChild(watchBtn);
+  }
+  if (step.duration > 0) {
+    const timerBtn = el('button', 'step-action-btn', 'begin timer');
+    timerBtn.addEventListener('click', () => startTimer(step.duration, step.name));
+    actions.appendChild(timerBtn);
+  }
+  const noteBtn = el('button', 'step-action-btn', step.notesOpen ? 'hide note' : 'note');
+  noteBtn.addEventListener('click', () => { step.notesOpen = !step.notesOpen; render(); });
+  actions.appendChild(noteBtn);
+
+  if (lib) {
+    const wikiBtn = el('button', 'step-action-btn', 'wiki →');
+    wikiBtn.addEventListener('click', () => {
+      activeSession.__paused = true;
+      window.__detailId = step.libraryId;
+      setView('libdetail');
+    });
+    actions.appendChild(wikiBtn);
+  }
+
+  const swapBtn = el('button', 'step-action-btn', 'swap');
+  swapBtn.addEventListener('click', () => openSwapModal(step, idx));
+  actions.appendChild(swapBtn);
+
+  body.appendChild(actions);
+
+  if (step.formOpen && lib) {
+    const formPanel = document.createElement('div');
+    formPanel.className = 'step-form open';
+    let html = '';
+    if (lib.imageUrl) html += `<div class="form-image-wrap"><img src="${escapeHtml(lib.imageUrl)}" alt="${escapeHtml(lib.name)}"></div>`;
+    if (lib.setup) html += `<div class="form-section"><div class="form-label">setup</div><div class="form-text">${escapeHtml(lib.setup)}</div></div>`;
+    if (lib.execution) html += `<div class="form-section"><div class="form-label">execution</div><div class="form-text">${escapeHtml(lib.execution)}</div></div>`;
+    if (lib.mistakes) html += `<div class="form-section"><div class="form-label">common mistakes</div><div class="form-text muted">${escapeHtml(lib.mistakes)}</div></div>`;
+    if (lib.breath) html += `<div class="form-section"><div class="form-label">breath</div><div class="form-text muted">${escapeHtml(lib.breath)}</div></div>`;
+    formPanel.innerHTML = html;
+    body.appendChild(formPanel);
+  }
+
+  const notes = document.createElement('div');
+  notes.className = 'step-notes' + (step.notesOpen ? ' open' : '');
+  notes.innerHTML = `<div class="step-notes-prompt">what landed in the body</div>`;
+  const ta = document.createElement('textarea');
+  ta.value = step.notes;
+  ta.placeholder = '…';
+  ta.addEventListener('input', e => { step.notes = e.target.value; });
+  notes.appendChild(ta);
+  body.appendChild(notes);
+
+  row.appendChild(body);
+  card.appendChild(row);
+  return card;
+}
+
+function closeSession() {
+  state.sessions.unshift({
+    id: uid('s'),
+    date: activeSession.date,
+    practiceId: activeSession.practiceId,
+    practiceName: activeSession.practiceName,
+    steps: activeSession.steps.map(s => ({ name: s.name, done: s.done, notes: s.notes })),
+    finalNotes: activeSession.finalNotes
+  });
+  saveState();
+  activeSession = null;
+  stopTimer();
+  toast('session kept');
+  render();
+}
+
+// ============================================================
+// TIMER
+// ============================================================
+function startTimer(seconds, label) {
+  stopTimer();
+  timerEnd = Date.now() + seconds * 1000;
+  document.getElementById('timer-label').textContent = label || 'step';
+  document.getElementById('timer-overlay').classList.add('active');
+  updateTimer();
+  timerInterval = setInterval(updateTimer, 250);
+  if (window.__audioCtx === undefined) {
+    try { window.__audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+  }
+}
+
+function updateTimer() {
+  const remaining = Math.max(0, Math.ceil((timerEnd - Date.now()) / 1000));
+  const m = Math.floor(remaining / 60);
+  const s = remaining % 60;
+  const display = document.getElementById('timer-display');
+  display.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+  if (remaining <= 5 && remaining > 0) display.classList.add('flash');
+  else display.classList.remove('flash');
+  if (remaining === 0) {
+    bell();
+    setTimeout(stopTimer, 1200);
+  }
+}
+
+function stopTimer() {
+  clearInterval(timerInterval);
+  timerInterval = null;
+  document.getElementById('timer-overlay').classList.remove('active');
+  document.getElementById('timer-display').classList.remove('flash');
+}
+
+function bell() {
+  try {
+    const ctx = window.__audioCtx;
+    if (!ctx) return;
+    // softer ritual bell vs. gym beep — two harmonics
+    [528, 792].forEach((freq, i) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = freq; o.type = 'sine';
+      g.gain.setValueAtTime(0.0001, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.15, ctx.currentTime + 0.05);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1.4);
+      o.start(); o.stop(ctx.currentTime + 1.5);
+    });
+  } catch (e) {}
+}
+
+document.getElementById('timer-stop').addEventListener('click', stopTimer);
+
+// ============================================================
+// PRACTICES
+// ============================================================
+function renderPractices() {
+  const wrap = document.createElement('div');
+  wrap.appendChild(el('div', 'today-eyebrow', 'practices'));
+  wrap.appendChild(el('div', 'session-sub', 'edit, duplicate, or build new.'));
+
+  const newBtn = el('button', 'btn-primary', '+ new practice');
+  newBtn.style.marginBottom = '20px';
+  newBtn.addEventListener('click', () => openEditor(null));
+  wrap.appendChild(newBtn);
+
+  wrap.appendChild(el('div', 'section-header', 'all practices'));
+  const list = document.createElement('div');
+  list.className = 'plans-list';
+  state.practices.forEach(p => list.appendChild(renderPracticeRow(p)));
+  wrap.appendChild(list);
+
+  // Schedule
+  wrap.appendChild(el('div', 'section-header', 'today defaults'));
+  const sched = document.createElement('div');
+  sched.style.background = 'var(--bg-card)';
+  sched.style.border = '1px solid var(--border)';
+  sched.style.borderRadius = 'var(--r-md)';
+  sched.style.padding = '14px';
+
+  ['morning', 'evening'].forEach(slot => {
+    const row = document.createElement('div');
+    row.className = 'editor-list-item';
+    const label = document.createElement('div');
+    label.style.flex = '0 0 90px';
+    label.style.fontSize = '13px';
+    label.style.color = 'var(--ink-dim)';
+    label.style.textTransform = 'capitalize';
+    label.textContent = slot;
+    row.appendChild(label);
+
+    const select = document.createElement('select');
+    select.style.flex = '1';
+    const optEmpty = document.createElement('option');
+    optEmpty.value = ''; optEmpty.textContent = '— none —';
+    select.appendChild(optEmpty);
+    state.practices.forEach(p => {
+      const o = document.createElement('option');
+      o.value = p.id; o.textContent = p.name;
+      select.appendChild(o);
+    });
+    select.value = state.schedule[slot] || '';
+    select.addEventListener('change', e => { state.schedule[slot] = e.target.value; saveState(); toast('updated'); });
+    row.appendChild(select);
+    sched.appendChild(row);
+  });
+  wrap.appendChild(sched);
+
+  wrap.appendChild(el('div', 'section-header', 'danger zone'));
+  const resetBtn = el('button', 'btn-danger', 'reset everything to defaults');
+  resetBtn.addEventListener('click', resetToDefaults);
+  wrap.appendChild(resetBtn);
+
+  return wrap;
+}
+
+function renderPracticeRow(p) {
+  const row = document.createElement('div');
+  row.className = 'plan-row';
+  row.innerHTML = `<div class="plan-row-info"><div class="plan-row-name">${escapeHtml(p.name)}</div><div class="plan-row-sub">${p.steps.length} steps${p.duration ? ' · ' + escapeHtml(p.duration) : ''}</div></div>`;
+  const actions = document.createElement('div');
+  actions.className = 'plan-row-actions';
+  const edit = el('button', 'icon-btn', '✎');
+  edit.addEventListener('click', () => openEditor(p.id));
+  actions.appendChild(edit);
+  const dup = el('button', 'icon-btn', '⎘');
+  dup.addEventListener('click', () => duplicatePractice(p.id));
+  actions.appendChild(dup);
+  const start = el('button', 'icon-btn', '▶');
+  start.style.color = 'var(--gold)';
+  start.style.borderColor = 'var(--gold-dim)';
+  start.addEventListener('click', () => startSession(p.id));
+  actions.appendChild(start);
+  row.appendChild(actions);
+  return row;
+}
+
+function duplicatePractice(id) {
+  const p = getPractice(id);
+  if (!p) return;
+  const copy = JSON.parse(JSON.stringify(p));
+  copy.id = uid('practice');
+  copy.name = p.name + ' (copy)';
+  copy.steps.forEach(s => s.id = uid('s'));
+  state.practices.push(copy);
+  saveState();
+  toast('duplicated');
+  render();
+}
+
+// ============================================================
+// EDITOR
+// ============================================================
+let editingPractice = null;
+
+function openEditor(id) {
+  editingPractice = id ? JSON.parse(JSON.stringify(getPractice(id)))
+    : { id: uid('practice'), name: 'New practice', subtitle: '', type: 'custom', duration: '', intro: '', steps: [], closing: '' };
+  currentView = 'editor';
+  render();
+}
+
+function renderEditor() {
+  const wrap = document.createElement('div');
+  const p = editingPractice;
+  if (!p) return wrap;
+
+  const back = el('button', 'subtle', '← cancel');
+  back.style.cursor = 'pointer';
+  back.style.marginBottom = '12px';
+  back.addEventListener('click', () => { editingPractice = null; setView('practices'); });
+  wrap.appendChild(back);
+
+  wrap.appendChild(el('div', 'today-eyebrow', 'edit practice'));
+
+  const fields = [
+    { key: 'name', label: 'name' },
+    { key: 'subtitle', label: 'subtitle' },
+    { key: 'duration', label: 'duration text' }
+  ];
+  fields.forEach(f => {
+    const wrap2 = document.createElement('div');
+    wrap2.className = 'editor-field';
+    wrap2.innerHTML = `<div class="editor-label">${f.label}</div>`;
+    const inp = document.createElement('input');
+    inp.value = p[f.key] || '';
+    inp.addEventListener('input', e => p[f.key] = e.target.value);
+    wrap2.appendChild(inp);
+    wrap.appendChild(wrap2);
+  });
+
+  // Intro
+  const introF = document.createElement('div');
+  introF.className = 'editor-field';
+  introF.innerHTML = `<div class="editor-label">intention (shown at top)</div>`;
+  const introIn = document.createElement('textarea');
+  introIn.value = p.intro || '';
+  introIn.rows = 2;
+  introIn.addEventListener('input', e => p.intro = e.target.value);
+  introF.appendChild(introIn);
+  wrap.appendChild(introF);
+
+  // Steps
+  wrap.appendChild(el('div', 'editor-label', 'steps'));
+  p.steps.forEach((s, i) => wrap.appendChild(makeStepEditor(s, i, p.steps)));
+
+  const fromLib = el('button', 'editor-add-btn accent', '+ pick from library');
+  fromLib.addEventListener('click', () => openLibPicker(p));
+  wrap.appendChild(fromLib);
+
+  const addCustom = el('button', 'editor-add-btn', '+ custom step');
+  addCustom.addEventListener('click', () => {
+    p.steps.push({ id: uid('s'), letter: nextLetter(p.steps.length), name: '', duration: 300, cues: '' });
+    render();
+  });
+  wrap.appendChild(addCustom);
+
+  // Closing
+  const closingF = document.createElement('div');
+  closingF.className = 'editor-field';
+  closingF.style.marginTop = '14px';
+  closingF.innerHTML = `<div class="editor-label">closing (shown at bottom)</div>`;
+  const closingIn = document.createElement('textarea');
+  closingIn.value = p.closing || '';
+  closingIn.rows = 2;
+  closingIn.addEventListener('input', e => p.closing = e.target.value);
+  closingF.appendChild(closingIn);
+  wrap.appendChild(closingF);
+
+  const actions = document.createElement('div');
+  actions.className = 'editor-actions';
+  const save = el('button', 'btn-primary', 'keep');
+  save.addEventListener('click', savePractice);
+  actions.appendChild(save);
+  const existing = state.practices.find(pr => pr.id === p.id);
+  if (existing) {
+    const del = el('button', 'btn-danger', 'delete');
+    del.addEventListener('click', () => {
+      if (!confirm('Delete this practice?')) return;
+      state.practices = state.practices.filter(pr => pr.id !== p.id);
+      saveState(); editingPractice = null; setView('practices'); toast('deleted');
+    });
+    actions.appendChild(del);
+  }
+  wrap.appendChild(actions);
+
+  return wrap;
+}
+
+function makeStepEditor(s, idx, list) {
+  const wrap = document.createElement('div');
+  wrap.className = 'editor-step' + (s.libraryId ? ' linked' : '');
+
+  const lib = getLibEntry(s.libraryId);
+  if (lib) wrap.appendChild(el('div', 'editor-link-info', `↳ linked: ${lib.name}`));
+
+  const grid = document.createElement('div');
+  grid.className = 'editor-step-grid';
+  const nameIn = document.createElement('input');
+  nameIn.value = s.name; nameIn.placeholder = 'step name';
+  nameIn.addEventListener('input', e => s.name = e.target.value);
+  grid.appendChild(nameIn);
+  const durIn = document.createElement('input');
+  durIn.type = 'number'; durIn.min = '0';
+  durIn.value = s.duration; durIn.placeholder = 'sec';
+  durIn.addEventListener('input', e => s.duration = parseInt(e.target.value) || 0);
+  grid.appendChild(durIn);
+  wrap.appendChild(grid);
+
+  const cuesIn = document.createElement('input');
+  cuesIn.value = s.cues || ''; cuesIn.placeholder = 'cues';
+  cuesIn.style.fontSize = '13px';
+  cuesIn.addEventListener('input', e => s.cues = e.target.value);
+  wrap.appendChild(cuesIn);
+
+  const ctrls = document.createElement('div');
+  ctrls.className = 'editor-step-controls';
+  const moves = document.createElement('div');
+  moves.className = 'move-btns';
+  const up = el('button', 'icon-btn', '↑');
+  up.addEventListener('click', () => { if (idx === 0) return; [list[idx-1], list[idx]] = [list[idx], list[idx-1]]; relabel(list); render(); });
+  moves.appendChild(up);
+  const down = el('button', 'icon-btn', '↓');
+  down.addEventListener('click', () => { if (idx === list.length-1) return; [list[idx+1], list[idx]] = [list[idx], list[idx+1]]; relabel(list); render(); });
+  moves.appendChild(down);
+  ctrls.appendChild(moves);
+  const del = el('button', 'icon-btn', '×');
+  del.style.color = 'var(--crimson)';
+  del.addEventListener('click', () => { list.splice(idx, 1); relabel(list); render(); });
+  ctrls.appendChild(del);
+  wrap.appendChild(ctrls);
+  return wrap;
+}
+
+function nextLetter(n) { return String.fromCharCode(65 + (n % 26)); }
+function relabel(list) { list.forEach((s, i) => s.letter = nextLetter(i)); }
+
+function openLibPicker(practice) {
+  const modal = document.getElementById('modal');
+  modal.innerHTML = `
+    <div class="modal-header"><div class="modal-title">pick from library</div><button class="modal-close" id="mclose">×</button></div>
+    <div class="library-search-wrap"><input id="lps" placeholder="search…"></div>
+    <div class="lib-grid" id="lpg"></div>`;
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('mclose').onclick = closeModal;
+  const fill = q => {
+    const grid = document.getElementById('lpg');
+    grid.innerHTML = '';
+    const qq = (q || '').toLowerCase().trim();
+    state.library.forEach(lib => {
+      if (qq && !lib.name.toLowerCase().includes(qq)) return;
+      const c = document.createElement('button');
+      c.className = 'lib-card';
+      c.innerHTML = `
+        <span class="lib-cat-tag lib-cat-${lib.category}">${escapeHtml(lib.category)}</span>
+        <div class="lib-card-info"><div class="lib-card-name">${escapeHtml(lib.name)}</div><div class="lib-card-meta">${formatDuration(lib.defaultDuration)}</div></div>`;
+      c.addEventListener('click', () => {
+        practice.steps.push({
+          id: uid('s'), libraryId: lib.id, letter: nextLetter(practice.steps.length),
+          name: lib.name, duration: lib.defaultDuration || 300, cues: ''
+        });
+        closeModal(); render(); toast('added');
+      });
+      grid.appendChild(c);
+    });
+  };
+  document.getElementById('lps').addEventListener('input', e => fill(e.target.value));
+  fill('');
+}
+
+function savePractice() {
+  const p = editingPractice;
+  if (!p.name.trim()) { toast('name needed'); return; }
+  p.steps = p.steps.filter(s => s.name && s.name.trim());
+  const idx = state.practices.findIndex(pr => pr.id === p.id);
+  if (idx >= 0) state.practices[idx] = p;
+  else state.practices.push(p);
+  saveState(); editingPractice = null; toast('kept'); setView('practices');
+}
+
+function renderHistory() {
+  const wrap = document.createElement('div');
+  wrap.appendChild(el('div', 'today-eyebrow', 'history'));
+  wrap.appendChild(el('div', 'session-sub', 'what the inner has done.'));
+  if (!state.sessions.length) {
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.innerHTML = `<div class="empty-msg">no sessions yet</div><div class="empty-sub">first one writes the line.</div>`;
+    wrap.appendChild(empty);
+    return wrap;
+  }
+  const list = document.createElement('div');
+  list.className = 'history-list';
+  state.sessions.slice(0, 50).forEach(s => {
+    const item = document.createElement('div');
+    item.className = 'history-item';
+    const doneCount = s.steps ? s.steps.filter(e => e.done).length : 0;
+    const totalCount = s.steps ? s.steps.length : 0;
+    item.innerHTML = `
+      <div class="history-date">${formatDate(s.date)}</div>
+      <div class="history-name">${escapeHtml(s.practiceName)}</div>
+      <div class="history-stats">${doneCount}/${totalCount} steps</div>
+      ${s.finalNotes ? `<div class="history-notes">${escapeHtml(s.finalNotes)}</div>` : ''}`;
+    list.appendChild(item);
+  });
+  wrap.appendChild(list);
+  return wrap;
+}
+
+setHeaderDate();
+render();
+setInterval(setHeaderDate, 60 * 1000);
+</script>
+</body>
+</html>

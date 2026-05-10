@@ -1,0 +1,2729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0a0908">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>Body Temple</title>
+<style>
+:root {
+  --bg: #0a0908;
+  --bg-elev: #14110f;
+  --bg-card: #1a1614;
+  --border: #2a2420;
+  --border-soft: #1f1a17;
+  --ink: #e8e1d4;
+  --ink-dim: #9a8f80;
+  --ink-faint: #5e554a;
+  --emerald: #3d7d63;
+  --emerald-dim: #2a5847;
+  --crimson: #9a4435;
+  --crimson-dim: #6e2d22;
+  --warning: #c89060;
+  --pull: #7d8fc7;
+  --push: #c78f8f;
+  --hinge: #a89b6b;
+  --squat: #6ba879;
+  --core: #b08fc7;
+  --mobility: #8fb8c7;
+  --r-sm: 8px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --shadow: 0 1px 0 rgba(255,255,255,0.02), 0 8px 24px rgba(0,0,0,0.4);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.55;
+  min-height: 100vh;
+  overscroll-behavior-y: contain;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) calc(env(safe-area-inset-bottom) + 80px) env(safe-area-inset-left);
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; padding: 0; }
+
+input, textarea, select {
+  font: inherit;
+  color: inherit;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 12px 14px;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+input:focus, textarea:focus, select:focus { border-color: var(--emerald); }
+textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+::placeholder { color: var(--ink-faint); }
+
+header.app-header {
+  padding: 28px 22px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.app-back {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: lowercase;
+  color: var(--ink-dim);
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.app-back:active { color: var(--ink); border-color: var(--ink-dim); }
+.app-titleblock { flex: 1; text-align: center; }
+.app-title {
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.app-date { font-size: 12px; color: var(--ink-faint); letter-spacing: 0.05em; }
+
+nav.tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(10, 9, 8, 0.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-top: 1px solid var(--border-soft);
+  padding: 12px max(env(safe-area-inset-left), 0px) calc(env(safe-area-inset-bottom) + 12px) max(env(safe-area-inset-right), 0px);
+  display: flex;
+  justify-content: space-around;
+  z-index: 50;
+}
+.tab-btn {
+  flex: 1;
+  padding: 8px 6px;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  text-align: center;
+  transition: color 0.15s;
+}
+.tab-btn.active { color: var(--ink); }
+
+main { padding: 0 22px; }
+.view { display: none; padding-top: 24px; padding-bottom: 32px; }
+.view.active { display: block; animation: fade 0.25s ease-out; }
+@keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* HOME */
+.today-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 10px;
+}
+.today-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 28px 24px;
+  margin-bottom: 18px;
+  position: relative;
+  overflow: hidden;
+}
+.today-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 3px; height: 100%;
+  background: var(--emerald);
+  opacity: 0.7;
+}
+.today-card.alt-mode::before { background: var(--warning); }
+.today-card.zen::before { background: var(--crimson); }
+.today-name {
+  font-size: 32px;
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
+  line-height: 1.15;
+}
+.today-sub { color: var(--ink-dim); font-size: 14px; margin-bottom: 18px; }
+.today-meta {
+  display: flex; gap: 16px;
+  font-size: 12px;
+  color: var(--ink-faint);
+  letter-spacing: 0.05em;
+  margin-bottom: 24px;
+}
+.btn-primary {
+  width: 100%;
+  background: var(--emerald);
+  color: var(--bg);
+  font-weight: 500;
+  padding: 16px 20px;
+  border-radius: var(--r-md);
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  transition: background 0.15s;
+}
+.btn-primary:active { background: var(--emerald-dim); }
+.btn-secondary {
+  width: 100%;
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--border);
+  padding: 14px 20px;
+  border-radius: var(--r-md);
+  font-size: 14px;
+  letter-spacing: 0.03em;
+  transition: border-color 0.15s, background 0.15s;
+}
+.btn-secondary:active { border-color: var(--ink-dim); background: var(--bg-elev); }
+
+.escape-hatch { margin-top: 22px; text-align: center; }
+.escape-hatch-prompt {
+  color: var(--ink-faint);
+  font-size: 13px;
+  font-style: italic;
+  margin-bottom: 12px;
+}
+.alt-modes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+.alt-mode-card {
+  background: var(--bg-elev);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-md);
+  padding: 16px 14px;
+  text-align: left;
+  transition: border-color 0.15s;
+}
+.alt-mode-card:active { border-color: var(--ink-dim); }
+.alt-mode-name { font-size: 15px; margin-bottom: 4px; }
+.alt-mode-sub { font-size: 12px; color: var(--ink-faint); line-height: 1.4; }
+
+/* SESSION */
+.session-header {
+  display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;
+}
+.session-title { font-size: 26px; font-weight: 300; letter-spacing: -0.01em; }
+.session-progress { font-size: 12px; color: var(--ink-faint); letter-spacing: 0.08em; }
+.session-sub { color: var(--ink-dim); font-size: 13px; margin-bottom: 22px; }
+
+.warmup-block, .cooldown-block {
+  background: var(--bg-elev);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-md);
+  padding: 16px 18px;
+  margin-bottom: 18px;
+}
+.warmup-block summary, .cooldown-block summary {
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  cursor: pointer;
+  outline: none;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.warmup-block summary::-webkit-details-marker,
+.cooldown-block summary::-webkit-details-marker { display: none; }
+.warmup-block summary::after, .cooldown-block summary::after {
+  content: '+'; font-size: 18px; color: var(--ink-faint); font-weight: 300;
+}
+.warmup-block[open] summary::after, .cooldown-block[open] summary::after { content: '−'; }
+.warmup-block ul, .cooldown-block ul { list-style: none; padding: 0; margin-top: 12px; }
+.warmup-block li, .cooldown-block li {
+  padding: 6px 0; color: var(--ink-dim); font-size: 14px;
+  border-top: 1px solid var(--border-soft);
+}
+.warmup-block li:first-child, .cooldown-block li:first-child { border-top: none; }
+
+.exercise-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 18px 18px 14px;
+  margin-bottom: 12px;
+  transition: opacity 0.2s;
+}
+.exercise-card.done { opacity: 0.45; }
+.exercise-card.done .ex-name { text-decoration: line-through; text-decoration-color: var(--ink-faint); }
+
+.ex-row { display: flex; align-items: flex-start; gap: 14px; }
+.ex-check {
+  flex: 0 0 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  margin-top: 2px;
+  transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center;
+}
+.ex-check.checked { background: var(--emerald); border-color: var(--emerald); }
+.ex-check.checked::after { content: '✓'; color: var(--bg); font-size: 14px; font-weight: 600; }
+.ex-body { flex: 1; min-width: 0; }
+.ex-letter {
+  display: inline-block;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+.ex-name { font-size: 17px; font-weight: 400; margin-bottom: 4px; line-height: 1.3; }
+.ex-alt { font-size: 12px; color: var(--ink-faint); font-style: italic; margin-bottom: 8px; }
+.ex-prescription {
+  display: flex; gap: 14px;
+  font-size: 13px;
+  color: var(--ink-dim);
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.ex-prescription span strong { color: var(--ink); font-weight: 500; }
+.ex-cues { font-size: 12px; color: var(--ink-faint); font-style: italic; margin-bottom: 10px; line-height: 1.5; }
+.ex-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.ex-action-btn {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  transition: border-color 0.15s, color 0.15s;
+}
+.ex-action-btn:active { border-color: var(--ink); color: var(--ink); }
+.ex-action-btn.accent { color: var(--emerald); border-color: var(--emerald-dim); }
+.ex-notes, .ex-form { margin-top: 12px; display: none; }
+.ex-notes.open, .ex-form.open { display: block; }
+.ex-notes textarea { font-size: 14px; background: var(--bg); min-height: 70px; margin-bottom: 6px; }
+.ex-notes-prompt { font-size: 11px; color: var(--ink-faint); font-style: italic; margin-bottom: 6px; }
+
+/* FORM PANEL (in-session wiki) */
+.ex-form {
+  background: var(--bg-elev);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+}
+.form-section { margin-bottom: 12px; }
+.form-section:last-child { margin-bottom: 0; }
+.form-label {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 4px;
+}
+.form-text { font-size: 13.5px; color: var(--ink); line-height: 1.55; }
+.form-text.muted { color: var(--ink-dim); }
+.form-image-wrap {
+  margin: 12px 0;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  background: var(--bg);
+  text-align: center;
+}
+.form-image-wrap img { max-width: 100%; max-height: 240px; display: block; margin: 0 auto; }
+.form-no-image {
+  padding: 24px 16px;
+  border: 1px dashed var(--border);
+  border-radius: var(--r-sm);
+  color: var(--ink-faint);
+  font-size: 12px;
+  text-align: center;
+  font-style: italic;
+}
+.form-no-image small { display: block; margin-top: 4px; font-style: normal; }
+
+/* TIMER */
+#timer-overlay {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-card);
+  border: 1px solid var(--emerald);
+  border-radius: 999px;
+  padding: 12px 22px;
+  display: none;
+  align-items: center;
+  gap: 14px;
+  z-index: 40;
+  box-shadow: var(--shadow);
+}
+#timer-overlay.active { display: flex; }
+.timer-label {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.timer-display {
+  font-variant-numeric: tabular-nums;
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--ink);
+  min-width: 48px;
+  text-align: center;
+}
+.timer-display.flash { color: var(--warning); }
+.timer-stop {
+  font-size: 11px; color: var(--ink-dim);
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 4px 8px;
+}
+
+/* SESSION COMPLETE */
+.session-complete {
+  background: var(--bg-card);
+  border: 1px solid var(--emerald-dim);
+  border-radius: var(--r-lg);
+  padding: 28px 24px;
+  text-align: center;
+  margin-top: 24px;
+}
+.session-complete-msg {
+  font-size: 17px; color: var(--ink); margin-bottom: 8px;
+  font-weight: 300; letter-spacing: 0.02em;
+}
+.session-complete-sub { font-size: 13px; color: var(--ink-dim); font-style: italic; margin-bottom: 22px; }
+.session-final-notes textarea { background: var(--bg); }
+
+/* PLANS LIBRARY */
+.plans-list { display: flex; flex-direction: column; gap: 10px; }
+.plan-row {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 16px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.plan-row-info { flex: 1; min-width: 0; }
+.plan-row-name { font-size: 16px; margin-bottom: 2px; }
+.plan-row-sub { font-size: 12px; color: var(--ink-faint); }
+.plan-row-actions { display: flex; gap: 6px; }
+.icon-btn {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ink-dim);
+  font-size: 14px;
+  transition: border-color 0.15s, color 0.15s;
+}
+.icon-btn:active { border-color: var(--ink); color: var(--ink); }
+
+.section-header {
+  font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 24px 0 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+/* EDITOR */
+.editor-field { margin-bottom: 16px; }
+.editor-label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin-bottom: 6px;
+}
+.editor-list-block {
+  background: var(--bg-elev);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-md);
+  padding: 14px;
+  margin-bottom: 14px;
+}
+.editor-list-item {
+  display: flex; gap: 8px; margin-bottom: 8px; align-items: center;
+}
+.editor-list-item input { flex: 1; padding: 10px 12px; font-size: 14px; }
+.editor-exercise {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 14px;
+  margin-bottom: 10px;
+}
+.editor-exercise.linked { border-left: 3px solid var(--emerald); }
+.editor-ex-link-info {
+  font-size: 11px;
+  color: var(--emerald);
+  margin-bottom: 8px;
+  letter-spacing: 0.05em;
+}
+.editor-ex-grid {
+  display: grid;
+  grid-template-columns: 1fr 80px 90px 80px;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.editor-ex-grid input { padding: 10px 10px; font-size: 13px; }
+.editor-ex-grid input::placeholder { font-size: 11px; }
+.editor-ex-controls {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 6px; padding-top: 8px;
+  border-top: 1px solid var(--border-soft);
+}
+.move-btns { display: flex; gap: 4px; }
+.editor-add-btn {
+  width: 100%;
+  padding: 12px;
+  border: 1px dashed var(--border);
+  border-radius: var(--r-md);
+  color: var(--ink-dim);
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  transition: border-color 0.15s, color 0.15s;
+  margin-bottom: 8px;
+}
+.editor-add-btn:active { border-color: var(--ink); color: var(--ink); border-style: solid; }
+.editor-add-btn.accent { color: var(--emerald); border-color: var(--emerald-dim); }
+
+.editor-actions { display: flex; gap: 10px; margin-top: 24px; }
+.editor-actions button { flex: 1; }
+.btn-danger {
+  color: var(--crimson);
+  background: transparent;
+  border: 1px solid var(--crimson-dim);
+  padding: 14px 20px;
+  border-radius: var(--r-md);
+  font-size: 13px;
+  letter-spacing: 0.05em;
+}
+.btn-danger:active { background: rgba(154, 68, 53, 0.08); }
+
+/* HISTORY */
+.history-list { display: flex; flex-direction: column; gap: 10px; }
+.history-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+}
+.history-date {
+  font-size: 12px; color: var(--ink-faint);
+  letter-spacing: 0.05em; margin-bottom: 4px;
+}
+.history-name { font-size: 15px; margin-bottom: 6px; }
+.history-stats { font-size: 12px; color: var(--ink-dim); letter-spacing: 0.04em; }
+.history-notes {
+  font-size: 13px; color: var(--ink-dim);
+  font-style: italic;
+  margin-top: 8px; padding-top: 8px;
+  border-top: 1px solid var(--border-soft);
+  line-height: 1.5;
+}
+
+/* ALT MODE VIEW */
+.alt-view-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 26px 22px;
+}
+.alt-view-name { font-size: 28px; font-weight: 300; letter-spacing: -0.01em; margin-bottom: 6px; }
+.alt-view-sub { color: var(--ink-dim); font-size: 14px; margin-bottom: 20px; }
+.alt-view-desc { color: var(--ink); font-size: 15px; line-height: 1.65; margin-bottom: 20px; }
+.alt-view-prompts {
+  background: var(--bg-elev);
+  border-left: 2px solid var(--emerald-dim);
+  padding: 14px 18px;
+  border-radius: 0 var(--r-md) var(--r-md) 0;
+  margin-bottom: 20px;
+}
+.alt-view-prompts li {
+  list-style: none;
+  font-size: 14px; color: var(--ink-dim);
+  font-style: italic; padding: 4px 0;
+}
+
+/* LIBRARY */
+.library-search-wrap { margin-bottom: 14px; position: relative; }
+.library-search-wrap input { padding-left: 40px; font-size: 14px; }
+.library-search-wrap::before {
+  content: '⌕';
+  position: absolute;
+  left: 14px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--ink-faint);
+  font-size: 18px;
+  pointer-events: none;
+}
+.lib-filter-row { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+.lib-filter-pill {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--ink-faint);
+  transition: all 0.15s;
+}
+.lib-filter-pill.active { color: var(--ink); border-color: var(--ink-dim); background: var(--bg-elev); }
+.lib-grid { display: flex; flex-direction: column; gap: 8px; }
+.lib-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  transition: border-color 0.15s;
+}
+.lib-card:active { border-color: var(--ink-dim); }
+.lib-mech-tag {
+  flex: 0 0 auto;
+  padding: 4px 8px;
+  border-radius: var(--r-sm);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.lib-mech-pull { background: rgba(125,143,199,0.15); color: var(--pull); }
+.lib-mech-push { background: rgba(199,143,143,0.15); color: var(--push); }
+.lib-mech-hinge { background: rgba(168,155,107,0.15); color: var(--hinge); }
+.lib-mech-squat { background: rgba(107,168,121,0.15); color: var(--squat); }
+.lib-mech-core { background: rgba(176,143,199,0.15); color: var(--core); }
+.lib-mech-mobility { background: rgba(143,184,199,0.15); color: var(--mobility); }
+.lib-card-info { flex: 1; min-width: 0; }
+.lib-card-name { font-size: 15px; margin-bottom: 2px; }
+.lib-card-muscles {
+  font-size: 11px;
+  color: var(--ink-faint);
+  letter-spacing: 0.03em;
+  text-transform: lowercase;
+}
+.lib-empty { padding: 40px 0; text-align: center; color: var(--ink-faint); font-size: 14px; }
+
+/* EXERCISE DETAIL */
+.detail-back {
+  background: none;
+  color: var(--ink-faint);
+  font-size: 13px;
+  margin-bottom: 14px;
+  cursor: pointer;
+}
+.detail-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 24px;
+}
+.detail-name {
+  font-size: 28px; font-weight: 300;
+  letter-spacing: -0.01em; margin-bottom: 6px;
+}
+.detail-tags {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.detail-meta-row {
+  display: flex; flex-direction: column; gap: 14px;
+  margin-bottom: 18px; padding-bottom: 18px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.detail-meta-row .form-section { margin: 0; }
+.detail-image {
+  margin: 14px 0 18px;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--bg);
+  text-align: center;
+}
+.detail-image img { max-width: 100%; max-height: 320px; display: block; margin: 0 auto; }
+.detail-image-empty {
+  padding: 32px 18px;
+  border: 1px dashed var(--border);
+  border-radius: var(--r-md);
+  color: var(--ink-faint);
+  font-size: 13px;
+  text-align: center;
+  line-height: 1.6;
+}
+.detail-image-paste {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--ink-dim);
+}
+.detail-section { margin-bottom: 18px; }
+.detail-section h3 {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+.detail-section p { font-size: 14px; color: var(--ink); line-height: 1.6; }
+.detail-actions {
+  display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap;
+}
+.detail-actions button { flex: 1; min-width: 130px; }
+
+/* EMPTY STATES */
+.empty { text-align: center; padding: 48px 20px; color: var(--ink-faint); }
+.empty-msg { font-size: 15px; font-style: italic; margin-bottom: 8px; }
+.empty-sub { font-size: 13px; }
+
+.divider { height: 1px; background: var(--border-soft); margin: 20px 0; }
+.subtle { color: var(--ink-faint); font-size: 12px; }
+.row-spread { display: flex; justify-content: space-between; align-items: center; }
+
+/* TOAST */
+#toast {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--ink);
+  padding: 12px 20px;
+  border-radius: 999px;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.25s ease;
+  z-index: 100;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* MODAL */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 200;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  width: 100%;
+  max-width: 720px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 20px 22px calc(env(safe-area-inset-bottom) + 20px);
+}
+.modal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 16px;
+}
+.modal-title { font-size: 18px; font-weight: 400; }
+.modal-close {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--bg-elev);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ink-dim);
+}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <button class="app-back" id="app-back" onclick="if(window.parent!==window){window.parent.postMessage('close-temple','*');}else{var b=window.location.href.split('/').slice(0,-1).join('/');window.location.assign(b+'/index.html');}">← portal</button>
+  <div class="app-titleblock">
+    <div class="app-title">body temple</div>
+    <div class="app-date" id="header-date"></div>
+  </div>
+</header>
+
+<main id="app"></main>
+
+<div id="timer-overlay">
+  <div>
+    <div class="timer-label">rest</div>
+    <div class="timer-display" id="timer-display">00:00</div>
+  </div>
+  <button class="timer-stop" id="timer-stop">stop</button>
+</div>
+
+<div id="toast"></div>
+<div id="modal-overlay" class="modal-overlay"><div class="modal" id="modal"></div></div>
+
+<nav class="tab-bar">
+  <button class="tab-btn active" data-view="home">today</button>
+  <button class="tab-btn" data-view="library">library</button>
+  <button class="tab-btn" data-view="plans">plans</button>
+  <button class="tab-btn" data-view="history">history</button>
+</nav>
+
+<script>
+// ============================================================
+// BODY TEMPLE — v2
+// ============================================================
+
+const STORAGE_KEY = 'body_temple_v1';
+const SCHEMA_VERSION = 2;
+const TODAY = () => new Date().toISOString().slice(0, 10);
+const DAYS = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+const DAY_LABELS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+// ============================================================
+// LIBRARY — exercise wiki
+// ============================================================
+const ytSearch = q => 'https://www.youtube.com/results?search_query=' + encodeURIComponent(q + ' form demonstration');
+
+const DEFAULT_LIBRARY = [
+  // ===== PULL =====
+  { id: 'pullup', name: 'Pull-up', primary: ['lats','biceps'], secondary: ['rear delts','core','forearms'], equipment: ['pull-up bar'], mechanic: 'pull', type: 'compound',
+    setup: 'Grip slightly wider than shoulders, palms forward. Hang from full extension. Engage core, draw shoulder blades down and back.',
+    execution: 'Pull elbows down toward the ribs — not chin to bar. Drive chest up. Lower with control to a full hang.',
+    mistakes: 'Kipping or swinging. Pulling chin only. Stopping short of full extension at the bottom.',
+    breath: 'Exhale up. Inhale down.',
+    progressions: 'Add weight via dip belt. Slow eccentric (5-second negative). Archer pull-ups.',
+    regressions: 'Assisted pull-up machine. Band-assisted. Lat pulldown.',
+    videoUrl: ytSearch('pull-up') },
+
+  { id: 'lat_pulldown', name: 'Lat pulldown', primary: ['lats'], secondary: ['biceps','rear delts'], equipment: ['cable machine'], mechanic: 'pull', type: 'compound',
+    setup: 'Sit, secure thighs under pad. Grip wider than shoulders, palms forward. Lean back ~10°. Chest up.',
+    execution: 'Pull bar to upper chest by driving elbows down and back. Squeeze lats at the bottom. Control the return to full stretch overhead.',
+    mistakes: 'Leaning back too far. Pulling with arms instead of lats. Letting shoulders shrug up at the top.',
+    breath: 'Exhale on pull. Inhale on return.',
+    progressions: 'Heavier load. Pause 1 second at the bottom. Single-arm.',
+    regressions: 'Lighter load. Neutral grip handle (easier on shoulders).',
+    videoUrl: ytSearch('lat pulldown') },
+
+  { id: 'lat_pulldown_close', name: 'Lat pulldown — close grip', primary: ['lats','biceps'], secondary: ['rear delts'], equipment: ['cable machine'], mechanic: 'pull', type: 'compound',
+    setup: 'Use V-handle or close-grip bar. Sit upright, slight lean back. Chest up.',
+    execution: 'Pull handle to lower chest, driving elbows to the ribs. Squeeze. Control the negative.',
+    mistakes: 'Leaning too far back. Pulling to the chin. Cutting the stretch short.',
+    breath: 'Exhale on pull.',
+    progressions: 'Pause at peak contraction.',
+    regressions: 'Wider grip if shoulders complain.',
+    videoUrl: ytSearch('close grip lat pulldown') },
+
+  { id: 'barbell_row', name: 'Barbell row', primary: ['lats','mid-back','rhomboids'], secondary: ['biceps','rear delts','spinal erectors'], equipment: ['barbell'], mechanic: 'pull', type: 'compound',
+    setup: 'Hinge to ~45° torso angle. Bar over mid-foot. Grip just outside knees. Spine long, core braced.',
+    execution: 'Row bar to lower chest / upper abs. Drive elbows back, squeeze shoulder blades. Lower with control.',
+    mistakes: 'Standing up during the row. Rounding the lower back. Yanking with the arms.',
+    breath: 'Brace at the bottom, exhale on row.',
+    progressions: 'Pendlay variation (dead-stop each rep). Heavier load.',
+    regressions: 'Chest-supported row. Single-arm DB row.',
+    videoUrl: ytSearch('barbell row') },
+
+  { id: 'cable_row', name: 'Cable row', primary: ['mid-back','lats'], secondary: ['biceps','rear delts'], equipment: ['cable machine'], mechanic: 'pull', type: 'compound',
+    setup: 'Sit, knees soft, chest up. Grip handle, lean slightly forward at the start.',
+    execution: 'Row to belly-button area. Drive elbows back, squeeze rhomboids. Control return to stretch.',
+    mistakes: 'Using momentum from the lower back. Stopping short on the stretch.',
+    breath: 'Exhale on row.',
+    progressions: 'Pause 1 sec at peak. Heavier.',
+    regressions: 'Lighter weight, focus on the squeeze.',
+    videoUrl: ytSearch('seated cable row') },
+
+  { id: 'db_row', name: 'Single-arm DB row', primary: ['lats','mid-back'], secondary: ['biceps','rear delts'], equipment: ['dumbbell','bench'], mechanic: 'pull', type: 'compound',
+    setup: 'One knee + same-side hand on bench. Other foot on floor. Spine flat, hips square.',
+    execution: 'Row DB to hip. Drive elbow up and back. Squeeze the lat. Lower to full stretch.',
+    mistakes: 'Twisting the torso. Using the bicep instead of the back.',
+    breath: 'Exhale on row.',
+    progressions: 'Heavier, or pause at the top.',
+    regressions: 'Lighter, slower tempo.',
+    videoUrl: ytSearch('single arm dumbbell row') },
+
+  { id: 'face_pull', name: 'Face pull', primary: ['rear delts'], secondary: ['mid-back','rotator cuff'], equipment: ['cable machine','rope'], mechanic: 'pull', type: 'isolation',
+    setup: 'Cable at upper chest height. Rope attachment. Step back, slight lean. Palms in.',
+    execution: 'Pull rope to forehead, ends apart. External rotation at the end — thumbs back. Squeeze rear delts.',
+    mistakes: 'Pulling to the chin. No external rotation. Using too much weight (can\'t finish the rotation).',
+    breath: 'Exhale on pull.',
+    progressions: 'Pause 1-2 sec at the end position.',
+    regressions: 'Lighter weight, focus on rotation.',
+    videoUrl: ytSearch('face pull') },
+
+  { id: 'hammer_curl', name: 'Hammer curl', primary: ['biceps','brachialis'], secondary: ['forearms'], equipment: ['dumbbells'], mechanic: 'pull', type: 'isolation',
+    setup: 'Stand tall, DBs at sides, palms facing in (neutral grip). Elbows pinned to ribs.',
+    execution: 'Curl up keeping palms neutral. Squeeze at the top. Control the lower.',
+    mistakes: 'Swinging. Letting elbows drift forward. Not finishing the lowering phase.',
+    breath: 'Exhale up.',
+    progressions: 'Heavier. Cross-body variation.',
+    regressions: 'Lighter weight, slow tempo.',
+    videoUrl: ytSearch('hammer curl') },
+
+  { id: 'incline_db_curl', name: 'Incline DB curl', primary: ['biceps'], secondary: ['forearms'], equipment: ['dumbbells','bench'], mechanic: 'pull', type: 'isolation',
+    setup: 'Bench at 45-60°. Sit back, DBs hanging at sides, palms forward. Shoulders back against the bench.',
+    execution: 'Curl up without lifting elbows. Full stretch at the bottom. Squeeze at the top.',
+    mistakes: 'Cheating with shoulders. Cutting the stretch short.',
+    breath: 'Exhale up.',
+    progressions: 'Heavier or slower tempo.',
+    regressions: 'Lighter, focus on stretch.',
+    videoUrl: ytSearch('incline dumbbell curl') },
+
+  { id: 'cable_curl', name: 'Cable curl', primary: ['biceps'], secondary: ['forearms'], equipment: ['cable machine'], mechanic: 'pull', type: 'isolation',
+    setup: 'Low cable, straight bar or rope. Stand tall, elbows pinned, slight forward lean.',
+    execution: 'Curl with constant tension. Squeeze at the top, full stretch at the bottom.',
+    mistakes: 'Swinging. Elbows drifting back.',
+    breath: 'Exhale up.',
+    progressions: 'Drop sets. Pause at peak.',
+    regressions: 'Lighter weight.',
+    videoUrl: ytSearch('cable curl') },
+
+  // ===== PUSH =====
+  { id: 'incline_db_press', name: 'Incline DB press', primary: ['upper chest'], secondary: ['front delts','triceps'], equipment: ['dumbbells','bench'], mechanic: 'push', type: 'compound',
+    setup: 'Bench at 30°. Lie back, DBs at chest level, palms forward. Shoulder blades down and in.',
+    execution: 'Press up and slightly together. Full stretch at the bottom. Drive feet into floor.',
+    mistakes: 'Bench too steep (becomes shoulder press). Bouncing off the chest.',
+    breath: 'Inhale down, exhale press.',
+    progressions: 'Heavier. Pause at chest.',
+    regressions: 'Flat DB press. Lighter weight.',
+    videoUrl: ytSearch('incline dumbbell press') },
+
+  { id: 'flat_db_press', name: 'Flat DB press', primary: ['chest'], secondary: ['front delts','triceps'], equipment: ['dumbbells','bench'], mechanic: 'push', type: 'compound',
+    setup: 'Flat bench. DBs at chest, palms forward. Feet planted. Shoulder blades retracted.',
+    execution: 'Press up. Full stretch at the bottom (lower than barbell allows). Drive feet down.',
+    mistakes: 'Flaring elbows wide. Bouncing.',
+    breath: 'Inhale down, exhale press.',
+    progressions: 'Heavier or pause.',
+    regressions: 'Lighter, slower tempo.',
+    videoUrl: ytSearch('flat dumbbell press') },
+
+  { id: 'dips', name: 'Dips', primary: ['chest','triceps'], secondary: ['front delts'], equipment: ['dip bars'], mechanic: 'push', type: 'compound',
+    setup: 'Hands on bars, arms straight, body lifted. Slight forward lean for chest emphasis, more upright for tricep emphasis.',
+    execution: 'Lower until shoulders are below elbows. Press back up. Lock out at the top.',
+    mistakes: 'Dropping too fast. Cutting depth short. Shrugging shoulders to the ears.',
+    breath: 'Inhale down, exhale up.',
+    progressions: 'Add weight via dip belt. Slow eccentric.',
+    regressions: 'Assisted dip machine. Band-assisted.',
+    videoUrl: ytSearch('dips') },
+
+  { id: 'bench_press', name: 'Barbell bench press', primary: ['chest'], secondary: ['front delts','triceps'], equipment: ['barbell','bench'], mechanic: 'push', type: 'compound',
+    setup: 'Eyes under bar. Shoulder blades retracted and depressed. Slight arch in lower back. Feet planted.',
+    execution: 'Unrack, lower to lower chest with elbows ~45°. Touch lightly. Press up and slightly back.',
+    mistakes: 'Flaring elbows to 90°. Pressing straight up only. Losing tightness in the upper back.',
+    breath: 'Big breath, brace, exhale on press.',
+    progressions: 'Pause press. Heavier.',
+    regressions: 'DB press. Lighter weight, slower tempo.',
+    videoUrl: ytSearch('bench press') },
+
+  { id: 'overhead_press', name: 'Overhead press', primary: ['front delts','side delts'], secondary: ['triceps','upper chest','core'], equipment: ['barbell'], mechanic: 'push', type: 'compound',
+    setup: 'Standing. Bar at front rack height. Grip just outside shoulders. Elbows slightly in front of bar. Glutes braced, ribs down.',
+    execution: 'Press the bar overhead. Move the head through at the top — bar finishes over the mid-foot. Lock out.',
+    mistakes: 'Pressing in front of the face only. Overarching the lower back. Soft glutes.',
+    breath: 'Brace, press, exhale at the top.',
+    progressions: 'Heavier. Push press for more load.',
+    regressions: 'Seated DB press. Lighter weight.',
+    videoUrl: ytSearch('overhead press') },
+
+  { id: 'db_shoulder_press', name: 'DB shoulder press', primary: ['front delts','side delts'], secondary: ['triceps'], equipment: ['dumbbells','bench'], mechanic: 'push', type: 'compound',
+    setup: 'Seated, back supported. DBs at shoulder height, palms forward. Core braced.',
+    execution: 'Press up. Slight inward arc — DBs nearly touch overhead. Lower to ear level.',
+    mistakes: 'Hyperextending lower back. Pressing too far back.',
+    breath: 'Exhale up.',
+    progressions: 'Standing variation. Arnold press.',
+    regressions: 'Lighter, partial range.',
+    videoUrl: ytSearch('seated dumbbell press') },
+
+  { id: 'lateral_raise', name: 'Lateral raise', primary: ['side delts'], secondary: ['traps'], equipment: ['dumbbells'], mechanic: 'push', type: 'isolation',
+    setup: 'Stand tall, DBs at sides, slight bend in elbows. Pinky slightly higher than thumb.',
+    execution: 'Lift to shoulder height, leading with the elbow. Light weight, perfect form. Lower with control.',
+    mistakes: 'Heavy weight that requires swing. Shrugging traps to lift. Going above shoulder height.',
+    breath: 'Exhale up.',
+    progressions: 'Slower eccentric. Pause at peak.',
+    regressions: 'Lighter dumbbells, focus on the side delt feeling the work.',
+    videoUrl: ytSearch('lateral raise') },
+
+  { id: 'cable_fly', name: 'Cable fly', primary: ['chest'], secondary: ['front delts'], equipment: ['cable machine'], mechanic: 'push', type: 'isolation',
+    setup: 'Cables at upper height. Step forward to put tension on the chest. Slight forward lean. Soft elbows.',
+    execution: 'Bring hands together at the centerline, slight downward arc. Pause and squeeze. Control return to full stretch.',
+    mistakes: 'Bending elbows too much (becomes a press). Overstretching at the bottom.',
+    breath: 'Exhale on the squeeze.',
+    progressions: 'Pause 1-2 sec at center.',
+    regressions: 'Lighter weight, more reps.',
+    videoUrl: ytSearch('cable fly') },
+
+  { id: 'pushup', name: 'Push-up', primary: ['chest','triceps'], secondary: ['front delts','core'], equipment: ['bodyweight'], mechanic: 'push', type: 'compound',
+    setup: 'Hands shoulder-width, fingers spread. Body in straight line — head, hips, heels. Core braced.',
+    execution: 'Lower until chest grazes the floor, elbows ~45°. Press up explosively, full lockout.',
+    mistakes: 'Sagging hips. Flaring elbows wide. Partial range of motion.',
+    breath: 'Inhale down, exhale up.',
+    progressions: 'Feet elevated. Weighted vest. Archer or one-arm.',
+    regressions: 'Knees down. Hands on a bench.',
+    videoUrl: ytSearch('push up') },
+
+  { id: 'tricep_pushdown', name: 'Tricep pushdown', primary: ['triceps'], secondary: [], equipment: ['cable machine'], mechanic: 'push', type: 'isolation',
+    setup: 'Cable at upper height. Rope or straight bar. Elbows pinned to sides, slight forward lean.',
+    execution: 'Press down, lock out fully. Squeeze the triceps. Control return to where the upper arm is the limit.',
+    mistakes: 'Elbows drifting forward. Using shoulders to press.',
+    breath: 'Exhale on press.',
+    progressions: 'Pause at lockout. Heavier.',
+    regressions: 'Lighter weight, focus on lockout squeeze.',
+    videoUrl: ytSearch('tricep pushdown') },
+
+  { id: 'overhead_tricep_extension', name: 'Overhead tricep extension', primary: ['triceps'], secondary: [], equipment: ['dumbbell'], mechanic: 'push', type: 'isolation',
+    setup: 'Hold one DB or rope overhead. Elbows close to ears, pointing up.',
+    execution: 'Lower DB behind the head with bent elbows. Full stretch at the bottom. Press back up to full extension.',
+    mistakes: 'Elbows flaring wide. Cutting stretch short.',
+    breath: 'Inhale down, exhale up.',
+    progressions: 'Heavier or single-arm.',
+    regressions: 'Lighter, seated for stability.',
+    videoUrl: ytSearch('overhead tricep extension') },
+
+  { id: 'arnold_press', name: 'Arnold press', primary: ['front delts','side delts'], secondary: ['triceps','upper chest'], equipment: ['dumbbells','bench'], mechanic: 'push', type: 'compound',
+    setup: 'Seated. DBs at chest level, palms facing you (supinated). Elbows in front.',
+    execution: 'Press up while rotating palms outward. Top position: arms locked, palms forward. Reverse on the way down.',
+    mistakes: 'Rushing the rotation. Hyperextending lower back.',
+    breath: 'Exhale on press.',
+    progressions: 'Heavier load. Standing variation.',
+    regressions: 'Lighter, slow tempo.',
+    videoUrl: ytSearch('arnold press') },
+
+  { id: 'skull_crusher', name: 'Skull crusher', primary: ['triceps'], secondary: [], equipment: ['ez-bar','bench'], mechanic: 'push', type: 'isolation',
+    setup: 'Lie on bench. EZ-bar overhead, arms straight. Elbows pointing up (not flared).',
+    execution: 'Hinge at the elbows only — lower the bar to forehead or just behind. Drive back to extension.',
+    mistakes: 'Elbows flaring wide. Using shoulders to press. Losing control near the head.',
+    breath: 'Inhale down, exhale up.',
+    progressions: 'Heavier load. Slower eccentric.',
+    regressions: 'DB version. Lighter weight.',
+    videoUrl: ytSearch('skull crusher') },
+
+  // ===== SQUAT =====
+  { id: 'back_squat', name: 'Back squat', primary: ['quads','glutes'], secondary: ['hamstrings','core','spinal erectors'], equipment: ['barbell','rack'], mechanic: 'squat', type: 'compound',
+    setup: 'Bar on traps (high-bar) or rear delts (low-bar). Feet shoulder-width, toes slightly out. Big breath, brace, unrack.',
+    execution: 'Sit back and down. Knees track over toes. Descend until hip crease is below knee. Drive through full foot to stand.',
+    mistakes: 'Knees caving in. Heels lifting. Folding forward at the bottom.',
+    breath: 'Big breath at the top, brace down, exhale up.',
+    progressions: 'Pause squat. Heavier load.',
+    regressions: 'Goblet squat. Box squat.',
+    videoUrl: ytSearch('back squat') },
+
+  { id: 'front_squat', name: 'Front squat', primary: ['quads'], secondary: ['glutes','core','upper back'], equipment: ['barbell','rack'], mechanic: 'squat', type: 'compound',
+    setup: 'Bar in front rack — fingers light on bar, elbows high. Feet shoulder-width. Vertical torso.',
+    execution: 'Sit straight down with vertical torso. Drive elbows up throughout. Stand up tall.',
+    mistakes: 'Elbows dropping (bar rolls forward). Heels lifting. Folding forward.',
+    breath: 'Big breath, brace, exhale up.',
+    progressions: 'Pause. Heavier load.',
+    regressions: 'Goblet squat. Cross-arm rack if mobility limits.',
+    videoUrl: ytSearch('front squat') },
+
+  { id: 'goblet_squat', name: 'Goblet squat', primary: ['quads','glutes'], secondary: ['core'], equipment: ['dumbbell'], mechanic: 'squat', type: 'compound',
+    setup: 'Hold one DB at chest, vertical. Feet shoulder-width, toes slightly out. Chest up.',
+    execution: 'Sit straight down between the heels. Elbows touch inside the knees at the bottom. Drive up.',
+    mistakes: 'Knees caving. Rounding the lower back at the bottom.',
+    breath: 'Inhale down, exhale up.',
+    progressions: 'Heavier DB. Pause at the bottom.',
+    regressions: 'Bodyweight squat. Box squat for confidence.',
+    videoUrl: ytSearch('goblet squat') },
+
+  { id: 'bulgarian_split_squat', name: 'Bulgarian split squat', primary: ['quads','glutes'], secondary: ['hamstrings','core'], equipment: ['dumbbells','bench'], mechanic: 'squat', type: 'compound',
+    setup: 'Back foot elevated on bench (laces down). Front foot far enough forward that the front knee tracks over the foot at the bottom. DBs at sides.',
+    execution: 'Drop the back knee straight down toward the floor. Drive through the front heel to stand. Stay tall.',
+    mistakes: 'Front foot too close (knee shoots past toes). Pushing off the back foot. Leaning forward.',
+    breath: 'Inhale down, exhale up.',
+    progressions: 'Heavier DBs. Slow eccentric. Front foot elevated.',
+    regressions: 'Bodyweight. Static lunge (both feet on floor).',
+    videoUrl: ytSearch('bulgarian split squat') },
+
+  { id: 'leg_press', name: 'Leg press', primary: ['quads','glutes'], secondary: ['hamstrings'], equipment: ['leg press machine'], mechanic: 'squat', type: 'compound',
+    setup: 'Sit, feet shoulder-width on platform. Lower back pressed to pad. Don\'t round the lower back at the bottom.',
+    execution: 'Lower until knees come close to the chest, full range without lifting hips. Drive through full foot. Don\'t lock the knees at the top.',
+    mistakes: 'Locking knees at the top. Lifting hips off the pad. Heels lifting.',
+    breath: 'Inhale down, exhale up.',
+    progressions: 'Higher foot placement (more glutes/hams). Single-leg.',
+    regressions: 'Lighter load, slower tempo.',
+    videoUrl: ytSearch('leg press') },
+
+  { id: 'walking_lunge', name: 'Walking lunge', primary: ['quads','glutes'], secondary: ['hamstrings','core'], equipment: ['bodyweight','dumbbells'], mechanic: 'squat', type: 'compound',
+    setup: 'Stand tall, DBs at sides if loaded. Take a long step forward.',
+    execution: 'Drop the back knee straight down. Drive off the front heel into the next step. Continue alternating.',
+    mistakes: 'Stepping too short (front knee shoots past toes). Bouncing up.',
+    breath: 'Inhale down, exhale up.',
+    progressions: 'Heavier. Reverse lunge (more glute).',
+    regressions: 'Bodyweight only. Static split squat.',
+    videoUrl: ytSearch('walking lunge') },
+
+  { id: 'step_up', name: 'Step-up', primary: ['quads','glutes'], secondary: ['hamstrings','calves'], equipment: ['box','dumbbells'], mechanic: 'squat', type: 'compound',
+    setup: 'Box at knee height (or below for easier). Stand facing it. DBs at sides if loaded.',
+    execution: 'Plant the full front foot on the box. Drive through the front heel — no push from the back foot. Stand up tall on the box. Lower with control.',
+    mistakes: 'Pushing off the back foot. Box too high (knee shoots past toes).',
+    breath: 'Exhale up.',
+    progressions: 'Higher box. Heavier DBs. Pause at the top.',
+    regressions: 'Lower box. Bodyweight.',
+    videoUrl: ytSearch('step up exercise') },
+
+  // ===== HINGE =====
+  { id: 'romanian_deadlift', name: 'Romanian deadlift', primary: ['hamstrings','glutes'], secondary: ['lower back','forearms'], equipment: ['barbell'], mechanic: 'hinge', type: 'compound',
+    setup: 'Bar at hip height or deadlift it up. Feet hip-width. Soft knees. Spine long.',
+    execution: 'Hinge at the hips, push hips back. Bar drags down the thighs. Stop when hamstrings reach maximum stretch (usually mid-shin). Drive hips forward to stand.',
+    mistakes: 'Squatting it down (knees bend too much). Rounding the lower back. Locking the knees stiff.',
+    breath: 'Big breath at the top, brace down, exhale up.',
+    progressions: 'Heavier. Slower eccentric.',
+    regressions: 'DB RDL. Lighter weight, focus on the hamstring stretch.',
+    videoUrl: ytSearch('romanian deadlift') },
+
+  { id: 'conventional_deadlift', name: 'Conventional deadlift', primary: ['glutes','hamstrings','lower back'], secondary: ['quads','traps','forearms'], equipment: ['barbell'], mechanic: 'hinge', type: 'compound',
+    setup: 'Bar over mid-foot, almost touching shins. Hinge to grip. Hips slightly higher than knees. Spine long, lats tight, big breath.',
+    execution: 'Push the floor away. Bar travels straight up, dragging the legs. Lock out hips and knees together. Lower with control.',
+    mistakes: 'Hips shooting up first (becomes a stiff-leg). Rounding the back. Pulling with the lower back instead of legs+hips.',
+    breath: 'Big breath at the bottom, brace, exhale at top.',
+    progressions: 'Heavier. Pause just below the knee.',
+    regressions: 'Trap bar deadlift. RDL for the hinge pattern only.',
+    videoUrl: ytSearch('conventional deadlift') },
+
+  { id: 'trap_bar_deadlift', name: 'Trap bar deadlift', primary: ['quads','glutes','hamstrings'], secondary: ['traps','forearms','core'], equipment: ['trap bar'], mechanic: 'hinge', type: 'compound',
+    setup: 'Stand inside trap bar, feet hip-width. Hinge to grip handles. Spine long. More upright torso than barbell.',
+    execution: 'Push the floor away. Stand up tall. Lower under control.',
+    mistakes: 'Squatting it instead of hinging. Rounding the back.',
+    breath: 'Big breath, brace, exhale up.',
+    progressions: 'Heavier load.',
+    regressions: 'Lighter weight, focus on form.',
+    videoUrl: ytSearch('trap bar deadlift') },
+
+  { id: 'hip_thrust', name: 'Hip thrust', primary: ['glutes'], secondary: ['hamstrings','core'], equipment: ['barbell','bench'], mechanic: 'hinge', type: 'compound',
+    setup: 'Upper back on bench. Feet flat, knees bent ~90°. Bar across hips (use pad). Ribs down, chin tucked.',
+    execution: 'Drive through full feet, push hips up. Glutes squeeze hard at the top. Body in a straight line from knees to shoulders. Lower with control.',
+    mistakes: 'Hyperextending lower back at top. Hips not fully extending. Driving from toes only.',
+    breath: 'Exhale at the top.',
+    progressions: 'Heavier. 2-second pause at the top.',
+    regressions: 'Glute bridge (no bench). Bodyweight.',
+    videoUrl: ytSearch('hip thrust') },
+
+  { id: 'lying_leg_curl', name: 'Lying leg curl', primary: ['hamstrings'], secondary: ['calves','glutes'], equipment: ['leg curl machine'], mechanic: 'hinge', type: 'isolation',
+    setup: 'Face down on the pad. Pad on Achilles area (just above the heels). Hips pressed flat into the bench.',
+    execution: 'Curl heels toward glutes. Squeeze hamstrings at the top. Slow eccentric to full extension.',
+    mistakes: 'Lifting hips off the pad. Cutting range short.',
+    breath: 'Exhale on curl.',
+    progressions: 'Heavier or slower eccentric. Single-leg.',
+    regressions: 'Lighter weight, focus on the squeeze.',
+    videoUrl: ytSearch('lying leg curl') },
+
+  { id: 'standing_calf_raise', name: 'Standing calf raise', primary: ['calves'], secondary: [], equipment: ['calf machine','smith machine'], mechanic: 'hinge', type: 'isolation',
+    setup: 'Balls of feet on platform, heels free to drop below. Knees straight (not locked).',
+    execution: 'Press up onto the balls of the feet, full range. Pause and squeeze at the top. Slowly lower to a deep stretch.',
+    mistakes: 'Bouncing. Not getting the full stretch at the bottom.',
+    breath: 'Exhale up.',
+    progressions: 'Single-leg. Pause at top and bottom.',
+    regressions: 'Lighter load, more reps.',
+    videoUrl: ytSearch('standing calf raise') },
+
+  // ===== CORE =====
+  { id: 'plank', name: 'Plank', primary: ['core','transverse abdominis'], secondary: ['glutes','shoulders'], equipment: ['bodyweight'], mechanic: 'core', type: 'isometric',
+    setup: 'Forearms on floor, elbows under shoulders. Body in a straight line. Glutes squeezed, ribs down.',
+    execution: 'Hold. Squeeze glutes hard. Pull belly toward spine. Breathe normally.',
+    mistakes: 'Sagging hips. Hips up like a tent. Holding breath.',
+    breath: 'Breathe through it — diaphragmatic.',
+    progressions: 'Single-arm or single-leg. Weighted plank. Longer holds.',
+    regressions: 'Knees down. Shorter holds.',
+    videoUrl: ytSearch('plank') },
+
+  { id: 'side_plank', name: 'Side plank', primary: ['obliques','core'], secondary: ['glute medius','shoulders'], equipment: ['bodyweight'], mechanic: 'core', type: 'isometric',
+    setup: 'On side, forearm under shoulder. Stack feet. Body in a straight line.',
+    execution: 'Lift hips. Hold position. Don\'t let the hip sag.',
+    mistakes: 'Hip sagging. Twisting forward.',
+    breath: 'Breathe normally.',
+    progressions: 'Lift top leg. Reach top arm to ceiling.',
+    regressions: 'Bottom knee on floor for support.',
+    videoUrl: ytSearch('side plank') },
+
+  { id: 'hanging_leg_raise', name: 'Hanging leg raise', primary: ['lower abs','hip flexors'], secondary: ['core','grip'], equipment: ['pull-up bar'], mechanic: 'core', type: 'compound',
+    setup: 'Hang from a pull-up bar. Engage the lats so shoulders aren\'t passive. Slight posterior pelvic tilt.',
+    execution: 'Lift legs to at least 90° (or higher — toes to bar is the goal). Squeeze. Lower with control. No swing.',
+    mistakes: 'Swinging the body. Using momentum. Not engaging the lower abs (swinging the legs only).',
+    breath: 'Exhale on lift.',
+    progressions: 'Toes to bar. Slow eccentric.',
+    regressions: 'Bent-knee raises. Captain\'s chair version.',
+    videoUrl: ytSearch('hanging leg raise') },
+
+  { id: 'dead_bug', name: 'Dead bug', primary: ['core','transverse abdominis'], secondary: [], equipment: ['bodyweight'], mechanic: 'core', type: 'isolation',
+    setup: 'Lie on back. Arms straight up, knees and hips at 90°. Lower back pressed to floor.',
+    execution: 'Slowly extend opposite arm and leg toward the floor without losing the lower-back contact. Return. Alternate.',
+    mistakes: 'Lower back arching off the floor. Moving too fast.',
+    breath: 'Exhale as limbs extend.',
+    progressions: 'Slower tempo. Hold extended position 2 sec.',
+    regressions: 'Move only one limb at a time.',
+    videoUrl: ytSearch('dead bug') },
+
+  { id: 'pallof_press', name: 'Pallof press', primary: ['core','obliques'], secondary: [], equipment: ['cable machine','band'], mechanic: 'core', type: 'isolation',
+    setup: 'Cable at chest height. Stand sideways to it. Hands together at chest. Step out so cable has tension.',
+    execution: 'Press hands straight out. Resist the cable\'s pull to rotate. Hold. Return.',
+    mistakes: 'Letting the torso rotate. Holding breath.',
+    breath: 'Exhale on press.',
+    progressions: 'Heavier. Hold press 3-5 sec.',
+    regressions: 'Lighter band/cable.',
+    videoUrl: ytSearch('pallof press') },
+
+  { id: 'bird_dog', name: 'Bird dog', primary: ['core','spinal erectors'], secondary: ['glutes','shoulders'], equipment: ['bodyweight'], mechanic: 'core', type: 'isolation',
+    setup: 'Hands and knees. Spine flat. Core braced.',
+    execution: 'Extend opposite arm and leg until parallel with the floor. Hold 1-2 sec. Squeeze the glute. Return slowly. Switch sides.',
+    mistakes: 'Letting the hips rotate open. Lower back arching.',
+    breath: 'Exhale on extension.',
+    progressions: 'Slower tempo. Touch elbow to opposite knee under the body between reps.',
+    regressions: 'Move arm only or leg only.',
+    videoUrl: ytSearch('bird dog exercise') },
+
+  { id: 'glute_bridge', name: 'Glute bridge', primary: ['glutes'], secondary: ['hamstrings','core'], equipment: ['bodyweight'], mechanic: 'hinge', type: 'compound',
+    setup: 'Lie on back. Knees bent, feet flat, heels close to glutes. Arms at sides.',
+    execution: 'Drive through the heels. Lift hips until body is in a straight line knees-to-shoulders. Squeeze glutes hard at the top. Lower with control.',
+    mistakes: 'Pushing through toes only. Hyperextending lower back at the top.',
+    breath: 'Exhale on lift.',
+    progressions: 'Single-leg. Add weight. Pause at the top.',
+    regressions: 'Smaller range. Hold the top instead of reps.',
+    videoUrl: ytSearch('glute bridge') },
+
+  // ===== MOBILITY =====
+  { id: 'cat_cow', name: 'Cat-cow', primary: ['spine'], secondary: ['hips','shoulders'], equipment: ['bodyweight'], mechanic: 'mobility', type: 'mobility',
+    setup: 'Hands and knees. Hands under shoulders, knees under hips.',
+    execution: 'Inhale: drop belly, lift chest and tailbone (cow). Exhale: round spine, tuck chin and tailbone (cat). Move slowly, breath-led.',
+    mistakes: 'Rushing. Not moving the entire spine.',
+    breath: 'One breath cycle per rep.',
+    progressions: 'Add side reaches. Threading the needle.',
+    regressions: 'Smaller range of motion.',
+    videoUrl: ytSearch('cat cow stretch') },
+
+  { id: 'world_greatest', name: "World's greatest stretch", primary: ['hips','thoracic spine','hamstrings'], secondary: [], equipment: ['bodyweight'], mechanic: 'mobility', type: 'mobility',
+    setup: 'Start in a low lunge — front foot flat, back leg long, hands on either side of front foot.',
+    execution: 'Drop the back-side elbow toward the front foot for a hip stretch. Then rotate that arm up to the ceiling — eyes follow. Switch sides.',
+    mistakes: 'Rushing. Not committing to the rotation.',
+    breath: 'Exhale into the rotation. Hold 2-3 breaths each side.',
+    progressions: 'Slow it down. Add the hamstring extension at the top.',
+    regressions: 'Skip the rotation, hold the lunge.',
+    videoUrl: ytSearch("world's greatest stretch") },
+
+  { id: 'ninetynine', name: '90/90 hip stretch', primary: ['hips'], secondary: [], equipment: ['bodyweight'], mechanic: 'mobility', type: 'mobility',
+    setup: 'Sit on the floor. Front leg bent 90° in front of you (shin parallel to body). Back leg bent 90° to the side.',
+    execution: 'Hinge forward over the front leg for 30-60 sec. Then twist toward the back leg and hinge over that for 30-60 sec. Switch sides.',
+    mistakes: 'Forcing the position. Holding breath.',
+    breath: 'Long slow exhales.',
+    progressions: 'Active 90/90 transitions. Hold longer.',
+    regressions: 'Sit on a yoga block to reduce intensity.',
+    videoUrl: ytSearch('90/90 hip stretch') },
+
+  { id: 'pigeon', name: 'Pigeon stretch', primary: ['glutes','hip rotators'], secondary: [], equipment: ['bodyweight'], mechanic: 'mobility', type: 'mobility',
+    setup: 'From all fours, bring one knee forward toward the same-side wrist. Shin angled across. Back leg long behind you.',
+    execution: 'Sink the front hip toward the floor. Hinge forward over the front shin. Hold 1-2 min per side.',
+    mistakes: 'Forcing depth. Letting the back hip rotate open.',
+    breath: 'Long exhales — let the hip release on the breath.',
+    progressions: 'Hold longer. Front shin closer to parallel.',
+    regressions: 'Yoga block under the front hip. Figure-4 on back instead.',
+    videoUrl: ytSearch('pigeon pose stretch') },
+
+  { id: 'couch_stretch', name: 'Couch stretch', primary: ['hip flexors','quads'], secondary: [], equipment: ['wall','bench'], mechanic: 'mobility', type: 'mobility',
+    setup: 'Kneel facing away from a wall or couch. Back foot up against the wall, shin vertical. Front foot flat on floor, knee bent.',
+    execution: 'Squeeze the back glute hard. Tuck the tailbone. Stand the torso up. Hold 1-2 min per side.',
+    mistakes: 'Letting the lower back arch (no glute squeeze).',
+    breath: 'Long slow exhales.',
+    progressions: 'Hold longer. Add an arm reach overhead.',
+    regressions: 'Pad under the back knee. Shorter hold.',
+    videoUrl: ytSearch('couch stretch') },
+
+  { id: 'doorway_pec', name: 'Doorway pec stretch', primary: ['chest','front delts'], secondary: [], equipment: ['doorway'], mechanic: 'mobility', type: 'mobility',
+    setup: 'Stand in a doorway. Forearm against the frame, elbow at shoulder height, bent 90°.',
+    execution: 'Step the same-side foot forward. Feel the stretch across the chest. Hold 30-60 sec per side.',
+    mistakes: 'Pushing into pain. Hunching shoulders.',
+    breath: 'Long exhales into the stretch.',
+    progressions: 'Multiple arm heights (low/mid/high) for different chest fibers.',
+    regressions: 'Smaller forward step.',
+    videoUrl: ytSearch('doorway pec stretch') },
+];
+
+// ============================================================
+// DEFAULT DATA — plans linked to library
+// ============================================================
+const DEFAULT_DATA = {
+  schemaVersion: SCHEMA_VERSION,
+  library: DEFAULT_LIBRARY,
+  plans: [
+    {
+      id: 'pull',
+      name: 'Pull',
+      subtitle: 'back + biceps — V-taper foundation',
+      type: 'training',
+      duration: '55–70 min',
+      warmup: ['3 min easy bike or rower','Band pull-aparts × 20','Cat-cow × 10','Scapular pull-ups × 10','1 light set of pull-ups or pulldowns × 6'],
+      exercises: [
+        { id: 'pull-a', libraryId: 'pullup', letter: 'A', name: 'Pull-up', alt: 'or assisted / lat pulldown if needed', sets: 4, reps: '5–8', rest: 120, cues: 'hang from full extension. pull elbows down, not chin up.' },
+        { id: 'pull-b', libraryId: 'barbell_row', letter: 'B', name: 'Barbell row', alt: 'or chest-supported row', sets: 3, reps: '8–10', rest: 90, cues: 'hinge at hips. row to lower chest. spine long.' },
+        { id: 'pull-c', libraryId: 'lat_pulldown_close', letter: 'C', name: 'Lat pulldown — close grip', alt: '', sets: 3, reps: '10–12', rest: 75, cues: 'lean back slightly. drive elbows to ribs. squeeze.' },
+        { id: 'pull-d', libraryId: 'cable_row', letter: 'D', name: 'Cable row', alt: 'or one-arm DB row', sets: 3, reps: '10–12', rest: 75, cues: 'squeeze at the back. controlled negative.' },
+        { id: 'pull-e', libraryId: 'face_pull', letter: 'E', name: 'Face pull', alt: '', sets: 3, reps: '12–15', rest: 60, cues: 'external rotation at the end. rear delt focus.' },
+        { id: 'pull-f', libraryId: 'hammer_curl', letter: 'F', name: 'Hammer curl', alt: '', sets: 3, reps: '10–12', rest: 60, cues: 'neutral grip. no swing.' },
+        { id: 'pull-g', libraryId: 'incline_db_curl', letter: 'G', name: 'Incline DB curl', alt: '', sets: 2, reps: '12–15', rest: 60, cues: 'full stretch at bottom. squeeze at top.' }
+      ],
+      cooldown: ['2 min easy bike',"Child's pose with side reach × 1 min/side",'Lat stretch in doorway × 30 sec/side','Long exhales 4-4-8 × 1 min']
+    },
+    {
+      id: 'push',
+      name: 'Push',
+      subtitle: 'chest + shoulders + triceps',
+      type: 'training',
+      duration: '55–70 min',
+      warmup: ['3 min easy bike','Doorway pec stretch × 30 sec each side','Arm circles × 20 each direction','Band overhead press × 15','1 light set of incline press × 8'],
+      exercises: [
+        { id: 'push-a', libraryId: 'incline_db_press', letter: 'A', name: 'Incline DB press', alt: 'or incline barbell', sets: 4, reps: '6–8', rest: 120, cues: 'shoulder blades down and in. control the lower.' },
+        { id: 'push-b', libraryId: 'overhead_press', letter: 'B', name: 'Overhead press', alt: 'standing — barbell or DB', sets: 3, reps: '6–8', rest: 120, cues: 'glutes braced. press the bar past your face.' },
+        { id: 'push-c', libraryId: 'flat_db_press', letter: 'C', name: 'Flat DB press', alt: 'or dips', sets: 3, reps: '8–10', rest: 90, cues: 'full stretch. drive feet into floor.' },
+        { id: 'push-d', libraryId: 'lateral_raise', letter: 'D', name: 'Lateral raise', alt: '', sets: 4, reps: '12–15', rest: 60, cues: 'pinky slightly up. lead with the elbow.' },
+        { id: 'push-e', libraryId: 'cable_fly', letter: 'E', name: 'Cable fly', alt: 'or push-up finisher', sets: 3, reps: '12–15', rest: 60, cues: 'meet hands at the centerline. pause.' },
+        { id: 'push-f', libraryId: 'tricep_pushdown', letter: 'F', name: 'Tricep pushdown', alt: '', sets: 3, reps: '10–12', rest: 60, cues: 'elbows pinned. lock out at the bottom.' },
+        { id: 'push-g', libraryId: 'overhead_tricep_extension', letter: 'G', name: 'Overhead tricep extension', alt: '', sets: 2, reps: '12–15', rest: 60, cues: 'full stretch overhead. control.' }
+      ],
+      cooldown: ['2 min easy walk or bike','Doorway pec stretch × 30 sec/side','Triceps overhead stretch × 30 sec/side','Long exhales 4-4-8 × 1 min']
+    },
+    {
+      id: 'legs',
+      name: 'Legs + Core',
+      subtitle: 'the most important day — do not skip',
+      type: 'training',
+      duration: '60–75 min',
+      warmup: ['3–5 min bike or incline walk','Bodyweight squats × 15','Walking lunges × 10/leg',"Hip openers (90/90, world's greatest stretch) × 1 min",'2 light sets of squat × 5–8'],
+      exercises: [
+        { id: 'legs-a', libraryId: 'back_squat', letter: 'A', name: 'Back squat', alt: '', sets: 4, reps: '6–8', rest: 180, cues: 'bar on traps. brace the core. sit between heels. knees track over toes.' },
+        { id: 'legs-b', libraryId: 'romanian_deadlift', letter: 'B', name: 'Romanian deadlift', alt: '', sets: 3, reps: '8–10', rest: 90, cues: 'hinge at hips. soft knee. spine long. feel the hamstring stretch.' },
+        { id: 'legs-c', libraryId: 'leg_press', letter: 'C', name: 'Leg press', alt: 'or Bulgarian split squat', sets: 3, reps: '10–12', rest: 90, cues: "don't lock knees at the top. full range." },
+        { id: 'legs-d', libraryId: 'hip_thrust', letter: 'D', name: 'Hip thrust', alt: '', sets: 3, reps: '10–12', rest: 90, cues: 'glutes drive the bar. ribs down. squeeze at the top.' },
+        { id: 'legs-e', libraryId: 'lying_leg_curl', letter: 'E', name: 'Lying leg curl', alt: '', sets: 3, reps: '10–12', rest: 60, cues: 'slow eccentric. full contraction.' },
+        { id: 'legs-f', libraryId: 'standing_calf_raise', letter: 'F', name: 'Standing calf raise', alt: '', sets: 4, reps: '12–15', rest: 60, cues: 'pause at the top. full stretch at the bottom.' },
+        { id: 'legs-g', libraryId: 'hanging_leg_raise', letter: 'G', name: 'Hanging leg raise', alt: '', sets: 3, reps: '8–12', rest: 60, cues: 'no swing. control.' },
+        { id: 'legs-h', libraryId: 'plank', letter: 'H', name: 'Plank', alt: '', sets: 2, reps: '45–60 sec', rest: 45, cues: 'glutes tight. ribs down. breathe.' }
+      ],
+      cooldown: ['2 min easy walk','Pigeon stretch × 1 min/side','Couch stretch × 1 min/side','Hamstring stretch × 30 sec/side','Long exhales 4-4-8 × 1 min']
+    },
+    {
+      id: 'upper_hyp',
+      name: 'Upper Hypertrophy',
+      subtitle: 'sculpt day — supersets, mind-muscle, the pump',
+      type: 'training',
+      duration: '45–55 min',
+      warmup: ['3 min easy rower','Arm circles, band pull-aparts','Scap work — pull-aparts and dislocates'],
+      exercises: [
+        { id: 'uh-a1', libraryId: 'lat_pulldown', letter: 'A1', name: 'Lat pulldown — wide grip', alt: 'superset with A2', sets: 3, reps: '12–15', rest: 0, cues: 'lean slightly. drive elbows down and back.' },
+        { id: 'uh-a2', libraryId: 'incline_db_press', letter: 'A2', name: 'Incline DB press — lighter', alt: 'rest 75 sec after', sets: 3, reps: '12–15', rest: 75, cues: 'mind-muscle. stretch the chest.' },
+        { id: 'uh-b1', libraryId: 'cable_row', letter: 'B1', name: 'Cable row', alt: 'superset with B2', sets: 3, reps: '12–15', rest: 0, cues: 'squeeze rhomboids.' },
+        { id: 'uh-b2', libraryId: 'cable_fly', letter: 'B2', name: 'Cable fly', alt: 'rest 60 sec after', sets: 3, reps: '12–15', rest: 60, cues: 'meet hands at midline. pause.' },
+        { id: 'uh-c1', libraryId: 'lateral_raise', letter: 'C1', name: 'Lateral raise', alt: 'superset with C2', sets: 4, reps: '15–20', rest: 0, cues: 'lead with elbow. light weight, perfect form.' },
+        { id: 'uh-c2', libraryId: 'face_pull', letter: 'C2', name: 'Face pull', alt: 'rest 60 sec after', sets: 4, reps: '15–20', rest: 60, cues: 'rotate at the end. rear delt squeeze.' },
+        { id: 'uh-d1', libraryId: 'cable_curl', letter: 'D1', name: 'Cable curl', alt: 'superset with D2', sets: 3, reps: '12–15', rest: 0, cues: 'no swing. constant tension.' },
+        { id: 'uh-d2', libraryId: 'tricep_pushdown', letter: 'D2', name: 'Tricep pushdown', alt: 'rest 60 sec after', sets: 3, reps: '12–15', rest: 60, cues: 'lock out. squeeze.' },
+        { id: 'uh-e', libraryId: 'hanging_leg_raise', letter: 'E', name: 'Hanging leg raise', alt: '', sets: 3, reps: '10–15', rest: 60, cues: 'control the lower.' }
+      ],
+      cooldown: ['2 min easy bike','Lat stretch + pec stretch','Long exhales 4-4-8 × 1 min']
+    }
+  ],
+  altModes: [
+    { id: 'walk', name: 'Walk', subtitle: 'recovery — the floor under everything', duration: '30+ min',
+      description: "Zone 1. Conversation pace. Outside if possible — vitamin D, mood, circadian regulation. Don't make it a workout. Make it a baseline. Music, podcast, or silence — whatever the body wants today.",
+      prompts: ['What does the body actually want — music, podcast, or silence?','Outside or inside? Which one does your gut lean to?','Pace: warm and slow, or warm and brisk?'] },
+    { id: 'zone2', name: 'Zone 2', subtitle: 'cardio base — the engine', duration: '30–45 min',
+      description: "Heart rate ~105–125 bpm (60–70% max). You can hold a conversation but it's getting harder. Stationary bike, incline treadmill, rowing, or swimming — Pisces Moon will love the pool. Builds the cardiovascular floor under everything else.",
+      prompts: ['Which modality does the body lean toward today?','Indoor or pool?','Anything to listen to, or full presence with the breath?'] },
+    { id: 'mobility', name: 'Mobility', subtitle: 'gentle — joints, fascia, breath', duration: '15–25 min',
+      description: "Cat-cow, hip openers (90/90, world's greatest stretch), pigeon, couch stretch, doorway pec stretch, child's pose with side reach. 60 seconds per movement. Long exhales throughout — let the body unwind into the stretch, don't force it.",
+      prompts: ['Where is the body holding today?','What asks for attention first?','Can the breath get longer than the stretch is uncomfortable?'] },
+    { id: 'zen', name: 'Zen Day', subtitle: 'sunday — sauna, light walk, mobility', duration: 'unscheduled',
+      description: "No structure. No minimums. Sauna, a light walk, some mobility if the body asks for it. The point of zen day is *not* to optimize. Let the wave settle. Read, write, be still. Tomorrow the body asks again.",
+      prompts: ['What does true rest look like today?','Is there anything the body is asking *not* to do?','Where is the calm between waves?'] },
+    { id: 'recovery', name: 'Recovery', subtitle: 'something is off — listen', duration: 'as needed',
+      description: "Sleep was short. Soreness is high. Nervous system is fried. Today the practice is recovery itself. Walk if anything. Sauna if available. Hydrate. Eat well. Sleep early. Skipping a planned session for real recovery is not failure — it is the practice.",
+      prompts: ['What is the body actually telling me?','Am I tired, or am I avoiding?',"Will tomorrow's session be better if I rest now?"] }
+  ],
+  schedule: { monday: 'pull', tuesday: 'walk', wednesday: 'push', thursday: 'walk', friday: 'legs', saturday: 'upper_hyp', sunday: 'zen' },
+  splitMode: '4day',
+  sessions: []
+};
+
+// ============================================================
+// STATE + MIGRATION
+// ============================================================
+let state = loadState();
+let currentView = 'home';
+let activeSession = null;
+let timerInterval = null;
+let timerEnd = 0;
+let modalContext = null;
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return JSON.parse(JSON.stringify(DEFAULT_DATA));
+    const parsed = JSON.parse(raw);
+    return migrateState(parsed);
+  } catch (e) {
+    console.warn('state load failed, using defaults', e);
+    return JSON.parse(JSON.stringify(DEFAULT_DATA));
+  }
+}
+
+function migrateState(s) {
+  // v1 → v2: add library, link plan exercises by name, ensure schemaVersion
+  if (!s.schemaVersion || s.schemaVersion < 2) {
+    if (!s.library) s.library = JSON.parse(JSON.stringify(DEFAULT_LIBRARY));
+    // Link plan exercises by name match
+    s.plans.forEach(p => {
+      p.exercises.forEach(ex => {
+        if (!ex.libraryId) {
+          const match = findLibraryMatch(ex.name, s.library);
+          if (match) ex.libraryId = match.id;
+        }
+      });
+    });
+    s.schemaVersion = 2;
+  }
+  // Ensure library exists even on v2 data missing it
+  if (!s.library) s.library = JSON.parse(JSON.stringify(DEFAULT_LIBRARY));
+  // Add any new default-library entries that don't exist yet (non-destructive merge)
+  const existingIds = new Set(s.library.map(e => e.id));
+  DEFAULT_LIBRARY.forEach(e => {
+    if (!existingIds.has(e.id)) s.library.push(JSON.parse(JSON.stringify(e)));
+  });
+  return s;
+}
+
+function findLibraryMatch(exName, library) {
+  if (!exName) return null;
+  const norm = s => String(s || '').toLowerCase().replace(/[^a-z0-9 ]/g, '').trim();
+  const n = norm(exName);
+  // exact match first
+  let m = library.find(e => norm(e.name) === n);
+  if (m) return m;
+  // contains match (e.g., "Lat pulldown — wide grip" → "Lat pulldown")
+  m = library.find(e => n.includes(norm(e.name)) || norm(e.name).includes(n.split(' ').slice(0, 2).join(' ')));
+  return m || null;
+}
+
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch (e) { toast('could not save — storage full?'); }
+}
+
+function resetToDefaults() {
+  if (!confirm('Reset all plans, library, and history to defaults? Custom edits will be lost.')) return;
+  state = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  saveState();
+  render();
+  toast('reset');
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function formatDate(iso) {
+  const d = new Date(iso + 'T00:00');
+  return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+}
+function todayDayName() { return DAYS[new Date().getDay()]; }
+function getPlan(id) { return state.plans.find(p => p.id === id); }
+function getAlt(id) { return state.altModes.find(m => m.id === id); }
+function getLibEntry(id) { return id ? state.library.find(e => e.id === id) : null; }
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function uid(prefix = 'x') { return prefix + '-' + Math.random().toString(36).slice(2, 9); }
+
+function el(tag, className, text) {
+  const e = document.createElement(tag);
+  if (className) e.className = className;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function formatRest(sec) {
+  if (sec < 60) return sec + 's';
+  if (sec % 60 === 0) return (sec / 60) + 'm';
+  return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
+}
+
+// ============================================================
+// HEADER + NAV
+// ============================================================
+function setHeaderDate() {
+  const d = new Date();
+  document.getElementById('header-date').textContent = d.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' }).toLowerCase();
+}
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => setView(btn.dataset.view));
+});
+
+function setView(name) {
+  currentView = name;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.view === name));
+  render();
+}
+
+// ============================================================
+// RENDER ROUTER
+// ============================================================
+function render() {
+  const main = document.getElementById('app');
+  main.innerHTML = '';
+  const view = document.createElement('div');
+  view.className = 'view active';
+
+  if (activeSession && !activeSession.__paused) view.appendChild(renderSession());
+  else if (currentView === 'home') view.appendChild(renderHome());
+  else if (currentView === 'library') view.appendChild(renderLibraryView());
+  else if (currentView === 'libdetail') view.appendChild(renderExerciseDetail());
+  else if (currentView === 'plans') view.appendChild(renderPlans());
+  else if (currentView === 'history') view.appendChild(renderHistory());
+  else if (currentView === 'editor') view.appendChild(renderEditor());
+  else if (currentView === 'altmode') view.appendChild(renderAltMode());
+  else if (currentView === 'altpicker') view.appendChild(renderAltPicker());
+
+  main.appendChild(view);
+  window.scrollTo(0, 0);
+}
+
+// ============================================================
+// HOME
+// ============================================================
+function renderHome() {
+  const wrap = document.createElement('div');
+  const day = todayDayName();
+  const scheduledId = state.schedule[day];
+  const plan = getPlan(scheduledId);
+  const alt = getAlt(scheduledId);
+
+  wrap.appendChild(el('div', 'today-eyebrow', `today · ${DAY_LABELS[new Date().getDay()]}`));
+
+  const card = document.createElement('div');
+  card.className = 'today-card';
+
+  if (plan) {
+    card.innerHTML = `
+      <div class="today-name">${escapeHtml(plan.name)}</div>
+      <div class="today-sub">${escapeHtml(plan.subtitle || '')}</div>
+      <div class="today-meta">
+        <span>${plan.exercises.length} movements</span>
+        <span>${plan.duration || ''}</span>
+      </div>`;
+    const startBtn = el('button', 'btn-primary', 'begin session');
+    startBtn.addEventListener('click', () => startSession(plan.id));
+    card.appendChild(startBtn);
+  } else if (alt) {
+    card.classList.add('alt-mode');
+    if (alt.id === 'zen') card.classList.add('zen');
+    card.innerHTML = `
+      <div class="today-name">${escapeHtml(alt.name)}</div>
+      <div class="today-sub">${escapeHtml(alt.subtitle)}</div>
+      <div class="today-meta"><span>${escapeHtml(alt.duration)}</span></div>`;
+    const openBtn = el('button', 'btn-primary', 'open');
+    openBtn.addEventListener('click', () => openAltMode(alt.id));
+    card.appendChild(openBtn);
+  } else {
+    card.innerHTML = `
+      <div class="today-name" style="color: var(--ink-dim)">no session set</div>
+      <div class="today-sub">what does the body want today?</div>`;
+  }
+  wrap.appendChild(card);
+
+  const hatch = document.createElement('div');
+  hatch.className = 'escape-hatch';
+  hatch.innerHTML = `<div class="escape-hatch-prompt">the body wants something different today</div>`;
+  const altBtn = el('button', 'btn-secondary', 'pick a different mode');
+  altBtn.addEventListener('click', () => { currentView = 'altpicker'; render(); });
+  hatch.appendChild(altBtn);
+  wrap.appendChild(hatch);
+
+  const quick = document.createElement('div');
+  quick.style.marginTop = '32px';
+  quick.style.textAlign = 'center';
+  const planLink = el('button', 'subtle', 'or jump into another plan →');
+  planLink.style.cursor = 'pointer';
+  planLink.style.padding = '8px';
+  planLink.addEventListener('click', () => setView('plans'));
+  quick.appendChild(planLink);
+  wrap.appendChild(quick);
+
+  return wrap;
+}
+
+function renderAltPicker() {
+  const wrap = document.createElement('div');
+  const back = el('button', 'subtle', '← today');
+  back.style.marginBottom = '14px';
+  back.style.cursor = 'pointer';
+  back.addEventListener('click', () => { currentView = 'home'; render(); });
+  wrap.appendChild(back);
+
+  wrap.appendChild(el('div', 'today-eyebrow', 'the body wants something else'));
+  wrap.appendChild(el('div', 'session-sub', 'pick what fits the wave today.'));
+
+  const grid = document.createElement('div');
+  grid.className = 'alt-modes-grid';
+  state.altModes.forEach(mode => {
+    const btn = document.createElement('button');
+    btn.className = 'alt-mode-card';
+    btn.innerHTML = `<div class="alt-mode-name">${escapeHtml(mode.name)}</div><div class="alt-mode-sub">${escapeHtml(mode.subtitle)}</div>`;
+    btn.addEventListener('click', () => openAltMode(mode.id));
+    grid.appendChild(btn);
+  });
+  wrap.appendChild(grid);
+  return wrap;
+}
+
+function openAltMode(id) {
+  window.__altModeId = id;
+  currentView = 'altmode';
+  render();
+}
+
+function renderAltMode() {
+  const wrap = document.createElement('div');
+  const mode = getAlt(window.__altModeId);
+  if (!mode) return wrap;
+
+  const back = el('button', 'subtle', '← back');
+  back.style.marginBottom = '14px';
+  back.style.cursor = 'pointer';
+  back.addEventListener('click', () => { currentView = 'home'; render(); });
+  wrap.appendChild(back);
+
+  const card = document.createElement('div');
+  card.className = 'alt-view-card';
+  card.innerHTML = `
+    <div class="alt-view-name">${escapeHtml(mode.name)}</div>
+    <div class="alt-view-sub">${escapeHtml(mode.subtitle)}</div>
+    <div class="alt-view-desc">${escapeHtml(mode.description)}</div>`;
+  if (mode.prompts && mode.prompts.length) {
+    const prompts = document.createElement('ul');
+    prompts.className = 'alt-view-prompts';
+    mode.prompts.forEach(p => { const li = document.createElement('li'); li.textContent = p; prompts.appendChild(li); });
+    card.appendChild(prompts);
+  }
+
+  const logBtn = el('button', 'btn-primary', 'log as done');
+  logBtn.addEventListener('click', () => {
+    state.sessions.unshift({ id: uid('s'), date: TODAY(), planId: mode.id, planName: mode.name, type: 'altmode', exercises: [], finalNotes: '' });
+    saveState();
+    toast('logged');
+    currentView = 'home';
+    render();
+  });
+  card.appendChild(logBtn);
+  wrap.appendChild(card);
+  return wrap;
+}
+
+// ============================================================
+// LIBRARY
+// ============================================================
+let libraryFilter = { mechanic: 'all', search: '' };
+
+function renderLibraryView() {
+  const wrap = document.createElement('div');
+  wrap.appendChild(el('div', 'today-eyebrow', 'library'));
+  wrap.appendChild(el('div', 'session-sub', `${state.library.length} movements. tap any for the wiki.`));
+
+  // Search
+  const searchWrap = document.createElement('div');
+  searchWrap.className = 'library-search-wrap';
+  const search = document.createElement('input');
+  search.type = 'text';
+  search.placeholder = 'search exercises…';
+  search.value = libraryFilter.search;
+  search.addEventListener('input', e => {
+    libraryFilter.search = e.target.value;
+    updateLibraryGrid();
+  });
+  searchWrap.appendChild(search);
+  wrap.appendChild(searchWrap);
+
+  // Filter pills
+  const filterRow = document.createElement('div');
+  filterRow.className = 'lib-filter-row';
+  const mechs = [
+    { id: 'all', label: 'all' },
+    { id: 'pull', label: 'pull' },
+    { id: 'push', label: 'push' },
+    { id: 'squat', label: 'squat' },
+    { id: 'hinge', label: 'hinge' },
+    { id: 'core', label: 'core' },
+    { id: 'mobility', label: 'mobility' }
+  ];
+  mechs.forEach(m => {
+    const pill = el('button', 'lib-filter-pill', m.label);
+    if (libraryFilter.mechanic === m.id) pill.classList.add('active');
+    pill.addEventListener('click', () => {
+      libraryFilter.mechanic = m.id;
+      render();
+    });
+    filterRow.appendChild(pill);
+  });
+  wrap.appendChild(filterRow);
+
+  // New custom exercise button
+  const newBtn = el('button', 'editor-add-btn accent', '+ add custom exercise');
+  newBtn.style.marginBottom = '14px';
+  newBtn.addEventListener('click', openCustomExerciseModal);
+  wrap.appendChild(newBtn);
+
+  // Grid
+  const grid = document.createElement('div');
+  grid.className = 'lib-grid';
+  grid.id = 'lib-grid';
+  wrap.appendChild(grid);
+
+  // Initial fill
+  setTimeout(updateLibraryGrid, 0);
+
+  return wrap;
+}
+
+function filteredLibrary() {
+  const q = libraryFilter.search.toLowerCase().trim();
+  return state.library.filter(e => {
+    if (libraryFilter.mechanic !== 'all' && e.mechanic !== libraryFilter.mechanic) return false;
+    if (q) {
+      const hay = (e.name + ' ' + (e.primary || []).join(' ') + ' ' + (e.equipment || []).join(' ')).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+function updateLibraryGrid() {
+  const grid = document.getElementById('lib-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  const items = filteredLibrary();
+  if (!items.length) {
+    grid.innerHTML = `<div class="lib-empty">no exercises match — clear filters?</div>`;
+    return;
+  }
+  items.forEach(ex => {
+    const card = document.createElement('button');
+    card.className = 'lib-card';
+    const mechClass = 'lib-mech-' + (ex.mechanic || 'core');
+    card.innerHTML = `
+      <span class="lib-mech-tag ${mechClass}">${escapeHtml(ex.mechanic || '')}</span>
+      <div class="lib-card-info">
+        <div class="lib-card-name">${escapeHtml(ex.name)}</div>
+        <div class="lib-card-muscles">${escapeHtml((ex.primary || []).join(', '))}</div>
+      </div>`;
+    card.addEventListener('click', () => openExerciseDetail(ex.id));
+    grid.appendChild(card);
+  });
+}
+
+function openExerciseDetail(id) {
+  window.__detailId = id;
+  currentView = 'libdetail';
+  render();
+}
+
+function renderExerciseDetail() {
+  const wrap = document.createElement('div');
+  const ex = getLibEntry(window.__detailId);
+  if (!ex) return wrap;
+
+  const fromSession = activeSession && activeSession.__paused;
+  const back = el('button', 'detail-back', fromSession ? '← back to session' : '← back to library');
+  back.addEventListener('click', () => {
+    if (fromSession) {
+      activeSession.__paused = false;
+      render();
+    } else {
+      setView('library');
+    }
+  });
+  wrap.appendChild(back);
+
+  const card = document.createElement('div');
+  card.className = 'detail-card';
+
+  const tagsHTML = `
+    <div class="detail-tags">
+      <span class="lib-mech-tag lib-mech-${ex.mechanic}">${escapeHtml(ex.mechanic)}</span>
+      ${ex.type ? `<span class="lib-mech-tag" style="background:rgba(255,255,255,0.05); color: var(--ink-dim)">${escapeHtml(ex.type)}</span>` : ''}
+      ${(ex.equipment||[]).map(e => `<span class="lib-mech-tag" style="background:rgba(255,255,255,0.04); color: var(--ink-faint)">${escapeHtml(e)}</span>`).join('')}
+    </div>`;
+
+  card.innerHTML = `
+    <div class="detail-name">${escapeHtml(ex.name)}</div>
+    ${tagsHTML}
+    <div class="detail-meta-row">
+      <div class="form-section">
+        <div class="form-label">primary</div>
+        <div class="form-text">${escapeHtml((ex.primary||[]).join(', ') || '—')}</div>
+      </div>
+      ${(ex.secondary && ex.secondary.length) ? `<div class="form-section">
+        <div class="form-label">secondary</div>
+        <div class="form-text muted">${escapeHtml(ex.secondary.join(', '))}</div>
+      </div>` : ''}
+    </div>`;
+
+  // Image / paste slot
+  const imgWrap = document.createElement('div');
+  if (ex.imageUrl) {
+    imgWrap.className = 'detail-image';
+    imgWrap.innerHTML = `<img src="${escapeHtml(ex.imageUrl)}" alt="${escapeHtml(ex.name)}">`;
+  } else {
+    imgWrap.className = 'detail-image-empty';
+    imgWrap.innerHTML = `no demo yet<small class="detail-image-paste">tap "paste GIF link" below to add one (Imgur, Giphy, Tenor, etc.)</small>`;
+  }
+  card.appendChild(imgWrap);
+
+  // Sections
+  const sections = [
+    { label: 'setup', value: ex.setup },
+    { label: 'execution', value: ex.execution },
+    { label: 'common mistakes', value: ex.mistakes },
+    { label: 'breath', value: ex.breath },
+    { label: 'progressions', value: ex.progressions },
+    { label: 'regressions', value: ex.regressions }
+  ];
+  sections.forEach(s => {
+    if (!s.value) return;
+    const div = document.createElement('div');
+    div.className = 'detail-section';
+    div.innerHTML = `<h3>${escapeHtml(s.label)}</h3><p>${escapeHtml(s.value)}</p>`;
+    card.appendChild(div);
+  });
+
+  // Actions
+  const actions = document.createElement('div');
+  actions.className = 'detail-actions';
+
+  if (ex.videoUrl) {
+    const watchBtn = el('button', 'btn-secondary', 'watch on YouTube ▶');
+    watchBtn.addEventListener('click', () => window.open(ex.videoUrl, '_blank', 'noopener'));
+    actions.appendChild(watchBtn);
+  }
+
+  const pasteBtn = el('button', 'btn-secondary', ex.imageUrl ? 'replace GIF link' : 'paste GIF link');
+  pasteBtn.addEventListener('click', () => openImageUrlModal(ex));
+  actions.appendChild(pasteBtn);
+
+  const editBtn = el('button', 'btn-secondary', 'edit wiki');
+  editBtn.addEventListener('click', () => openWikiEditModal(ex));
+  actions.appendChild(editBtn);
+
+  card.appendChild(actions);
+  wrap.appendChild(card);
+  return wrap;
+}
+
+function openImageUrlModal(ex) {
+  modalContext = { type: 'imageUrl', exerciseId: ex.id };
+  const modal = document.getElementById('modal');
+  modal.innerHTML = `
+    <div class="modal-header">
+      <div class="modal-title">paste GIF or image URL</div>
+      <button class="modal-close" id="modal-close-btn">×</button>
+    </div>
+    <div class="editor-field">
+      <div class="editor-label">URL</div>
+      <input type="url" id="modal-img-url" placeholder="https://i.imgur.com/example.gif" value="${escapeHtml(ex.imageUrl || '')}">
+    </div>
+    <div class="subtle" style="margin-bottom:14px; line-height:1.5;">
+      Imgur direct links (i.imgur.com/...gif), Giphy direct media URLs (media.giphy.com/...), or Tenor work best. Right-click the GIF on the source site → "copy image address".
+    </div>
+    <div class="editor-actions">
+      <button class="btn-primary" id="modal-save">save</button>
+      <button class="btn-danger" id="modal-clear">clear</button>
+    </div>`;
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('modal-close-btn').onclick = closeModal;
+  document.getElementById('modal-save').onclick = () => {
+    const v = document.getElementById('modal-img-url').value.trim();
+    const entry = getLibEntry(ex.id);
+    if (entry) entry.imageUrl = v;
+    saveState();
+    closeModal();
+    render();
+    toast(v ? 'image saved' : 'image cleared');
+  };
+  document.getElementById('modal-clear').onclick = () => {
+    const entry = getLibEntry(ex.id);
+    if (entry) entry.imageUrl = '';
+    saveState();
+    closeModal();
+    render();
+    toast('image cleared');
+  };
+}
+
+function openWikiEditModal(ex) {
+  const modal = document.getElementById('modal');
+  const fields = ['setup', 'execution', 'mistakes', 'breath', 'progressions', 'regressions'];
+  modal.innerHTML = `
+    <div class="modal-header">
+      <div class="modal-title">edit wiki — ${escapeHtml(ex.name)}</div>
+      <button class="modal-close" id="modal-close-btn">×</button>
+    </div>
+    ${fields.map(f => `
+      <div class="editor-field">
+        <div class="editor-label">${f}</div>
+        <textarea id="wiki-${f}" rows="3">${escapeHtml(ex[f] || '')}</textarea>
+      </div>`).join('')}
+    <div class="editor-field">
+      <div class="editor-label">YouTube URL</div>
+      <input type="url" id="wiki-videoUrl" value="${escapeHtml(ex.videoUrl || '')}">
+    </div>
+    <div class="editor-actions">
+      <button class="btn-primary" id="modal-save">keep</button>
+    </div>`;
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('modal-close-btn').onclick = closeModal;
+  document.getElementById('modal-save').onclick = () => {
+    const entry = getLibEntry(ex.id);
+    if (entry) {
+      fields.forEach(f => entry[f] = document.getElementById('wiki-' + f).value.trim());
+      entry.videoUrl = document.getElementById('wiki-videoUrl').value.trim();
+    }
+    saveState();
+    closeModal();
+    render();
+    toast('wiki kept');
+  };
+}
+
+function openCustomExerciseModal() {
+  const modal = document.getElementById('modal');
+  modal.innerHTML = `
+    <div class="modal-header">
+      <div class="modal-title">add custom exercise</div>
+      <button class="modal-close" id="modal-close-btn">×</button>
+    </div>
+    <div class="editor-field"><div class="editor-label">name</div><input id="cx-name" placeholder="e.g. Single-leg RDL"></div>
+    <div class="editor-field"><div class="editor-label">mechanic</div>
+      <select id="cx-mech">
+        <option value="pull">pull</option><option value="push">push</option>
+        <option value="squat">squat</option><option value="hinge">hinge</option>
+        <option value="core">core</option><option value="mobility">mobility</option>
+      </select>
+    </div>
+    <div class="editor-field"><div class="editor-label">primary muscles (comma-separated)</div><input id="cx-primary" placeholder="hamstrings, glutes"></div>
+    <div class="editor-field"><div class="editor-label">equipment (comma-separated)</div><input id="cx-equipment" placeholder="dumbbell"></div>
+    <div class="editor-field"><div class="editor-label">setup</div><textarea id="cx-setup" rows="2"></textarea></div>
+    <div class="editor-field"><div class="editor-label">execution</div><textarea id="cx-execution" rows="2"></textarea></div>
+    <div class="editor-field"><div class="editor-label">common mistakes</div><textarea id="cx-mistakes" rows="2"></textarea></div>
+    <div class="editor-actions"><button class="btn-primary" id="modal-save">add to library</button></div>`;
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('modal-close-btn').onclick = closeModal;
+  document.getElementById('modal-save').onclick = () => {
+    const name = document.getElementById('cx-name').value.trim();
+    if (!name) { toast('name needed'); return; }
+    const newEx = {
+      id: uid('lib'),
+      name,
+      primary: document.getElementById('cx-primary').value.split(',').map(s => s.trim()).filter(Boolean),
+      secondary: [],
+      equipment: document.getElementById('cx-equipment').value.split(',').map(s => s.trim()).filter(Boolean),
+      mechanic: document.getElementById('cx-mech').value,
+      type: 'custom',
+      setup: document.getElementById('cx-setup').value.trim(),
+      execution: document.getElementById('cx-execution').value.trim(),
+      mistakes: document.getElementById('cx-mistakes').value.trim(),
+      videoUrl: ytSearch(name),
+      imageUrl: ''
+    };
+    state.library.push(newEx);
+    saveState();
+    closeModal();
+    render();
+    toast('added to library');
+  };
+}
+
+function openSwapModal(ex, idx) {
+  const lib = getLibEntry(ex.libraryId);
+  const mech = lib ? lib.mechanic : null;
+  const candidates = state.library.filter(e => (!mech || e.mechanic === mech) && e.id !== ex.libraryId);
+  const modal = document.getElementById('modal');
+  modal.innerHTML = `
+    <div class="modal-header">
+      <div class="modal-title">swap${mech ? ' — same ' + escapeHtml(mech) : ''}</div>
+      <button class="modal-close" id="modal-close-btn">×</button>
+    </div>
+    <div class="subtle" style="margin-bottom:14px; line-height:1.5;">
+      pick an alternative${mech ? ' (same movement pattern)' : ''}. sets, reps, and rest stay the same — just the movement changes.
+    </div>
+    <div class="library-search-wrap"><input id="swap-search" placeholder="search…"></div>
+    <div class="lib-grid" id="swap-grid"></div>`;
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('modal-close-btn').onclick = closeModal;
+  const fillGrid = (q) => {
+    const grid = document.getElementById('swap-grid');
+    grid.innerHTML = '';
+    const qq = (q || '').toLowerCase().trim();
+    candidates.forEach(c => {
+      if (qq && !(c.name + ' ' + (c.primary || []).join(' ')).toLowerCase().includes(qq)) return;
+      const card = document.createElement('button');
+      card.className = 'lib-card';
+      card.innerHTML = `
+        <span class="lib-mech-tag lib-mech-${c.mechanic}">${escapeHtml(c.mechanic)}</span>
+        <div class="lib-card-info">
+          <div class="lib-card-name">${escapeHtml(c.name)}</div>
+          <div class="lib-card-muscles">${escapeHtml((c.primary || []).join(', '))}</div>
+        </div>`;
+      card.addEventListener('click', () => {
+        const target = activeSession.exercises[idx];
+        target.libraryId = c.id;
+        target.name = c.name;
+        target.alt = '';
+        // sets, reps, rest, cues, letter — preserved
+        closeModal();
+        render();
+        toast('swapped to ' + c.name);
+      });
+      grid.appendChild(card);
+    });
+  };
+  document.getElementById('swap-search').addEventListener('input', e => fillGrid(e.target.value));
+  fillGrid('');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.getElementById('modal').innerHTML = '';
+  modalContext = null;
+}
+
+// click outside modal to close
+document.getElementById('modal-overlay').addEventListener('click', e => {
+  if (e.target.id === 'modal-overlay') closeModal();
+});
+
+// ============================================================
+// SESSION
+// ============================================================
+function startSession(planId) {
+  const plan = getPlan(planId);
+  if (!plan) return;
+  activeSession = {
+    date: TODAY(),
+    planId: plan.id,
+    planName: plan.name,
+    exercises: plan.exercises.map(ex => ({
+      id: ex.id,
+      libraryId: ex.libraryId,
+      name: ex.name,
+      letter: ex.letter,
+      alt: ex.alt,
+      sets: ex.sets,
+      reps: ex.reps,
+      rest: ex.rest,
+      cues: ex.cues,
+      done: false,
+      notes: '',
+      notesOpen: false,
+      formOpen: false
+    })),
+    warmup: plan.warmup || [],
+    cooldown: plan.cooldown || [],
+    duration: plan.duration,
+    finalNotes: ''
+  };
+  render();
+}
+
+function renderSession() {
+  const wrap = document.createElement('div');
+  const s = activeSession;
+
+  const exitRow = document.createElement('div');
+  exitRow.className = 'row-spread';
+  exitRow.style.marginBottom = '14px';
+  const exitBtn = el('button', 'subtle', '← exit (progress saved)');
+  exitBtn.style.cursor = 'pointer';
+  exitBtn.addEventListener('click', () => { activeSession = null; render(); });
+  exitRow.appendChild(exitBtn);
+  wrap.appendChild(exitRow);
+
+  const header = document.createElement('div');
+  header.className = 'session-header';
+  const done = s.exercises.filter(e => e.done).length;
+  header.innerHTML = `<div class="session-title">${escapeHtml(s.planName)}</div><div class="session-progress">${done}/${s.exercises.length}</div>`;
+  wrap.appendChild(header);
+  wrap.appendChild(el('div', 'session-sub', formatDate(s.date) + (s.duration ? ' · ' + s.duration : '')));
+
+  if (s.warmup && s.warmup.length) {
+    const wu = document.createElement('details');
+    wu.className = 'warmup-block';
+    wu.innerHTML = `<summary>warm-up</summary>`;
+    const ul = document.createElement('ul');
+    s.warmup.forEach(item => { const li = document.createElement('li'); li.textContent = item; ul.appendChild(li); });
+    wu.appendChild(ul);
+    wrap.appendChild(wu);
+  }
+
+  s.exercises.forEach((ex, i) => wrap.appendChild(renderExerciseCard(ex, i)));
+
+  if (s.cooldown && s.cooldown.length) {
+    const cd = document.createElement('details');
+    cd.className = 'cooldown-block';
+    cd.innerHTML = `<summary>cool-down</summary>`;
+    const ul = document.createElement('ul');
+    s.cooldown.forEach(item => { const li = document.createElement('li'); li.textContent = item; ul.appendChild(li); });
+    cd.appendChild(ul);
+    wrap.appendChild(cd);
+  }
+
+  const allDone = s.exercises.every(e => e.done);
+  const complete = document.createElement('div');
+  complete.className = 'session-complete';
+  complete.innerHTML = allDone
+    ? `<div class="session-complete-msg">rest. integrate. the body showed up.</div><div class="session-complete-sub">how did it land?</div>`
+    : `<div class="session-complete-msg">close the session when you're ready.</div><div class="session-complete-sub">finish the exercises above, or close it here — your call.</div>`;
+
+  const finalField = document.createElement('div');
+  finalField.className = 'session-final-notes';
+  finalField.style.textAlign = 'left';
+  finalField.style.marginBottom = '16px';
+  finalField.innerHTML = `<div class="ex-notes-prompt">what moved? what blocked? where did the energy sit?</div>`;
+  const finalTA = document.createElement('textarea');
+  finalTA.value = s.finalNotes;
+  finalTA.placeholder = 'session notes…';
+  finalTA.addEventListener('input', e => { s.finalNotes = e.target.value; });
+  finalField.appendChild(finalTA);
+  complete.appendChild(finalField);
+
+  const closeBtn = el('button', 'btn-primary', 'close session — keep');
+  closeBtn.addEventListener('click', closeSession);
+  complete.appendChild(closeBtn);
+  wrap.appendChild(complete);
+
+  return wrap;
+}
+
+function renderExerciseCard(ex, idx) {
+  const card = document.createElement('div');
+  card.className = 'exercise-card' + (ex.done ? ' done' : '');
+
+  const row = document.createElement('div');
+  row.className = 'ex-row';
+
+  const check = document.createElement('button');
+  check.className = 'ex-check' + (ex.done ? ' checked' : '');
+  check.setAttribute('aria-label', ex.done ? 'mark not done' : 'mark done');
+  check.addEventListener('click', () => {
+    ex.done = !ex.done;
+    if (ex.done && ex.rest > 0) startTimer(ex.rest);
+    render();
+  });
+  row.appendChild(check);
+
+  const body = document.createElement('div');
+  body.className = 'ex-body';
+  body.innerHTML = `
+    ${ex.letter ? `<div class="ex-letter">${escapeHtml(ex.letter)}</div>` : ''}
+    <div class="ex-name">${escapeHtml(ex.name)}</div>
+    ${ex.alt ? `<div class="ex-alt">${escapeHtml(ex.alt)}</div>` : ''}
+    <div class="ex-prescription">
+      <span><strong>${ex.sets}</strong> × ${escapeHtml(String(ex.reps))}</span>
+      ${ex.rest ? `<span>rest <strong>${formatRest(ex.rest)}</strong></span>` : ''}
+    </div>
+    ${ex.cues ? `<div class="ex-cues">${escapeHtml(ex.cues)}</div>` : ''}`;
+
+  const actions = document.createElement('div');
+  actions.className = 'ex-actions';
+
+  const lib = getLibEntry(ex.libraryId);
+  if (lib) {
+    const formBtn = el('button', 'ex-action-btn accent', ex.formOpen ? 'hide form' : 'form');
+    formBtn.addEventListener('click', () => { ex.formOpen = !ex.formOpen; render(); });
+    actions.appendChild(formBtn);
+  }
+
+  if (lib && lib.videoUrl) {
+    const watchBtn = el('button', 'ex-action-btn', 'watch ▶');
+    watchBtn.addEventListener('click', () => window.open(lib.videoUrl, '_blank', 'noopener'));
+    actions.appendChild(watchBtn);
+  }
+
+  if (ex.rest > 0) {
+    const timerBtn = el('button', 'ex-action-btn', 'rest');
+    timerBtn.addEventListener('click', () => startTimer(ex.rest));
+    actions.appendChild(timerBtn);
+  }
+
+  const noteBtn = el('button', 'ex-action-btn', ex.notesOpen ? 'hide note' : 'note');
+  noteBtn.addEventListener('click', () => { ex.notesOpen = !ex.notesOpen; render(); });
+  actions.appendChild(noteBtn);
+
+  if (lib) {
+    const wikiBtn = el('button', 'ex-action-btn', 'wiki →');
+    wikiBtn.addEventListener('click', () => {
+      activeSession.__paused = true;
+      window.__detailId = ex.libraryId;
+      setView('libdetail');
+    });
+    actions.appendChild(wikiBtn);
+  }
+
+  const swapBtn = el('button', 'ex-action-btn', 'swap');
+  swapBtn.addEventListener('click', () => openSwapModal(ex, idx));
+  actions.appendChild(swapBtn);
+
+  body.appendChild(actions);
+
+  // Form panel (in-session wiki)
+  if (ex.formOpen && lib) {
+    const formPanel = document.createElement('div');
+    formPanel.className = 'ex-form open';
+    let html = '';
+    if (lib.imageUrl) {
+      html += `<div class="form-image-wrap"><img src="${escapeHtml(lib.imageUrl)}" alt="${escapeHtml(lib.name)}"></div>`;
+    }
+    if (lib.setup) html += `<div class="form-section"><div class="form-label">setup</div><div class="form-text">${escapeHtml(lib.setup)}</div></div>`;
+    if (lib.execution) html += `<div class="form-section"><div class="form-label">execution</div><div class="form-text">${escapeHtml(lib.execution)}</div></div>`;
+    if (lib.mistakes) html += `<div class="form-section"><div class="form-label">common mistakes</div><div class="form-text muted">${escapeHtml(lib.mistakes)}</div></div>`;
+    if (lib.breath) html += `<div class="form-section"><div class="form-label">breath</div><div class="form-text muted">${escapeHtml(lib.breath)}</div></div>`;
+    formPanel.innerHTML = html;
+    body.appendChild(formPanel);
+  }
+
+  // Notes panel
+  const notes = document.createElement('div');
+  notes.className = 'ex-notes' + (ex.notesOpen ? ' open' : '');
+  notes.innerHTML = `<div class="ex-notes-prompt">weight, form, what landed</div>`;
+  const ta = document.createElement('textarea');
+  ta.value = ex.notes;
+  ta.placeholder = '…';
+  ta.addEventListener('input', e => { ex.notes = e.target.value; });
+  notes.appendChild(ta);
+  body.appendChild(notes);
+
+  row.appendChild(body);
+  card.appendChild(row);
+  return card;
+}
+
+function closeSession() {
+  state.sessions.unshift({
+    id: uid('s'),
+    date: activeSession.date,
+    planId: activeSession.planId,
+    planName: activeSession.planName,
+    type: 'training',
+    exercises: activeSession.exercises.map(e => ({ name: e.name, done: e.done, notes: e.notes })),
+    finalNotes: activeSession.finalNotes
+  });
+  saveState();
+  activeSession = null;
+  stopTimer();
+  toast('session kept');
+  render();
+}
+
+// ============================================================
+// TIMER
+// ============================================================
+function startTimer(seconds) {
+  stopTimer();
+  timerEnd = Date.now() + seconds * 1000;
+  document.getElementById('timer-overlay').classList.add('active');
+  updateTimer();
+  timerInterval = setInterval(updateTimer, 250);
+  if (window.__audioCtx === undefined) {
+    try { window.__audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+  }
+}
+
+function updateTimer() {
+  const remaining = Math.max(0, Math.ceil((timerEnd - Date.now()) / 1000));
+  const m = Math.floor(remaining / 60);
+  const s = remaining % 60;
+  const display = document.getElementById('timer-display');
+  display.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+  if (remaining <= 5 && remaining > 0) display.classList.add('flash');
+  else display.classList.remove('flash');
+  if (remaining === 0) {
+    beep();
+    setTimeout(stopTimer, 800);
+  }
+}
+
+function stopTimer() {
+  clearInterval(timerInterval);
+  timerInterval = null;
+  document.getElementById('timer-overlay').classList.remove('active');
+  document.getElementById('timer-display').classList.remove('flash');
+}
+
+function beep() {
+  try {
+    const ctx = window.__audioCtx;
+    if (!ctx) return;
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value = 660; o.type = 'sine';
+    g.gain.setValueAtTime(0.0001, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4);
+    o.start(); o.stop(ctx.currentTime + 0.45);
+  } catch (e) {}
+}
+
+document.getElementById('timer-stop').addEventListener('click', stopTimer);
+
+// ============================================================
+// PLANS
+// ============================================================
+function renderPlans() {
+  const wrap = document.createElement('div');
+  wrap.appendChild(el('div', 'today-eyebrow', 'plans'));
+  wrap.appendChild(el('div', 'session-sub', 'edit, duplicate, or build new.'));
+
+  const newBtn = el('button', 'btn-primary', '+ new plan');
+  newBtn.style.marginBottom = '20px';
+  newBtn.addEventListener('click', () => openEditor(null));
+  wrap.appendChild(newBtn);
+
+  wrap.appendChild(el('div', 'section-header', 'training plans'));
+  const list = document.createElement('div');
+  list.className = 'plans-list';
+  state.plans.forEach(plan => list.appendChild(renderPlanRow(plan)));
+  wrap.appendChild(list);
+
+  wrap.appendChild(el('div', 'section-header', 'alternative modes'));
+  const altList = document.createElement('div');
+  altList.className = 'plans-list';
+  state.altModes.forEach(mode => {
+    const row = document.createElement('div');
+    row.className = 'plan-row';
+    row.innerHTML = `<div class="plan-row-info"><div class="plan-row-name">${escapeHtml(mode.name)}</div><div class="plan-row-sub">${escapeHtml(mode.subtitle)}</div></div>`;
+    const open = el('button', 'icon-btn', '→');
+    open.addEventListener('click', () => openAltMode(mode.id));
+    row.appendChild(open);
+    altList.appendChild(row);
+  });
+  wrap.appendChild(altList);
+
+  wrap.appendChild(el('div', 'section-header', 'weekly schedule'));
+  const sched = document.createElement('div');
+  sched.style.background = 'var(--bg-card)';
+  sched.style.border = '1px solid var(--border)';
+  sched.style.borderRadius = 'var(--r-md)';
+  sched.style.padding = '14px';
+
+  DAYS.forEach((day) => {
+    const row = document.createElement('div');
+    row.className = 'editor-list-item';
+    const label = document.createElement('div');
+    label.style.flex = '0 0 90px';
+    label.style.fontSize = '13px';
+    label.style.color = 'var(--ink-dim)';
+    label.style.textTransform = 'capitalize';
+    label.textContent = day;
+    row.appendChild(label);
+
+    const select = document.createElement('select');
+    select.style.flex = '1';
+    const optEmpty = document.createElement('option');
+    optEmpty.value = ''; optEmpty.textContent = '— rest —';
+    select.appendChild(optEmpty);
+    state.plans.forEach(p => {
+      const o = document.createElement('option');
+      o.value = p.id; o.textContent = p.name;
+      select.appendChild(o);
+    });
+    state.altModes.forEach(m => {
+      const o = document.createElement('option');
+      o.value = m.id; o.textContent = m.name + ' (mode)';
+      select.appendChild(o);
+    });
+    select.value = state.schedule[day] || '';
+    select.addEventListener('change', e => { state.schedule[day] = e.target.value; saveState(); toast('schedule updated'); });
+    row.appendChild(select);
+    sched.appendChild(row);
+  });
+  wrap.appendChild(sched);
+
+  wrap.appendChild(el('div', 'section-header', 'danger zone'));
+  const resetBtn = el('button', 'btn-danger', 'reset everything to defaults');
+  resetBtn.addEventListener('click', resetToDefaults);
+  wrap.appendChild(resetBtn);
+
+  return wrap;
+}
+
+function renderPlanRow(plan) {
+  const row = document.createElement('div');
+  row.className = 'plan-row';
+  row.innerHTML = `<div class="plan-row-info"><div class="plan-row-name">${escapeHtml(plan.name)}</div><div class="plan-row-sub">${plan.exercises.length} movements${plan.duration ? ' · ' + escapeHtml(plan.duration) : ''}</div></div>`;
+  const actions = document.createElement('div');
+  actions.className = 'plan-row-actions';
+
+  const edit = el('button', 'icon-btn', '✎');
+  edit.addEventListener('click', () => openEditor(plan.id));
+  actions.appendChild(edit);
+
+  const dup = el('button', 'icon-btn', '⎘');
+  dup.addEventListener('click', () => duplicatePlan(plan.id));
+  actions.appendChild(dup);
+
+  const start = el('button', 'icon-btn', '▶');
+  start.style.color = 'var(--emerald)';
+  start.style.borderColor = 'var(--emerald-dim)';
+  start.addEventListener('click', () => startSession(plan.id));
+  actions.appendChild(start);
+
+  row.appendChild(actions);
+  return row;
+}
+
+function duplicatePlan(id) {
+  const plan = getPlan(id);
+  if (!plan) return;
+  const copy = JSON.parse(JSON.stringify(plan));
+  copy.id = uid('plan');
+  copy.name = plan.name + ' (copy)';
+  copy.exercises.forEach(ex => ex.id = uid('ex'));
+  state.plans.push(copy);
+  saveState();
+  toast('duplicated');
+  render();
+}
+
+// ============================================================
+// EDITOR
+// ============================================================
+let editingPlan = null;
+
+function openEditor(id) {
+  if (id) editingPlan = JSON.parse(JSON.stringify(getPlan(id)));
+  else editingPlan = { id: uid('plan'), name: 'New plan', subtitle: '', type: 'training', duration: '', warmup: [], exercises: [], cooldown: [] };
+  currentView = 'editor';
+  render();
+}
+
+function renderEditor() {
+  const wrap = document.createElement('div');
+  const p = editingPlan;
+  if (!p) return wrap;
+
+  const back = el('button', 'subtle', '← cancel');
+  back.style.cursor = 'pointer';
+  back.style.marginBottom = '12px';
+  back.addEventListener('click', () => { editingPlan = null; setView('plans'); });
+  wrap.appendChild(back);
+
+  wrap.appendChild(el('div', 'today-eyebrow', 'edit plan'));
+
+  const nameField = document.createElement('div');
+  nameField.className = 'editor-field';
+  nameField.innerHTML = '<div class="editor-label">name</div>';
+  const nameIn = document.createElement('input');
+  nameIn.value = p.name;
+  nameIn.addEventListener('input', e => p.name = e.target.value);
+  nameField.appendChild(nameIn);
+  wrap.appendChild(nameField);
+
+  const subField = document.createElement('div');
+  subField.className = 'editor-field';
+  subField.innerHTML = '<div class="editor-label">subtitle</div>';
+  const subIn = document.createElement('input');
+  subIn.value = p.subtitle || '';
+  subIn.placeholder = 'e.g. back + biceps — V-taper foundation';
+  subIn.addEventListener('input', e => p.subtitle = e.target.value);
+  subField.appendChild(subIn);
+  wrap.appendChild(subField);
+
+  const durField = document.createElement('div');
+  durField.className = 'editor-field';
+  durField.innerHTML = '<div class="editor-label">duration (text)</div>';
+  const durIn = document.createElement('input');
+  durIn.value = p.duration || '';
+  durIn.placeholder = '55–70 min';
+  durIn.addEventListener('input', e => p.duration = e.target.value);
+  durField.appendChild(durIn);
+  wrap.appendChild(durField);
+
+  // Warmup
+  wrap.appendChild(el('div', 'editor-label', 'warm-up'));
+  const wuBlock = document.createElement('div');
+  wuBlock.className = 'editor-list-block';
+  p.warmup.forEach((line, i) => wuBlock.appendChild(makeListItemEditor(line, v => p.warmup[i] = v, () => { p.warmup.splice(i, 1); render(); })));
+  const addWU = el('button', 'editor-add-btn', '+ warm-up step');
+  addWU.addEventListener('click', () => { p.warmup.push(''); render(); });
+  wuBlock.appendChild(addWU);
+  wrap.appendChild(wuBlock);
+
+  // Exercises
+  wrap.appendChild(el('div', 'editor-label', 'exercises'));
+  p.exercises.forEach((ex, i) => wrap.appendChild(makeExerciseEditor(ex, i, p.exercises)));
+
+  const fromLib = el('button', 'editor-add-btn accent', '+ pick from library');
+  fromLib.addEventListener('click', () => openLibraryPickerModal(p));
+  wrap.appendChild(fromLib);
+
+  const addEx = el('button', 'editor-add-btn', '+ custom exercise');
+  addEx.addEventListener('click', () => {
+    p.exercises.push({ id: uid('ex'), letter: nextLetter(p.exercises.length), name: '', alt: '', sets: 3, reps: '8–12', rest: 90, cues: '' });
+    render();
+  });
+  wrap.appendChild(addEx);
+
+  // Cooldown
+  wrap.appendChild(el('div', 'editor-label', 'cool-down'));
+  const cdBlock = document.createElement('div');
+  cdBlock.className = 'editor-list-block';
+  (p.cooldown || []).forEach((line, i) => cdBlock.appendChild(makeListItemEditor(line, v => p.cooldown[i] = v, () => { p.cooldown.splice(i, 1); render(); })));
+  const addCD = el('button', 'editor-add-btn', '+ cool-down step');
+  addCD.addEventListener('click', () => { (p.cooldown ||= []).push(''); render(); });
+  cdBlock.appendChild(addCD);
+  wrap.appendChild(cdBlock);
+
+  const actions = document.createElement('div');
+  actions.className = 'editor-actions';
+  const save = el('button', 'btn-primary', 'keep');
+  save.addEventListener('click', savePlan);
+  actions.appendChild(save);
+
+  const existing = state.plans.find(pl => pl.id === p.id);
+  if (existing) {
+    const del = el('button', 'btn-danger', 'delete');
+    del.addEventListener('click', () => {
+      if (!confirm('Delete this plan?')) return;
+      state.plans = state.plans.filter(pl => pl.id !== p.id);
+      saveState();
+      editingPlan = null;
+      setView('plans');
+      toast('deleted');
+    });
+    actions.appendChild(del);
+  }
+  wrap.appendChild(actions);
+
+  return wrap;
+}
+
+function makeListItemEditor(value, onChange, onDelete) {
+  const row = document.createElement('div');
+  row.className = 'editor-list-item';
+  const inp = document.createElement('input');
+  inp.value = value;
+  inp.placeholder = 'add a step…';
+  inp.addEventListener('input', e => onChange(e.target.value));
+  row.appendChild(inp);
+  const del = el('button', 'icon-btn', '×');
+  del.addEventListener('click', onDelete);
+  row.appendChild(del);
+  return row;
+}
+
+function makeExerciseEditor(ex, idx, list) {
+  const wrap = document.createElement('div');
+  wrap.className = 'editor-exercise' + (ex.libraryId ? ' linked' : '');
+
+  const lib = getLibEntry(ex.libraryId);
+  if (lib) {
+    const linkInfo = el('div', 'editor-ex-link-info', `↳ linked: ${lib.name}`);
+    wrap.appendChild(linkInfo);
+  }
+
+  const grid = document.createElement('div');
+  grid.className = 'editor-ex-grid';
+  const nameIn = document.createElement('input');
+  nameIn.value = ex.name;
+  nameIn.placeholder = 'exercise name';
+  nameIn.addEventListener('input', e => ex.name = e.target.value);
+  grid.appendChild(nameIn);
+
+  const setsIn = document.createElement('input');
+  setsIn.type = 'number'; setsIn.min = '1';
+  setsIn.value = ex.sets; setsIn.placeholder = 'sets';
+  setsIn.addEventListener('input', e => ex.sets = parseInt(e.target.value) || 1);
+  grid.appendChild(setsIn);
+
+  const repsIn = document.createElement('input');
+  repsIn.value = ex.reps; repsIn.placeholder = 'reps';
+  repsIn.addEventListener('input', e => ex.reps = e.target.value);
+  grid.appendChild(repsIn);
+
+  const restIn = document.createElement('input');
+  restIn.type = 'number'; restIn.min = '0';
+  restIn.value = ex.rest; restIn.placeholder = 'rest s';
+  restIn.addEventListener('input', e => ex.rest = parseInt(e.target.value) || 0);
+  grid.appendChild(restIn);
+
+  wrap.appendChild(grid);
+
+  const altIn = document.createElement('input');
+  altIn.value = ex.alt || ''; altIn.placeholder = 'alternative (optional)';
+  altIn.style.fontSize = '13px'; altIn.style.marginBottom = '6px';
+  altIn.addEventListener('input', e => ex.alt = e.target.value);
+  wrap.appendChild(altIn);
+
+  const cuesIn = document.createElement('input');
+  cuesIn.value = ex.cues || ''; cuesIn.placeholder = 'cues — what to remember mid-set';
+  cuesIn.style.fontSize = '13px';
+  cuesIn.addEventListener('input', e => ex.cues = e.target.value);
+  wrap.appendChild(cuesIn);
+
+  const ctrls = document.createElement('div');
+  ctrls.className = 'editor-ex-controls';
+  const moves = document.createElement('div');
+  moves.className = 'move-btns';
+  const up = el('button', 'icon-btn', '↑');
+  up.addEventListener('click', () => { if (idx === 0) return; [list[idx-1], list[idx]] = [list[idx], list[idx-1]]; relabel(list); render(); });
+  moves.appendChild(up);
+  const down = el('button', 'icon-btn', '↓');
+  down.addEventListener('click', () => { if (idx === list.length - 1) return; [list[idx+1], list[idx]] = [list[idx], list[idx+1]]; relabel(list); render(); });
+  moves.appendChild(down);
+  ctrls.appendChild(moves);
+
+  const del = el('button', 'icon-btn', '×');
+  del.style.color = 'var(--crimson)';
+  del.addEventListener('click', () => { list.splice(idx, 1); relabel(list); render(); });
+  ctrls.appendChild(del);
+
+  wrap.appendChild(ctrls);
+  return wrap;
+}
+
+function nextLetter(n) { return String.fromCharCode(65 + (n % 26)); }
+function relabel(list) { list.forEach((ex, i) => ex.letter = nextLetter(i)); }
+
+function openLibraryPickerModal(plan) {
+  const modal = document.getElementById('modal');
+  modal.innerHTML = `
+    <div class="modal-header">
+      <div class="modal-title">pick from library</div>
+      <button class="modal-close" id="modal-close-btn">×</button>
+    </div>
+    <div class="library-search-wrap">
+      <input id="lib-pick-search" placeholder="search…">
+    </div>
+    <div class="lib-grid" id="lib-pick-grid"></div>`;
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('modal-close-btn').onclick = closeModal;
+  const renderPickGrid = (q) => {
+    const grid = document.getElementById('lib-pick-grid');
+    grid.innerHTML = '';
+    const qq = (q || '').toLowerCase().trim();
+    state.library.forEach(libEx => {
+      if (qq) {
+        const hay = (libEx.name + ' ' + (libEx.primary || []).join(' ')).toLowerCase();
+        if (!hay.includes(qq)) return;
+      }
+      const card = document.createElement('button');
+      card.className = 'lib-card';
+      card.innerHTML = `
+        <span class="lib-mech-tag lib-mech-${libEx.mechanic}">${escapeHtml(libEx.mechanic)}</span>
+        <div class="lib-card-info">
+          <div class="lib-card-name">${escapeHtml(libEx.name)}</div>
+          <div class="lib-card-muscles">${escapeHtml((libEx.primary || []).join(', '))}</div>
+        </div>`;
+      card.addEventListener('click', () => {
+        plan.exercises.push({
+          id: uid('ex'),
+          libraryId: libEx.id,
+          letter: nextLetter(plan.exercises.length),
+          name: libEx.name,
+          alt: '',
+          sets: 3,
+          reps: '8\u201312',
+          rest: 90,
+          cues: ''
+        });
+        closeModal();
+        render();
+        toast('added');
+      });
+      grid.appendChild(card);
+    });
+  };
+  document.getElementById('lib-pick-search').addEventListener('input', e => renderPickGrid(e.target.value));
+  renderPickGrid('');
+}
+
+function savePlan() {
+  const p = editingPlan;
+  if (!p.name.trim()) {
+    toast('plan needs a name');
+    return;
+  }
+  p.warmup = (p.warmup || []).map(s => s.trim()).filter(Boolean);
+  p.cooldown = (p.cooldown || []).map(s => s.trim()).filter(Boolean);
+  p.exercises = p.exercises.filter(ex => ex.name && ex.name.trim());
+  const idx = state.plans.findIndex(pl => pl.id === p.id);
+  if (idx >= 0) state.plans[idx] = p;
+  else state.plans.push(p);
+  saveState();
+  editingPlan = null;
+  toast('kept');
+  setView('plans');
+}
+
+function renderHistory() {
+  const wrap = document.createElement('div');
+  wrap.appendChild(el('div', 'today-eyebrow', 'history'));
+  wrap.appendChild(el('div', 'session-sub', 'what the body has done.'));
+  if (!state.sessions.length) {
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.innerHTML = `<div class="empty-msg">no sessions yet</div><div class="empty-sub">first one writes the line.</div>`;
+    wrap.appendChild(empty);
+    return wrap;
+  }
+  const list = document.createElement('div');
+  list.className = 'history-list';
+  state.sessions.slice(0, 50).forEach(s => {
+    const item = document.createElement('div');
+    item.className = 'history-item';
+    const doneCount = s.exercises ? s.exercises.filter(e => e.done).length : 0;
+    const totalCount = s.exercises ? s.exercises.length : 0;
+    item.innerHTML = `
+      <div class="history-date">${formatDate(s.date)}</div>
+      <div class="history-name">${escapeHtml(s.planName)}</div>
+      ${s.type === 'training' ? `<div class="history-stats">${doneCount}/${totalCount} movements</div>` : `<div class="history-stats">mode</div>`}
+      ${s.finalNotes ? `<div class="history-notes">${escapeHtml(s.finalNotes)}</div>` : ''}`;
+    list.appendChild(item);
+  });
+  wrap.appendChild(list);
+  return wrap;
+}
+
+setHeaderDate();
+render();
+setInterval(setHeaderDate, 60 * 1000);
+</script>
+</body>
+</html>

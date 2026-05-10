@@ -1,0 +1,19 @@
+{
+  "name": "Daily Practice — Halo Horns",
+  "short_name": "Practice",
+  "description": "Body Temple, Inner Temple, and the daily portal — Lek's practice instrument.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0908",
+  "theme_color": "#0a0908",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
