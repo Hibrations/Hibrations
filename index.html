@@ -730,25 +730,83 @@ const Portal = (function() {
     sunday:    { kind: 'zen',      name: 'Zen Day',             sub: 'sauna, light walk, mobility — no minimums', duration: 'unscheduled', meta: 'rest' }
   };
 
+  // CROSSLINKS now keyed by plan id, so the breath pairing always matches what you're training,
+  // regardless of which day of the week the plan lands on (Body Temple's schedule is editable).
   const CROSSLINKS = {
-    monday: { label: 'breath pairings — pull day', before: 'Box breath (3–4 min) — primes the nervous system for pulling. Steady focus before the big lifts.', after: '4-7-8 breath (4 rounds) — drops you back into parasympathetic. Helps lats and biceps recover.' },
-    wednesday: { label: 'breath pairings — push day', before: 'Breath of fire or Wim Hof (1 round) — activation, drives blood and intent into the chest.', after: 'Long exhales (4-4-8) — settles the front-body, releases jaw and shoulder tension that push days build up.' },
-    friday: { label: 'breath pairings — leg day', before: 'Box breath (4-4-4-4) — focus and bracing for the squat. Establishes intra-abdominal pressure rhythm.', after: 'Microcosmic orbit (5–10 min) — pulls the spent energy back up and circulates it. Specifically good after legs.' },
-    saturday: { label: 'breath pairings — upper hypertrophy', before: 'Quick breath reset (3 min, box) — light-load day, just need to be present.', after: 'Light evening wind-down ratio — tomorrow is zen.' },
-    tuesday: { label: 'breath pairing — walk day', before: '', after: 'No specific pairing — let the walk be the breath practice. Long inhale through the nose, slow exhale, repeat as you move.' },
-    thursday: { label: 'breath pairing — walk day', before: '', after: 'If you do zone 2 cardio: alternate-nostril breath after to balance hemispheres. Otherwise, same as Tuesday — the walk is the practice.' },
-    sunday: { label: 'pairing — zen day', before: '', after: 'Microcosmic orbit fits zen day perfectly — no exertion, just energy moving. Or extend Solar Gate to a longer sit. The point is to NOT optimize.' }
+    pull:      { label: 'breath pairings — pull day',            before: 'Box breath (3–4 min) — primes the nervous system for pulling. Steady focus before the big lifts.', after: '4-7-8 breath (4 rounds) — drops you back into parasympathetic. Helps lats and biceps recover.' },
+    push:      { label: 'breath pairings — push day',            before: 'Breath of fire or Wim Hof (1 round) — activation, drives blood and intent into the chest.', after: 'Long exhales (4-4-8) — settles the front-body, releases jaw and shoulder tension that push days build up.' },
+    legs:      { label: 'breath pairings — leg day',             before: 'Box breath (4-4-4-4) — focus and bracing for the squat. Establishes intra-abdominal pressure rhythm.', after: 'Microcosmic orbit (5–10 min) — pulls the spent energy back up and circulates it. Specifically good after legs.' },
+    upper_hyp: { label: 'breath pairings — upper hypertrophy',   before: 'Quick breath reset (3 min, box) — light-load day, just need to be present.', after: 'Light evening wind-down ratio — let the system idle.' },
+    walk:      { label: 'breath pairing — walk',                 before: '', after: 'Let the walk be the breath practice. Long inhale through the nose, slow exhale, repeat as you move.' },
+    zone2:     { label: 'breath pairing — zone 2',               before: '', after: 'Alternate-nostril breath after to balance the hemispheres. The cardio took ida; nadi shodhana settles it.' },
+    mobility:  { label: 'breath pairing — mobility',             before: '', after: 'Long exhales throughout. Let the breath be longer than the stretch is uncomfortable.' },
+    zen:       { label: 'pairing — zen day',                     before: '', after: 'Microcosmic orbit fits zen day perfectly — no exertion, just energy moving. Or extend Solar Gate to a longer sit. The point is to NOT optimize.' },
+    recovery:  { label: 'pairing — recovery',                    before: '', after: 'Coherent breathing (5-in/5-out) for 10 min. Nothing fancy. Let the parasympathetic do its work.' }
   };
 
+  // HEART_NOTES keyed by plan id — the note tracks what you're doing, not what day it is.
   const HEART_NOTES = {
-    sunday: "the practice today is rest. trust the wave.",
-    monday: "back day is V-taper day. drive the elbows down, not the chin up.",
-    tuesday: "the walk is the floor. don't make it a workout.",
-    wednesday: "press the bar past the face. the glutes brace, the ribs stay down.",
-    thursday: "midweek — what does the body need that the schedule didn't ask for?",
-    friday: "legs are the systemic gate. the testosterone is downstream of the squat.",
-    saturday: "lighter today. mind-muscle, not load. the pump is the medicine."
+    pull:      "back day is V-taper day. drive the elbows down, not the chin up.",
+    push:      "press the bar past the face. the glutes brace, the ribs stay down.",
+    legs:      "legs are the systemic gate. the testosterone is downstream of the squat.",
+    upper_hyp: "lighter today. mind-muscle, not load. the pump is the medicine.",
+    walk:      "the walk is the floor. don't make it a workout.",
+    zone2:     "find the breath where conversation is just barely possible.",
+    mobility:  "let the breath get longer than the stretch is uncomfortable.",
+    zen:       "the practice today is rest. trust the wave.",
+    recovery:  "what is the body telling you? listen first, then move."
   };
+
+  // Reads Body Temple's editable schedule from shared localStorage so the Portal
+  // always reflects what Body Temple actually has scheduled (Body Temple is source of truth).
+  // Falls back to TRAINING_SCHEDULE hardcoded defaults for fresh installs.
+  function readBodyTempleSchedule(dayName) {
+    try {
+      const raw = localStorage.getItem('body_temple_v1');
+      if (!raw) return null;
+      const state = JSON.parse(raw);
+      if (!state || !state.schedule) return null;
+      const planId = state.schedule[dayName];
+      if (!planId) return null;
+      const plan = (state.plans || []).find(p => p.id === planId);
+      if (plan) {
+        return {
+          kind: 'training',
+          planId: planId,
+          name: plan.name,
+          sub: plan.subtitle || '',
+          duration: plan.duration || '',
+          meta: (plan.exercises && plan.exercises.length) ? plan.exercises.length + ' movements' : ''
+        };
+      }
+      const alt = (state.altModes || []).find(m => m.id === planId);
+      if (alt) {
+        let kind = 'training';
+        if (planId === 'zen') kind = 'zen';
+        else if (planId === 'walk' || planId === 'zone2') kind = 'cardio';
+        else if (planId === 'recovery') kind = 'rest';
+        return {
+          kind: kind,
+          planId: planId,
+          name: alt.name,
+          sub: alt.subtitle || '',
+          duration: alt.duration || '',
+          meta: planId === 'zen' ? 'rest' : (planId === 'walk' ? 'zone 1' : (planId === 'zone2' ? 'zone 2' : ''))
+        };
+      }
+      return null;
+    } catch (e) { return null; }
+  }
+
+  // Hardcoded fallback adds planId so the new CROSSLINKS/HEART_NOTES keying still works
+  // even when Body Temple's localStorage hasn't been populated yet.
+  TRAINING_SCHEDULE.monday.planId    = 'pull';
+  TRAINING_SCHEDULE.tuesday.planId   = 'walk';
+  TRAINING_SCHEDULE.wednesday.planId = 'push';
+  TRAINING_SCHEDULE.thursday.planId  = 'walk';
+  TRAINING_SCHEDULE.friday.planId    = 'legs';
+  TRAINING_SCHEDULE.saturday.planId  = 'upper_hyp';
+  TRAINING_SCHEDULE.sunday.planId    = 'zen';
 
   function makeBlock({ icon, iconClass, cardClass, onClick, eyebrow, name, sub, meta }) {
     const block = document.createElement('div');
@@ -995,7 +1053,8 @@ const Portal = (function() {
     const now = new Date();
     const dayIdx = now.getDay();
     const day = DAYS[dayIdx];
-    const train = TRAINING_SCHEDULE[day];
+    // Read from Body Temple's actual schedule (source of truth), fall back to hardcoded defaults.
+    const train = readBodyTempleSchedule(day) || TRAINING_SCHEDULE[day];
 
     // Hero
     const hero = document.createElement('div');
@@ -1031,7 +1090,7 @@ const Portal = (function() {
       meta: [train.duration, train.meta, 'body temple']
     }));
 
-    const cross = CROSSLINKS[day];
+    const cross = CROSSLINKS[train.planId];
     if (cross && (cross.before || cross.after)) {
       const cl = document.createElement('div');
       cl.className = 'crosslink';
@@ -1068,7 +1127,7 @@ const Portal = (function() {
 
     const heart = document.createElement('div');
     heart.className = 'heart-note';
-    heart.innerHTML = `<div class="heart-note-text">${escapeHtml(HEART_NOTES[day] || '')}</div>`;
+    heart.innerHTML = `<div class="heart-note-text">${escapeHtml(HEART_NOTES[train.planId] || '')}</div>`;
     view.appendChild(heart);
 
     mount.appendChild(view);
