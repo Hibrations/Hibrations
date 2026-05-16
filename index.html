@@ -430,6 +430,78 @@ nav.tab-bar {
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .modal-title { font-size: 18px; font-weight: 400; }
 .modal-close { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elev); display: flex; align-items: center; justify-content: center; color: var(--ink-dim); }
+
+/* ====== DAY PLANNER ====== */
+.portal-toggle { display: flex; gap: 6px; justify-content: center; margin: 0 0 22px; }
+.portal-toggle-pill {
+  font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+  padding: 7px 20px; border-radius: 999px; border: 1px solid var(--border);
+  color: var(--ink-faint); transition: all 0.15s;
+}
+.portal-toggle-pill.active { color: var(--ink); border-color: var(--ink-dim); background: var(--bg-elev); }
+.plan-intro { text-align: center; font-size: 13px; color: var(--ink-faint); font-style: italic; margin: 4px 0 20px; line-height: 1.6; }
+.plan-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+.plan-activity {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--r-md); padding: 14px 14px 14px 16px;
+  display: flex; align-items: flex-start; gap: 12px; transition: opacity 0.2s;
+}
+.plan-activity.done { opacity: 0.5; }
+.plan-activity.done .plan-activity-name { text-decoration: line-through; text-decoration-color: var(--ink-faint); }
+.plan-check {
+  flex: 0 0 26px; height: 26px; border-radius: 50%;
+  border: 1.5px solid var(--border); background: transparent;
+  margin-top: 1px; transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center;
+}
+.plan-check.checked { background: var(--gold); border-color: var(--gold); }
+.plan-check.checked::after { content: '\2713'; color: var(--bg); font-size: 13px; font-weight: 600; }
+.plan-activity-body { flex: 1; min-width: 0; }
+.plan-activity-name { font-size: 16px; font-weight: 400; line-height: 1.3; margin-bottom: 7px; }
+.plan-stack { display: flex; gap: 5px; flex-wrap: wrap; }
+.plan-stack-chip {
+  font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 999px; font-weight: 500;
+}
+.plan-stack-empty { font-size: 11px; color: var(--ink-faint); font-style: italic; }
+.plan-activity-controls { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+.plan-mini-btn {
+  width: 30px; height: 26px; border-radius: var(--r-sm);
+  border: 1px solid var(--border-soft); color: var(--ink-faint);
+  font-size: 13px; display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.plan-mini-btn:active { border-color: var(--ink-dim); color: var(--ink); }
+.plan-tended { text-align: center; font-size: 12px; color: var(--gold-dim); letter-spacing: 0.1em; margin: 2px 0 16px; }
+.plan-add-btn {
+  width: 100%; padding: 14px; border: 1px dashed var(--gold-dim);
+  border-radius: var(--r-md); color: var(--gold);
+  font-size: 13px; letter-spacing: 0.05em; transition: all 0.15s;
+}
+.plan-add-btn:active { border-style: solid; background: var(--bg-elev); }
+.plan-preset-grid { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+.plan-preset {
+  background: var(--bg-elev); border: 1px solid var(--border-soft);
+  border-radius: var(--r-md); padding: 12px 14px; text-align: left;
+  width: 100%; transition: border-color 0.15s;
+}
+.plan-preset:active { border-color: var(--ink-dim); }
+.plan-preset-name { font-size: 14px; margin-bottom: 6px; }
+.plan-stack-picker { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0 16px; }
+.plan-stack-pick {
+  font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border);
+  color: var(--ink-faint); transition: all 0.15s;
+}
+.plan-recent { margin-top: 30px; }
+.plan-recent-item {
+  background: var(--bg-elev); border: 1px solid var(--border-soft);
+  border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 8px;
+}
+.plan-recent-date { font-size: 11px; color: var(--ink-faint); letter-spacing: 0.06em; margin-bottom: 4px; }
+.plan-recent-acts { font-size: 13px; color: var(--ink-dim); line-height: 1.55; }
+.plan-empty { text-align: center; padding: 28px 16px 8px; color: var(--ink-faint); }
+.plan-empty-msg { font-size: 14px; font-style: italic; line-height: 1.6; }
 </style>
 </head>
 <body>
@@ -698,11 +770,227 @@ const Portal = (function() {
     return block;
   }
 
+  // ============================================================
+  // DAY PLANNER — activity-list, daily-fresh, stack view
+  // ============================================================
+  let subview = 'flow';
+  const PLAN_KEY = 'portal_plan_v1';
+
+  const PLAN_STACKS = {
+    body:    { label: 'body',    color: '#3d7d63', bg: 'rgba(61,125,99,0.18)' },
+    breath:  { label: 'breath',  color: '#8fb8c7', bg: 'rgba(143,184,199,0.18)' },
+    energy:  { label: 'energy',  color: '#b08fc7', bg: 'rgba(176,143,199,0.18)' },
+    field:   { label: 'field',   color: '#c89060', bg: 'rgba(200,144,96,0.18)' },
+    healing: { label: 'healing', color: '#6ba879', bg: 'rgba(107,168,121,0.18)' },
+    primal:  { label: 'primal',  color: '#c78f8f', bg: 'rgba(199,143,143,0.18)' }
+  };
+
+  const PRESET_ACTIVITIES = [
+    { name: 'Solar Gate',        stack: ['breath','energy'] },
+    { name: 'Training / gym',    stack: ['body','breath','energy','primal'] },
+    { name: 'Walk',              stack: ['body','breath','field','energy'] },
+    { name: 'Sauna',             stack: ['body','breath','energy','healing'] },
+    { name: 'Cold plunge',       stack: ['body','breath','energy'] },
+    { name: 'Breathwork',        stack: ['breath','energy'] },
+    { name: 'Microcosmic orbit', stack: ['breath','energy'] },
+    { name: 'Field practice',    stack: ['field','breath','energy'] },
+    { name: 'Massage practice',  stack: ['healing','body','energy'] },
+    { name: 'Qigong',            stack: ['healing','energy','breath','body'] },
+    { name: 'Vocal practice',    stack: ['body','breath'] },
+    { name: 'Wind-down',         stack: ['breath','energy'] },
+    { name: 'Journal',           stack: [] },
+    { name: 'Work block',        stack: [] }
+  ];
+
+  function loadPlanStore() {
+    try { return JSON.parse(localStorage.getItem(PLAN_KEY)) || {}; }
+    catch (e) { return {}; }
+  }
+  function savePlanStore(store) {
+    try { localStorage.setItem(PLAN_KEY, JSON.stringify(store)); } catch (e) {}
+  }
+  function getPlan(dateKey) {
+    const store = loadPlanStore();
+    return store[dateKey] || { activities: [] };
+  }
+  function setPlan(dateKey, plan) {
+    const store = loadPlanStore();
+    store[dateKey] = plan;
+    const keys = Object.keys(store).sort();
+    while (keys.length > 30) { delete store[keys.shift()]; }
+    savePlanStore(store);
+  }
+  function planAdd(name, stack) {
+    const t = TODAY(); const plan = getPlan(t);
+    plan.activities.push({ id: uid('act'), name: name, stack: stack || [], done: false });
+    setPlan(t, plan);
+  }
+  function planToggle(id) {
+    const t = TODAY(); const plan = getPlan(t);
+    const a = plan.activities.find(x => x.id === id);
+    if (a) a.done = !a.done;
+    setPlan(t, plan);
+  }
+  function planRemove(id) {
+    const t = TODAY(); const plan = getPlan(t);
+    plan.activities = plan.activities.filter(x => x.id !== id);
+    setPlan(t, plan);
+  }
+  function planMove(id, dir) {
+    const t = TODAY(); const plan = getPlan(t);
+    const i = plan.activities.findIndex(x => x.id === id);
+    if (i < 0) return;
+    const j = i + dir;
+    if (j < 0 || j >= plan.activities.length) return;
+    const tmp = plan.activities[i]; plan.activities[i] = plan.activities[j]; plan.activities[j] = tmp;
+    setPlan(t, plan);
+  }
+
+  function stackChips(stack) {
+    if (!stack || !stack.length) return '<span class="plan-stack-empty">\u2014 solo</span>';
+    return stack.map(k => {
+      const s = PLAN_STACKS[k]; if (!s) return '';
+      return '<span class="plan-stack-chip" style="color:' + s.color + ';background:' + s.bg + '">' + s.label + '</span>';
+    }).join('');
+  }
+
+  function renderPlanInto(view) {
+    const plan = getPlan(TODAY());
+    view.appendChild(el('div', 'section-eyebrow', "today's plan"));
+    const intro = el('div', 'plan-intro');
+    intro.textContent = plan.activities.length
+      ? 'the day, as the body is living it \u2014 each card shows the temples it stacks.'
+      : 'what does today ask? add what the body says yes to. each card will show the temples it stacks.';
+    view.appendChild(intro);
+
+    if (plan.activities.length) {
+      const list = el('div', 'plan-list');
+      plan.activities.forEach((a) => {
+        const card = el('div', 'plan-activity' + (a.done ? ' done' : ''));
+        const check = el('button', 'plan-check' + (a.done ? ' checked' : ''));
+        check.addEventListener('click', () => { planToggle(a.id); render(); });
+        const body = el('div', 'plan-activity-body');
+        body.innerHTML = '<div class="plan-activity-name">' + escapeHtml(a.name) + '</div>' +
+          '<div class="plan-stack">' + stackChips(a.stack) + '</div>';
+        const ctrls = el('div', 'plan-activity-controls');
+        const up = el('button', 'plan-mini-btn', '\u2191');
+        up.addEventListener('click', () => { planMove(a.id, -1); render(); });
+        const down = el('button', 'plan-mini-btn', '\u2193');
+        down.addEventListener('click', () => { planMove(a.id, 1); render(); });
+        const rm = el('button', 'plan-mini-btn', '\u00d7');
+        rm.addEventListener('click', () => { planRemove(a.id); render(); });
+        ctrls.appendChild(up); ctrls.appendChild(down); ctrls.appendChild(rm);
+        card.appendChild(check); card.appendChild(body); card.appendChild(ctrls);
+        list.appendChild(card);
+      });
+      view.appendChild(list);
+      const tended = plan.activities.filter(a => a.done).length;
+      if (tended > 0) {
+        view.appendChild(el('div', 'plan-tended', tended === 1 ? '1 tended today' : tended + ' tended today'));
+      }
+    } else {
+      const empty = el('div', 'plan-empty');
+      empty.innerHTML = '<div class="plan-empty-msg">blank slate. the day plans itself by being lived.</div>';
+      view.appendChild(empty);
+    }
+
+    const addBtn = el('button', 'plan-add-btn', '+ add activity');
+    addBtn.addEventListener('click', openAddActivity);
+    view.appendChild(addBtn);
+
+    const store = loadPlanStore();
+    const recentKeys = Object.keys(store)
+      .filter(k => k !== TODAY() && store[k].activities && store[k].activities.length)
+      .sort().reverse().slice(0, 5);
+    if (recentKeys.length) {
+      const recent = el('div', 'plan-recent');
+      recent.appendChild(el('div', 'section-eyebrow', 'recent days'));
+      recentKeys.forEach(k => {
+        const acts = store[k].activities;
+        const doneCount = acts.filter(a => a.done).length;
+        const item = el('div', 'plan-recent-item');
+        item.innerHTML = '<div class="plan-recent-date">' + escapeHtml(formatDate(k)) + '</div>' +
+          '<div class="plan-recent-acts">' + acts.map(a => escapeHtml(a.name)).join(' \u00b7 ') +
+          (doneCount ? ' <span style="color:var(--gold)">\u00b7 ' + doneCount + ' tended</span>' : '') + '</div>';
+        recent.appendChild(item);
+      });
+      view.appendChild(recent);
+    }
+  }
+
+  function openAddActivity() {
+    let customStack = [];
+    const presetHtml = PRESET_ACTIVITIES.map((p, i) =>
+      '<button class="plan-preset" data-preset="' + i + '">' +
+        '<div class="plan-preset-name">' + escapeHtml(p.name) + '</div>' +
+        '<div class="plan-stack">' + stackChips(p.stack) + '</div>' +
+      '</button>').join('');
+    const pickHtml = Object.keys(PLAN_STACKS).map(k =>
+      '<button class="plan-stack-pick" data-stack="' + k + '">' + PLAN_STACKS[k].label + '</button>').join('');
+    Modal.open(
+      '<div class="modal-header">' +
+        '<div class="modal-title">add activity</div>' +
+        '<button class="modal-close" id="mclose">\u2715</button>' +
+      '</div>' +
+      '<div class="section-header">pick a practice</div>' +
+      '<div class="plan-preset-grid">' + presetHtml + '</div>' +
+      '<div class="section-header">or name your own</div>' +
+      '<input type="text" id="plan-custom-name" placeholder="custom activity..." />' +
+      '<div class="form-label" style="margin-top:14px">tap the temples it stacks</div>' +
+      '<div class="plan-stack-picker">' + pickHtml + '</div>' +
+      '<button class="btn-primary" id="plan-custom-add">add custom</button>'
+    );
+    document.querySelectorAll('.plan-preset').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const p = PRESET_ACTIVITIES[parseInt(btn.dataset.preset, 10)];
+        planAdd(p.name, p.stack.slice());
+        Modal.close(); render(); toast(p.name + ' added');
+      });
+    });
+    document.querySelectorAll('.plan-stack-pick').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const k = btn.dataset.stack;
+        if (customStack.indexOf(k) >= 0) {
+          customStack = customStack.filter(x => x !== k);
+          btn.classList.remove('on');
+          btn.style.background = ''; btn.style.borderColor = ''; btn.style.color = '';
+        } else {
+          customStack.push(k);
+          btn.classList.add('on');
+          btn.style.background = PLAN_STACKS[k].color;
+          btn.style.borderColor = PLAN_STACKS[k].color;
+          btn.style.color = 'var(--bg)';
+        }
+      });
+    });
+    document.getElementById('plan-custom-add').addEventListener('click', () => {
+      const name = (document.getElementById('plan-custom-name').value || '').trim();
+      if (!name) { toast('name it first'); return; }
+      planAdd(name, customStack.slice());
+      Modal.close(); render(); toast(name + ' added');
+    });
+  }
+
   function render() {
     const mount = document.getElementById('app-mount');
     mount.innerHTML = '';
     const view = document.createElement('div');
     view.className = 'view active';
+
+    // ---- subview toggle (flow / plan) ----
+    const toggle = el('div', 'portal-toggle');
+    const flowPill = el('button', 'portal-toggle-pill' + (subview === 'flow' ? ' active' : ''), 'flow');
+    flowPill.addEventListener('click', () => { if (subview !== 'flow') { subview = 'flow'; window.scrollTo(0, 0); render(); } });
+    const planPill = el('button', 'portal-toggle-pill' + (subview === 'plan' ? ' active' : ''), 'plan');
+    planPill.addEventListener('click', () => { if (subview !== 'plan') { subview = 'plan'; window.scrollTo(0, 0); render(); } });
+    toggle.appendChild(flowPill); toggle.appendChild(planPill);
+    view.appendChild(toggle);
+
+    if (subview === 'plan') {
+      renderPlanInto(view);
+      mount.appendChild(view);
+      return;
+    }
 
     const now = new Date();
     const dayIdx = now.getDay();
