@@ -161,10 +161,10 @@ nav.tab-bar {
 .crosslink-text { font-size: 13px; color: var(--ink-dim); line-height: 1.6; font-style: italic; }
 .crosslink-text strong { font-style: normal; font-weight: 500; color: var(--ink); }
 
-.temples-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.temples-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .temple-card {
   background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: var(--r-md); padding: 22px 18px; text-align: center;
+  border-radius: var(--r-md); padding: 18px 12px; text-align: center;
   transition: border-color 0.15s, transform 0.15s;
   display: block; cursor: pointer; width: 100%;
 }
@@ -173,10 +173,13 @@ nav.tab-bar {
 .temple-card.gold:active { border-color: var(--gold); }
 .temple-card.emerald { border-color: var(--emerald-dim); }
 .temple-card.emerald:active { border-color: var(--emerald); }
-.temple-name { font-size: 15px; font-weight: 500; letter-spacing: 0.02em; margin-bottom: 4px; }
+.temple-card.crimson { border-color: var(--crimson-dim); }
+.temple-card.crimson:active { border-color: var(--crimson); }
+.temple-name { font-size: 14px; font-weight: 500; letter-spacing: 0.02em; margin-bottom: 4px; }
 .temple-name.gold { color: var(--gold); }
 .temple-name.emerald { color: var(--emerald); }
-.temple-sub { font-size: 11px; color: var(--ink-faint); letter-spacing: 0.04em; }
+.temple-name.crimson { color: var(--crimson); }
+.temple-sub { font-size: 10px; color: var(--ink-faint); letter-spacing: 0.04em; }
 
 .heart-note {
   margin-top: 36px; padding: 20px 22px;
@@ -685,6 +688,9 @@ const Shell = {
     } else if (app === 'inner') {
       Shell.openTemple('inner_temple.html', 'inner temple');
       return;
+    } else if (app === 'beast') {
+      Shell.openTemple('beast_temple.html', 'beast temple');
+      return;
     }
     window.scrollTo(0, 0);
   },
@@ -1123,6 +1129,10 @@ const Portal = (function() {
     innerCard.innerHTML = `<div class="temple-name gold">Inner Temple</div><div class="temple-sub">breath · ritual</div>`;
     innerCard.addEventListener('click', () => Shell.goTo('inner'));
     grid.appendChild(innerCard);
+    const beastCard = el('button', 'temple-card crimson');
+    beastCard.innerHTML = `<div class="temple-name crimson">Beast Temple</div><div class="temple-sub">primal · field · aura</div>`;
+    beastCard.addEventListener('click', () => Shell.goTo('beast'));
+    grid.appendChild(beastCard);
     view.appendChild(grid);
 
     const heart = document.createElement('div');
