@@ -505,6 +505,70 @@ nav.tab-bar {
 .plan-recent-acts { font-size: 13px; color: var(--ink-dim); line-height: 1.55; }
 .plan-empty { text-align: center; padding: 28px 16px 8px; color: var(--ink-faint); }
 .plan-empty-msg { font-size: 14px; font-style: italic; line-height: 1.6; }
+
+/* ====== ROUND 4a/4b — EDITABLE FLOW + LIBRARY PICKER ====== */
+.flow-add-btn {
+  width: calc(100% - 36px); margin-left: 36px;
+  padding: 12px; border: 1px dashed var(--border-soft);
+  border-radius: var(--r-md); color: var(--ink-faint);
+  font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+  margin-top: 6px; transition: all 0.15s;
+}
+.flow-add-btn:active { border-color: var(--ink-dim); color: var(--ink); border-style: solid; }
+.flow-extra-block { position: relative; }
+.flow-extra-x {
+  position: absolute; right: 8px; top: 14px;
+  width: 24px; height: 24px; border-radius: 50%;
+  border: 1px solid var(--border-soft); color: var(--ink-faint);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; background: var(--bg-card);
+  z-index: 3; opacity: 0.6;
+}
+.flow-extra-x:active { color: var(--crimson); border-color: var(--crimson-dim); opacity: 1; }
+.flow-extra-stack { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+
+/* Library picker */
+.lib-picker-search { margin-bottom: 12px; }
+.lib-picker-search input { padding: 12px 14px; font-size: 14px; }
+.lib-picker-tabs {
+  display: flex; gap: 4px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 2px;
+}
+.lib-picker-tab {
+  font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 7px 14px; border-radius: 999px; border: 1px solid var(--border);
+  color: var(--ink-faint); white-space: nowrap; flex-shrink: 0;
+}
+.lib-picker-tab.active { color: var(--ink); border-color: var(--ink-dim); background: var(--bg-elev); }
+.lib-picker-list {
+  max-height: 56vh; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;
+  -webkit-overflow-scrolling: touch;
+}
+.lib-picker-card {
+  background: var(--bg-elev); border: 1px solid var(--border-soft);
+  border-radius: var(--r-md); padding: 12px 14px; text-align: left;
+  width: 100%; transition: border-color 0.15s;
+}
+.lib-picker-card:active { border-color: var(--ink-dim); }
+.lib-picker-card-row {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+}
+.lib-picker-name { font-size: 14px; color: var(--ink); line-height: 1.3; }
+.lib-picker-source {
+  font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 999px; font-weight: 500; flex-shrink: 0;
+}
+.lib-picker-source.body { color: #3d7d63; background: rgba(61,125,99,0.18); }
+.lib-picker-source.inner { color: #c89060; background: rgba(200,144,96,0.18); }
+.lib-picker-source.beast { color: #9a4435; background: rgba(154,68,53,0.18); }
+.lib-picker-meta {
+  font-size: 11px; color: var(--ink-faint); margin-top: 6px;
+  display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+}
+.lib-picker-empty {
+  text-align: center; padding: 32px 12px; color: var(--ink-faint);
+  font-size: 13px; font-style: italic;
+}
+.plan-add-btn.lib-trigger { color: var(--ink-dim); border-color: var(--border); margin-bottom: 12px; }
 </style>
 </head>
 <body>
@@ -996,7 +1060,9 @@ const Portal = (function() {
         '<div class="modal-title">add activity</div>' +
         '<button class="modal-close" id="mclose">\u2715</button>' +
       '</div>' +
-      '<div class="section-header">pick a practice</div>' +
+      '<div class="section-header">from a temple library</div>' +
+      '<button class="plan-add-btn lib-trigger" id="plan-from-lib">search Body / Inner / Beast practices</button>' +
+      '<div class="section-header">or pick a quick preset</div>' +
       '<div class="plan-preset-grid">' + presetHtml + '</div>' +
       '<div class="section-header">or name your own</div>' +
       '<input type="text" id="plan-custom-name" placeholder="custom activity..." />' +
@@ -1009,6 +1075,13 @@ const Portal = (function() {
         const p = PRESET_ACTIVITIES[parseInt(btn.dataset.preset, 10)];
         planAdd(p.name, p.stack.slice());
         Modal.close(); render(); toast(p.name + ' added');
+      });
+    });
+    document.getElementById('plan-from-lib').addEventListener('click', () => {
+      openLibraryPicker(picked => {
+        planAdd(picked.name, picked.stack || []);
+        render();
+        toast(picked.name + ' added');
       });
     });
     document.querySelectorAll('.plan-stack-pick').forEach(btn => {
@@ -1032,6 +1105,246 @@ const Portal = (function() {
       if (!name) { toast('name it first'); return; }
       planAdd(name, customStack.slice());
       Modal.close(); render(); toast(name + ' added');
+    });
+  }
+
+  // ============================================================
+  // ROUND 4a/4b — EDITABLE FLOW + LIBRARY PICKER
+  // ============================================================
+
+  // Minimal Beast Temple manifest (canonical list is in beast_temple.html;
+  // this mirror lets the portal pull beast practices into flow/plan).
+  const BEAST_PRACTICES = [
+    { id: 'charged_lift', name: 'Charged Squat / Pull / Press', stack: ['body','breath','primal','field'], durationLabel: 'integrated' },
+    { id: 'bonfire_walk', name: 'Bonfire Walk', stack: ['body','field','breath','energy'], durationLabel: '20–45 min' },
+    { id: 'summoning', name: 'Summoning Practice', stack: ['breath','energy','primal'], durationLabel: '10 min' },
+    { id: 'volume_dial', name: 'Volume Dial Reps', stack: ['field','primal'], durationLabel: '5 min' },
+    { id: 'field_cultivation', name: 'Field Cultivation', stack: ['field','breath','body'], durationLabel: '10 min' },
+    { id: 'off_switch', name: 'Off-Switch', stack: ['field','breath'], durationLabel: '90 sec' },
+    { id: 'mirror', name: 'Mirror Practice', stack: ['field','primal'], durationLabel: '15 min' },
+    { id: 'sigil_edge', name: 'Sigil Edge', stack: ['primal','energy','breath'], durationLabel: '30–60 min' },
+    { id: 'aphrodite', name: 'Aphrodite / Eros Working', stack: ['healing','primal','field'], durationLabel: '30–60 min' },
+    { id: 'ra_eros', name: 'Ra Sphere + Eros Aura', stack: ['field','healing','energy'], durationLabel: '10–15 min' },
+    { id: 'orbit_arousal', name: 'Orbit During Arousal', stack: ['breath','energy','primal'], durationLabel: 'integrated' },
+    { id: 'shadow_journal', name: 'Shadow Journal', stack: ['primal'], durationLabel: '15–30 min' },
+    { id: 'fuel_cycle', name: 'Fuel Cycle Review', stack: ['primal','body'], durationLabel: '15 min' },
+    { id: 'tantric_solo', name: 'Tantric Solo Session', stack: ['primal','breath','energy','healing'], durationLabel: '45–90 min' },
+    { id: 'cock_breath', name: 'Cock-Breath Integration', stack: ['breath','energy','primal','body'], durationLabel: '10 min' },
+    { id: 'lust_meditation', name: 'Lust Meditation', stack: ['primal','energy','breath'], durationLabel: '15–30 min' },
+    { id: 'public_field', name: 'Charged Public Field Test', stack: ['field','primal','body'], durationLabel: '30–90 min' },
+    { id: 'sexual_visualization', name: 'Sexual Visualization', stack: ['primal','energy','breath'], durationLabel: '10–20 min' },
+    { id: 'worship', name: 'Worship Practice', stack: ['primal','healing','field'], durationLabel: '20–30 min' },
+    { id: 'pan_invocation', name: 'Pan Invocation', stack: ['primal','body','healing'], durationLabel: '30–45 min' },
+    { id: 'energetic_intercourse', name: 'Energetic Intercourse', stack: ['primal','energy','breath','healing'], durationLabel: '30–60 min' },
+    { id: 'cold_fire', name: 'Cold-Fire Alternation', stack: ['body','breath','primal','energy'], durationLabel: '30–60 min' }
+  ];
+
+  function readBodyLib() {
+    try {
+      const s = JSON.parse(localStorage.getItem('body_temple_v1') || '{}');
+      return (s.library || []).map(e => ({ id: e.id, name: e.name, source: 'body', stack: ['body'], durationLabel: '' }));
+    } catch(e) { return []; }
+  }
+  function readInnerLib() {
+    try {
+      const s = JSON.parse(localStorage.getItem('inner_temple_v1') || '{}');
+      return (s.library || []).map(e => {
+        const cat = e.category || '';
+        let stack = ['energy'];
+        if (cat === 'breath') stack = ['breath'];
+        else if (cat === 'meditation') stack = ['energy'];
+        else if (cat === 'movement') stack = ['body','breath'];
+        else if (cat === 'vocal') stack = ['body','breath'];
+        else if (cat === 'ritual') stack = ['energy','healing'];
+        return {
+          id: e.id, name: e.name, source: 'inner', stack,
+          durationLabel: e.defaultDuration ? Math.round(e.defaultDuration/60) + ' min' : ''
+        };
+      });
+    } catch(e) { return []; }
+  }
+  function readBeastLib() {
+    return BEAST_PRACTICES.map(p => ({ id: p.id, name: p.name, source: 'beast', stack: p.stack, durationLabel: p.durationLabel }));
+  }
+  function allLibs() { return [].concat(readBodyLib(), readInnerLib(), readBeastLib()); }
+
+  function openLibraryPicker(onPick) {
+    let activeTab = 'all';
+    let q = '';
+    const TABS = ['all','body','inner','beast'];
+    Modal.open(
+      '<div class="modal-header">' +
+        '<div class="modal-title">pick from a temple library</div>' +
+        '<button class="modal-close" id="mclose">\u2715</button>' +
+      '</div>' +
+      '<div class="lib-picker-search"><input type="text" id="lib-q" placeholder="search practices..." /></div>' +
+      '<div class="lib-picker-tabs">' +
+        TABS.map(t => '<button class="lib-picker-tab' + (t === activeTab ? ' active' : '') + '" data-tab="' + t + '">' + t + '</button>').join('') +
+      '</div>' +
+      '<div class="lib-picker-list" id="lib-list"></div>'
+    );
+    let currentItems = [];
+    function renderList() {
+      let items = allLibs();
+      if (activeTab !== 'all') items = items.filter(x => x.source === activeTab);
+      if (q) {
+        const qq = q.toLowerCase();
+        items = items.filter(x => x.name.toLowerCase().indexOf(qq) >= 0);
+      }
+      currentItems = items.slice(0, 200);
+      const listEl = document.getElementById('lib-list');
+      if (!listEl) return;
+      if (!currentItems.length) {
+        listEl.innerHTML = '<div class="lib-picker-empty">no practices match. try a different tab or term.</div>';
+        return;
+      }
+      listEl.innerHTML = currentItems.map((it, i) => {
+        const stackHtml = (it.stack || []).map(k => {
+          const s = PLAN_STACKS[k]; if (!s) return '';
+          return '<span class="plan-stack-chip" style="color:' + s.color + ';background:' + s.bg + '">' + s.label + '</span>';
+        }).join('');
+        return '<button class="lib-picker-card" data-idx="' + i + '">' +
+          '<div class="lib-picker-card-row">' +
+            '<div class="lib-picker-name">' + escapeHtml(it.name) + '</div>' +
+            '<div class="lib-picker-source ' + it.source + '">' + it.source + '</div>' +
+          '</div>' +
+          '<div class="lib-picker-meta">' +
+            '<div class="plan-stack">' + stackHtml + '</div>' +
+            (it.durationLabel ? '<span>' + escapeHtml(it.durationLabel) + '</span>' : '') +
+          '</div>' +
+        '</button>';
+      }).join('');
+      document.querySelectorAll('.lib-picker-card').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const picked = currentItems[parseInt(btn.dataset.idx, 10)];
+          Modal.close();
+          if (onPick) onPick(picked);
+        });
+      });
+    }
+    document.getElementById('lib-q').addEventListener('input', e => { q = e.target.value; renderList(); });
+    document.querySelectorAll('.lib-picker-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        activeTab = btn.dataset.tab;
+        document.querySelectorAll('.lib-picker-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderList();
+      });
+    });
+    renderList();
+  }
+
+  // ---- Flow extras storage (daily-fresh) ----
+  const FLOW_KEY = 'portal_flow_extras_v1';
+  function loadFlowStore() {
+    try { return JSON.parse(localStorage.getItem(FLOW_KEY)) || {}; }
+    catch(e) { return {}; }
+  }
+  function saveFlowStore(s) { try { localStorage.setItem(FLOW_KEY, JSON.stringify(s)); } catch(e) {} }
+  function getFlow(date) {
+    const s = loadFlowStore();
+    return s[date] || { extras: [] };
+  }
+  function setFlow(date, flow) {
+    const s = loadFlowStore();
+    s[date] = flow;
+    const keys = Object.keys(s).sort();
+    while (keys.length > 30) { delete s[keys.shift()]; }
+    saveFlowStore(s);
+  }
+  function addFlowExtra(extra) {
+    const t = TODAY(); const f = getFlow(t);
+    f.extras.push(Object.assign({ id: uid('fx') }, extra));
+    setFlow(t, f);
+  }
+  function removeFlowExtra(id) {
+    const t = TODAY(); const f = getFlow(t);
+    f.extras = f.extras.filter(x => x.id !== id);
+    setFlow(t, f);
+  }
+
+  function openAddToFlow() {
+    let customStack = [];
+    Modal.open(
+      '<div class="modal-header">' +
+        '<div class="modal-title">add to today\u2019s flow</div>' +
+        '<button class="modal-close" id="mclose">\u2715</button>' +
+      '</div>' +
+      '<div class="section-header">pick a source</div>' +
+      '<button class="plan-add-btn lib-trigger" id="flow-from-lib">from a temple library</button>' +
+      '<div class="section-header">or a custom moment</div>' +
+      '<input type="text" id="flow-name" placeholder="e.g. sauna, journal, walk..." />' +
+      '<div class="form-label" style="margin-top:14px">tap the temples it stacks (optional)</div>' +
+      '<div class="plan-stack-picker" id="flow-stack-picker">' +
+        Object.keys(PLAN_STACKS).map(k => '<button class="plan-stack-pick" data-stack="' + k + '">' + PLAN_STACKS[k].label + '</button>').join('') +
+      '</div>' +
+      '<button class="btn-primary" id="flow-custom-add">add custom</button>'
+    );
+    document.querySelectorAll('#flow-stack-picker .plan-stack-pick').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const k = btn.dataset.stack;
+        if (customStack.indexOf(k) >= 0) {
+          customStack = customStack.filter(x => x !== k);
+          btn.classList.remove('on');
+          btn.style.background = ''; btn.style.borderColor = ''; btn.style.color = '';
+        } else {
+          customStack.push(k);
+          btn.classList.add('on');
+          btn.style.background = PLAN_STACKS[k].color;
+          btn.style.borderColor = PLAN_STACKS[k].color;
+          btn.style.color = 'var(--bg)';
+        }
+      });
+    });
+    document.getElementById('flow-custom-add').addEventListener('click', () => {
+      const name = (document.getElementById('flow-name').value || '').trim();
+      if (!name) { toast('name it first'); return; }
+      addFlowExtra({ name: name, stack: customStack.slice(), durationLabel: '' });
+      Modal.close();
+      render();
+      toast(name + ' added to flow');
+    });
+    document.getElementById('flow-from-lib').addEventListener('click', () => {
+      openLibraryPicker(picked => {
+        addFlowExtra({ name: picked.name, stack: picked.stack || [], durationLabel: picked.durationLabel || '', source: picked.source });
+        render();
+        toast(picked.name + ' added to flow');
+      });
+    });
+  }
+
+  function renderFlowExtras(timeline) {
+    const f = getFlow(TODAY());
+    if (!f.extras.length) return;
+    f.extras.forEach(extra => {
+      const block = document.createElement('div');
+      block.className = 'timeline-block flow-extra-block';
+      const iconEl = document.createElement('div');
+      iconEl.className = 'timeline-icon dim';
+      iconEl.textContent = extra.source === 'beast' ? '\u2756' : extra.source === 'inner' ? '\u263c' : extra.source === 'body' ? '\u25b2' : '+';
+      block.appendChild(iconEl);
+      const card = document.createElement('button');
+      card.className = 'day-card dim';
+      const stackHtml = (extra.stack || []).map(k => {
+        const s = PLAN_STACKS[k]; if (!s) return '';
+        return '<span class="plan-stack-chip" style="color:' + s.color + ';background:' + s.bg + '">' + s.label + '</span>';
+      }).join('');
+      card.innerHTML =
+        '<div class="day-card-eyebrow">' + (extra.source ? escapeHtml(extra.source) + ' \u00b7 added' : 'added') + '</div>' +
+        '<div class="day-card-name">' + escapeHtml(extra.name) + '</div>' +
+        (stackHtml ? '<div class="flow-extra-stack">' + stackHtml + '</div>' : '') +
+        (extra.durationLabel ? '<div class="day-card-meta"><span>' + escapeHtml(extra.durationLabel) + '</span></div>' : '');
+      block.appendChild(card);
+      const x = document.createElement('button');
+      x.className = 'flow-extra-x';
+      x.textContent = '\u00d7';
+      x.addEventListener('click', (e) => {
+        e.stopPropagation();
+        removeFlowExtra(extra.id);
+        render();
+      });
+      block.appendChild(x);
+      timeline.appendChild(block);
     });
   }
 
@@ -1116,7 +1429,14 @@ const Portal = (function() {
       meta: ['~15 min', '4 steps', 'inner temple']
     }));
 
+    // render today's added flow extras after the defaults
+    renderFlowExtras(timeline);
     view.appendChild(timeline);
+
+    // "+ add to today's flow" button
+    const flowAddBtn = el('button', 'flow-add-btn', '+ add to today\u2019s flow');
+    flowAddBtn.addEventListener('click', openAddToFlow);
+    view.appendChild(flowAddBtn);
 
     view.appendChild(el('div', 'section-eyebrow', 'jump in'));
     const grid = document.createElement('div');
