@@ -569,6 +569,24 @@ nav.tab-bar {
   font-size: 13px; font-style: italic;
 }
 .plan-add-btn.lib-trigger { color: var(--ink-dim); border-color: var(--border); margin-bottom: 12px; }
+
+/* ====== ROUND 5 — SCHEDULE EDITOR + LUNAR ====== */
+.portal-moon { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; letter-spacing: 0.12em; color: var(--ink-faint); margin-top: 6px; }
+.portal-moon-glyph { font-size: 16px; line-height: 1; }
+.portal-moon.lunar-hint { color: var(--gold); }
+.schedule-list { display: flex; flex-direction: column; gap: 14px; }
+.schedule-day { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-md); padding: 14px 16px; }
+.schedule-day-name { font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-dim); margin-bottom: 10px; }
+.schedule-day-name.today { color: var(--gold); }
+.schedule-slot-row { display: grid; grid-template-columns: 60px 1fr; gap: 10px; align-items: center; padding: 6px 0; }
+.schedule-slot-label { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint); }
+.schedule-slot-btn { text-align: left; padding: 10px 12px; background: var(--bg-elev); border: 1px solid var(--border-soft); border-radius: var(--r-sm); transition: border-color 0.15s; font-size: 13px; color: var(--ink); position: relative; }
+.schedule-slot-btn:active { border-color: var(--ink-dim); }
+.schedule-slot-btn.empty { color: var(--ink-faint); font-style: italic; }
+.schedule-slot-meta { font-size: 10px; color: var(--ink-faint); margin-top: 3px; letter-spacing: 0.04em; }
+.schedule-reset { margin-top: 18px; padding: 12px; border: 1px dashed var(--border-soft); border-radius: var(--r-md); color: var(--ink-faint); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; width: 100%; transition: all 0.15s; }
+.schedule-reset:active { color: var(--crimson); border-color: var(--crimson-dim); }
+.schedule-intro { background: var(--bg-elev); border-left: 2px solid var(--gold-dim); padding: 12px 14px; border-radius: 0 var(--r-md) var(--r-md) 0; font-size: 12px; color: var(--ink-dim); line-height: 1.55; font-style: italic; margin-bottom: 18px; }
 </style>
 </head>
 <body>
@@ -1166,7 +1184,21 @@ const Portal = (function() {
   function readBeastLib() {
     return BEAST_PRACTICES.map(p => ({ id: p.id, name: p.name, source: 'beast', stack: p.stack, durationLabel: p.durationLabel }));
   }
-  function allLibs() { return [].concat(readBodyLib(), readInnerLib(), readBeastLib()); }
+  function readInnerPractices() {
+    try {
+      const s = JSON.parse(localStorage.getItem('inner_temple_v1') || '{}');
+      const practices = s.practices || [];
+      return practices.map(p => ({
+        id: p.id, name: p.name, source: 'inner', stack: ['breath','energy'],
+        durationLabel: p.duration || '', meta: (p.steps && p.steps.length ? p.steps.length + ' steps' : '')
+      }));
+    } catch(e) { return []; }
+  }
+  let _scheduleAllLibsOverride = false;
+  function allLibs() {
+    const practices = _scheduleAllLibsOverride ? readInnerPractices() : [];
+    return [].concat(practices, readBodyLib(), readInnerLib(), readBeastLib());
+  }
 
   function openLibraryPicker(onPick) {
     let activeTab = 'all';
@@ -1348,23 +1380,150 @@ const Portal = (function() {
     });
   }
 
+  // ============================================================
+  // ROUND 5 — FLOW SCHEDULE EDITOR + LUNAR AWARENESS
+  // ============================================================
+
+  function moonPhase(date) {
+    const refMs = Date.UTC(2000, 0, 6, 18, 14);
+    const period = 29.530588;
+    const dayUTC = (date.getTime() - refMs) / 86400000;
+    const age = ((dayUTC % period) + period) % period;
+    const frac = age / period;
+    if (frac < 0.03 || frac >= 0.97) return { key: 'new', name: 'new moon', glyph: '🌑', hint: true };
+    if (frac < 0.22) return { key: 'waxing_crescent', name: 'waxing crescent', glyph: '🌒', hint: false };
+    if (frac < 0.28) return { key: 'first_quarter', name: 'first quarter', glyph: '🌓', hint: false };
+    if (frac < 0.47) return { key: 'waxing_gibbous', name: 'waxing gibbous', glyph: '🌔', hint: false };
+    if (frac < 0.53) return { key: 'full', name: 'full moon', glyph: '🌕', hint: true };
+    if (frac < 0.72) return { key: 'waning_gibbous', name: 'waning gibbous', glyph: '🌖', hint: false };
+    if (frac < 0.78) return { key: 'last_quarter', name: 'last quarter', glyph: '🌗', hint: false };
+    return { key: 'waning_crescent', name: 'waning crescent', glyph: '🌘', hint: false };
+  }
+
+  const SCHEDULE_KEY = 'portal_flow_schedule_v1';
+  const DEFAULT_MORNING = { name: 'Solar Gate', source: 'inner', durationLabel: '~30 min', meta: '6 steps', id: 'solar_gate' };
+  const DEFAULT_EVENING = { name: 'Wind-Down', source: 'inner', durationLabel: '~15 min', meta: '4 steps', id: 'evening_wind_down' };
+
+  function loadSchedule() {
+    try { return JSON.parse(localStorage.getItem(SCHEDULE_KEY)) || {}; }
+    catch(e) { return {}; }
+  }
+  function saveSchedule(s) { try { localStorage.setItem(SCHEDULE_KEY, JSON.stringify(s)); } catch(e) {} }
+  function getSlot(weekday, slot) {
+    const sched = loadSchedule();
+    if (sched[weekday] && sched[weekday][slot] !== undefined) return sched[weekday][slot];
+    return slot === 'morning' ? DEFAULT_MORNING : DEFAULT_EVENING;
+  }
+  function setSlot(weekday, slot, value) {
+    const sched = loadSchedule();
+    if (!sched[weekday]) sched[weekday] = {};
+    sched[weekday][slot] = value;
+    saveSchedule(sched);
+  }
+  function resetSchedule() { try { localStorage.removeItem(SCHEDULE_KEY); } catch(e) {} }
+
+  function sourceToRoute(src) {
+    if (src === 'inner') return 'inner';
+    if (src === 'body') return 'body';
+    if (src === 'beast') return 'beast';
+    return null;
+  }
+
+  function renderScheduleInto(view) {
+    const intro = el('div', 'schedule-intro');
+    intro.textContent = 'set the default morning + evening for each weekday. tap any slot to change it. ad-hoc additions for today live in flow → +.';
+    view.appendChild(intro);
+    const todayName = todayDayName();
+    const list = el('div', 'schedule-list');
+    DAYS.forEach((day, i) => {
+      const card = el('div', 'schedule-day');
+      const name = el('div', 'schedule-day-name' + (day === todayName ? ' today' : ''),
+        DAY_LABELS_LONG[i].toLowerCase() + (day === todayName ? ' · today' : ''));
+      card.appendChild(name);
+      ['morning','evening'].forEach(slot => {
+        const row = el('div', 'schedule-slot-row');
+        row.appendChild(el('div', 'schedule-slot-label', slot));
+        const val = getSlot(day, slot);
+        const btn = document.createElement('button');
+        btn.className = 'schedule-slot-btn' + (val === null ? ' empty' : '');
+        if (val === null) {
+          btn.textContent = '— none —';
+        } else {
+          btn.innerHTML = escapeHtml(val.name) +
+            (val.durationLabel || val.meta || val.source
+              ? '<div class="schedule-slot-meta">' +
+                [val.durationLabel, val.meta, val.source].filter(Boolean).map(escapeHtml).join(' · ') +
+                '</div>'
+              : '');
+        }
+        btn.addEventListener('click', () => openSlotPicker(day, slot));
+        row.appendChild(btn);
+        card.appendChild(row);
+      });
+      list.appendChild(card);
+    });
+    view.appendChild(list);
+    const reset = el('button', 'schedule-reset', 'reset all days to defaults');
+    reset.addEventListener('click', () => {
+      if (!confirm('Reset the entire flow schedule to defaults?')) return;
+      resetSchedule(); render(); toast('schedule reset');
+    });
+    view.appendChild(reset);
+  }
+
+  function openSlotPicker(weekday, slot) {
+    Modal.open(
+      '<div class="modal-header">' +
+        '<div class="modal-title">' + escapeHtml(weekday + ' · ' + slot) + '</div>' +
+        '<button class="modal-close" id="mclose">✕</button>' +
+      '</div>' +
+      '<div class="section-header">choose a practice</div>' +
+      '<button class="plan-add-btn lib-trigger" id="slot-from-lib">from a temple library</button>' +
+      '<div class="section-header">or empty</div>' +
+      '<button class="plan-add-btn" id="slot-none">set to — none —</button>'
+    );
+    document.getElementById('slot-from-lib').addEventListener('click', () => {
+      _scheduleAllLibsOverride = true;
+      openLibraryPicker(picked => {
+        _scheduleAllLibsOverride = false;
+        setSlot(weekday, slot, {
+          name: picked.name, source: picked.source,
+          durationLabel: picked.durationLabel || '',
+          meta: picked.meta || '', id: picked.id || ''
+        });
+        render(); toast(weekday + ' ' + slot + ': ' + picked.name);
+      });
+    });
+    document.getElementById('slot-none').addEventListener('click', () => {
+      setSlot(weekday, slot, null); Modal.close(); render();
+      toast(weekday + ' ' + slot + ': none');
+    });
+  }
+
   function render() {
     const mount = document.getElementById('app-mount');
     mount.innerHTML = '';
     const view = document.createElement('div');
     view.className = 'view active';
 
-    // ---- subview toggle (flow / plan) ----
+    // ---- subview toggle (flow / plan / schedule) ----
     const toggle = el('div', 'portal-toggle');
     const flowPill = el('button', 'portal-toggle-pill' + (subview === 'flow' ? ' active' : ''), 'flow');
     flowPill.addEventListener('click', () => { if (subview !== 'flow') { subview = 'flow'; window.scrollTo(0, 0); render(); } });
     const planPill = el('button', 'portal-toggle-pill' + (subview === 'plan' ? ' active' : ''), 'plan');
     planPill.addEventListener('click', () => { if (subview !== 'plan') { subview = 'plan'; window.scrollTo(0, 0); render(); } });
-    toggle.appendChild(flowPill); toggle.appendChild(planPill);
+    const schedPill = el('button', 'portal-toggle-pill' + (subview === 'schedule' ? ' active' : ''), 'schedule');
+    schedPill.addEventListener('click', () => { if (subview !== 'schedule') { subview = 'schedule'; window.scrollTo(0, 0); render(); } });
+    toggle.appendChild(flowPill); toggle.appendChild(planPill); toggle.appendChild(schedPill);
     view.appendChild(toggle);
 
     if (subview === 'plan') {
       renderPlanInto(view);
+      mount.appendChild(view);
+      return;
+    }
+    if (subview === 'schedule') {
+      renderScheduleInto(view);
       mount.appendChild(view);
       return;
     }
@@ -1380,10 +1539,12 @@ const Portal = (function() {
     hero.className = 'portal-hero';
     const arcText = day === 'sunday' ? 'zen day. let the wave settle.' :
       `${train.kind === 'training' ? 'training day' : train.kind === 'cardio' ? 'cardio + recovery' : 'rest'} · ${train.name.toLowerCase()}`;
+    const moon = moonPhase(now);
     hero.innerHTML = `
       <div class="portal-date-big">${escapeHtml(now.toLocaleDateString(undefined, { month: 'long', day: 'numeric' }).toLowerCase())}</div>
       <div class="portal-day-name">${escapeHtml(DAY_LABELS_LONG[dayIdx].toLowerCase())}</div>
-      <div class="portal-arc">${escapeHtml(arcText)}</div>`;
+      <div class="portal-arc">${escapeHtml(arcText)}</div>
+      <div class="portal-moon${moon.hint ? ' lunar-hint' : ''}"><span class="portal-moon-glyph">${moon.glyph}</span><span>${escapeHtml(moon.name)}</span></div>`;
     view.appendChild(hero);
 
     view.appendChild(el('div', 'section-eyebrow', "today's flow"));
@@ -1391,13 +1552,19 @@ const Portal = (function() {
     const timeline = document.createElement('div');
     timeline.className = 'timeline';
 
-    timeline.appendChild(makeBlock({
-      icon: '☉', iconClass: 'gold', cardClass: 'gold',
-      onClick: () => Shell.goTo('inner'),
-      eyebrow: 'morning', name: 'Solar Gate',
-      sub: 'foundation layer — phone stays away, body comes first',
-      meta: ['~30 min', '6 steps', 'inner temple']
-    }));
+    // Morning slot — from schedule (default: Solar Gate)
+    const morningVal = getSlot(day, 'morning');
+    if (morningVal !== null) {
+      const mRoute = sourceToRoute(morningVal.source);
+      const mMeta = [morningVal.durationLabel, morningVal.meta, morningVal.source ? morningVal.source + ' temple' : ''].filter(Boolean);
+      timeline.appendChild(makeBlock({
+        icon: '☉', iconClass: 'gold', cardClass: 'gold',
+        onClick: mRoute ? () => Shell.goTo(mRoute) : null,
+        eyebrow: 'morning', name: morningVal.name,
+        sub: morningVal.id === 'solar_gate' ? 'foundation layer — phone stays away, body comes first' : '',
+        meta: mMeta
+      }));
+    }
 
     timeline.appendChild(makeBlock({
       icon: train.kind === 'training' ? '☼' : train.kind === 'cardio' ? '◐' : '◯',
@@ -1421,13 +1588,19 @@ const Portal = (function() {
       timeline.appendChild(cl);
     }
 
-    timeline.appendChild(makeBlock({
-      icon: '☽', iconClass: 'gold', cardClass: 'gold',
-      onClick: () => Shell.goTo('inner'),
-      eyebrow: 'evening', name: 'Wind-Down',
-      sub: "drop the day. long exhales. give the system the signal that it's safe to sleep.",
-      meta: ['~15 min', '4 steps', 'inner temple']
-    }));
+    // Evening slot — from schedule (default: Wind-Down)
+    const eveningVal = getSlot(day, 'evening');
+    if (eveningVal !== null) {
+      const eRoute = sourceToRoute(eveningVal.source);
+      const eMeta = [eveningVal.durationLabel, eveningVal.meta, eveningVal.source ? eveningVal.source + ' temple' : ''].filter(Boolean);
+      timeline.appendChild(makeBlock({
+        icon: '☽', iconClass: 'gold', cardClass: 'gold',
+        onClick: eRoute ? () => Shell.goTo(eRoute) : null,
+        eyebrow: 'evening', name: eveningVal.name,
+        sub: eveningVal.id === 'evening_wind_down' ? "drop the day. long exhales. give the system the signal that it's safe to sleep." : '',
+        meta: eMeta
+      }));
+    }
 
     // render today's added flow extras after the defaults
     renderFlowExtras(timeline);
