@@ -673,15 +673,46 @@ function bell() {
   });
 }
 
+// Round 5.1 — softer mid-practice cues
+function softChime() {
+  if (!audioCtx) return;
+  const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.frequency.value = 660; o.type = 'sine';
+  g.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.08, audioCtx.currentTime + 0.04);
+  g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.7);
+  o.start(); o.stop(audioCtx.currentTime + 0.75);
+}
+function minuteTick() {
+  if (!audioCtx) return;
+  const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.frequency.value = 880; o.type = 'sine';
+  g.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.04, audioCtx.currentTime + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.18);
+  o.start(); o.stop(audioCtx.currentTime + 0.2);
+}
+
 // ============================================================
 // TIMER
 // ============================================================
+let timerStartMs = 0;
+let timerDurationSec = 0;
+let midpointFired = false;
+let lastMinuteMark = 0;
+
 function startTimer(practiceId) {
   ensureAudio();
   const p = PRACTICES.find(x => x.id === practiceId);
   if (!p) return;
   activeSession = { practiceId: p.id, name: p.name, stack: p.stack };
   timerEnd = Date.now() + (p.durationSec || 0) * 1000;
+  timerStartMs = Date.now();
+  timerDurationSec = p.durationSec || 0;
+  midpointFired = false;
+  lastMinuteMark = 0;
   document.getElementById('timer-label').textContent = p.name;
   document.getElementById('timer-overlay').classList.add('active');
   tickTimer();
@@ -692,6 +723,24 @@ function tickTimer() {
   const display = document.getElementById('timer-display');
   display.textContent = fmtTime(remaining);
   display.classList.toggle('flash', remaining <= 5 && remaining > 0);
+
+  // Round 5.1 — midpoint chime + minute ticks
+  if (timerDurationSec > 0) {
+    const elapsed = (Date.now() - timerStartMs) / 1000;
+    if (timerDurationSec > 60 && !midpointFired && elapsed >= timerDurationSec / 2 && remaining > 5) {
+      midpointFired = true;
+      softChime();
+    }
+    if (timerDurationSec > 180) {
+      const minute = Math.floor(elapsed / 60);
+      const totalMinutes = Math.floor(timerDurationSec / 60);
+      if (minute > lastMinuteMark && minute < totalMinutes && remaining > 5) {
+        lastMinuteMark = minute;
+        minuteTick();
+      }
+    }
+  }
+
   if (remaining === 0) {
     bell();
     clearInterval(timerInterval); timerInterval = null;

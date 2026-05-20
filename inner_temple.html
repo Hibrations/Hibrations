@@ -1457,9 +1457,19 @@ function closeSession() {
 // ============================================================
 // TIMER
 // ============================================================
+// Round 5.1 — audio guidance trackers
+let timerStartMs = 0;
+let timerDurationSec = 0;
+let midpointFired = false;
+let lastMinuteMark = 0;
+
 function startTimer(seconds, label) {
   stopTimer();
   timerEnd = Date.now() + seconds * 1000;
+  timerStartMs = Date.now();
+  timerDurationSec = seconds;
+  midpointFired = false;
+  lastMinuteMark = 0;
   document.getElementById('timer-label').textContent = label || 'step';
   document.getElementById('timer-overlay').classList.add('active');
   updateTimer();
@@ -1477,6 +1487,24 @@ function updateTimer() {
   display.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
   if (remaining <= 5 && remaining > 0) display.classList.add('flash');
   else display.classList.remove('flash');
+
+  // Round 5.1 — midpoint chime + minute ticks
+  if (timerDurationSec > 0) {
+    const elapsed = (Date.now() - timerStartMs) / 1000;
+    if (timerDurationSec > 60 && !midpointFired && elapsed >= timerDurationSec / 2 && remaining > 5) {
+      midpointFired = true;
+      softChime();
+    }
+    if (timerDurationSec > 180) {
+      const minute = Math.floor(elapsed / 60);
+      const totalMinutes = Math.floor(timerDurationSec / 60);
+      if (minute > lastMinuteMark && minute < totalMinutes && remaining > 5) {
+        lastMinuteMark = minute;
+        minuteTick();
+      }
+    }
+  }
+
   if (remaining === 0) {
     bell();
     setTimeout(stopTimer, 1200);
@@ -1488,6 +1516,32 @@ function stopTimer() {
   timerInterval = null;
   document.getElementById('timer-overlay').classList.remove('active');
   document.getElementById('timer-display').classList.remove('flash');
+}
+
+function softChime() {
+  try {
+    const ctx = window.__audioCtx; if (!ctx) return;
+    const o = ctx.createOscillator(); const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value = 660; o.type = 'sine';
+    g.gain.setValueAtTime(0.0001, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.08, ctx.currentTime + 0.04);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.7);
+    o.start(); o.stop(ctx.currentTime + 0.75);
+  } catch (e) {}
+}
+
+function minuteTick() {
+  try {
+    const ctx = window.__audioCtx; if (!ctx) return;
+    const o = ctx.createOscillator(); const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value = 880; o.type = 'sine';
+    g.gain.setValueAtTime(0.0001, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.04, ctx.currentTime + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.18);
+    o.start(); o.stop(ctx.currentTime + 0.2);
+  } catch (e) {}
 }
 
 function bell() {
