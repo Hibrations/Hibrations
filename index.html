@@ -467,6 +467,19 @@ nav.tab-bar {
   padding: 3px 8px; border-radius: 999px; font-weight: 500;
 }
 .plan-stack-empty { font-size: 11px; color: var(--ink-faint); font-style: italic; }
+
+/* Stack Pulse — fuel-line recency glance (Round 7) */
+.stack-pulse { padding: 0 0 22px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.stack-pulse-eyebrow { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-faint); opacity: 0.55; }
+.stack-pulse-chips { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; max-width: 340px; }
+.stack-pulse-chip {
+  font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 999px; font-weight: 500;
+  transition: opacity 0.4s, filter 0.4s; cursor: default;
+}
+.stack-pulse-chip.bright { opacity: 1; }
+.stack-pulse-chip.mid    { opacity: 0.55; filter: saturate(0.7); }
+.stack-pulse-chip.dim    { opacity: 0.22; filter: saturate(0.35) brightness(0.85); }
 .plan-activity-controls { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
 .plan-mini-btn {
   width: 30px; height: 26px; border-radius: var(--r-sm);
@@ -998,6 +1011,100 @@ const Portal = (function() {
       const s = PLAN_STACKS[k]; if (!s) return '';
       return '<span class="plan-stack-chip" style="color:' + s.color + ';background:' + s.bg + '">' + s.label + '</span>';
     }).join('');
+  }
+
+  // Stack Pulse (Round 7) \u2014 reads all three temple session logs and surfaces
+  // which fuel lines have been touched this week. Bright = <2d, mid = 2-7d, dim = >7d or never.
+  // Signal not score: no streaks, no numbers \u2014 just luminosity.
+  function readStackPulse() {
+    const now = Date.now();
+    const dayMs = 24 * 60 * 60 * 1000;
+    const last = { body: 0, breath: 0, energy: 0, field: 0, healing: 0, primal: 0 };
+
+    const tsOf = s => {
+      if (s.at) return Date.parse(s.at);
+      if (s.date) return Date.parse(s.date + 'T12:00:00');
+      return 0;
+    };
+    const touch = (k, ts) => { if (ts > (last[k] || 0)) last[k] = ts; };
+
+    // Body Temple \u2014 every session touches body; training sessions also breath.
+    try {
+      const body = JSON.parse(localStorage.getItem('body_temple_v1') || '{}');
+      (body.sessions || []).forEach(s => {
+        const ts = tsOf(s); if (!ts) return;
+        touch('body', ts);
+        if (s.type === 'training') touch('breath', ts);
+      });
+    } catch (e) {}
+
+    // Inner Temple \u2014 map practiceId via library.category to stacks.
+    const INNER_CAT_STACK = {
+      breath:     ['breath'],
+      meditation: ['energy'],
+      movement:   ['body', 'breath'],
+      vocal:      ['body', 'breath'],
+      ritual:     ['energy', 'healing']
+    };
+    try {
+      const inner = JSON.parse(localStorage.getItem('inner_temple_v1') || '{}');
+      const libById = {};
+      (inner.library || []).forEach(e => { libById[e.id] = e; });
+      (inner.sessions || []).forEach(s => {
+        const ts = tsOf(s); if (!ts) return;
+        const entry = libById[s.practiceId];
+        const cat = entry && entry.category;
+        const stacks = INNER_CAT_STACK[cat] || ['energy'];
+        stacks.forEach(k => touch(k, ts));
+      });
+    } catch (e) {}
+
+    // Beast Temple \u2014 stack array lives on the session itself.
+    try {
+      const beast = JSON.parse(localStorage.getItem('beast_temple_v1') || '{}');
+      (beast.sessions || []).forEach(s => {
+        const ts = tsOf(s); if (!ts) return;
+        (s.stack || []).forEach(k => touch(k, ts));
+      });
+    } catch (e) {}
+
+    const brightness = {};
+    Object.keys(last).forEach(k => {
+      const ts = last[k];
+      if (!ts) { brightness[k] = 'dim'; return; }
+      const ageDays = (now - ts) / dayMs;
+      if (ageDays < 2)      brightness[k] = 'bright';
+      else if (ageDays < 7) brightness[k] = 'mid';
+      else                  brightness[k] = 'dim';
+    });
+    return { brightness: brightness, last: last };
+  }
+
+  function renderStackPulse(view) {
+    const data = readStackPulse();
+    const pulse = el('div', 'stack-pulse');
+    pulse.appendChild(el('div', 'stack-pulse-eyebrow', 'stack pulse \u00b7 last 7 days'));
+    const chips = el('div', 'stack-pulse-chips');
+    const order = ['body', 'breath', 'energy', 'field', 'healing', 'primal'];
+    order.forEach(k => {
+      const s = PLAN_STACKS[k]; if (!s) return;
+      const chip = document.createElement('span');
+      chip.className = 'stack-pulse-chip ' + data.brightness[k];
+      chip.style.color = s.color;
+      chip.style.background = s.bg;
+      chip.textContent = s.label;
+      const ts = data.last[k];
+      if (ts) {
+        const ageDays = Math.floor((Date.now() - ts) / (24 * 3600 * 1000));
+        const ago = ageDays === 0 ? 'today' : ageDays === 1 ? 'yesterday' : ageDays + 'd ago';
+        chip.title = s.label + ' \u2014 last touched ' + ago;
+      } else {
+        chip.title = s.label + ' \u2014 not touched recently';
+      }
+      chips.appendChild(chip);
+    });
+    pulse.appendChild(chips);
+    view.appendChild(pulse);
   }
 
   function renderPlanInto(view) {
@@ -1554,6 +1661,8 @@ const Portal = (function() {
       <div class="portal-arc">${escapeHtml(arcText)}</div>
       <div class="portal-moon${moon.hint ? ' lunar-hint' : ''}"><span class="portal-moon-glyph">${moon.glyph}</span><span>${escapeHtml(moon.name)}</span></div>`;
     view.appendChild(hero);
+
+    renderStackPulse(view);
 
     view.appendChild(el('div', 'section-eyebrow', "today's flow"));
 
