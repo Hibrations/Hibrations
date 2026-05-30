@@ -616,6 +616,54 @@ nav.tab-bar {
   transition: background 0.2s, color 0.2s;
 }
 .closing-done-btn:hover { background: var(--gold); color: var(--bg); }
+
+/* History Pulse — 4th subview, last 7 days grouped by day (Round 10) */
+.history-eyebrow {
+  font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-faint); opacity: 0.6;
+  text-align: center; margin: 0 0 22px;
+}
+.history-empty {
+  text-align: center; color: var(--ink-faint);
+  font-size: 12px; font-style: italic;
+  padding: 32px 20px;
+}
+.history-day { margin-bottom: 24px; }
+.history-day-header {
+  font-size: 11px; color: var(--ink-faint);
+  letter-spacing: 0.1em; text-transform: lowercase;
+  opacity: 0.75;
+  padding: 0 0 8px;
+  border-bottom: 1px solid var(--border-soft);
+  margin-bottom: 10px;
+}
+.history-row {
+  padding: 10px 14px;
+  border-radius: var(--r-sm);
+  background: var(--bg-elev);
+  margin-bottom: 6px;
+}
+.history-row-line {
+  display: flex; gap: 10px; align-items: baseline;
+}
+.history-time {
+  color: var(--ink-faint); font-size: 11px; min-width: 54px;
+}
+.history-name {
+  flex: 1; color: var(--ink); font-size: 13px; line-height: 1.3;
+}
+.history-source {
+  font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 999px;
+  opacity: 0.85; flex-shrink: 0;
+}
+.history-body  { color: #3d7d63; background: rgba(61,125,99,0.18); }
+.history-inner { color: var(--gold); background: rgba(200,144,96,0.18); }
+.history-beast { color: var(--crimson); background: rgba(199,143,143,0.18); }
+.history-stack {
+  display: flex; gap: 4px; flex-wrap: wrap;
+  margin-top: 6px; margin-left: 64px;
+}
 .plan-activity-controls { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
 .plan-mini-btn {
   width: 30px; height: 26px; border-radius: var(--r-sm);
@@ -1575,6 +1623,137 @@ const Portal = (function() {
     view.appendChild(wrap);
   }
 
+  // History Pulse (Round 10) — last 7 days of practices across all temples,
+  // grouped by day, newest first. The reflection complement to the Stack Pulse:
+  // Pulse shows the texture (lit/dim), History shows the explicit shape.
+  const HISTORY_DAYS = 7;
+
+  function readHistoryWeek() {
+    const cutoff = Date.now() - HISTORY_DAYS * 24 * 3600 * 1000;
+    const out = [];
+    const tsOf = s => {
+      if (s.at) return Date.parse(s.at);
+      if (s.date) return Date.parse(s.date + 'T12:00:00');
+      return 0;
+    };
+
+    // Body
+    try {
+      const body = JSON.parse(localStorage.getItem('body_temple_v1') || '{}');
+      (body.sessions || []).forEach(s => {
+        const ts = tsOf(s); if (!ts || ts < cutoff) return;
+        out.push({
+          ts: ts,
+          source: 'body',
+          name: s.planName || s.name || (s.type === 'training' ? 'training' : 'session'),
+          stack: s.type === 'training' ? ['body', 'breath'] : ['body']
+        });
+      });
+    } catch (e) {}
+
+    // Inner
+    const INNER_CAT_STACK = {
+      breath:     ['breath'],
+      meditation: ['energy'],
+      movement:   ['body', 'breath'],
+      vocal:      ['body', 'breath'],
+      ritual:     ['energy', 'healing']
+    };
+    try {
+      const inner = JSON.parse(localStorage.getItem('inner_temple_v1') || '{}');
+      const libById = {};
+      (inner.library || []).forEach(e => { libById[e.id] = e; });
+      (inner.sessions || []).forEach(s => {
+        const ts = tsOf(s); if (!ts || ts < cutoff) return;
+        const entry = libById[s.practiceId];
+        out.push({
+          ts: ts,
+          source: 'inner',
+          name: s.practiceName || (entry && entry.name) || s.practiceId,
+          stack: entry ? (INNER_CAT_STACK[entry.category] || ['energy']) : ['energy']
+        });
+      });
+    } catch (e) {}
+
+    // Beast
+    try {
+      const beast = JSON.parse(localStorage.getItem('beast_temple_v1') || '{}');
+      (beast.sessions || []).forEach(s => {
+        const ts = tsOf(s); if (!ts || ts < cutoff) return;
+        out.push({
+          ts: ts,
+          source: 'beast',
+          name: s.name || 'beast practice',
+          stack: s.stack || ['primal']
+        });
+      });
+    } catch (e) {}
+
+    return out.sort((a, b) => b.ts - a.ts);
+  }
+
+  function dayKeyFromTs(ts) {
+    const d = new Date(ts);
+    return d.getFullYear() + '-' +
+      String(d.getMonth() + 1).padStart(2, '0') + '-' +
+      String(d.getDate()).padStart(2, '0');
+  }
+
+  function dayLabelFor(dateKey) {
+    const today = dailyTodayKey();
+    if (dateKey === today) return 'today';
+    const yesterdayDate = new Date(Date.now() - 24 * 3600 * 1000);
+    const yKey = yesterdayDate.getFullYear() + '-' +
+      String(yesterdayDate.getMonth() + 1).padStart(2, '0') + '-' +
+      String(yesterdayDate.getDate()).padStart(2, '0');
+    if (dateKey === yKey) return 'yesterday';
+    const d = new Date(dateKey + 'T12:00:00');
+    const dayNames = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+    const monthNames = ['january','february','march','april','may','june','july','august','september','october','november','december'];
+    return dayNames[d.getDay()] + ' · ' + monthNames[d.getMonth()] + ' ' + d.getDate();
+  }
+
+  function renderHistoryInto(view) {
+    view.appendChild(el('div', 'history-eyebrow', 'last 7 days'));
+
+    const items = readHistoryWeek();
+    if (!items.length) {
+      const empty = el('div', 'history-empty');
+      empty.textContent = 'no practices logged in the last 7 days. open a temple to begin.';
+      view.appendChild(empty);
+      return;
+    }
+
+    // Group by day key
+    const groups = {};
+    items.forEach(item => {
+      const key = dayKeyFromTs(item.ts);
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(item);
+    });
+    const dayKeysDesc = Object.keys(groups).sort().reverse();
+
+    dayKeysDesc.forEach(dayKey => {
+      const daySection = el('div', 'history-day');
+      daySection.appendChild(el('div', 'history-day-header', dayLabelFor(dayKey)));
+      groups[dayKey].forEach(item => {
+        const row = el('div', 'history-row');
+        const time = item.ts
+          ? new Date(item.ts).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }).toLowerCase().replace(/\s/g, '')
+          : '';
+        row.innerHTML =
+          '<div class="history-row-line">' +
+            '<span class="history-time">' + escapeHtml(time) + '</span>' +
+            '<span class="history-name">' + escapeHtml(item.name) + '</span>' +
+            '<span class="history-source history-' + escapeHtml(item.source) + '">' + escapeHtml(item.source) + '</span>' +
+          '</div>' +
+          '<div class="history-stack">' + stackChips(item.stack) + '</div>';
+        daySection.appendChild(row);
+      });
+      view.appendChild(daySection);
+    });
+  }
+
   function renderPlanInto(view) {
     const plan = getPlan(TODAY());
     view.appendChild(el('div', 'section-eyebrow', "today's plan"));
@@ -2097,7 +2276,9 @@ const Portal = (function() {
     planPill.addEventListener('click', () => { if (subview !== 'plan') { subview = 'plan'; window.scrollTo(0, 0); render(); } });
     const schedPill = el('button', 'portal-toggle-pill' + (subview === 'schedule' ? ' active' : ''), 'schedule');
     schedPill.addEventListener('click', () => { if (subview !== 'schedule') { subview = 'schedule'; window.scrollTo(0, 0); render(); } });
-    toggle.appendChild(flowPill); toggle.appendChild(planPill); toggle.appendChild(schedPill);
+    const histPill = el('button', 'portal-toggle-pill' + (subview === 'history' ? ' active' : ''), 'history');
+    histPill.addEventListener('click', () => { if (subview !== 'history') { subview = 'history'; window.scrollTo(0, 0); render(); } });
+    toggle.appendChild(flowPill); toggle.appendChild(planPill); toggle.appendChild(schedPill); toggle.appendChild(histPill);
     view.appendChild(toggle);
 
     if (subview === 'plan') {
@@ -2107,6 +2288,11 @@ const Portal = (function() {
     }
     if (subview === 'schedule') {
       renderScheduleInto(view);
+      mount.appendChild(view);
+      return;
+    }
+    if (subview === 'history') {
+      renderHistoryInto(view);
       mount.appendChild(view);
       return;
     }
