@@ -28,6 +28,7 @@
   --crimson-dim: #6e2d22;
   --warning: #c89060;
   --bronze: #a87b50;
+  --bronze-dim: #6f5536;
   --pull: #7d8fc7;
   --push: #c78f8f;
   --hinge: #a89b6b;
@@ -175,10 +176,13 @@ nav.tab-bar {
 .temple-card.emerald:active { border-color: var(--emerald); }
 .temple-card.crimson { border-color: var(--crimson-dim); }
 .temple-card.crimson:active { border-color: var(--crimson); }
+.temple-card.bronze { border-color: var(--bronze-dim); }
+.temple-card.bronze:active { border-color: var(--bronze); }
 .temple-name { font-size: 14px; font-weight: 500; letter-spacing: 0.02em; margin-bottom: 4px; }
 .temple-name.gold { color: var(--gold); }
 .temple-name.emerald { color: var(--emerald); }
 .temple-name.crimson { color: var(--crimson); }
+.temple-name.bronze { color: var(--bronze); }
 .temple-sub { font-size: 10px; color: var(--ink-faint); letter-spacing: 0.04em; }
 
 .heart-note {
@@ -576,6 +580,7 @@ nav.tab-bar {
 .completions-body  { color: #3d7d63; background: rgba(61,125,99,0.18); }
 .completions-inner { color: var(--gold); background: rgba(200,144,96,0.18); }
 .completions-beast { color: var(--crimson); background: rgba(199,143,143,0.18); }
+.completions-magnetic { color: var(--bronze); background: rgba(168,123,80,0.18); }
 
 /* Evening closing card */
 .closing-card {
@@ -660,6 +665,7 @@ nav.tab-bar {
 .history-body  { color: #3d7d63; background: rgba(61,125,99,0.18); }
 .history-inner { color: var(--gold); background: rgba(200,144,96,0.18); }
 .history-beast { color: var(--crimson); background: rgba(199,143,143,0.18); }
+.history-magnetic { color: var(--bronze); background: rgba(168,123,80,0.18); }
 .history-stack {
   display: flex; gap: 4px; flex-wrap: wrap;
   margin-top: 6px; margin-left: 64px;
@@ -970,6 +976,9 @@ const Shell = {
     } else if (app === 'beast') {
       Shell.openTemple('beast_temple.html', 'beast temple');
       return;
+    } else if (app === 'magnetic') {
+      Shell.openTemple('magnetic_temple.html', 'magnetic temple');
+      return;
     }
     window.scrollTo(0, 0);
   },
@@ -1247,6 +1256,15 @@ const Portal = (function() {
     try {
       const beast = JSON.parse(localStorage.getItem('beast_temple_v1') || '{}');
       (beast.sessions || []).forEach(s => {
+        const ts = tsOf(s); if (!ts) return;
+        (s.stack || []).forEach(k => touch(k, ts));
+      });
+    } catch (e) {}
+
+    // Magnetic Temple \u2014 same session shape as Beast (stack array on each session).
+    try {
+      const mag = JSON.parse(localStorage.getItem('magnetic_temple_v1') || '{}');
+      (mag.sessions || []).forEach(s => {
         const ts = tsOf(s); if (!ts) return;
         (s.stack || []).forEach(k => touch(k, ts));
       });
@@ -1535,6 +1553,19 @@ const Portal = (function() {
       });
     } catch (e) {}
 
+    // Magnetic
+    try {
+      const mag = JSON.parse(localStorage.getItem('magnetic_temple_v1') || '{}');
+      (mag.sessions || []).forEach(s => {
+        if (sessionDateOf(s) !== today) return;
+        out.push({
+          source: 'magnetic',
+          name: s.name || 'magnetic drill',
+          ts: tsOf(s)
+        });
+      });
+    } catch (e) {}
+
     out.sort((a, b) => a.ts - b.ts);
     return out;
   }
@@ -1685,6 +1716,20 @@ const Portal = (function() {
           source: 'beast',
           name: s.name || 'beast practice',
           stack: s.stack || ['primal']
+        });
+      });
+    } catch (e) {}
+
+    // Magnetic
+    try {
+      const mag = JSON.parse(localStorage.getItem('magnetic_temple_v1') || '{}');
+      (mag.sessions || []).forEach(s => {
+        const ts = tsOf(s); if (!ts || ts < cutoff) return;
+        out.push({
+          ts: ts,
+          source: 'magnetic',
+          name: s.name || 'magnetic drill',
+          stack: s.stack || ['field']
         });
       });
     } catch (e) {}
@@ -2188,6 +2233,7 @@ const Portal = (function() {
     if (src === 'inner') return 'inner';
     if (src === 'body') return 'body';
     if (src === 'beast') return 'beast';
+    if (src === 'magnetic') return 'magnetic';
     return null;
   }
 
@@ -2399,6 +2445,10 @@ const Portal = (function() {
     beastCard.innerHTML = `<div class="temple-name crimson">Beast Temple</div><div class="temple-sub">primal · field · aura</div>`;
     beastCard.addEventListener('click', () => Shell.goTo('beast'));
     grid.appendChild(beastCard);
+    const magCard = el('button', 'temple-card bronze');
+    magCard.innerHTML = `<div class="temple-name bronze">Magnetic Temple</div><div class="temple-sub">charge · dial · field</div>`;
+    magCard.addEventListener('click', () => Shell.goTo('magnetic'));
+    grid.appendChild(magCard);
     view.appendChild(grid);
 
     const heart = document.createElement('div');
