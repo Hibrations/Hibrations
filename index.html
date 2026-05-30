@@ -480,6 +480,35 @@ nav.tab-bar {
 .stack-pulse-chip.bright { opacity: 1; }
 .stack-pulse-chip.mid    { opacity: 0.55; filter: saturate(0.7); }
 .stack-pulse-chip.dim    { opacity: 0.22; filter: saturate(0.35) brightness(0.85); }
+
+/* Coherent Next-Practice — suggestions for unwatered stacks (Round 8) */
+.next-practice { padding: 0 0 22px; }
+.next-practice-eyebrow {
+  font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-faint); opacity: 0.6;
+  margin: 0 0 12px; text-align: center;
+}
+.next-practice-card {
+  display: block; width: 100%; text-align: left;
+  padding: 14px 16px; margin-bottom: 8px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+  cursor: pointer;
+  transition: transform 0.18s, border-color 0.18s;
+  font-family: inherit;
+  color: inherit;
+}
+.next-practice-card:hover  { transform: translateY(-1px); border-color: var(--ink-dim); }
+.next-practice-card:active { transform: translateY(0); }
+.next-practice-card.next-inner { border-left: 3px solid var(--gold); }
+.next-practice-card.next-beast { border-left: 3px solid var(--crimson); }
+.next-practice-name { font-size: 14px; font-weight: 500; color: var(--ink); margin: 0 0 6px; line-height: 1.3; }
+.next-practice-meta { display: flex; gap: 12px; font-size: 11px; color: var(--ink-faint); margin: 0 0 6px; }
+.next-practice-source { text-transform: lowercase; letter-spacing: 0.05em; }
+.next-practice-duration { color: var(--ink-dim); }
+.next-practice-stack { display: flex; gap: 4px; flex-wrap: wrap; }
+.next-practice-target-hint { font-size: 10px; color: var(--ink-faint); opacity: 0.7; margin-top: 6px; font-style: italic; }
 .plan-activity-controls { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
 .plan-mini-btn {
   width: 30px; height: 26px; border-radius: var(--r-sm);
@@ -1107,6 +1136,101 @@ const Portal = (function() {
     view.appendChild(pulse);
   }
 
+  // Coherent Next-Practice (Round 8) — for each currently-dim stack, surface the
+  // shortest practice from Inner+Beast that touches it. Pulse shows what's unwatered;
+  // this gives a single-tap reach into each line. Body sessions excluded (gym-dependent).
+  function parseDurationSec(label) {
+    if (!label) return 0;
+    if (/integrated|all day|no timer|on demand/i.test(label)) return 9999;
+    const m = label.match(/(\d+)/);
+    if (!m) return 9999;
+    const n = parseInt(m[1], 10);
+    if (/sec/i.test(label)) return n;
+    return n * 60;
+  }
+
+  function buildNextPractices() {
+    const pulse = readStackPulse();
+    const dim = []; const mid = [];
+    Object.keys(pulse.brightness).forEach(k => {
+      if (pulse.brightness[k] === 'dim') dim.push(k);
+      else if (pulse.brightness[k] === 'mid') mid.push(k);
+    });
+    const targets = dim.length ? dim : mid;
+    if (!targets.length) return [];
+
+    const INNER_CAT_STACK = {
+      breath:     ['breath'],
+      meditation: ['energy'],
+      movement:   ['body', 'breath'],
+      vocal:      ['body', 'breath'],
+      ritual:     ['energy', 'healing']
+    };
+
+    const pool = [];
+    // Inner library (from localStorage — populated once Inner Temple is opened)
+    try {
+      const inner = JSON.parse(localStorage.getItem('inner_temple_v1') || '{}');
+      (inner.library || []).forEach(e => {
+        const sec = e.defaultDuration || 0;
+        if (sec <= 0 || sec >= 9999) return;
+        pool.push({
+          id: e.id, name: e.name, source: 'inner',
+          stack: INNER_CAT_STACK[e.category] || ['energy'],
+          durationSec: sec,
+          durationLabel: Math.round(sec / 60) + ' min'
+        });
+      });
+    } catch (e) {}
+    // Beast manifest (always embedded)
+    BEAST_PRACTICES.forEach(p => {
+      const sec = parseDurationSec(p.durationLabel);
+      if (sec <= 0 || sec >= 9999) return;
+      pool.push({
+        id: p.id, name: p.name, source: 'beast',
+        stack: p.stack, durationSec: sec, durationLabel: p.durationLabel
+      });
+    });
+
+    // For each target stack (dim first), pick the shortest unseen practice that touches it
+    const seen = new Set();
+    const out = [];
+    targets.forEach(stackKey => {
+      if (out.length >= 3) return;
+      const cands = pool
+        .filter(p => p.stack.indexOf(stackKey) >= 0 && !seen.has(p.id))
+        .sort((a, b) => a.durationSec - b.durationSec);
+      if (cands.length) {
+        const pick = cands[0];
+        seen.add(pick.id);
+        out.push(Object.assign({}, pick, { targetStack: stackKey }));
+      }
+    });
+    return out;
+  }
+
+  function renderNextPractice(view) {
+    const suggestions = buildNextPractices();
+    if (!suggestions.length) return;
+    const wrap = el('div', 'next-practice');
+    wrap.appendChild(el('div', 'next-practice-eyebrow', 'feed the dim lines'));
+    suggestions.forEach(s => {
+      const card = document.createElement('button');
+      card.className = 'next-practice-card next-' + s.source;
+      card.innerHTML =
+        '<div class="next-practice-name">' + escapeHtml(s.name) + '</div>' +
+        '<div class="next-practice-meta">' +
+          '<span class="next-practice-source">' + escapeHtml(s.source) + ' temple</span>' +
+          '<span class="next-practice-duration">' + escapeHtml(s.durationLabel) + '</span>' +
+        '</div>' +
+        '<div class="next-practice-stack">' + stackChips(s.stack) + '</div>' +
+        '<div class="next-practice-target-hint">feeds the ' + escapeHtml(s.targetStack) + ' line</div>';
+      card.addEventListener('click', () => Shell.goTo(s.source));
+      wrap.appendChild(card);
+    });
+    view.appendChild(wrap);
+  }
+
   function renderPlanInto(view) {
     const plan = getPlan(TODAY());
     view.appendChild(el('div', 'section-eyebrow', "today's plan"));
@@ -1663,6 +1787,7 @@ const Portal = (function() {
     view.appendChild(hero);
 
     renderStackPulse(view);
+    renderNextPractice(view);
 
     view.appendChild(el('div', 'section-eyebrow', "today's flow"));
 
