@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Magnetic Temple</title>
+<style>
+:root {
+  --bg: #0a0908;
+  --bg-elev: #14110f;
+  --bg-card: #1a1614;
+  --border: #2a2420;
+  --border-soft: #1f1a17;
+  --ink: #e8e1d4;
+  --ink-dim: #9a8f80;
+  --ink-faint: #5e554a;
+  --bronze: #c89060;
+  --bronze-dim: #8a6440;
+  --bronze-faint: #5a4128;
+  --gold: #c89060;
+  --crimson: #c78f8f;
+  --emerald: #3d7d63;
+  --breath: #8fb8c7;
+  --energy: #b08fc7;
+  --field: #c89060;
+  --healing: #6ba879;
+  --primal: #c78f8f;
+  --body: #3d7d63;
+  --r-sm: 8px;
+  --r-md: 14px;
+  --r-lg: 20px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body {
+  background: var(--bg); color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font-size: 16px; line-height: 1.55; min-height: 100vh;
+  overscroll-behavior-y: contain; -webkit-font-smoothing: antialiased;
+}
+body {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) calc(env(safe-area-inset-bottom) + 40px) env(safe-area-inset-left);
+  max-width: 720px; margin: 0 auto;
+}
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; padding: 0; }
+textarea {
+  font: inherit; color: inherit;
+  background: var(--bg-elev); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 12px 14px; width: 100%;
+  outline: none; transition: border-color 0.15s ease;
+  resize: vertical; min-height: 70px; line-height: 1.5;
+}
+textarea:focus { border-color: var(--bronze); }
+::placeholder { color: var(--ink-faint); }
+
+header.shell-header {
+  padding: 18px 22px 14px;
+  display: flex; align-items: center; gap: 12px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.back-btn {
+  font-size: 12px; letter-spacing: 0.1em; text-transform: lowercase;
+  color: var(--ink-dim); padding: 8px 14px;
+  border: 1px solid var(--border); border-radius: 999px;
+  transition: all 0.15s;
+}
+.back-btn:active { color: var(--ink); border-color: var(--ink-dim); background: var(--bg-elev); }
+.shell-title { flex: 1; text-align: center; font-size: 13px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--bronze); margin-right: 90px; }
+
+.tab-bar { display: flex; gap: 6px; padding: 14px 22px 4px; border-bottom: 1px solid var(--border-soft); }
+.tab-btn {
+  flex: 1; padding: 10px 12px; font-size: 11px;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-faint); text-align: center;
+  border-bottom: 2px solid transparent; transition: all 0.15s;
+}
+.tab-btn.active { color: var(--bronze); border-bottom-color: var(--bronze); }
+
+main { padding: 22px; }
+
+.declaration {
+  background: var(--bg-elev); border: 1px solid var(--border-soft);
+  border-left: 2px solid var(--bronze);
+  border-radius: 0 var(--r-md) var(--r-md) 0;
+  padding: 14px 18px; margin-bottom: 22px;
+  font-size: 13px; color: var(--ink-dim); font-style: italic; line-height: 1.6;
+}
+.declaration strong { font-style: normal; color: var(--ink); font-weight: 500; }
+
+.section-eyebrow {
+  font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--ink-faint); margin: 10px 0 14px;
+}
+
+/* Off-Switch quick action — the most-used drill, one tap away */
+.off-switch-quick {
+  width: 100%;
+  display: flex; align-items: center; gap: 16px;
+  padding: 18px 20px;
+  background: linear-gradient(135deg, var(--bg-elev) 0%, var(--bg) 100%);
+  border: 1px solid var(--bronze-dim);
+  border-left: 4px solid var(--bronze);
+  border-radius: var(--r-md);
+  margin-bottom: 26px;
+  text-align: left;
+  transition: transform 0.18s, border-color 0.18s;
+}
+.off-switch-quick:active { transform: translateY(0); border-color: var(--bronze); }
+.off-switch-icon {
+  font-size: 26px; color: var(--bronze);
+  width: 44px; height: 44px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--bronze-dim); border-radius: 50%;
+  letter-spacing: 0;
+}
+.off-switch-content { flex: 1; min-width: 0; }
+.off-switch-name { font-size: 15px; color: var(--ink); font-weight: 500; letter-spacing: 0.04em; }
+.off-switch-sub { font-size: 11px; color: var(--ink-faint); margin-top: 3px; letter-spacing: 0.1em; text-transform: lowercase; }
+
+/* Drill cards (library) */
+.practice-list { display: flex; flex-direction: column; gap: 8px; }
+.practice-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--r-md); overflow: hidden;
+  transition: border-color 0.15s;
+}
+.practice-card.open { border-color: var(--bronze-dim); }
+.practice-summary {
+  display: flex; gap: 14px; align-items: flex-start;
+  padding: 14px 16px; width: 100%; text-align: left;
+}
+.practice-num {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--bg-elev); border: 1px solid var(--border);
+  font-size: 11px; color: var(--bronze);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; letter-spacing: 0;
+}
+.practice-info { flex: 1; min-width: 0; }
+.practice-name { font-size: 14px; color: var(--ink); margin-bottom: 6px; letter-spacing: 0.02em; line-height: 1.3; }
+.practice-stack { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 6px; }
+.practice-stack-chip {
+  font-size: 9px; padding: 3px 8px; border-radius: 999px;
+  letter-spacing: 0.1em; text-transform: uppercase; font-weight: 500;
+}
+.practice-meta { display: flex; gap: 12px; font-size: 11px; color: var(--ink-faint); }
+.practice-toggle {
+  width: 24px; height: 24px; border-radius: 50%;
+  border: 1px solid var(--border);
+  font-size: 16px; color: var(--ink-dim);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; line-height: 1; transition: transform 0.2s;
+}
+.practice-card.open .practice-toggle { transform: rotate(45deg); color: var(--bronze); }
+
+.practice-detail {
+  display: none;
+  padding: 0 16px 18px;
+  border-top: 1px solid var(--border-soft);
+}
+.practice-card.open .practice-detail { display: block; padding-top: 16px; }
+.detail-section { margin-bottom: 16px; }
+.detail-section h4 {
+  font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--bronze-dim); margin-bottom: 8px; font-weight: 500;
+}
+.detail-section p, .detail-section ul { font-size: 13px; color: var(--ink-dim); line-height: 1.55; }
+.detail-section ul { padding-left: 18px; }
+.detail-section li { margin-bottom: 5px; }
+
+.detail-watch {
+  background: var(--bg-elev); border-left: 2px solid var(--bronze-dim);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  padding: 12px 14px; margin-top: 8px;
+  font-size: 12px; color: var(--ink-dim); font-style: italic; line-height: 1.5;
+}
+.detail-watch strong {
+  font-style: normal; color: var(--bronze); font-weight: 500;
+  font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+}
+
+.detail-actions { display: flex; gap: 8px; margin-top: 14px; }
+.btn-begin, .btn-log {
+  font-size: 12px; padding: 10px 16px; border-radius: var(--r-sm);
+  letter-spacing: 0.1em; text-transform: lowercase; font-weight: 500;
+  flex: 1; transition: all 0.15s;
+}
+.btn-begin { background: var(--bronze); color: var(--bg); }
+.btn-begin:active { background: var(--bronze-dim); }
+.btn-log { background: var(--bg-elev); color: var(--ink-dim); border: 1px solid var(--border); }
+.btn-log:active { color: var(--ink); border-color: var(--ink-dim); }
+
+.complete-card {
+  margin-top: 14px; padding: 14px;
+  background: var(--bg-elev); border: 1px solid var(--bronze-dim);
+  border-radius: var(--r-sm);
+}
+.complete-msg { font-size: 13px; color: var(--bronze); margin-bottom: 6px; letter-spacing: 0.05em; }
+.complete-sub { font-size: 11px; color: var(--ink-faint); font-style: italic; margin-bottom: 10px; line-height: 1.5; }
+
+/* Timer overlay */
+#timer-overlay {
+  position: fixed; inset: 0; background: rgba(10,9,8,0.95);
+  display: none; flex-direction: column; align-items: center; justify-content: center;
+  z-index: 100; backdrop-filter: blur(6px);
+}
+#timer-overlay.active { display: flex; }
+#timer-overlay.gold .timer-display { color: var(--bronze); }
+.timer-label {
+  font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--ink-dim); margin-bottom: 16px; text-align: center; max-width: 80%;
+}
+.timer-display {
+  font-size: 80px; font-variant-numeric: tabular-nums; color: var(--ink);
+  letter-spacing: 0.05em; line-height: 1; margin-bottom: 30px;
+  transition: color 0.3s, transform 0.1s;
+}
+.timer-display.flash { color: var(--bronze); transform: scale(1.05); }
+.timer-controls { display: flex; gap: 12px; }
+.timer-btn {
+  padding: 12px 22px; font-size: 12px; letter-spacing: 0.15em;
+  text-transform: lowercase; border-radius: 999px; border: 1px solid var(--border);
+  color: var(--ink-dim);
+}
+.timer-btn.primary { background: var(--bronze); color: var(--bg); border-color: var(--bronze); }
+.timer-btn:active { transform: scale(0.97); }
+
+/* History */
+.history-list { display: flex; flex-direction: column; gap: 6px; }
+.history-item {
+  background: var(--bg-card); border: 1px solid var(--border-soft);
+  border-radius: var(--r-sm); padding: 12px 14px;
+}
+.history-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.history-name { font-size: 13px; color: var(--ink); flex: 1; }
+.history-date { font-size: 10px; color: var(--ink-faint); letter-spacing: 0.08em; }
+.history-stack { display: flex; gap: 4px; flex-wrap: wrap; margin: 4px 0; }
+.history-stack .practice-stack-chip { font-size: 8px; padding: 2px 6px; }
+.history-notes { font-size: 12px; color: var(--ink-dim); font-style: italic; margin-top: 6px; line-height: 1.5; }
+.history-empty {
+  text-align: center; color: var(--ink-faint);
+  font-size: 12px; font-style: italic;
+  padding: 32px 20px;
+}
+
+/* Toast */
+#toast {
+  position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+  background: var(--bronze); color: var(--bg);
+  padding: 10px 18px; border-radius: 999px;
+  font-size: 12px; letter-spacing: 0.08em;
+  opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  z-index: 200;
+}
+#toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<header class="shell-header">
+  <button class="back-btn" id="back-btn">← portal</button>
+  <div class="shell-title">magnetic temple</div>
+</header>
+
+<div class="tab-bar">
+  <button class="tab-btn active" data-tab="library">library</button>
+  <button class="tab-btn" data-tab="history">history</button>
+</div>
+
+<main id="mount"></main>
+
+<div id="timer-overlay">
+  <div class="timer-label" id="timer-label"></div>
+  <div class="timer-display" id="timer-display">00:00</div>
+  <div class="timer-controls">
+    <button class="timer-btn" id="timer-cancel">cancel</button>
+    <button class="timer-btn primary" id="timer-done">mark done</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ============================================================
+// THE DRILLS — single-temple practices from the_magnetic_temple.md
+// (Beast Temple holds the multi-stack fused versions; here they live single)
+// ============================================================
+const DRILLS = [
+  {
+    id: 'summoning_practice',
+    name: 'Summoning Practice',
+    stack: ['breath','energy','primal'],
+    durationSec: 600, durationLabel: '10 min', frequency: '3× per week minimum',
+    what: 'Generating sexual charge from intent, in stillness, no external stimulus. The skill of CALLING the current rather than working with what arises.',
+    how: [
+      'Sitting upright. Hands on Dan Tian. Tongue at palate (orbit ready).',
+      '2 min body scan from crown to feet — inventory.',
+      '2 min sacral activation — warmth in the bowl below the navel, not stimulation, just amber glow.',
+      '4 min charge summoning — invite sexual energy as frequency, not as fantasy. Release the image, keep the current.',
+      '1 min hold at 6/10. Notice the texture — buzz in palms, warmth in chest.',
+      '1 min closing — three breaths, anchor at Dan Tian. \"This is mine. It is safe to want. It is safe to be wanted.\"'
+    ],
+    watch: 'Image addiction (mind keeps returning to a specific person), genital pull demanding discharge. Both are signals to use the Big Draw and redistribute.'
+  },
+  {
+    id: 'volume_dial_reps',
+    name: 'Volume Dial Reps',
+    stack: ['field','primal'],
+    durationSec: 300, durationLabel: '5 min', frequency: 'daily',
+    what: 'Field-charge control. Moving the charge between defined intensities like training scales on an instrument. The hand that moves the lever.',
+    how: [
+      'Find the charge at 6/10. Hold 30 sec.',
+      'Dial down to 2/10. Hold 30 sec.',
+      'Back to 6/10. Hold.',
+      'Down to 2/10. Hold.',
+      'Back to 6/10. Close.'
+    ],
+    watch: 'Unable to dial DOWN. If only up works, you don’t yet have the dial — the field is stuck at one volume. Practice the down twice as much as the up until both feel equal.'
+  },
+  {
+    id: 'field_cultivation',
+    name: 'Field Cultivation',
+    stack: ['field','breath','body'],
+    durationSec: 600, durationLabel: '10 min', frequency: 'daily',
+    what: 'The standing / walking practice that lives in ordinary life. Full, not pointed. The field expands because you are full inside, not because you push outward.',
+    how: [
+      '1 min anchor: stand, feet rooted, structural breath.',
+      '3 min fill the inside: charge held INSIDE, not pushed outward. Vessel filling with golden water.',
+      '3 min field expands naturally: notice the air just past your skin warming. The field does its job because you are full.',
+      '3 min walk: through a room, a hallway. Field walks with you. Slow enough that the field has time to inhabit each space.'
+    ],
+    watch: 'Pushing outward. The moment you try to MAKE the field bigger, it collapses. Return to filling.'
+  },
+  {
+    id: 'mirror_practice',
+    name: 'Mirror Practice',
+    stack: ['field','primal'],
+    durationSec: 900, durationLabel: '15 min', frequency: 'weekly',
+    what: 'Transmission training with the reflection. The weekly honest meeting with the man in the glass. Door locked, no phone.',
+    how: [
+      'Soft sustained eye contact with yourself. Notice when you flinch.',
+      'Speak a sentence. Notice the voice tone — belly, or throat-trapped.',
+      'Three postures: collapsed (intentionally), composed, fully present. Feel the difference.',
+      'Walk toward the mirror at three paces: rushed, normal, twenty-percent-slower.',
+      'The slight smirk — the natural face of a man in on his own current.',
+      'Close with one minute of held eye contact. \"I see you. I am not going anywhere.\"'
+    ],
+    watch: 'Chandler showing up with a joke to cut the seriousness. Let him pass. The discomfort IS the practice.'
+  }
+];
+
+// Off-Switch — the on-demand drill (not in library, quick-action button at top)
+const OFF_SWITCH = {
+  id: 'off_switch',
+  name: 'Off-Switch — Closing the Field',
+  stack: ['field','breath'],
+  durationSec: 90, durationLabel: '90 sec', frequency: 'on demand',
+  what: 'The containment drill. For meetings, family, contexts where broadcast is inappropriate. The charge is CONCENTRATED, not killed.',
+  how: [
+    '15 sec: identify where the charge is sitting (sacral, chest, eyes, field).',
+    '30 sec: inhale and draw the field inward toward the Dan Tian. Not killed — gathered. Like banking a fire.',
+    '30 sec: seal. Hands briefly over Dan Tian. Iridescent sphere closing the field at the skin. \"This is for me. Not for them.\"',
+    '15 sec: reorient. Eyes scan the room in functional mode — pick three objects, name them silently.'
+  ],
+  watch: 'Mistaking the off-switch for suppression. The charge is CONCENTRATED, not killed. The field refills on its own.'
+};
+
+const STACK_COLORS = {
+  body:    { c: '#3d7d63', bg: 'rgba(61,125,99,0.18)' },
+  breath:  { c: '#8fb8c7', bg: 'rgba(143,184,199,0.18)' },
+  energy:  { c: '#b08fc7', bg: 'rgba(176,143,199,0.18)' },
+  field:   { c: '#c89060', bg: 'rgba(200,144,96,0.18)' },
+  healing: { c: '#6ba879', bg: 'rgba(107,168,121,0.18)' },
+  primal:  { c: '#c78f8f', bg: 'rgba(199,143,143,0.18)' }
+};
+
+// ============================================================
+// STATE
+// ============================================================
+const STORAGE_KEY = 'magnetic_temple_v1';
+let state = loadState();
+let currentTab = 'library';
+let openCardId = null;
+let activeSession = null;
+let timerInterval = null;
+let timerEnd = 0;
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return { sessions: [] };
+    return JSON.parse(raw);
+  } catch (e) { return { sessions: [] }; }
+}
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch (e) {}
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function el(tag, cls, txt) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (txt !== undefined) e.textContent = txt;
+  return e;
+}
+function uid(p) { return (p || 'x') + '-' + Math.random().toString(36).slice(2, 9); }
+function fmtTime(sec) {
+  const m = Math.floor(sec / 60), s = sec % 60;
+  return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+}
+function fmtDateTime(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }).toLowerCase() +
+    ' · ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+}
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+}
+function stackChipsHtml(stack) {
+  if (!stack || !stack.length) return '';
+  return stack.map(k => {
+    const s = STACK_COLORS[k]; if (!s) return '';
+    return '<span class="practice-stack-chip" style="color:' + s.c + ';background:' + s.bg + '">' + k + '</span>';
+  }).join('');
+}
+
+// ============================================================
+// AUDIO BELL + chimes
+// ============================================================
+let audioCtx = null;
+function ensureAudio() { if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } }
+function bell() {
+  if (!audioCtx) return;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.frequency.value = 528; o.type = 'sine';
+  g.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.18, audioCtx.currentTime + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1.6);
+  o.start(); o.stop(audioCtx.currentTime + 1.8);
+  // Second harmonic
+  const o2 = audioCtx.createOscillator();
+  const g2 = audioCtx.createGain();
+  o2.connect(g2); g2.connect(audioCtx.destination);
+  o2.frequency.value = 792; o2.type = 'sine';
+  g2.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+  g2.gain.exponentialRampToValueAtTime(0.08, audioCtx.currentTime + 0.02);
+  g2.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1.4);
+  o2.start(); o2.stop(audioCtx.currentTime + 1.6);
+}
+function softChime() {
+  if (!audioCtx) return;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.frequency.value = 660; o.type = 'sine';
+  g.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.08, audioCtx.currentTime + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.7);
+  o.start(); o.stop(audioCtx.currentTime + 0.8);
+}
+function minuteTick() {
+  if (!audioCtx) return;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.frequency.value = 880; o.type = 'sine';
+  g.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.04, audioCtx.currentTime + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.18);
+  o.start(); o.stop(audioCtx.currentTime + 0.2);
+}
+
+// ============================================================
+// TIMER (Round 5.1 audio cues built in)
+// ============================================================
+let timerStartMs = 0;
+let timerDurationSec = 0;
+let midpointFired = false;
+let lastMinuteMark = 0;
+
+function startTimerForPractice(p) {
+  ensureAudio();
+  if (!p) return;
+  activeSession = { practiceId: p.id, name: p.name, stack: p.stack };
+  timerEnd = Date.now() + (p.durationSec || 0) * 1000;
+  timerStartMs = Date.now();
+  timerDurationSec = p.durationSec || 0;
+  midpointFired = false;
+  lastMinuteMark = 0;
+  document.getElementById('timer-label').textContent = p.name;
+  document.getElementById('timer-overlay').classList.add('active');
+  tickTimer();
+  timerInterval = setInterval(tickTimer, 250);
+}
+function startTimer(practiceId) {
+  startTimerForPractice(DRILLS.find(x => x.id === practiceId));
+}
+function tickTimer() {
+  const remaining = Math.max(0, Math.ceil((timerEnd - Date.now()) / 1000));
+  const display = document.getElementById('timer-display');
+  display.textContent = fmtTime(remaining);
+  display.classList.toggle('flash', remaining <= 5 && remaining > 0);
+
+  if (timerDurationSec > 0) {
+    const elapsed = (Date.now() - timerStartMs) / 1000;
+    if (timerDurationSec > 60 && !midpointFired && elapsed >= timerDurationSec / 2 && remaining > 5) {
+      midpointFired = true;
+      softChime();
+    }
+    if (timerDurationSec > 180) {
+      const minute = Math.floor(elapsed / 60);
+      const totalMinutes = Math.floor(timerDurationSec / 60);
+      if (minute > lastMinuteMark && minute < totalMinutes && remaining > 5) {
+        lastMinuteMark = minute;
+        minuteTick();
+      }
+    }
+  }
+
+  if (remaining === 0) {
+    bell();
+    clearInterval(timerInterval); timerInterval = null;
+    setTimeout(() => stopTimer(true), 600);
+  }
+}
+function stopTimer(finished) {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  document.getElementById('timer-overlay').classList.remove('active');
+  document.getElementById('timer-display').classList.remove('flash');
+  if (finished && activeSession) {
+    promptToLog();
+  }
+}
+function cancelTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  document.getElementById('timer-overlay').classList.remove('active');
+  document.getElementById('timer-display').classList.remove('flash');
+  activeSession = null;
+}
+
+// ============================================================
+// LOG / COMPLETE
+// ============================================================
+function promptToLog() {
+  if (!activeSession) return;
+  const all = [OFF_SWITCH].concat(DRILLS);
+  const p = all.find(x => x.id === activeSession.practiceId);
+  if (!p) { activeSession = null; return; }
+  // For off-switch, log directly without prompt (it's a quick action)
+  if (p.id === 'off_switch') {
+    saveSession(p, '');
+    toast('off-switch · sealed');
+    activeSession = null;
+    render();
+    return;
+  }
+  openCardId = p.id;
+  showCompleteCard(p);
+  render();
+}
+function showCompleteCard(p) {
+  setTimeout(() => {
+    const card = document.querySelector('[data-practice="' + p.id + '"] .practice-detail');
+    if (!card) return;
+    const existing = card.querySelector('.complete-card');
+    if (existing) return;
+    const cc = el('div', 'complete-card');
+    cc.innerHTML =
+      '<div class="complete-msg">drill held.</div>' +
+      '<div class="complete-sub">what moved? what blocked? where did the field sit?</div>' +
+      '<textarea id="complete-notes" placeholder="optional — leave blank if it doesn’t want words"></textarea>' +
+      '<button class="btn-begin" id="save-session">save to history</button>';
+    card.appendChild(cc);
+    document.getElementById('save-session').addEventListener('click', () => {
+      const notes = (document.getElementById('complete-notes').value || '').trim();
+      saveSession(p, notes);
+      activeSession = null;
+      toast('saved to history');
+      render();
+    });
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 50);
+}
+function logSessionDirect(practiceId) {
+  const p = DRILLS.find(x => x.id === practiceId);
+  if (!p) return;
+  saveSession(p, '');
+  toast('logged');
+  render();
+}
+function saveSession(practice, notes) {
+  state.sessions.unshift({
+    id: uid('s'),
+    practiceId: practice.id,
+    name: practice.name,
+    stack: practice.stack,
+    at: new Date().toISOString(),
+    notes: notes
+  });
+  if (state.sessions.length > 200) state.sessions = state.sessions.slice(0, 200);
+  saveState();
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function render() {
+  const mount = document.getElementById('mount');
+  mount.innerHTML = '';
+
+  if (currentTab === 'library') {
+    renderLibrary(mount);
+  } else {
+    renderHistory(mount);
+  }
+}
+
+function renderLibrary(mount) {
+  const decl = el('div', 'declaration');
+  decl.innerHTML = '<strong>charge, dial, field, transmission, off-switch.</strong> the magnetic temple is the daily-life weather of cultivated current — not session-only. drills here are the singles; beast temple holds them fused. <em>off-switch lives at the top because it is used in moments, not on a schedule.</em>';
+  mount.appendChild(decl);
+
+  // OFF-SWITCH quick action — the most-used drill, one tap away
+  const offBtn = el('button', 'off-switch-quick');
+  offBtn.id = 'off-switch-btn';
+  offBtn.innerHTML =
+    '<div class="off-switch-icon">⊘</div>' +
+    '<div class="off-switch-content">' +
+      '<div class="off-switch-name">close the field</div>' +
+      '<div class="off-switch-sub">90 sec · on demand</div>' +
+    '</div>';
+  offBtn.addEventListener('click', () => startTimerForPractice(OFF_SWITCH));
+  mount.appendChild(offBtn);
+
+  mount.appendChild(el('div', 'section-eyebrow', 'the drills'));
+
+  const list = el('div', 'practice-list');
+  DRILLS.forEach((p, idx) => {
+    const card = el('div', 'practice-card' + (openCardId === p.id ? ' open' : ''));
+    card.setAttribute('data-practice', p.id);
+
+    const summary = el('button', 'practice-summary');
+    summary.innerHTML =
+      '<div class="practice-num">' + (idx + 1) + '</div>' +
+      '<div class="practice-info">' +
+        '<div class="practice-name">' + escapeHtml(p.name) + '</div>' +
+        '<div class="practice-stack">' + stackChipsHtml(p.stack) + '</div>' +
+        '<div class="practice-meta">' +
+          '<span>' + escapeHtml(p.durationLabel) + '</span>' +
+          '<span>' + escapeHtml(p.frequency) + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="practice-toggle">+</div>';
+    summary.addEventListener('click', () => {
+      openCardId = (openCardId === p.id) ? null : p.id;
+      render();
+    });
+    card.appendChild(summary);
+
+    const detail = el('div', 'practice-detail');
+    let detailHtml = '';
+    detailHtml += '<div class="detail-section"><h4>what it is</h4><p>' + escapeHtml(p.what) + '</p></div>';
+    detailHtml += '<div class="detail-section"><h4>how to do it</h4><ul>' +
+      p.how.map(li => '<li>' + escapeHtml(li) + '</li>').join('') + '</ul></div>';
+    detailHtml += '<div class="detail-watch"><strong>watch for</strong><br>' + escapeHtml(p.watch) + '</div>';
+    detail.innerHTML = detailHtml;
+
+    const actions = el('div', 'detail-actions');
+    if (p.durationSec > 0) {
+      const beginBtn = el('button', 'btn-begin', 'begin practice · ' + p.durationLabel);
+      beginBtn.addEventListener('click', () => startTimer(p.id));
+      actions.appendChild(beginBtn);
+    }
+    const logBtn = el('button', 'btn-log', p.durationSec > 0 ? 'log without timer' : 'log this practice');
+    logBtn.addEventListener('click', () => logSessionDirect(p.id));
+    actions.appendChild(logBtn);
+    detail.appendChild(actions);
+
+    card.appendChild(detail);
+    list.appendChild(card);
+  });
+  mount.appendChild(list);
+}
+
+function renderHistory(mount) {
+  mount.appendChild(el('div', 'section-eyebrow', 'recent sessions'));
+  if (!state.sessions.length) {
+    const empty = el('div', 'history-empty', 'nothing logged yet. tap the off-switch in the moment, or hold a drill from the library.');
+    mount.appendChild(empty);
+    return;
+  }
+  const list = el('div', 'history-list');
+  state.sessions.slice(0, 50).forEach(s => {
+    const item = el('div', 'history-item');
+    let html =
+      '<div class="history-row">' +
+        '<div class="history-name">' + escapeHtml(s.name) + '</div>' +
+        '<div class="history-date">' + escapeHtml(fmtDateTime(s.at)) + '</div>' +
+      '</div>' +
+      '<div class="history-stack">' + stackChipsHtml(s.stack || []) + '</div>';
+    if (s.notes) {
+      html += '<div class="history-notes">' + escapeHtml(s.notes) + '</div>';
+    }
+    item.innerHTML = html;
+    list.appendChild(item);
+  });
+  mount.appendChild(list);
+}
+
+// ============================================================
+// EVENTS
+// ============================================================
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentTab = btn.dataset.tab;
+    render();
+  });
+});
+
+document.getElementById('back-btn').addEventListener('click', () => {
+  try { window.parent.postMessage('close-temple', '*'); } catch (e) {}
+  try { window.location.href = 'index.html'; } catch (e) {}
+});
+
+document.getElementById('timer-cancel').addEventListener('click', cancelTimer);
+document.getElementById('timer-done').addEventListener('click', () => stopTimer(true));
+
+// ============================================================
+// BOOT
+// ============================================================
+render();
+</script>
+</body>
+</html>
