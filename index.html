@@ -505,8 +505,9 @@ nav.tab-bar {
 }
 .next-practice-card:hover  { transform: translateY(-1px); border-color: var(--ink-dim); }
 .next-practice-card:active { transform: translateY(0); }
-.next-practice-card.next-inner { border-left: 3px solid var(--gold); }
-.next-practice-card.next-beast { border-left: 3px solid var(--crimson); }
+.next-practice-card.next-inner    { border-left: 3px solid var(--gold); }
+.next-practice-card.next-beast    { border-left: 3px solid var(--crimson); }
+.next-practice-card.next-magnetic { border-left: 3px solid var(--bronze); }
 .next-practice-name { font-size: 14px; font-weight: 500; color: var(--ink); margin: 0 0 6px; line-height: 1.3; }
 .next-practice-meta { display: flex; gap: 12px; font-size: 11px; color: var(--ink-faint); margin: 0 0 6px; }
 .next-practice-source { text-transform: lowercase; letter-spacing: 0.05em; }
@@ -1355,7 +1356,18 @@ const Portal = (function() {
         });
       });
     } catch (e) {}
-    // Beast manifest (always embedded)
+    // Magnetic manifest — iterated BEFORE Beast so that shared-id practices
+    // (off_switch, field_cultivation) resolve to the Magnetic surface where
+    // Off-Switch is the prominent one-tap quick-action, not buried in Beast's library.
+    MAGNETIC_PRACTICES.forEach(p => {
+      const sec = parseDurationSec(p.durationLabel);
+      if (sec <= 0 || sec >= 9999) return;
+      pool.push({
+        id: p.id, name: p.name, source: 'magnetic',
+        stack: p.stack, durationSec: sec, durationLabel: p.durationLabel
+      });
+    });
+    // Beast manifest (fused multi-stack practices)
     BEAST_PRACTICES.forEach(p => {
       const sec = parseDurationSec(p.durationLabel);
       if (sec <= 0 || sec >= 9999) return;
@@ -1964,6 +1976,16 @@ const Portal = (function() {
     { id: 'living_magnet', name: 'The Living Magnet (Daily Sensuality)', stack: ['field','body','primal'], durationLabel: 'all day' }
   ];
 
+  // Magnetic Temple manifest — mirrors apps/magnetic_temple.html (Off-Switch + 4 sit-down drills).
+  // Used by cross-temple library picker + Coherent Next-Practice suggestions.
+  const MAGNETIC_PRACTICES = [
+    { id: 'off_switch', name: 'Off-Switch — Closing the Field', stack: ['field','breath'], durationLabel: '90 sec' },
+    { id: 'summoning_practice', name: 'Summoning Practice', stack: ['breath','energy','primal'], durationLabel: '10 min' },
+    { id: 'volume_dial_reps', name: 'Volume Dial Reps', stack: ['field','primal'], durationLabel: '5 min' },
+    { id: 'field_cultivation', name: 'Field Cultivation', stack: ['field','breath','body'], durationLabel: '10 min' },
+    { id: 'mirror_practice', name: 'Mirror Practice', stack: ['field','primal'], durationLabel: '15 min' }
+  ];
+
   function readBodyLib() {
     try {
       const s = JSON.parse(localStorage.getItem('body_temple_v1') || '{}');
@@ -1991,6 +2013,9 @@ const Portal = (function() {
   function readBeastLib() {
     return BEAST_PRACTICES.map(p => ({ id: p.id, name: p.name, source: 'beast', stack: p.stack, durationLabel: p.durationLabel }));
   }
+  function readMagneticLib() {
+    return MAGNETIC_PRACTICES.map(p => ({ id: p.id, name: p.name, source: 'magnetic', stack: p.stack, durationLabel: p.durationLabel }));
+  }
   function readInnerPractices() {
     try {
       const s = JSON.parse(localStorage.getItem('inner_temple_v1') || '{}');
@@ -2004,13 +2029,13 @@ const Portal = (function() {
   let _scheduleAllLibsOverride = false;
   function allLibs() {
     const practices = _scheduleAllLibsOverride ? readInnerPractices() : [];
-    return [].concat(practices, readBodyLib(), readInnerLib(), readBeastLib());
+    return [].concat(practices, readBodyLib(), readInnerLib(), readBeastLib(), readMagneticLib());
   }
 
   function openLibraryPicker(onPick) {
     let activeTab = 'all';
     let q = '';
-    const TABS = ['all','body','inner','beast'];
+    const TABS = ['all','body','inner','beast','magnetic'];
     Modal.open(
       '<div class="modal-header">' +
         '<div class="modal-title">pick from a temple library</div>' +
