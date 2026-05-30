@@ -509,6 +509,113 @@ nav.tab-bar {
 .next-practice-duration { color: var(--ink-dim); }
 .next-practice-stack { display: flex; gap: 4px; flex-wrap: wrap; }
 .next-practice-target-hint { font-size: 10px; color: var(--ink-faint); opacity: 0.7; margin-top: 6px; font-style: italic; }
+
+/* Daily Container — morning intention, evening completions + closing ritual (Round 9) */
+
+/* Morning intention strip */
+.intention-strip {
+  margin: 0 0 18px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  text-align: center;
+}
+.intention-eyebrow {
+  font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-faint); opacity: 0.6;
+}
+.intention-text {
+  font-size: 14px; color: var(--ink); font-style: italic; line-height: 1.4;
+  max-width: 340px;
+  padding: 8px 14px; border-radius: var(--r-md);
+  background: var(--bg-elev);
+}
+.intention-input {
+  font-size: 13px; color: var(--ink);
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 9px 14px;
+  width: 100%; max-width: 340px;
+  font-family: inherit;
+  text-align: center;
+}
+.intention-input:focus { outline: none; border-color: var(--ink-dim); }
+.intention-input::placeholder { color: var(--ink-faint); font-style: italic; }
+.intention-edit {
+  font-size: 11px; color: var(--ink-faint);
+  background: none; border: none; cursor: pointer; padding: 2px 6px;
+  font-family: inherit;
+}
+.intention-edit:hover { color: var(--ink-dim); }
+
+/* Evening completions panel */
+.completions {
+  margin-top: 28px;
+  padding: 16px 18px;
+  border-radius: var(--r-md);
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+}
+.completions-eyebrow {
+  font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-faint); opacity: 0.6;
+  margin-bottom: 12px;
+}
+.completions-row {
+  display: flex; gap: 10px; align-items: baseline;
+  padding: 7px 0; font-size: 12px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.completions-row:last-child { border-bottom: none; }
+.completions-time { color: var(--ink-faint); font-size: 10px; min-width: 54px; }
+.completions-name { flex: 1; color: var(--ink); }
+.completions-source {
+  font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 999px;
+  opacity: 0.85;
+}
+.completions-body  { color: #3d7d63; background: rgba(61,125,99,0.18); }
+.completions-inner { color: var(--gold); background: rgba(200,144,96,0.18); }
+.completions-beast { color: var(--crimson); background: rgba(199,143,143,0.18); }
+
+/* Evening closing card */
+.closing-card {
+  margin-top: 22px; padding: 22px 20px;
+  border-radius: var(--r-md);
+  background: linear-gradient(180deg, var(--bg-elev) 0%, var(--bg) 100%);
+  border: 1px solid var(--border);
+}
+.closing-eyebrow {
+  font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--gold); opacity: 0.9;
+  text-align: center;
+  margin-bottom: 14px;
+}
+.closing-intro {
+  font-size: 12px; color: var(--ink-faint); font-style: italic;
+  text-align: center; line-height: 1.5;
+  margin: 0 auto 18px;
+  max-width: 320px;
+}
+.closing-steps {
+  margin: 0 0 20px;
+  padding-left: 24px;
+  font-size: 13px; color: var(--ink-dim); line-height: 1.6;
+}
+.closing-steps li { margin-bottom: 6px; }
+.closing-steps li:last-child { margin-bottom: 0; }
+.closing-done-btn {
+  display: block; width: 100%;
+  padding: 13px;
+  background: var(--bg);
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  border-radius: var(--r-md);
+  font-family: inherit; font-size: 11px;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.closing-done-btn:hover { background: var(--gold); color: var(--bg); }
 .plan-activity-controls { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
 .plan-mini-btn {
   width: 30px; height: 26px; border-radius: var(--r-sm);
@@ -1231,6 +1338,243 @@ const Portal = (function() {
     view.appendChild(wrap);
   }
 
+  // Daily Container (Round 9) — morning intention, evening completions + closing ritual.
+  // The portal as a threshold-aware container: clean opening + clean closing.
+
+  const INTENTION_KEY = 'portal_intention_v1';
+
+  function dailyTodayKey() {
+    const d = new Date();
+    return d.getFullYear() + '-' +
+      String(d.getMonth() + 1).padStart(2, '0') + '-' +
+      String(d.getDate()).padStart(2, '0');
+  }
+
+  function isMorning() {
+    const h = new Date().getHours();
+    return h >= 5 && h < 12;
+  }
+  function isEvening() {
+    const h = new Date().getHours();
+    return h >= 18 || h < 5;  // 6pm through 5am
+  }
+
+  function getIntention(dateKey) {
+    try {
+      const all = JSON.parse(localStorage.getItem(INTENTION_KEY) || '{}');
+      return all[dateKey] || '';
+    } catch (e) { return ''; }
+  }
+  function setIntention(dateKey, text) {
+    try {
+      const all = JSON.parse(localStorage.getItem(INTENTION_KEY) || '{}');
+      if (text) all[dateKey] = text;
+      else delete all[dateKey];
+      // Cap to last 30 days
+      const keys = Object.keys(all).sort();
+      if (keys.length > 30) keys.slice(0, keys.length - 30).forEach(k => delete all[k]);
+      localStorage.setItem(INTENTION_KEY, JSON.stringify(all));
+    } catch (e) {}
+  }
+
+  function renderIntentionInput(container, initial) {
+    container.innerHTML = '';
+    container.appendChild(el('div', 'intention-eyebrow', "today's intention"));
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'intention-input';
+    input.placeholder = 'what are you orienting toward today?';
+    input.value = initial || '';
+    input.maxLength = 140;
+    input.addEventListener('blur', () => {
+      const t = input.value.trim();
+      const prev = getIntention(dailyTodayKey());
+      if (t !== prev) {
+        setIntention(dailyTodayKey(), t);
+        render();
+      }
+    });
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { input.blur(); }
+    });
+    container.appendChild(input);
+    // Auto-focus when shown in input mode
+    setTimeout(() => { try { input.focus(); } catch (e) {} }, 50);
+  }
+
+  function renderIntention(view) {
+    const today = dailyTodayKey();
+    const current = getIntention(today);
+    // Don't nag past morning if not set
+    if (!current && !isMorning()) return;
+
+    const wrap = el('div', 'intention-strip');
+
+    if (current) {
+      // Display mode with edit
+      wrap.appendChild(el('div', 'intention-eyebrow', "today's intention"));
+      const text = el('div', 'intention-text');
+      text.textContent = current;
+      wrap.appendChild(text);
+      const editBtn = el('button', 'intention-edit', 'edit');
+      editBtn.addEventListener('click', () => {
+        renderIntentionInput(wrap, current);
+      });
+      wrap.appendChild(editBtn);
+    } else {
+      // Input mode (morning, not yet set)
+      renderIntentionInput(wrap, '');
+    }
+
+    view.appendChild(wrap);
+  }
+
+  // Evening completions — what got done today, across all temples
+  function readTodayCompletions() {
+    const today = dailyTodayKey();
+    const out = [];
+
+    const sessionDateOf = s => {
+      if (s.at) return new Date(s.at).toISOString().slice(0, 10);
+      if (s.date) return s.date;
+      return null;
+    };
+    const tsOf = s => {
+      if (s.at) return Date.parse(s.at);
+      if (s.date) return Date.parse(s.date + 'T12:00:00');
+      return 0;
+    };
+
+    // Body
+    try {
+      const body = JSON.parse(localStorage.getItem('body_temple_v1') || '{}');
+      (body.sessions || []).forEach(s => {
+        if (sessionDateOf(s) !== today) return;
+        out.push({
+          source: 'body',
+          name: s.planName || s.name || 'training',
+          ts: tsOf(s)
+        });
+      });
+    } catch (e) {}
+
+    // Inner
+    try {
+      const inner = JSON.parse(localStorage.getItem('inner_temple_v1') || '{}');
+      const libById = {};
+      (inner.library || []).forEach(e => { libById[e.id] = e; });
+      (inner.sessions || []).forEach(s => {
+        if (sessionDateOf(s) !== today) return;
+        const entry = libById[s.practiceId];
+        out.push({
+          source: 'inner',
+          name: s.practiceName || (entry && entry.name) || s.practiceId,
+          ts: tsOf(s)
+        });
+      });
+    } catch (e) {}
+
+    // Beast
+    try {
+      const beast = JSON.parse(localStorage.getItem('beast_temple_v1') || '{}');
+      (beast.sessions || []).forEach(s => {
+        if (sessionDateOf(s) !== today) return;
+        out.push({
+          source: 'beast',
+          name: s.name || 'beast practice',
+          ts: tsOf(s)
+        });
+      });
+    } catch (e) {}
+
+    out.sort((a, b) => a.ts - b.ts);
+    return out;
+  }
+
+  function renderCompletions(view) {
+    if (!isEvening()) return;
+    const items = readTodayCompletions();
+    if (!items.length) return;
+
+    const wrap = el('div', 'completions');
+    wrap.appendChild(el('div', 'completions-eyebrow', 'today, looking back'));
+    items.forEach(item => {
+      const row = el('div', 'completions-row');
+      const time = item.ts
+        ? new Date(item.ts).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }).toLowerCase().replace(/\s/g, '')
+        : '';
+      row.innerHTML =
+        '<span class="completions-time">' + escapeHtml(time) + '</span>' +
+        '<span class="completions-name">' + escapeHtml(item.name) + '</span>' +
+        '<span class="completions-source completions-' + escapeHtml(item.source) + '">' + escapeHtml(item.source) + '</span>';
+      wrap.appendChild(row);
+    });
+    view.appendChild(wrap);
+  }
+
+  // Evening closing card — the closing ritual inline + mark-complete
+  function hasClosedToday() {
+    const today = dailyTodayKey();
+    try {
+      const inner = JSON.parse(localStorage.getItem('inner_temple_v1') || '{}');
+      return (inner.sessions || []).some(s => {
+        const date = s.date || (s.at ? new Date(s.at).toISOString().slice(0, 10) : null);
+        return date === today && s.practiceId === 'closing_ritual';
+      });
+    } catch (e) { return false; }
+  }
+
+  function logClosingRitual() {
+    try {
+      const inner = JSON.parse(localStorage.getItem('inner_temple_v1') || '{}');
+      if (!inner.sessions) inner.sessions = [];
+      inner.sessions.unshift({
+        id: 'closing-' + Date.now(),
+        date: dailyTodayKey(),
+        practiceId: 'closing_ritual',
+        practiceName: 'Closing ritual — sealing the working',
+        stepStates: [],
+        finalNotes: 'closed via portal'
+      });
+      if (inner.sessions.length > 500) inner.sessions = inner.sessions.slice(0, 500);
+      localStorage.setItem('inner_temple_v1', JSON.stringify(inner));
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function renderClosing(view) {
+    if (!isEvening()) return;
+    if (hasClosedToday()) return;
+
+    const wrap = el('div', 'closing-card');
+    wrap.appendChild(el('div', 'closing-eyebrow', '☽  close the day'));
+
+    const intro = el('div', 'closing-intro');
+    intro.textContent = 'the closing tells the nervous system this was sacred — store it. five steps, about five minutes.';
+    wrap.appendChild(intro);
+
+    const steps = document.createElement('ol');
+    steps.className = 'closing-steps';
+    steps.innerHTML =
+      '<li>one hand over the heart, one hand over the lower belly</li>' +
+      '<li>three slow breaths</li>' +
+      '<li>speak one line aloud — what was received, what was appreciated, what will be carried forward</li>' +
+      '<li>speak your name once</li>' +
+      '<li>at least three minutes of silence</li>';
+    wrap.appendChild(steps);
+
+    const btn = el('button', 'closing-done-btn', 'mark closed');
+    btn.addEventListener('click', () => {
+      if (logClosingRitual()) {
+        toast('day closed · sealed');
+        render();
+      }
+    });
+    wrap.appendChild(btn);
+
+    view.appendChild(wrap);
+  }
+
   function renderPlanInto(view) {
     const plan = getPlan(TODAY());
     view.appendChild(el('div', 'section-eyebrow', "today's plan"));
@@ -1786,6 +2130,7 @@ const Portal = (function() {
       <div class="portal-moon${moon.hint ? ' lunar-hint' : ''}"><span class="portal-moon-glyph">${moon.glyph}</span><span>${escapeHtml(moon.name)}</span></div>`;
     view.appendChild(hero);
 
+    renderIntention(view);
     renderStackPulse(view);
     renderNextPractice(view);
 
@@ -1874,6 +2219,9 @@ const Portal = (function() {
     heart.className = 'heart-note';
     heart.innerHTML = `<div class="heart-note-text">${escapeHtml(HEART_NOTES[train.planId] || '')}</div>`;
     view.appendChild(heart);
+
+    renderCompletions(view);
+    renderClosing(view);
 
     mount.appendChild(view);
   }
