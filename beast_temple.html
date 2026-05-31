@@ -1047,6 +1047,30 @@ document.getElementById('timer-done').addEventListener('click', () => stopTimer(
 // BOOT
 // ============================================================
 render();
+
+// Round 14 — auto-start handler for practices launched from the portal
+function checkPortalAutoStart() {
+  try {
+    const raw = localStorage.getItem('portal_auto_start_v1');
+    if (!raw) return;
+    const flag = JSON.parse(raw);
+    if (flag.temple !== 'beast') return;
+    if (!flag.timestamp || (Date.now() - flag.timestamp > 60000)) {
+      localStorage.removeItem('portal_auto_start_v1');
+      return;
+    }
+    localStorage.removeItem('portal_auto_start_v1');
+    if (flag.practiceId) {
+      const practice = PRACTICES.find(p => p.id === flag.practiceId);
+      if (practice) {
+        openCardId = practice.id;
+        render();
+        setTimeout(() => startTimer(practice.id), 350);
+      }
+    }
+  } catch (e) {}
+}
+checkPortalAutoStart();
 </script>
 </body>
 </html>

@@ -1934,6 +1934,27 @@ function renderHistory() {
 setHeaderDate();
 render();
 setInterval(setHeaderDate, 60 * 1000);
+
+// Round 14 — auto-start handler for practices launched from the portal.
+// Solar Gate / Wind-Down (multi-step) trigger startSession; library protocols
+// under 30 min run on the portal timer instead, so they don't reach here.
+function checkPortalAutoStart() {
+  try {
+    const raw = localStorage.getItem('portal_auto_start_v1');
+    if (!raw) return;
+    const flag = JSON.parse(raw);
+    if (flag.temple !== 'inner') return;
+    if (!flag.timestamp || (Date.now() - flag.timestamp > 60000)) {
+      localStorage.removeItem('portal_auto_start_v1');
+      return;
+    }
+    localStorage.removeItem('portal_auto_start_v1');
+    if (flag.practiceId) {
+      setTimeout(() => { try { startSession(flag.practiceId); } catch (e) {} }, 350);
+    }
+  } catch (e) {}
+}
+checkPortalAutoStart();
 </script>
 </body>
 </html>
