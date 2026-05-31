@@ -137,21 +137,56 @@ nav.tab-bar {
 .timeline-icon.dim { border-color: var(--ink-faint); color: var(--ink-faint); }
 .day-card {
   background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: var(--r-md); padding: 18px 20px;
+  border-radius: var(--r-md);
   position: relative; overflow: hidden;
-  transition: border-color 0.15s, transform 0.15s;
-  cursor: pointer; display: block; width: 100%; text-align: left;
+  transition: border-color 0.15s;
 }
-.day-card:active { border-color: var(--ink-dim); transform: scale(0.99); }
+.day-card.open { border-color: var(--gold-dim); }
+.day-card.dim { opacity: 0.7; }
 .day-card::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: var(--ink-faint); opacity: 0.6; }
 .day-card.gold::before { background: var(--gold); }
 .day-card.emerald::before { background: var(--emerald); }
-.day-card.dim { opacity: 0.7; }
+.day-card-summary {
+  display: block; width: 100%; text-align: left;
+  padding: 18px 20px;
+  background: transparent; border: none;
+  color: inherit; font: inherit;
+  cursor: pointer;
+  transition: transform 0.15s;
+  position: relative;
+}
+.day-card-summary:active { transform: scale(0.99); }
 .day-card-eyebrow { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 4px; }
 .day-card-name { font-size: 19px; font-weight: 400; letter-spacing: -0.005em; color: var(--ink); margin-bottom: 4px; }
 .day-card-sub { font-size: 13px; color: var(--ink-dim); line-height: 1.5; margin-bottom: 10px; }
 .day-card-meta { display: flex; gap: 14px; font-size: 11px; color: var(--ink-faint); letter-spacing: 0.04em; text-transform: lowercase; }
-.day-card-arrow { position: absolute; right: 18px; top: 50%; transform: translateY(-50%); color: var(--ink-faint); font-size: 14px; pointer-events: none; }
+.day-card-arrow { position: absolute; right: 18px; top: 50%; transform: translateY(-50%); color: var(--ink-faint); font-size: 14px; pointer-events: none; transition: transform 0.2s, color 0.2s; }
+.day-card.open .day-card-arrow { transform: translateY(-50%) rotate(90deg); color: var(--gold); }
+
+/* Flow card expansion — steps + begin (Round 13) */
+.day-card-expansion {
+  display: none;
+  padding: 4px 20px 18px;
+  border-top: 1px solid var(--border-soft);
+}
+.day-card.open .day-card-expansion { display: block; }
+.day-card-steps {
+  margin: 14px 0 18px;
+  padding-left: 22px;
+  font-size: 13px; color: var(--ink-dim); line-height: 1.6;
+}
+.day-card-steps li { margin-bottom: 6px; }
+.day-card-steps li:last-child { margin-bottom: 0; }
+.day-card-begin {
+  display: block; width: 100%; padding: 13px;
+  background: transparent; border: 1px solid var(--gold);
+  color: var(--gold); border-radius: var(--r-md);
+  font-family: inherit; font-size: 11px;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.day-card-begin:active { background: var(--gold); color: var(--bg); }
 
 .crosslink {
   background: var(--bg-elev); border-left: 2px solid var(--bronze);
@@ -515,42 +550,7 @@ nav.tab-bar {
 .next-practice-stack { display: flex; gap: 4px; flex-wrap: wrap; }
 .next-practice-target-hint { font-size: 10px; color: var(--ink-faint); opacity: 0.7; margin-top: 6px; font-style: italic; }
 
-/* Daily Container — morning intention, evening completions + closing ritual (Round 9) */
-
-/* Morning intention strip */
-.intention-strip {
-  margin: 0 0 18px;
-  display: flex; flex-direction: column; align-items: center; gap: 8px;
-  text-align: center;
-}
-.intention-eyebrow {
-  font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
-  color: var(--ink-faint); opacity: 0.6;
-}
-.intention-text {
-  font-size: 14px; color: var(--ink); font-style: italic; line-height: 1.4;
-  max-width: 340px;
-  padding: 8px 14px; border-radius: var(--r-md);
-  background: var(--bg-elev);
-}
-.intention-input {
-  font-size: 13px; color: var(--ink);
-  background: var(--bg-elev);
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  padding: 9px 14px;
-  width: 100%; max-width: 340px;
-  font-family: inherit;
-  text-align: center;
-}
-.intention-input:focus { outline: none; border-color: var(--ink-dim); }
-.intention-input::placeholder { color: var(--ink-faint); font-style: italic; }
-.intention-edit {
-  font-size: 11px; color: var(--ink-faint);
-  background: none; border: none; cursor: pointer; padding: 2px 6px;
-  font-family: inherit;
-}
-.intention-edit:hover { color: var(--ink-dim); }
+/* Daily Container — evening completions + closing ritual (Round 9; intention strip removed Round 13) */
 
 /* Evening completions panel */
 .completions {
@@ -1103,23 +1103,99 @@ const Portal = (function() {
   TRAINING_SCHEDULE.saturday.planId  = 'upper_hyp';
   TRAINING_SCHEDULE.sunday.planId    = 'zen';
 
-  function makeBlock({ icon, iconClass, cardClass, onClick, eyebrow, name, sub, meta }) {
+  // Round 13 — flow card expansion data
+  let openFlowCardId = null;
+  const FLOW_PRACTICE_STEPS = {
+    solar_gate: [
+      'Phase I — coherent breathing, 5 in / 5 out',
+      'Phase II — microcosmic orbit, slow nasal, ~10 min',
+      'Phase III — Ra sphere, golden sovereignty',
+      'Phase IV — sigil set or intention from fullness',
+      'Phase V — gratitude, anchor at the dantian',
+      'Phase VI — open the eyes, the day begins'
+    ],
+    evening_wind_down: [
+      'Phase I — long exhales, parasympathetic shift',
+      'Phase II — slow body scan, crown to feet',
+      'Phase III — release the day, name what was kept',
+      'Phase IV — close cords from heavy interactions',
+      'Phase V — seal the field for sleep',
+      'Phase VI — drop into the dream substrate'
+    ],
+    off_switch: [
+      '15 sec — identify where the charge is sitting (sacral, chest, eyes, field)',
+      '30 sec — inhale, draw the field inward toward the dantian',
+      '30 sec — seal, hands over dantian, iridescent sphere closing at the skin',
+      '15 sec — reorient, name three objects in the room silently'
+    ],
+    closing_ritual: [
+      'one hand over the heart, one hand over the lower belly',
+      'three slow breaths',
+      'speak one line aloud — what was received, what was appreciated, what will be carried forward',
+      'speak your own name once',
+      'at least three minutes of silence'
+    ]
+  };
+  function lookupStepsFor(practiceId) {
+    return practiceId ? (FLOW_PRACTICE_STEPS[practiceId] || null) : null;
+  }
+
+  function makeBlock({ icon, iconClass, cardClass, onClick, onBegin, beginLabel, cardId, steps, eyebrow, name, sub, meta }) {
     const block = document.createElement('div');
     block.className = 'timeline-block';
     const iconEl = document.createElement('div');
     iconEl.className = 'timeline-icon ' + (iconClass || '');
     iconEl.textContent = icon;
     block.appendChild(iconEl);
-    const card = document.createElement('button');
-    card.className = 'day-card ' + (cardClass || '');
-    card.innerHTML = `
+
+    const isOpen = cardId && openFlowCardId === cardId;
+    const cardWrap = document.createElement('div');
+    cardWrap.className = 'day-card ' + (cardClass || '') + (isOpen ? ' open' : '');
+
+    const summary = document.createElement('button');
+    summary.className = 'day-card-summary';
+    summary.innerHTML = `
       ${eyebrow ? `<div class="day-card-eyebrow">${escapeHtml(eyebrow)}</div>` : ''}
       <div class="day-card-name">${escapeHtml(name)}</div>
       ${sub ? `<div class="day-card-sub">${escapeHtml(sub)}</div>` : ''}
       ${meta && meta.length ? `<div class="day-card-meta">${meta.filter(Boolean).map(m => `<span>${escapeHtml(m)}</span>`).join('')}</div>` : ''}
       <div class="day-card-arrow">→</div>`;
-    if (onClick) card.addEventListener('click', onClick);
-    block.appendChild(card);
+
+    if (cardId) {
+      summary.addEventListener('click', () => {
+        openFlowCardId = (openFlowCardId === cardId) ? null : cardId;
+        render();
+      });
+    } else if (onClick) {
+      summary.addEventListener('click', onClick);
+    }
+    cardWrap.appendChild(summary);
+
+    // Expansion section appears when card is expandable (cardId provided)
+    if (cardId) {
+      const expansion = document.createElement('div');
+      expansion.className = 'day-card-expansion';
+      let expHtml = '';
+      if (steps && steps.length) {
+        expHtml += '<ol class="day-card-steps">';
+        steps.forEach(s => { expHtml += '<li>' + escapeHtml(s) + '</li>'; });
+        expHtml += '</ol>';
+      }
+      expansion.innerHTML = expHtml;
+      if (onBegin) {
+        const beginBtn = document.createElement('button');
+        beginBtn.className = 'day-card-begin';
+        beginBtn.textContent = beginLabel || 'begin';
+        beginBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          onBegin();
+        });
+        expansion.appendChild(beginBtn);
+      }
+      cardWrap.appendChild(expansion);
+    }
+
+    block.appendChild(cardWrap);
     return block;
   }
 
@@ -1416,10 +1492,8 @@ const Portal = (function() {
     view.appendChild(wrap);
   }
 
-  // Daily Container (Round 9) — morning intention, evening completions + closing ritual.
-  // The portal as a threshold-aware container: clean opening + clean closing.
-
-  const INTENTION_KEY = 'portal_intention_v1';
+  // Daily Container (Round 9, simplified Round 13) — evening completions + closing ritual only.
+  // The morning intention strip was removed Round 13 — kept dailyTodayKey/isEvening for the evening surfaces.
 
   function dailyTodayKey() {
     const d = new Date();
@@ -1428,83 +1502,9 @@ const Portal = (function() {
       String(d.getDate()).padStart(2, '0');
   }
 
-  function isMorning() {
-    const h = new Date().getHours();
-    return h >= 5 && h < 12;
-  }
   function isEvening() {
     const h = new Date().getHours();
     return h >= 18 || h < 5;  // 6pm through 5am
-  }
-
-  function getIntention(dateKey) {
-    try {
-      const all = JSON.parse(localStorage.getItem(INTENTION_KEY) || '{}');
-      return all[dateKey] || '';
-    } catch (e) { return ''; }
-  }
-  function setIntention(dateKey, text) {
-    try {
-      const all = JSON.parse(localStorage.getItem(INTENTION_KEY) || '{}');
-      if (text) all[dateKey] = text;
-      else delete all[dateKey];
-      // Cap to last 30 days
-      const keys = Object.keys(all).sort();
-      if (keys.length > 30) keys.slice(0, keys.length - 30).forEach(k => delete all[k]);
-      localStorage.setItem(INTENTION_KEY, JSON.stringify(all));
-    } catch (e) {}
-  }
-
-  function renderIntentionInput(container, initial) {
-    container.innerHTML = '';
-    container.appendChild(el('div', 'intention-eyebrow', "today's intention"));
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.className = 'intention-input';
-    input.placeholder = 'what are you orienting toward today?';
-    input.value = initial || '';
-    input.maxLength = 140;
-    input.addEventListener('blur', () => {
-      const t = input.value.trim();
-      const prev = getIntention(dailyTodayKey());
-      if (t !== prev) {
-        setIntention(dailyTodayKey(), t);
-        render();
-      }
-    });
-    input.addEventListener('keydown', e => {
-      if (e.key === 'Enter') { input.blur(); }
-    });
-    container.appendChild(input);
-    // Auto-focus when shown in input mode
-    setTimeout(() => { try { input.focus(); } catch (e) {} }, 50);
-  }
-
-  function renderIntention(view) {
-    const today = dailyTodayKey();
-    const current = getIntention(today);
-    // Don't nag past morning if not set
-    if (!current && !isMorning()) return;
-
-    const wrap = el('div', 'intention-strip');
-
-    if (current) {
-      // Display mode with edit
-      wrap.appendChild(el('div', 'intention-eyebrow', "today's intention"));
-      const text = el('div', 'intention-text');
-      text.textContent = current;
-      wrap.appendChild(text);
-      const editBtn = el('button', 'intention-edit', 'edit');
-      editBtn.addEventListener('click', () => {
-        renderIntentionInput(wrap, current);
-      });
-      wrap.appendChild(editBtn);
-    } else {
-      // Input mode (morning, not yet set)
-      renderIntentionInput(wrap, '');
-    }
-
-    view.appendChild(wrap);
   }
 
   // Evening completions — what got done today, across all temples
@@ -2187,17 +2187,20 @@ const Portal = (function() {
       iconEl.className = 'timeline-icon dim';
       iconEl.textContent = extra.source === 'beast' ? '\u2756' : extra.source === 'inner' ? '\u263c' : extra.source === 'body' ? '\u25b2' : '+';
       block.appendChild(iconEl);
-      const card = document.createElement('button');
+      const card = document.createElement('div');
       card.className = 'day-card dim';
+      const summary = document.createElement('button');
+      summary.className = 'day-card-summary';
       const stackHtml = (extra.stack || []).map(k => {
         const s = PLAN_STACKS[k]; if (!s) return '';
         return '<span class="plan-stack-chip" style="color:' + s.color + ';background:' + s.bg + '">' + s.label + '</span>';
       }).join('');
-      card.innerHTML =
+      summary.innerHTML =
         '<div class="day-card-eyebrow">' + (extra.source ? escapeHtml(extra.source) + ' \u00b7 added' : 'added') + '</div>' +
         '<div class="day-card-name">' + escapeHtml(extra.name) + '</div>' +
         (stackHtml ? '<div class="flow-extra-stack">' + stackHtml + '</div>' : '') +
         (extra.durationLabel ? '<div class="day-card-meta"><span>' + escapeHtml(extra.durationLabel) + '</span></div>' : '');
+      card.appendChild(summary);
       block.appendChild(card);
       const x = document.createElement('button');
       x.className = 'flow-extra-x';
@@ -2387,7 +2390,6 @@ const Portal = (function() {
       <div class="portal-moon${moon.hint ? ' lunar-hint' : ''}"><span class="portal-moon-glyph">${moon.glyph}</span><span>${escapeHtml(moon.name)}</span></div>`;
     view.appendChild(hero);
 
-    renderIntention(view);
     renderStackPulse(view);
     renderNextPractice(view);
 
@@ -2403,7 +2405,10 @@ const Portal = (function() {
       const mMeta = [morningVal.durationLabel, morningVal.meta, morningVal.source ? morningVal.source + ' temple' : ''].filter(Boolean);
       timeline.appendChild(makeBlock({
         icon: '☉', iconClass: 'gold', cardClass: 'gold',
-        onClick: mRoute ? () => Shell.goTo(mRoute) : null,
+        cardId: 'morning',
+        steps: lookupStepsFor(morningVal.id),
+        onBegin: mRoute ? () => Shell.goTo(mRoute) : null,
+        beginLabel: mRoute ? 'begin in ' + mRoute + ' temple' : null,
         eyebrow: 'morning', name: morningVal.name,
         sub: morningVal.id === 'solar_gate' ? 'foundation layer — phone stays away, body comes first' : '',
         meta: mMeta
@@ -2414,7 +2419,9 @@ const Portal = (function() {
       icon: train.kind === 'training' ? '☼' : train.kind === 'cardio' ? '◐' : '◯',
       iconClass: train.kind === 'training' ? 'emerald' : 'dim',
       cardClass: train.kind === 'training' ? 'emerald' : 'dim',
-      onClick: () => Shell.goTo('body'),
+      cardId: 'training',
+      onBegin: () => Shell.goTo('body'),
+      beginLabel: 'begin in body temple',
       eyebrow: train.kind === 'training' ? 'training' : (train.kind === 'cardio' ? 'cardio / recovery' : 'rest'),
       name: train.name, sub: train.sub,
       meta: [train.duration, train.meta, 'body temple']
@@ -2439,7 +2446,10 @@ const Portal = (function() {
       const eMeta = [eveningVal.durationLabel, eveningVal.meta, eveningVal.source ? eveningVal.source + ' temple' : ''].filter(Boolean);
       timeline.appendChild(makeBlock({
         icon: '☽', iconClass: 'gold', cardClass: 'gold',
-        onClick: eRoute ? () => Shell.goTo(eRoute) : null,
+        cardId: 'evening',
+        steps: lookupStepsFor(eveningVal.id),
+        onBegin: eRoute ? () => Shell.goTo(eRoute) : null,
+        beginLabel: eRoute ? 'begin in ' + eRoute + ' temple' : null,
         eyebrow: 'evening', name: eveningVal.name,
         sub: eveningVal.id === 'evening_wind_down' ? "drop the day. long exhales. give the system the signal that it's safe to sleep." : '',
         meta: eMeta
