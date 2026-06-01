@@ -261,7 +261,7 @@ main { padding: 22px; }
 
 <script>
 // ============================================================
-// THE 30 PRACTICES
+// THE 34 PRACTICES
 // ============================================================
 const PRACTICES = [
   {
@@ -692,6 +692,70 @@ const PRACTICES = [
       'Be a little dangerous — unowned. Your own appetites, your own opinions. Don’t shrink to fit.'
     ],
     watch: 'Flipping it back into performance — the moment it becomes "am I being magnetic right now" you’ve left the body and the field collapses. It only works as overflow. Ground first; you can’t do this from a stressed nervous system.'
+  },
+  {
+    id: 'big_draw',
+    name: 'The Big Draw Protocol',
+    stack: ['primal','energy','body'],
+    durationSec: 600, durationLabel: '10 min', frequency: 'weekly, integrated with Tantric Solo (#14)',
+    what: 'The Taoist technique of redirecting orgasmic energy back up the spine at the INSTANT of peak. Distinct from Orbit During Arousal (#11) which runs the orbit alongside arousal — this is the specific instant-of-peak redirection that converts ejaculation into whole-body retention. Mantak Chia’s named protocol.',
+    how: [
+      'Approach orgasm threshold during solo cultivation (inside Tantric Solo Session, #14).',
+      'At the absolute edge — point of no return is one breath away — STOP all stimulation.',
+      'PC clench HARD. Perineum lifts.',
+      'Inhale sharply through the nose, drawing energy UP the spine from perineum to crown in one breath.',
+      'Hold the breath. Hands clenched. Tongue pressed against palate.',
+      'Exhale slowly while energy spreads down the front of the body and through the upper body.',
+      'Repeat 1–3 times if more peaks arise. The body learns: the peak does not have to discharge.'
+    ],
+    watch: 'Doing it too late — past the point of no return, ejaculation already started. Practice catching the edge well before it. Also: doing it without the orbit primed first — gather and channel through the upper body, don’t let it pool in the head.'
+  },
+  {
+    id: 'orbit_walking',
+    name: 'Microcosmic Orbit Walking',
+    stack: ['breath','energy','body','field'],
+    durationSec: 1200, durationLabel: '20 min', frequency: '2–3× per week',
+    what: 'Running the microcosmic orbit WHILE walking through space. The orbit usually run sitting becomes the carrier wave for a walking field. Slow, sustained, attentive. A moving meditation that integrates body, breath, and energy.',
+    how: [
+      'Begin standing. Establish the orbit — tongue to palate, attention at perineum, breath cycling energy up the back and down the front.',
+      'Begin walking slowly. 50% your normal pace. Feet making firm contact with the ground.',
+      'With each step, breath cycles the orbit. Inhale: energy rises from perineum up the back to crown. Exhale: down the front to perineum.',
+      'The walking itself becomes the orbit — body moving the energy through space.',
+      '20+ min. Walk outside if possible — bare feet on grass or sand if available.'
+    ],
+    watch: 'Speeding up unconsciously. The slow pace IS the practice. If you find yourself walking briskly, the orbit has dropped out. Slow back down. Also: doing it in chaotic environments at first — start in quiet, then bring it to busier spaces.'
+  },
+  {
+    id: 'charged_reading',
+    name: 'Charged Reading',
+    stack: ['primal','field','body'],
+    durationSec: 1800, durationLabel: '30 min', frequency: 'weekly',
+    what: 'Reading erotic, sacred, or alchemical text with the full body activated. The mind reads; the body integrates. Erotic literature read with the orbit running becomes more than entertainment — it primes the field, deepens the erotic vocabulary, and trains the body to STAY with sensation across pages.',
+    how: [
+      'Choose a text: erotic literature (Anaïs Nin, Henry Miller), tantric instruction (Chia, Richardson, Deida), poetic mystical (Rumi, Hafiz, John Donne).',
+      'Read in a comfortable position. Body upright but soft.',
+      'Before starting: 3 min summoning practice (#3). Charge at 4–5/10 baseline.',
+      'Read slowly. Each paragraph: pause. Notice what the body did. Where in the body did the text land?',
+      'If arousal arises, don’t act on it — circulate via the orbit, keep reading.',
+      'End: 5 min sitting with whatever the text opened.'
+    ],
+    watch: 'Reading mechanically as escape. The body should respond. If you’re consuming text without feeling it, slow further or change text. Also: choosing text that bypasses depth — porn-style prose. Real charged reading uses text that asks more of you.'
+  },
+  {
+    id: 'vacuum_practice',
+    name: 'Vacuum Practice (Magnetic Hold)',
+    stack: ['field','primal'],
+    durationSec: 600, durationLabel: '10 min', frequency: 'daily during cultivation arcs',
+    what: 'The "attraction is vacuum, not emission" principle from the Primal Engine made into an embodied drill. Practice being magnetically drawing-IN rather than projecting-OUT. The receptive pole inhabited specifically — critical for the man whose default is push, send, project.',
+    how: [
+      'Stand or sit. Eyes soft or closed.',
+      'Drop into the body. Feel the natural fullness already present.',
+      'Imagine you are a still pool — the surface inviting reflection without pulling. Or a deep well that draws what is around it without grasping.',
+      'Breath: long, low, sustained — inhalation slightly longer than exhalation.',
+      'Energy: gather inward rather than radiate outward. Pull the field toward the dantian, not push it from the field.',
+      '10 min sustained. Notice the difference in how the room responds to vacuum vs emission.'
+    ],
+    watch: 'Confusing vacuum with collapse or withdrawal. The vacuum is full, dense, magnetic — NOT empty or shrinking. If you feel shrinking, the pole shifted. Anchor in the dantian fullness, the drawing follows. Vacuum is yin POWER, not yin absence.'
   }
 ];
 
@@ -946,7 +1010,7 @@ function renderLibrary(mount) {
   decl.innerHTML = '<strong>the temple that fuels the beast.</strong> every practice multi-stack by design — primal + magnetic + aura threaded into single drills. Joey’s instrument, Sophia’s staying fire baked in from line one. <em>heat is fuel; this is where it lives.</em>';
   mount.appendChild(decl);
 
-  mount.appendChild(el('div', 'section-eyebrow', 'the 30 practices'));
+  mount.appendChild(el('div', 'section-eyebrow', 'the 34 practices'));
 
   const list = el('div', 'practice-list');
   PRACTICES.forEach((p, idx) => {
