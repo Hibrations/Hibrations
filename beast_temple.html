@@ -835,6 +835,7 @@ function stackChipsHtml(stack) {
 let audioCtx = null;
 function ensureAudio() { if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } }
 function bell() {
+  try { if (navigator.vibrate) navigator.vibrate([200, 100, 300, 100, 400]); } catch (e) {}
   if (!audioCtx) return;
   [440, 660].forEach(freq => {
     const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
@@ -849,6 +850,7 @@ function bell() {
 
 // Round 5.1 — softer mid-practice cues
 function softChime() {
+  try { if (navigator.vibrate) navigator.vibrate(100); } catch (e) {}
   if (!audioCtx) return;
   const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
   o.connect(g); g.connect(audioCtx.destination);
@@ -859,6 +861,7 @@ function softChime() {
   o.start(); o.stop(audioCtx.currentTime + 0.75);
 }
 function minuteTick() {
+  try { if (navigator.vibrate) navigator.vibrate(30); } catch (e) {}
   if (!audioCtx) return;
   const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
   o.connect(g); g.connect(audioCtx.destination);

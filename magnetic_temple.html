@@ -517,6 +517,7 @@ function stackChipsHtml(stack) {
 let audioCtx = null;
 function ensureAudio() { if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } }
 function bell() {
+  try { if (navigator.vibrate) navigator.vibrate([200, 100, 300, 100, 400]); } catch (e) {}
   if (!audioCtx) return;
   const o = audioCtx.createOscillator();
   const g = audioCtx.createGain();
@@ -537,6 +538,7 @@ function bell() {
   o2.start(); o2.stop(audioCtx.currentTime + 1.6);
 }
 function softChime() {
+  try { if (navigator.vibrate) navigator.vibrate(100); } catch (e) {}
   if (!audioCtx) return;
   const o = audioCtx.createOscillator();
   const g = audioCtx.createGain();
@@ -548,6 +550,7 @@ function softChime() {
   o.start(); o.stop(audioCtx.currentTime + 0.8);
 }
 function minuteTick() {
+  try { if (navigator.vibrate) navigator.vibrate(30); } catch (e) {}
   if (!audioCtx) return;
   const o = audioCtx.createOscillator();
   const g = audioCtx.createGain();

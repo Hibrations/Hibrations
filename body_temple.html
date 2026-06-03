@@ -1658,8 +1658,12 @@ function renderHome() {
   card.className = 'today-card';
 
   if (plan) {
+    const rotationEyebrow = planHasRotation(plan.id)
+      ? `<div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--emerald);opacity:0.75;margin:4px 0 8px;">block ${getCurrentBlock()} · variant ${String.fromCharCode(65 + (getCurrentBlock() % 4))} · week ${getVariationWeekOf2()} of 2</div>`
+      : '';
     card.innerHTML = `
       <div class="today-name">${escapeHtml(plan.name)}</div>
+      ${rotationEyebrow}
       <div class="today-sub">${escapeHtml(plan.subtitle || '')}</div>
       <div class="today-meta">
         <span>${plan.exercises.length} movements</span>
@@ -2158,6 +2162,65 @@ document.getElementById('modal-overlay').addEventListener('click', e => {
 // ============================================================
 // SESSION
 // ============================================================
+// Round 17 — Bi-weekly exercise rotation for Push / Pull / Legs.
+// Schoenfeld + Israetel: variation within movement patterns improves
+// hypertrophy outcomes without sacrificing progressive overload.
+// 2-week blocks = 2 sessions per exercise (enough to add weight or reps),
+// then the slot rotates to the next exercise in its pool.
+// ============================================================
+const ROTATION_POOLS = {
+  pull: {
+    A: ['pullup', 'lat_pulldown', 'lat_pulldown_close'],                       // vertical pull
+    B: ['barbell_row', 'cable_row', 'db_row', 'pendlay_row'],                  // horizontal pull
+    C: ['conventional_deadlift', 'romanian_deadlift', 'trap_bar_deadlift'],    // hip hinge
+    D: ['cable_curl', 'hammer_curl', 'incline_db_curl'],                       // biceps
+    E: ['face_pull']                                                            // rear delt (single — won't rotate yet)
+  },
+  push: {
+    A: ['bench_press', 'flat_db_press', 'incline_db_press'],                   // horizontal push
+    B: ['overhead_press', 'db_shoulder_press', 'arnold_press', 'push_press'],  // vertical push
+    C: ['dips', 'skull_crusher', 'tricep_pushdown', 'overhead_tricep_extension'], // triceps
+    D: ['lateral_raise'],                                                       // lateral delt (single)
+    E: ['cable_fly', 'doorway_pec']                                            // chest fly
+  },
+  legs: {
+    A: ['back_squat', 'front_squat', 'goblet_squat', 'leg_press'],             // squat pattern
+    B: ['walking_lunge', 'bulgarian_split_squat', 'step_up', 'pistol_squat'],  // lunge pattern
+    C: ['lying_leg_curl', 'romanian_deadlift'],                                 // hamstring
+    D: ['hip_thrust', 'glute_bridge'],                                         // hip/glute
+    E: ['standing_calf_raise']                                                  // calf (single)
+  }
+};
+
+function getISOWeekNumber(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+}
+
+// Bi-weekly cadence: block index = floor(ISO week / 2).
+function getCurrentBlock() {
+  return Math.floor(getISOWeekNumber(new Date()) / 2);
+}
+
+function getRotatedLibraryId(planId, slotLetter, fallbackId) {
+  const pool = ROTATION_POOLS[planId] && ROTATION_POOLS[planId][slotLetter];
+  if (!pool || pool.length === 0) return fallbackId;
+  const idx = getCurrentBlock() % pool.length;
+  return pool[idx];
+}
+
+// "Variation week 1 of 2" or "2 of 2" — tells Lek which session of the 2-week block this is.
+function getVariationWeekOf2() {
+  return (getISOWeekNumber(new Date()) % 2) + 1;
+}
+
+// Pull / Push / Legs are the only plans with rotation in V1. Returns boolean.
+function planHasRotation(planId) {
+  return !!ROTATION_POOLS[planId];
+}
+
 function startSession(planId) {
   const plan = getPlan(planId);
   if (!plan) return;
@@ -2165,21 +2228,29 @@ function startSession(planId) {
     date: TODAY(),
     planId: plan.id,
     planName: plan.name,
-    exercises: plan.exercises.map(ex => ({
-      id: ex.id,
-      libraryId: ex.libraryId,
-      name: ex.name,
-      letter: ex.letter,
-      alt: ex.alt,
-      sets: ex.sets,
-      reps: ex.reps,
-      rest: ex.rest,
-      cues: ex.cues,
-      done: false,
-      notes: '',
-      notesOpen: false,
-      formOpen: false
-    })),
+    exercises: plan.exercises.map(ex => {
+      // Apply rotation if this plan + slot has a pool. Look up the rotated
+      // library entry; if it exists in the user's library, swap libraryId + name.
+      // If lookup fails (exercise deleted from library), fall back to the saved exercise.
+      const rotatedId = getRotatedLibraryId(planId, ex.letter, ex.libraryId);
+      const useRotated = rotatedId && rotatedId !== ex.libraryId;
+      const libEntry = useRotated ? (state.library || []).find(l => l.id === rotatedId) : null;
+      return {
+        id: ex.id,
+        libraryId: libEntry ? libEntry.id : ex.libraryId,
+        name: libEntry ? libEntry.name : ex.name,
+        letter: ex.letter,
+        alt: ex.alt,
+        sets: ex.sets,
+        reps: ex.reps,
+        rest: ex.rest,
+        cues: ex.cues,
+        done: false,
+        notes: '',
+        notesOpen: false,
+        formOpen: false
+      };
+    }),
     warmup: plan.warmup || [],
     cooldown: plan.cooldown || [],
     duration: plan.duration,

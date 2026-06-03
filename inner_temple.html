@@ -1631,6 +1631,7 @@ function stopTimer() {
 }
 
 function softChime() {
+  try { if (navigator.vibrate) navigator.vibrate(100); } catch (e) {}
   try {
     const ctx = window.__audioCtx; if (!ctx) return;
     const o = ctx.createOscillator(); const g = ctx.createGain();
@@ -1644,6 +1645,7 @@ function softChime() {
 }
 
 function minuteTick() {
+  try { if (navigator.vibrate) navigator.vibrate(30); } catch (e) {}
   try {
     const ctx = window.__audioCtx; if (!ctx) return;
     const o = ctx.createOscillator(); const g = ctx.createGain();
@@ -1657,6 +1659,7 @@ function minuteTick() {
 }
 
 function bell() {
+  try { if (navigator.vibrate) navigator.vibrate([200, 100, 300, 100, 400]); } catch (e) {}
   try {
     const ctx = window.__audioCtx;
     if (!ctx) return;

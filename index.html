@@ -1201,6 +1201,7 @@ const Portal = (function() {
     }
   }
   function portalBell() {
+    try { if (navigator.vibrate) navigator.vibrate([200, 100, 300, 100, 400]); } catch (e) {}
     if (!portalAudioCtx) return;
     const o = portalAudioCtx.createOscillator();
     const g = portalAudioCtx.createGain();
@@ -1220,6 +1221,7 @@ const Portal = (function() {
     o2.start(); o2.stop(portalAudioCtx.currentTime + 1.6);
   }
   function portalSoftChime() {
+    try { if (navigator.vibrate) navigator.vibrate(100); } catch (e) {}
     if (!portalAudioCtx) return;
     const o = portalAudioCtx.createOscillator();
     const g = portalAudioCtx.createGain();
@@ -1231,6 +1233,7 @@ const Portal = (function() {
     o.start(); o.stop(portalAudioCtx.currentTime + 0.8);
   }
   function portalMinuteTick() {
+    try { if (navigator.vibrate) navigator.vibrate(30); } catch (e) {}
     if (!portalAudioCtx) return;
     const o = portalAudioCtx.createOscillator();
     const g = portalAudioCtx.createGain();
