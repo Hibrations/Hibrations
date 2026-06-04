@@ -306,6 +306,28 @@ main { padding: 0 22px; }
   flex-wrap: wrap;
 }
 .ex-prescription span strong { color: var(--ink); font-weight: 500; }
+/* Round 19 — last-session progress surface */
+.ex-last-session {
+  font-size: 11px;
+  color: var(--ink-faint);
+  margin: 0 0 8px;
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+}
+.ex-last-session .ex-last-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 9px;
+  color: var(--ink-faint);
+  opacity: 0.7;
+  margin-right: 8px;
+}
+.ex-last-session .ex-last-note {
+  color: var(--ink-dim);
+  font-style: italic;
+}
+.ex-last-session.ex-last-plateau .ex-last-note { color: #c89060; }
+.ex-last-session.ex-last-plateau::before { content: '⚐ '; color: #c89060; font-style: normal; }
 .ex-cues { font-size: 12px; color: var(--ink-faint); font-style: italic; margin-bottom: 10px; line-height: 1.5; }
 .ex-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 .ex-action-btn {
@@ -2399,6 +2421,55 @@ function renderSession() {
   return wrap;
 }
 
+// Round 19 — last-session progress surface helpers.
+// Surfaces the most recent notes for the same exercise so Lek walks into
+// the gym knowing what to beat. Plateau flag fires when last 3 sessions
+// have identical notes (case-insensitive) — signal to vary or deload.
+function findLastSessionExercise(name) {
+  if (!name || !state.sessions) return null;
+  for (let i = 0; i < state.sessions.length; i++) {
+    const s = state.sessions[i];
+    if (!s.exercises) continue;
+    const ex = s.exercises.find(e => e.name === name);
+    if (ex) return { exercise: ex, sessionDate: s.date };
+  }
+  return null;
+}
+
+function findRecentSessionsForExercise(name, max) {
+  const out = [];
+  if (!name || !state.sessions) return out;
+  for (let i = 0; i < state.sessions.length && out.length < max; i++) {
+    const s = state.sessions[i];
+    if (!s.exercises) continue;
+    const ex = s.exercises.find(e => e.name === name);
+    if (ex) out.push({ exercise: ex, sessionDate: s.date });
+  }
+  return out;
+}
+
+function daysAgoFrom(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr + 'T12:00:00');
+  if (isNaN(d.getTime())) return null;
+  const today = new Date();
+  today.setHours(12, 0, 0, 0);
+  const diff = Math.round((today.getTime() - d.getTime()) / (24 * 3600 * 1000));
+  if (diff <= 0) return 'today';
+  if (diff === 1) return 'yesterday';
+  return diff + 'd ago';
+}
+
+// Plateau detection: same notes across last 3 sessions = plateau flag.
+// Requires non-empty notes on all three (otherwise can't tell).
+function isPlateauFor(name) {
+  const recent = findRecentSessionsForExercise(name, 3);
+  if (recent.length < 3) return false;
+  const norms = recent.map(r => (r.exercise.notes || '').trim().toLowerCase());
+  if (norms.some(n => !n)) return false;
+  return norms[0] === norms[1] && norms[1] === norms[2];
+}
+
 function renderExerciseCard(ex, idx) {
   const card = document.createElement('div');
   card.className = 'exercise-card' + (ex.done ? ' done' : '');
@@ -2416,12 +2487,23 @@ function renderExerciseCard(ex, idx) {
   });
   row.appendChild(check);
 
+  // Build last-session block (Round 19) — shown above the prescription
+  const last = findLastSessionExercise(ex.name);
+  let lastHtml = '';
+  if (last) {
+    const noteText = (last.exercise.notes || '').trim();
+    const ageText = daysAgoFrom(last.sessionDate) || '';
+    const plateauCls = isPlateauFor(ex.name) ? ' ex-last-plateau' : '';
+    lastHtml = `<div class="ex-last-session${plateauCls}"><span class="ex-last-eyebrow">last · ${escapeHtml(ageText)}</span>${noteText ? `<span class="ex-last-note">${escapeHtml(noteText)}</span>` : ''}</div>`;
+  }
+
   const body = document.createElement('div');
   body.className = 'ex-body';
   body.innerHTML = `
     ${ex.letter ? `<div class="ex-letter">${escapeHtml(ex.letter)}</div>` : ''}
     <div class="ex-name">${escapeHtml(ex.name)}</div>
     ${ex.alt ? `<div class="ex-alt">${escapeHtml(ex.alt)}</div>` : ''}
+    ${lastHtml}
     <div class="ex-prescription">
       <span><strong>${ex.sets}</strong> × ${escapeHtml(String(ex.reps))}</span>
       ${ex.rest ? `<span>rest <strong>${formatRest(ex.rest)}</strong></span>` : ''}
