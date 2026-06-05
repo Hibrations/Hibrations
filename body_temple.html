@@ -2513,6 +2513,45 @@ function progressiveOverloadFor(name) {
   return { value: +(w1.value + increment).toFixed(2), unit: w1.unit };
 }
 
+// Round 21 — PR detection.
+// Returns the highest detected weight (in kg, normalised across units) found in
+// any prior session for this exercise. excludeSessionId lets the just-saved
+// session skip itself when checking whether IT set a new PR.
+function findPriorMaxWeight(name, excludeSessionId) {
+  if (!name || !state.sessions) return null;
+  let maxKg = null;
+  for (const s of state.sessions) {
+    if (excludeSessionId && s.id === excludeSessionId) continue;
+    if (!s.exercises) continue;
+    const ex = s.exercises.find(e => e.name === name);
+    if (!ex) continue;
+    const w = extractWeight(ex.notes);
+    if (!w) continue;
+    const valueKg = w.unit === 'kg' ? w.value : w.value * 0.453592;
+    if (maxKg === null || valueKg > maxKg) maxKg = valueKg;
+  }
+  return maxKg;
+}
+
+// Scans a freshly-saved session for PRs. For each exercise with parseable weight,
+// checks if it exceeds the prior all-time max (in kg). Returns one entry per PR
+// with the original unit preserved for display.
+function detectPRsInSession(session) {
+  if (!session || !session.exercises) return [];
+  const prs = [];
+  session.exercises.forEach(ex => {
+    const w = extractWeight(ex.notes);
+    if (!w) return;
+    const currentKg = w.unit === 'kg' ? w.value : w.value * 0.453592;
+    const priorKg = findPriorMaxWeight(ex.name, session.id);
+    if (priorKg === null) return; // no prior baseline yet — not a PR
+    if (currentKg > priorKg + 0.01) {
+      prs.push({ name: ex.name, value: w.value, unit: w.unit });
+    }
+  });
+  return prs;
+}
+
 function renderExerciseCard(ex, idx) {
   const card = document.createElement('div');
   card.className = 'exercise-card' + (ex.done ? ' done' : '');
@@ -2641,7 +2680,7 @@ function renderExerciseCard(ex, idx) {
 }
 
 function closeSession() {
-  state.sessions.unshift({
+  const newSession = {
     id: uid('s'),
     date: activeSession.date,
     planId: activeSession.planId,
@@ -2649,11 +2688,19 @@ function closeSession() {
     type: 'training',
     exercises: activeSession.exercises.map(e => ({ name: e.name, done: e.done, notes: e.notes })),
     finalNotes: activeSession.finalNotes
-  });
+  };
+  state.sessions.unshift(newSession);
   saveState();
   activeSession = null;
   stopTimer();
-  toast('session kept');
+  // Round 21 — PR detection
+  const prs = detectPRsInSession(newSession);
+  if (prs.length > 0) {
+    const msg = prs.map(p => p.name + ' · ' + p.value + p.unit).join(' · ');
+    toast('🏆 PR! ' + msg);
+  } else {
+    toast('session kept');
+  }
   render();
 }
 
