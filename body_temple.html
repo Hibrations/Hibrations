@@ -328,6 +328,16 @@ main { padding: 0 22px; }
 }
 .ex-last-session.ex-last-plateau .ex-last-note { color: #c89060; }
 .ex-last-session.ex-last-plateau::before { content: '⚐ '; color: #c89060; font-style: normal; }
+/* Round 20 — weight + progressive overload nudge */
+.ex-last-session .ex-last-weight {
+  color: var(--ink); font-weight: 500; font-style: normal;
+  margin-right: 6px; letter-spacing: 0.01em;
+}
+.ex-progress-nudge {
+  font-size: 11px; color: #c89060; letter-spacing: 0.04em;
+  margin: -2px 0 8px; font-style: italic;
+}
+.ex-progress-nudge strong { color: #c89060; font-weight: 600; font-style: normal; }
 .ex-cues { font-size: 12px; color: var(--ink-faint); font-style: italic; margin-bottom: 10px; line-height: 1.5; }
 .ex-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 .ex-action-btn {
@@ -2470,6 +2480,39 @@ function isPlateauFor(name) {
   return norms[0] === norms[1] && norms[1] === norms[2];
 }
 
+// Round 20 — extract weight from free-text notes.
+// Recognises "70kg", "70 kg", "70.5 kg", "150lbs", "150 lb", with optional comma decimal.
+function extractWeight(notes) {
+  if (!notes) return null;
+  const text = String(notes).trim();
+  const kgMatch = text.match(/(\d+(?:[.,]\d+)?)\s*(?:kg|kilo(?:s|gram)?)/i);
+  if (kgMatch) return { value: parseFloat(kgMatch[1].replace(',', '.')), unit: 'kg' };
+  const lbMatch = text.match(/(\d+(?:[.,]\d+)?)\s*(?:lbs?|pound(?:s)?)/i);
+  if (lbMatch) return { value: parseFloat(lbMatch[1].replace(',', '.')), unit: 'lbs' };
+  return null;
+}
+
+// Strip the weight token from notes so the rest can render as a separate line.
+function stripWeightFromNotes(notes) {
+  if (!notes) return '';
+  return String(notes).replace(/[\d.,]+\s*(?:kg|kilo(?:s|gram)?|lbs?|pound(?:s)?)\s*[,·\-]?\s*/i, '').trim();
+}
+
+// Progressive overload nudge: if last 2 sessions had the same weight, suggest +2.5kg / +5lbs.
+// Returns null if no recent matched-weight pair, or if weight changed between sessions
+// (user is already progressing, no nudge needed).
+function progressiveOverloadFor(name) {
+  const recent = findRecentSessionsForExercise(name, 2);
+  if (recent.length < 2) return null;
+  const w1 = extractWeight(recent[0].exercise.notes);
+  const w2 = extractWeight(recent[1].exercise.notes);
+  if (!w1 || !w2) return null;
+  if (w1.unit !== w2.unit) return null;
+  if (Math.abs(w1.value - w2.value) > 0.01) return null;
+  const increment = w1.unit === 'kg' ? 2.5 : 5;
+  return { value: +(w1.value + increment).toFixed(2), unit: w1.unit };
+}
+
 function renderExerciseCard(ex, idx) {
   const card = document.createElement('div');
   card.className = 'exercise-card' + (ex.done ? ' done' : '');
@@ -2487,14 +2530,26 @@ function renderExerciseCard(ex, idx) {
   });
   row.appendChild(check);
 
-  // Build last-session block (Round 19) — shown above the prescription
+  // Build last-session block (Round 19 + Round 20) — weight bolded, nudge if applicable
   const last = findLastSessionExercise(ex.name);
   let lastHtml = '';
   if (last) {
-    const noteText = (last.exercise.notes || '').trim();
+    const rawNotes = (last.exercise.notes || '').trim();
     const ageText = daysAgoFrom(last.sessionDate) || '';
     const plateauCls = isPlateauFor(ex.name) ? ' ex-last-plateau' : '';
-    lastHtml = `<div class="ex-last-session${plateauCls}"><span class="ex-last-eyebrow">last · ${escapeHtml(ageText)}</span>${noteText ? `<span class="ex-last-note">${escapeHtml(noteText)}</span>` : ''}</div>`;
+    const weight = extractWeight(rawNotes);
+    const restNote = weight ? stripWeightFromNotes(rawNotes) : rawNotes;
+    const weightPart = weight ? `<span class="ex-last-weight">${weight.value}${weight.unit}</span>` : '';
+    const notePart = restNote ? `<span class="ex-last-note">${escapeHtml(restNote)}</span>` : '';
+    lastHtml = `<div class="ex-last-session${plateauCls}"><span class="ex-last-eyebrow">last · ${escapeHtml(ageText)}</span>${weightPart}${notePart}</div>`;
+    // Progressive overload nudge — suggest next increment if last 2 weights matched
+    // and we're not already in a plateau flag (plateau is its own signal).
+    if (!isPlateauFor(ex.name)) {
+      const nudge = progressiveOverloadFor(ex.name);
+      if (nudge) {
+        lastHtml += `<div class="ex-progress-nudge">try <strong>${nudge.value}${nudge.unit}</strong>?</div>`;
+      }
+    }
   }
 
   const body = document.createElement('div');
