@@ -354,6 +354,31 @@ main { padding: 0 22px; }
 .prs-name { font-size: 14px; color: var(--ink); line-height: 1.3; }
 .prs-weight { font-size: 15px; color: #c89060; font-weight: 500; letter-spacing: 0.02em; white-space: nowrap; }
 .prs-date { font-size: 10px; color: var(--ink-faint); letter-spacing: 0.08em; text-transform: lowercase; white-space: nowrap; }
+/* Round 23 — notes history in exercise wiki view */
+.detail-notes-history { margin-top: 20px; }
+.notes-history-list {
+  display: flex; flex-direction: column; gap: 8px; margin-top: 12px;
+  max-height: 420px; overflow-y: auto; padding-right: 4px;
+}
+.nh-row {
+  display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap;
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border-soft);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.nh-date {
+  font-size: 10px; color: var(--ink-faint); letter-spacing: 0.1em;
+  text-transform: lowercase; min-width: 70px; flex-shrink: 0;
+}
+.nh-weight { color: #c89060; font-weight: 500; letter-spacing: 0.02em; }
+.nh-note { color: var(--ink-dim); font-style: italic; flex: 1; min-width: 200px; }
+.notes-history-empty {
+  font-size: 12px; color: var(--ink-faint); font-style: italic;
+  padding: 14px; text-align: center;
+}
 .ex-cues { font-size: 12px; color: var(--ink-faint); font-style: italic; margin-bottom: 10px; line-height: 1.5; }
 .ex-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 .ex-action-btn {
@@ -2077,6 +2102,27 @@ function renderExerciseDetail() {
     card.appendChild(div);
   });
 
+  // Round 23 — Notes history: all past sessions where this exercise had notes.
+  // The wiki becomes a journal of how this lift has lived in your body over time.
+  const noteHistory = findAllSessionsForExercise(ex.name);
+  if (noteHistory.length > 0) {
+    const notesDiv = document.createElement('div');
+    notesDiv.className = 'detail-section detail-notes-history';
+    let html = '<h3>your notes · ' + noteHistory.length + ' session' + (noteHistory.length === 1 ? '' : 's') + '</h3>';
+    html += '<div class="notes-history-list">';
+    noteHistory.forEach(n => {
+      const ageText = daysAgoFrom(n.date) || '';
+      const weight = extractWeight(n.notes);
+      const restNote = weight ? stripWeightFromNotes(n.notes) : n.notes;
+      const weightPart = weight ? '<span class="nh-weight">' + weight.value + weight.unit + '</span>' : '';
+      const notePart = restNote ? '<span class="nh-note">' + escapeHtml(restNote) + '</span>' : '';
+      html += '<div class="nh-row"><span class="nh-date">' + escapeHtml(ageText) + '</span>' + weightPart + notePart + '</div>';
+    });
+    html += '</div>';
+    notesDiv.innerHTML = html;
+    card.appendChild(notesDiv);
+  }
+
   // Actions
   const actions = document.createElement('div');
   actions.className = 'detail-actions';
@@ -2596,6 +2642,21 @@ function getAllTimePRs() {
     }
   }
   return Object.values(byExercise);
+}
+
+// Round 23 — all sessions where this exercise has non-empty notes.
+// Sessions in state.sessions are already newest-first, so the returned list is too.
+function findAllSessionsForExercise(name) {
+  if (!name || !state.sessions) return [];
+  const out = [];
+  state.sessions.forEach(s => {
+    if (!s.exercises) return;
+    const ex = s.exercises.find(e => e.name === name);
+    if (ex && (ex.notes || '').trim()) {
+      out.push({ date: s.date, notes: ex.notes, planName: s.planName, sessionId: s.id });
+    }
+  });
+  return out;
 }
 
 function renderPRsPanel() {
