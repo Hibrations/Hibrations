@@ -2102,9 +2102,9 @@ function renderExerciseDetail() {
     card.appendChild(div);
   });
 
-  // Round 23 — Notes history: all past sessions where this exercise had notes.
-  // The wiki becomes a journal of how this lift has lived in your body over time.
-  const noteHistory = findAllSessionsForExercise(ex.name);
+  // Round 23 + 24 — Notes history: all past sessions where this exercise had notes.
+  // Match by libraryId (ex.id from library entry) first, fall back to name.
+  const noteHistory = findAllSessionsForExercise(ex.name, ex.id);
   if (noteHistory.length > 0) {
     const notesDiv = document.createElement('div');
     notesDiv.className = 'detail-section detail-notes-history';
@@ -2644,14 +2644,25 @@ function getAllTimePRs() {
   return Object.values(byExercise);
 }
 
-// Round 23 — all sessions where this exercise has non-empty notes.
-// Sessions in state.sessions are already newest-first, so the returned list is too.
-function findAllSessionsForExercise(name) {
-  if (!name || !state.sessions) return [];
+// Round 24 — robust name matching (case-insensitive, trimmed) so notes link
+// even if the saved session's name differs in case/whitespace/hyphen from the
+// library entry. Backward compatibility for sessions saved before libraryId was preserved.
+function nameMatches(a, b) {
+  if (!a || !b) return false;
+  return String(a).trim().toLowerCase() === String(b).trim().toLowerCase();
+}
+
+// Round 23 + 24 — all sessions where this exercise has non-empty notes.
+// Matches by libraryId first (added Round 24, most reliable), falls back to
+// normalized name. Sessions in state.sessions are already newest-first.
+function findAllSessionsForExercise(name, libraryId) {
+  if (!state.sessions) return [];
   const out = [];
   state.sessions.forEach(s => {
     if (!s.exercises) return;
-    const ex = s.exercises.find(e => e.name === name);
+    const ex = s.exercises.find(e =>
+      (libraryId && e.libraryId === libraryId) || nameMatches(e.name, name)
+    );
     if (ex && (ex.notes || '').trim()) {
       out.push({ date: s.date, notes: ex.notes, planName: s.planName, sessionId: s.id });
     }
@@ -2820,7 +2831,14 @@ function closeSession() {
     planId: activeSession.planId,
     planName: activeSession.planName,
     type: 'training',
-    exercises: activeSession.exercises.map(e => ({ name: e.name, done: e.done, notes: e.notes })),
+    // Round 24 — also save libraryId so notes link reliably to the library entry
+    // even if the exercise name later changes or differs slightly.
+    exercises: activeSession.exercises.map(e => ({
+      name: e.name,
+      libraryId: e.libraryId,
+      done: e.done,
+      notes: e.notes
+    })),
     finalNotes: activeSession.finalNotes
   };
   state.sessions.unshift(newSession);
