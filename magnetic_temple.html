@@ -726,8 +726,28 @@ function renderLibrary(mount) {
 
   mount.appendChild(el('div', 'section-eyebrow', 'the drills'));
 
+  // Round 25 — natural progressive order: foundation → channels → integration
+  const DRILLS_DISPLAY_ORDER = [
+    'summoning_practice',   // 1. call the charge from intent
+    'field_cultivation',    // 2. fill the body — full not pointed
+    'volume_dial_reps',     // 3. dial the field once you have it
+    'posture_reset',        // 4. structural baseline (foundational, used between)
+    'mirror_trataka',       // 5. eye channel isolated
+    'voice_prosody',        // 6. voice channel
+    'slowness_drill',       // 7. pace channel
+    'mirror_practice',      // 8. full transmission integration
+    'field_test_log'        // 9. reflective practice after social exposure
+  ];
+  const _orderMap = {};
+  DRILLS_DISPLAY_ORDER.forEach((id, i) => { _orderMap[id] = i; });
+  const _sortedDrills = [...DRILLS].sort((a, b) => {
+    const ai = _orderMap[a.id] !== undefined ? _orderMap[a.id] : 999;
+    const bi = _orderMap[b.id] !== undefined ? _orderMap[b.id] : 999;
+    return ai - bi;
+  });
+
   const list = el('div', 'practice-list');
-  DRILLS.forEach((p, idx) => {
+  _sortedDrills.forEach((p, idx) => {
     const card = el('div', 'practice-card' + (openCardId === p.id ? ' open' : ''));
     card.setAttribute('data-practice', p.id);
 

@@ -1015,8 +1015,64 @@ function renderLibrary(mount) {
 
   mount.appendChild(el('div', 'section-eyebrow', 'the 34 practices'));
 
+  // Round 25 — natural progressive order: grounding → body → energy → transmission
+  // → sound/polarity → sexual cultivation (solo) → advanced sexual → ritual/deity → reflection
+  const PRACTICES_DISPLAY_ORDER = [
+    // Foundation & grounding — must be in the system before anything cultivates
+    'earth_rooting',         // 1. draw from source
+    'dantian_sealing',       // 2. store it
+    'bioenergetic_shaking',  // 3. discharge armor
+    'pelvic_dearmoring',     // 4. open the channel
+    'cold_fire',             // 5. cold opens body before cultivation
+    // Body cultivation through training
+    'charged_lift',          // 6. sexual breath into training
+    'bonfire_walk',          // 7. field walked into the world
+    // Energy cultivation — building the field
+    'summoning',             // 8. call the charge
+    'field_cultivation',     // 9. fill the body
+    'volume_dial',           // 10. dial the field
+    'off_switch',            // 11. containment
+    // Transmission & field application
+    'mirror',                // 12. self-transmission training
+    'public_field',          // 13. applied in social space
+    'living_magnet',         // 14. daily-life integration
+    // Sound, polarity, sexual foundation
+    'toning_bija',           // 15. sound as carrier wave
+    'polarity_flow',         // 16. Shiva/Shakti poles
+    'cock_breath',           // 17. cock as awareness organ
+    'lust_meditation',       // 18. sit with charge
+    // Sexual cultivation — solo
+    'sexual_visualization',  // 19. fantasy as charging tool
+    'tantric_solo',          // 20. deep solo cultivation container
+    'orbit_arousal',         // 21. orbit during arousal
+    'big_draw',              // 22. instant-of-peak redirect
+    'valley_orgasm',         // 23. sustained plateau
+    // Advanced sexual cultivation
+    'energetic_intercourse', // 24. solo prep for partnered
+    'vacuum_practice',       // 25. receptive pole (yin power)
+    'orbit_walking',         // 26. orbit through space
+    // Ritual + deity work
+    'sigil_edge',            // 27. sexual fire as sigil engine
+    'worship',               // 28. reverence for the feminine
+    'pan_invocation',        // 29. wild masculine deity
+    'aphrodite',             // 30. erotic-receptive deity working
+    'ra_eros',               // 31. sovereignty + erotic together
+    // Sacred integration
+    'charged_reading',       // 32. text + body
+    // Reflection & daily integration
+    'shadow_journal',        // 33. name the raw
+    'fuel_cycle'             // 34. weekly five-line check
+  ];
+  const _orderMap = {};
+  PRACTICES_DISPLAY_ORDER.forEach((id, i) => { _orderMap[id] = i; });
+  const _sortedPractices = [...PRACTICES].sort((a, b) => {
+    const ai = _orderMap[a.id] !== undefined ? _orderMap[a.id] : 999;
+    const bi = _orderMap[b.id] !== undefined ? _orderMap[b.id] : 999;
+    return ai - bi;
+  });
+
   const list = el('div', 'practice-list');
-  PRACTICES.forEach((p, idx) => {
+  _sortedPractices.forEach((p, idx) => {
     const card = el('div', 'practice-card' + (openCardId === p.id ? ' open' : ''));
     card.setAttribute('data-practice', p.id);
 

@@ -1145,13 +1145,41 @@ function renderLibraryView() {
   return wrap;
 }
 
+// Round 25 — natural progressive order within each category (foundational → advanced)
+// Categories: breath / meditation / movement / vocal / ritual
+const LIBRARY_DISPLAY_ORDER = [
+  // Breath — slow/foundational → deeper pranayama → advanced/altered
+  'breath_478', 'box_breath', 'resonance_breath', 'alternate_nostril',
+  'bhramari', 'sitali', 'kapalabhati', 'breath_of_fire', 'wim_hof', 'microcosmic_orbit',
+  // Meditation — foundational sit → attention practices → witness/inquiry
+  'silent_sit', 'body_scan', 'felt_sense_scan', 'standing_meditation', 'walking_meditation',
+  'loving_kindness', 'tonglen', 'mantra_japa', 'visualization', 'trataka',
+  'vipassana', 'self_inquiry', 'open_awareness', 'witness_consciousness',
+  // Movement — warm-up → flows → deeper
+  'spinal_wave', 'sun_salutation_a', 'sun_salutation_b', 'qigong_opening', 'lower_body_flow', 'yin_pose',
+  // Vocal — warm-up → exercises → seed/devotional
+  'vocal_humming', 'lip_trills', 'vocal_scales', 'bija_sequence', 'mantra_chant', 'overtone_singing',
+  // Ritual — daily anchors → energy → night/closing
+  'theta_wake', 'intention_setting', 'gratitude', 'water_glass', 'morning_journal',
+  'dream_incubation', 'energy_bathing', 'cord_cutting_ritual', 'closing_ritual', 'merkaba_activation'
+];
+
 function filteredLibrary() {
   const q = libraryFilter.search.toLowerCase().trim();
-  return state.library.filter(e => {
+  const filtered = state.library.filter(e => {
     if (libraryFilter.category !== 'all' && e.category !== libraryFilter.category) return false;
     if (q && !e.name.toLowerCase().includes(q)) return false;
     return true;
   });
+  // Round 25 — sort by natural progressive order; entries not in the order list go to the end
+  const orderMap = {};
+  LIBRARY_DISPLAY_ORDER.forEach((id, i) => { orderMap[id] = i; });
+  filtered.sort((a, b) => {
+    const ai = orderMap[a.id] !== undefined ? orderMap[a.id] : 999;
+    const bi = orderMap[b.id] !== undefined ? orderMap[b.id] : 999;
+    return ai - bi;
+  });
+  return filtered;
 }
 
 function updateLibraryGrid() {
