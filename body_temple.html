@@ -372,6 +372,22 @@ main { padding: 0 22px; }
   font-variant-numeric: tabular-nums;
 }
 .ex-weight-value.empty { color: var(--ink-faint); font-weight: 400; font-style: italic; }
+.ex-weight-value { cursor: pointer; }
+/* Round 28 — tap value to type a weight directly (skip the dozens of taps for big jumps) */
+.ex-weight-input {
+  font-size: 16px; font-weight: 600;
+  color: #c89060; background: var(--bg-card);
+  border: 1px solid #c89060;
+  border-radius: 8px;
+  min-width: 64px; width: 80px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  padding: 5px 6px;
+  outline: none;
+  -moz-appearance: textfield;
+}
+.ex-weight-input::-webkit-outer-spin-button,
+.ex-weight-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 /* Round 22 — Personal Records panel on home view */
 .prs-panel { margin-top: 28px; }
 .prs-list { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
@@ -2819,9 +2835,9 @@ function renderExerciseCard(ex, idx) {
   const weightPillHtml = `
     <div class="ex-weight">
       <span class="ex-weight-label">weight</span>
-      <button class="ex-weight-btn" data-delta="-2.5" type="button" aria-label="lower 2.5 kg">−</button>
-      <span class="ex-weight-value${weightEmptyCls}">${weightDisplay}</span>
-      <button class="ex-weight-btn" data-delta="2.5" type="button" aria-label="raise 2.5 kg">+</button>
+      <button class="ex-weight-btn" data-delta="-1" type="button" aria-label="lower 1 kg">−</button>
+      <span class="ex-weight-value${weightEmptyCls}" title="tap to type">${weightDisplay}</span>
+      <button class="ex-weight-btn" data-delta="1" type="button" aria-label="raise 1 kg">+</button>
     </div>`;
 
   const body = document.createElement('div');
@@ -2838,20 +2854,65 @@ function renderExerciseCard(ex, idx) {
     ${weightPillHtml}
     ${ex.cues ? `<div class="ex-cues">${escapeHtml(ex.cues)}</div>` : ''}`;
 
-  // Round 27 — wire up the weight pill +/− handlers. Persist to ex.weight in active session,
-  // update the value display in place (no full re-render to avoid losing focus/scroll position),
-  // vibration cue for tactile feedback on phone.
+  // Round 27 + 28 — wire up the weight pill. ± buttons step by 1 kg (Round 28),
+  // tap the value to swap in a numeric input and type a weight directly (Round 28 — for
+  // big jumps or starting from zero). Vibration cue on every change.
   const weightDiv = body.querySelector('.ex-weight');
   if (weightDiv) {
-    const valueSpan = weightDiv.querySelector('.ex-weight-value');
+    const refreshDisplay = () => {
+      const v = weightDiv.querySelector('.ex-weight-value');
+      const i = weightDiv.querySelector('.ex-weight-input');
+      if (v) {
+        v.textContent = ex.weight > 0 ? formatKg(ex.weight) : '— kg';
+        v.classList.toggle('empty', !(ex.weight > 0));
+      } else if (i) {
+        i.value = ex.weight > 0 ? ex.weight : '';
+      }
+    };
+    const bindValueClick = span => {
+      span.addEventListener('click', e => {
+        e.stopPropagation();
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.step = '0.5';
+        input.min = '0';
+        input.inputMode = 'decimal';
+        input.className = 'ex-weight-input';
+        input.value = ex.weight > 0 ? ex.weight : '';
+        input.placeholder = 'kg';
+        span.replaceWith(input);
+        input.focus();
+        input.select();
+        let committed = false;
+        const commit = () => {
+          if (committed) return;
+          committed = true;
+          const raw = String(input.value || '').replace(',', '.').trim();
+          const v = parseFloat(raw);
+          if (raw === '') ex.weight = 0;
+          else if (!isNaN(v) && v >= 0) ex.weight = Math.round(v * 10) / 10;
+          const newSpan = document.createElement('span');
+          newSpan.className = 'ex-weight-value' + (ex.weight > 0 ? '' : ' empty');
+          newSpan.setAttribute('title', 'tap to type');
+          newSpan.textContent = ex.weight > 0 ? formatKg(ex.weight) : '— kg';
+          input.replaceWith(newSpan);
+          bindValueClick(newSpan);
+          if (navigator.vibrate) navigator.vibrate(15);
+        };
+        input.addEventListener('blur', commit);
+        input.addEventListener('keydown', kev => {
+          if (kev.key === 'Enter') { kev.preventDefault(); input.blur(); }
+        });
+      });
+    };
+    bindValueClick(weightDiv.querySelector('.ex-weight-value'));
     weightDiv.querySelectorAll('.ex-weight-btn').forEach(btn => {
       btn.addEventListener('click', e => {
         e.stopPropagation();
         const delta = parseFloat(btn.dataset.delta);
         const next = Math.max(0, (typeof ex.weight === 'number' ? ex.weight : 0) + delta);
         ex.weight = Math.round(next * 10) / 10;
-        valueSpan.textContent = ex.weight > 0 ? formatKg(ex.weight) : '— kg';
-        valueSpan.classList.toggle('empty', !(ex.weight > 0));
+        refreshDisplay();
         if (navigator.vibrate) navigator.vibrate(15);
       });
     });
