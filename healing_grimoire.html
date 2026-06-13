@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Healing Grimoire</title>
+<style>
+:root {
+  --bg: #0a0908; --bg-elev: #14110f; --bg-card: #1a1614;
+  --border: #2a2420; --border-soft: #1f1a17;
+  --ink: #e8e1d4; --ink-dim: #9a8f80; --ink-faint: #5e554a;
+  --indigo: #7d8fd0; --indigo-dim: #4a5494; --indigo-faint: #2a3052;
+  --gold: #c89060; --silver: #b9c0cf; --crimson: #c78f8f;
+  --r-sm: 8px; --r-md: 14px; --r-lg: 20px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { background: var(--bg); color: var(--ink); }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; line-height: 1.55;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  max-width: 680px; margin: 0 auto; min-height: 100vh; }
+.wrap { padding: 18px 16px 80px; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.back-btn { font-size: 13px; color: var(--ink-dim); background: var(--bg-card); border: 1px solid var(--border); border-radius: 999px; padding: 7px 14px; cursor: pointer; }
+.back-btn:active { color: var(--ink); border-color: var(--ink-dim); }
+.brand { text-align: right; }
+.brand-name { font-size: 20px; font-weight: 700; color: var(--indigo); letter-spacing: -0.01em; }
+.brand-sub { font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); }
+.tabs { display: flex; gap: 8px; margin: 18px 0; }
+.tab { flex: 1; text-align: center; font-size: 13px; padding: 9px 6px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-card); color: var(--ink-dim); cursor: pointer; }
+.tab.active { color: var(--ink); border-color: var(--indigo-dim); background: var(--bg-elev); }
+.eyebrow { font-size: 10.5px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-faint); margin: 24px 0 10px; }
+.eyebrow:first-child { margin-top: 2px; }
+.hint { font-size: 12px; color: var(--ink-faint); font-style: italic; margin-top: 8px; }
+.stage-name { color: var(--indigo); }
+
+/* practice cards */
+.pcard { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-md); margin-bottom: 9px; overflow: hidden; }
+.pcard.integration { border-color: var(--gold); }
+.pcard-head { padding: 13px 14px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.pcard-head:active { background: var(--bg-elev); }
+.pc-name { font-size: 15px; font-weight: 600; }
+.pc-dur { font-size: 11px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; }
+.pcard-body { display: none; padding: 0 14px 14px; }
+.pcard.open .pcard-body { display: block; }
+.pc-section { margin-top: 12px; }
+.pc-label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--indigo); margin-bottom: 4px; }
+.pc-text { font-size: 13.5px; color: var(--ink-dim); }
+.pc-actions { display: flex; gap: 9px; margin-top: 16px; }
+.btn { flex: 1; padding: 11px; border-radius: var(--r-md); font-size: 13px; font-weight: 600; border: 1px solid var(--indigo-dim); background: var(--indigo-faint); color: var(--ink); cursor: pointer; }
+.btn:active { background: var(--indigo-dim); }
+.btn.ghost { background: var(--bg-card); border-color: var(--border); color: var(--ink-dim); }
+
+/* timer overlay */
+.tov { position: fixed; inset: 0; background: var(--bg); z-index: 60; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; }
+.tov.show { display: flex; }
+.tov-name { font-size: 18px; color: var(--indigo); margin-bottom: 8px; }
+.tov-time { font-size: 68px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.tov-btns { display: flex; gap: 12px; margin-top: 28px; }
+.tov-btn { padding: 12px 22px; border-radius: var(--r-md); font-size: 14px; border: 1px solid var(--border); background: var(--bg-card); color: var(--ink); cursor: pointer; }
+.tov-btn.done { border-color: var(--indigo-dim); background: var(--indigo-faint); }
+
+/* lunar */
+.moon-now { text-align: center; padding: 14px 0 6px; }
+.moon-glyph { font-size: 56px; line-height: 1; }
+.moon-phase { font-size: 17px; font-weight: 600; margin-top: 8px; }
+.moon-energy { font-size: 13px; color: var(--ink-dim); margin-top: 2px; }
+.moon-work { font-size: 14px; color: var(--indigo); margin-top: 10px; padding: 12px 16px; background: var(--bg-elev); border: 1px solid var(--indigo-dim); border-radius: var(--r-md); }
+.lrow { display: flex; gap: 12px; padding: 11px 4px; border-bottom: 1px solid var(--border-soft); align-items: baseline; }
+.lrow.cur { background: var(--bg-elev); border-radius: var(--r-sm); padding-left: 10px; padding-right: 10px; }
+.lrow .lg { font-size: 20px; }
+.lrow .ln { font-size: 13.5px; font-weight: 600; min-width: 96px; }
+.lrow .lw { font-size: 12.5px; color: var(--ink-dim); }
+
+/* path */
+.law { background: var(--bg-card); border-left: 2px solid var(--indigo-dim); border-radius: 0 var(--r-md) var(--r-md) 0; padding: 13px 16px; margin-bottom: 10px; }
+.law .lt { font-size: 14px; font-weight: 600; color: var(--indigo); }
+.law .lb { font-size: 13px; color: var(--ink-dim); margin-top: 4px; }
+.stagerow { display: flex; gap: 10px; padding: 10px 4px; border-bottom: 1px solid var(--border-soft); }
+.stagerow .sn { font-size: 13px; font-weight: 600; min-width: 92px; }
+.stagerow .sf { font-size: 12.5px; color: var(--ink-dim); }
+.quote { font-style: italic; color: var(--ink-dim); font-size: 14px; text-align: center; margin: 22px 0 6px; padding: 0 8px; }
+
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: var(--bg-elev); border: 1px solid var(--indigo-dim); color: var(--ink); padding: 10px 18px; border-radius: 999px; font-size: 13px; z-index: 80; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <button class="back-btn" id="back-btn">← portal</button>
+    <div class="brand"><div class="brand-name">Healing Grimoire</div><div class="brand-sub">qi · reiki · prana · the great work</div></div>
+  </div>
+  <div class="tabs" id="tabs">
+    <div class="tab active" data-tab="practices">practices</div>
+    <div class="tab" data-tab="lunar">lunar</div>
+    <div class="tab" data-tab="path">the path</div>
+  </div>
+  <div id="view"></div>
+</div>
+
+<div class="tov" id="tov">
+  <div class="tov-name" id="tov-name"></div>
+  <div class="tov-time" id="tov-time">0:00</div>
+  <div class="tov-btns">
+    <button class="tov-btn" id="tov-cancel">cancel</button>
+    <button class="tov-btn done" id="tov-done">mark done</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ---------- practices (grounded in healing_grimoire.md) ----------
+  var PRACTICES = [
+    // Qigong
+    { id:'zhan_zhuang', cat:'Qigong', name:'Zhan Zhuang — Standing Pole', dur:600,
+      what:'The single most powerful qigong practice for building foundational energy. Stand, feet shoulder-width, knees soft, spine straight, arms raised as if holding a large ball at chest height.',
+      how:'Begin with 5 minutes, build toward 20–30 over months. Feel the earth beneath your feet — Capricorn Rising activates here. Heat, tingling, then a column of energy between palms and body.',
+      watch:'This is how qigong masters build the field you already feel spontaneously. Stillness is the work.' },
+    { id:'water_qigong', cat:'Qigong', name:'Water Qigong Flow', dur:720,
+      what:'Flowing, wavelike movements that mirror the ocean. Your Cancer/Pisces nature takes to this immediately.',
+      how:'Let the body move like water — undulations from the spine. Visualize dark blue-black water up the Kidney meridian: inner legs, spine, to the crown. On the exhale the wave rolls down the front and back into the earth.',
+      watch:'10–15 minutes. Don’t lead the movement — follow it.' },
+    { id:'ba_duan_jin', cat:'Qigong', name:'Eight Pieces of Brocade', dur:600,
+      what:'The most famous qigong set, targeting all major organ systems. For your constitution, prioritize three movements.',
+      how:'3 — Separate Heaven and Earth (Stomach/Spleen, your Capricorn earth). 6 — Punching with Angry Eyes (builds the fire that balances excess water). 7 — Vibrate the Back (resets the whole nervous system).',
+      watch:'Slow, deliberate, breath-led. The fire movement matters most for you.' },
+    { id:'micro_orbit', cat:'Qigong', name:'Microcosmic Orbit', dur:300,
+      what:'The foundational Taoist meditation — circulating qi through the Governor Vessel (up the back) and Conception Vessel (down the front).',
+      how:'Sit, breathe into the Lower Dan Tian. Inhale: draw energy up the spine to the crown. Exhale: let it flow down the front back to the Dan Tian.',
+      watch:'With Pisces Moon you may enter spontaneous trance. Normal and beneficial — allow it.' },
+    { id:'laogong_ball', cat:'Qigong', name:'Laogong Activation & Energy Ball', dur:180,
+      what:'Wake the Laogong points in the palms — your primary gateways — and form a felt ball of qi between the hands.',
+      how:'Rub palms vigorously, hold them 4–6 inches apart, slowly move toward and away. Feel the resistance, the magnetic push-pull. Let the ball grow dense.',
+      watch:'When the ball becomes heavy with clear resistance, you are developing. Daily.' },
+    // Reiki
+    { id:'reiki_self', cat:'Reiki', name:'Self-Treatment — Hand Positions', dur:1200,
+      what:'Hands-on self-healing through the 12 positions covering the major chakras and organs. Healing begins with self — always.',
+      how:'Move slowly crown → eyes/temples → back of head → throat → heart/chest → solar plexus → sacral/lower abdomen → feet. Rest each position ~2 minutes. Let universal energy flow through, not from, you.',
+      watch:'Head and heart are strong for you (Pisces/Cancer). Solar plexus needs conscious work — water weakens fire.' },
+    { id:'reiki_distance', cat:'Reiki', name:'Distance Healing (Level 2)', dur:600,
+      what:'Sending Reiki across space and time — where Pisces placements excel above all others. Your signature gift.',
+      how:'With consent, hold the person in mind. Use Hon Sha Ze Sho Nen (the distance symbol) to bridge space, then Cho Ku Rei to amplify. Let the energy go where it’s needed.',
+      watch:'Always ask first — even a silent inner "may I offer healing?". Free will is sacred.' },
+    // Pranic
+    { id:'pranic_protocol', cat:'Pranic Healing', name:'The Six-Step Protocol', dur:0,
+      what:'Master Choa Kok Sui’s precise method. Energy healing as science, not intuition alone — satisfying the Iron Monkey mind.',
+      how:'1 Sensitize the hands. 2 Scan (congestion = heavy/sticky, depletion = cold/hollow). 3 Cleanse — downward sweeps, dissolve diseased energy into the earth. 4 Energize — project clean prana through Laogong. 5 Stabilize & release the connection. 6 Wash hands with salt water.',
+      watch:'Always cleanse before energizing. Intend energy flows through you, not from you — this prevents depletion.' },
+    { id:'hand_sensitize', cat:'Pranic Healing', name:'Hand Sensitizing', dur:120,
+      what:'Open and sharpen the diagnostic instrument before any scanning or healing.',
+      how:'Rub palms vigorously, hold 4–6 inches apart, slowly move toward and away. Feel the prana as resistance. With Pisces Moon this develops fast — trust what you feel immediately; doubt is the only obstacle.',
+      watch:'Two minutes. The felt-sense is real data.' },
+    // Protection & Hygiene
+    { id:'silver_shell', cat:'Protection', name:'The Silver Shell — Shielding', dur:120,
+      what:'The Cancerian shell made conscious. Not optional for your chart — a receiver needs an off-switch.',
+      how:'Visualize a luminous silver-white shell around your aura, 3 feet in all directions. State: "I am a clear channel. I transmit but do not retain. All that passes through me is returned to the light." Root into the Capricorn earth.',
+      watch:'Conscious permeability, not blocking. You still sense everything — it just doesn’t stick.' },
+    { id:'morning_ground', cat:'Protection', name:'Morning Grounding', dur:300,
+      what:'Before rising — anchor the vessel in the body before the day pulls at it.',
+      how:'Breathe into the Lower Dan Tian three times, feel your physical weight in the bed, set the intention: "I am present in my body today. I am a grounded vessel."',
+      watch:'Capricorn Rising responds to this ritual of embodiment. Do it before the phone.' },
+    { id:'aura_comb', cat:'Protection', name:'Aura Combing', dur:300,
+      what:'Sweep the field clean of energy that isn’t yours.',
+      how:'With your hands (or a selenite wand), slowly sweep 4–6 inches above the body crown → feet, pulling out anything not yours and releasing it down into the earth.',
+      watch:'Evening practice, especially after any contact-heavy day.' },
+    { id:'closing_field', cat:'Protection', name:'Closing the Field', dur:180,
+      what:'At day’s end — Cancer retrieves what it sent out.',
+      how:'Visualize all your energy returning to your body. Draw the silver shell closer. Root deeply. Sleep with selenite or black tourmaline nearby.',
+      watch:'Especially after healing work. Don’t carry the day into the dream.' },
+    { id:'cord_cutting', cat:'Protection', name:'Psychic Cord Cutting', dur:300,
+      what:'Release energetic bonds that persist after interactions — some for years. With Cancer/Pisces you form strong ones.',
+      how:'See the cord between you and the other as a silver rope. Call on Archangel Michael with his sword. See it cut cleanly — send their energy back to them with love. Seal your end with golden light.',
+      watch:'Weekly minimum, daily if you’re doing healing work.' },
+    { id:'salt_bath', cat:'Protection', name:'Salt Bath — Weekly Clearing', dur:0,
+      what:'Full energetic clearing of the week. Salt is Saturnine — resonant with your Capricorn.',
+      how:'Bathe with sea salt. Let the water take what the field has gathered. Cold water on wrists and the back of the neck breaks cords immediately.',
+      watch:'Weekly ritual. Keep salt in your healing space too.' },
+    // Hermetic & Alchemy
+    { id:'middle_pillar', cat:'Hermetic & Alchemy', name:'The Middle Pillar', dur:600,
+      what:'The Kabbalistic energy practice — activating the central sphere-points of the Tree of Life along the body, the metaphysical architecture beneath all the healing arts.',
+      how:'Crown (Kether, white) → throat (Daath, lavender) → heart (Tiphareth, gold) → groin (Yesod, violet) → feet (Malkuth, earth). Vibrate each sphere into light, then circulate the light around the body.',
+      watch:'Structure for the Capricorn, depth for the Pisces. Build it slowly.' },
+    { id:'solve_coagula', cat:'Hermetic & Alchemy', name:'Solve et Coagula — Contemplation', dur:0,
+      what:'The alchemical work: dissolve, then reconstitute. The true Philosopher’s Stone is a transformed human being.',
+      how:'Sit with the four stages on your own material. Prima Materia — your unprocessed experience. Nigredo — the blackening, shadow integration (don’t bypass it). Albedo — purification, the silver Moon light. Rubedo — the Great Work, the red Mars/Iron force now in service.',
+      watch:'You are not just learning techniques. You are the substance being transformed.' }
+  ];
+  var CAT_ORDER = ['Qigong', 'Reiki', 'Pranic Healing', 'Protection', 'Hermetic & Alchemy'];
+
+  // ---------- lunar table (grounded in the doc) ----------
+  var LUNAR = [
+    { g:'🌑', n:'New Moon', e:'beginnings, seed-planting', w:'Set healing intentions, charge water and crystals, begin new protocols.' },
+    { g:'🌒', n:'Waxing Crescent', e:'building, momentum', w:'Increase practice intensity. Build the Dan Tian.' },
+    { g:'🌓', n:'First Quarter', e:'action, challenge', w:'Work through resistance. Strengthen the Solar Plexus.' },
+    { g:'🌔', n:'Waxing Gibbous', e:'refinement, focus', w:'Refine technique. Deepen sensitivity training.' },
+    { g:'🌕', n:'Full Moon', e:'peak power, illumination', w:'Your strongest sessions — schedule all important healing here. Charge water in moonlight.' },
+    { g:'🌖', n:'Waning Gibbous', e:'gratitude, sharing', w:'Teach, share, integrate what you learned.' },
+    { g:'🌗', n:'Last Quarter', e:'release, letting go', w:'Cord cutting, clearing your field, releasing what no longer serves.' },
+    { g:'🌘', n:'Waning Crescent', e:'rest, surrender', w:'Deep rest, dreamwork, receptive meditation. Let Pisces Moon do its underground work.' }
+  ];
+
+  // ---------- the path ----------
+  var LAWS = [
+    { t:'First Law — You Do Not Heal', b:'You are a channel, not a source. Universal life force heals; you are the instrument it flows through. Believe you heal by your own power and you begin depleting yourself and inflating the ego.' },
+    { t:'Second Law — Healing Begins With Self', b:'With Cancer and Pisces the instinct is to give before receiving. That is backwards. Daily practice is self-healing first. A depleted healer transmits their own disharmony.' },
+    { t:'Third Law — Free Will is Sacred', b:'Never project healing onto someone without consent. Even the most loving intention can invade another’s sovereignty. Ask — always. Even a silent inner "may I offer healing?" is enough.' }
+  ];
+  var STAGES = [
+    { n:'Awakening', f:'Feel and activate the palms, daily energy ball, breathwork. → consistent sensation on demand.' },
+    { n:'Foundation', f:'Daily qigong, Dan Tian building, grounding. → 30-min daily practice established.' },
+    { n:'Initiation', f:'Reiki Level 1 attunement, Pranic study begins. → first formal healing on another.' },
+    { n:'Deepening', f:'Moon-cycle practice, Kabbalistic study, scanning refinement. → read the field of a stranger.' },
+    { n:'Integration', f:'Reiki Level 2, distance healing, shadow work. → distance healing working.' },
+    { n:'Mastery Path', f:'Your own synthesis begins; teach what you know. → students appear naturally.' },
+    { n:'Iron Monkey Builds', f:'Your unique system emerges from the synthesis. → others call you a healer.' }
+  ];
+
+  // ---------- state ----------
+  var KEY = 'grimoire_v1';
+  var state = load();
+  var tab = state.lastTab || 'practices';
+  var openId = null;
+  function load(){ try{ var r=localStorage.getItem(KEY); if(r){var p=JSON.parse(r); if(!p.sessions)p.sessions=[]; return p;} }catch(e){} return { sessions:[], lastTab:'practices' }; }
+  function save(){ state.lastTab=tab; try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+
+  function el(t,c,h){ var n=document.createElement(t); if(c)n.className=c; if(h!=null)n.innerHTML=h; return n; }
+  function esc(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  var toastTimer; function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(function(){t.classList.remove('show');},1600); }
+  function buzz(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms);}catch(e){} }
+  function find(id){ for(var i=0;i<PRACTICES.length;i++) if(PRACTICES[i].id===id) return PRACTICES[i]; return null; }
+
+  // ---------- moon math ----------
+  function moonIndex() {
+    var synodic = 29.530588;
+    var knownNew = Date.UTC(2000, 0, 6, 18, 14) ; // ms
+    var days = (Date.now() - knownNew) / 86400000;
+    var phase = days % synodic; if (phase < 0) phase += synodic;
+    var frac = phase / synodic; // 0..1
+    var idx = Math.round(frac * 8) % 8; // 0..7
+    return idx;
+  }
+
+  // ---------- audio cue ----------
+  var actx=null;
+  function bell(){ try{ if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)(); if(actx.state==='suspended')actx.resume();
+    [528,792].forEach(function(f,i){ var o=actx.createOscillator(),g=actx.createGain(); o.frequency.value=f; o.connect(g); g.connect(actx.destination); var t=actx.currentTime+i*0.04; g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.4,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+2.4); o.start(t); o.stop(t+2.5); }); }catch(e){} }
+
+  // ---------- render ----------
+  function render(){
+    var v=document.getElementById('view'); v.innerHTML='';
+    document.querySelectorAll('.tab').forEach(function(t){ t.classList.toggle('active', t.dataset.tab===tab); });
+    if(tab==='practices') renderPractices(v);
+    else if(tab==='lunar') renderLunar(v);
+    else renderPath(v);
+    window.scrollTo(0,0);
+  }
+
+  function renderPractices(v){
+    // today's window from the moon
+    var mi=moonIndex(), m=LUNAR[mi];
+    var win=el('div','hint','tonight ' + m.g + ' ' + m.n.toLowerCase() + ' — ' + m.w);
+    win.style.marginBottom='6px'; win.style.marginTop='2px';
+    v.appendChild(win);
+    CAT_ORDER.forEach(function(cat){
+      var group=PRACTICES.filter(function(p){return p.cat===cat;});
+      if(!group.length) return;
+      v.appendChild(el('div','eyebrow stage-name', cat));
+      group.forEach(function(p){ v.appendChild(practiceCard(p)); });
+    });
+    // recent
+    if(state.sessions.length){
+      v.appendChild(el('div','eyebrow','recently tended'));
+      state.sessions.slice(0,6).forEach(function(s){
+        var r=el('div','hint', s.name + ' · ' + relDate(s.at));
+        r.style.marginTop='2px'; v.appendChild(r);
+      });
+    }
+  }
+
+  function practiceCard(p){
+    var card=el('div','pcard'+(openId===p.id?' open':''));
+    var head=el('div','pcard-head');
+    head.appendChild(el('div','pc-name', esc(p.name)));
+    head.appendChild(el('div','pc-dur', p.dur?Math.round(p.dur/60)+' min':'ritual'));
+    head.addEventListener('click', function(){ openId = (openId===p.id?null:p.id); render(); });
+    card.appendChild(head);
+    var body=el('div','pcard-body');
+    body.appendChild(secEl('what it is', p.what));
+    body.appendChild(secEl('how', p.how));
+    body.appendChild(secEl('watch for', p.watch));
+    var acts=el('div','pc-actions');
+    if(p.dur){
+      var begin=el('button','btn','begin · '+Math.round(p.dur/60)+' min');
+      begin.addEventListener('click', function(e){ e.stopPropagation(); startTimer(p); });
+      acts.appendChild(begin);
+    }
+    var log=el('button','btn ghost', p.dur?'log only':'log it');
+    log.addEventListener('click', function(e){ e.stopPropagation(); logSession(p); });
+    acts.appendChild(log);
+    body.appendChild(acts);
+    card.appendChild(body);
+    return card;
+  }
+  function secEl(label,text){ var s=el('div','pc-section'); s.appendChild(el('div','pc-label',label)); s.appendChild(el('div','pc-text', esc(text))); return s; }
+
+  function logSession(p){
+    state.sessions.unshift({ id:p.id, name:p.name, at:Date.now() });
+    if(state.sessions.length>60) state.sessions.length=60;
+    save(); buzz(20); toast('logged — '+p.name); render();
+  }
+
+  // ---------- timer ----------
+  var tIvl=null, tLeft=0, tP=null;
+  function startTimer(p){
+    tP=p; tLeft=p.dur;
+    document.getElementById('tov-name').textContent=p.name;
+    paint(); document.getElementById('tov').classList.add('show');
+    try{ if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)(); if(actx&&actx.state==='suspended')actx.resume(); }catch(e){}
+    clearInterval(tIvl);
+    tIvl=setInterval(function(){
+      tLeft--; paint();
+      if(tLeft>5 && p.dur>120 && tLeft===Math.floor(p.dur/2)) { try{ softTick(660); }catch(e){} buzz(30); }
+      if(tLeft<=0){ clearInterval(tIvl); bell(); buzz([60,40,80]); finishTimer(true); }
+    },1000);
+  }
+  function softTick(f){ try{ if(!actx)return; var o=actx.createOscillator(),g=actx.createGain(); o.frequency.value=f; o.connect(g); g.connect(actx.destination); var t=actx.currentTime; g.gain.setValueAtTime(0.18,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.25); o.start(t); o.stop(t+0.3);}catch(e){} }
+  function paint(){ var m=Math.floor(Math.max(tLeft,0)/60),s=Math.max(tLeft,0)%60; document.getElementById('tov-time').textContent=m+':'+(s<10?'0':'')+s; }
+  function finishTimer(done){
+    document.getElementById('tov').classList.remove('show'); clearInterval(tIvl);
+    if(done && tP){ logSession(tP); }
+    tP=null;
+  }
+  document.getElementById('tov-cancel').addEventListener('click', function(){ finishTimer(false); });
+  document.getElementById('tov-done').addEventListener('click', function(){ finishTimer(true); });
+
+  function relDate(ts){ var d=Math.floor((Date.now()-ts)/86400000); if(d<=0)return 'today'; if(d===1)return 'yesterday'; if(d<7)return d+'d ago'; return new Date(ts).toLocaleDateString(undefined,{month:'short',day:'numeric'}); }
+
+  // ---------- lunar ----------
+  function renderLunar(v){
+    var mi=moonIndex(), m=LUNAR[mi];
+    var now=el('div','moon-now');
+    now.appendChild(el('div','moon-glyph', m.g));
+    now.appendChild(el('div','moon-phase', m.n));
+    now.appendChild(el('div','moon-energy', m.e));
+    v.appendChild(now);
+    v.appendChild(el('div','moon-work', m.w));
+    v.appendChild(el('div','eyebrow','the wheel'));
+    LUNAR.forEach(function(p,i){
+      var r=el('div','lrow'+(i===mi?' cur':''));
+      r.appendChild(el('span','lg', p.g));
+      r.appendChild(el('span','ln', esc(p.n)));
+      r.appendChild(el('span','lw', esc(p.w)));
+      v.appendChild(r);
+    });
+    v.appendChild(el('div','eyebrow','full moon — your power peak'));
+    v.appendChild(el('div','hint','Cancer is ruled by the Moon; Pisces dissolves into her light. Charge water in moonlight overnight, do your most important healing across the 48 hours of the full moon, and meditate outdoors — let lunar light enter through the crown. The Cancer full moon each year (≈ June–July) is your annual peak. Mark it.'));
+  }
+
+  // ---------- path ----------
+  function renderPath(v){
+    v.appendChild(el('div','eyebrow','the three laws of the healer'));
+    LAWS.forEach(function(l){ var c=el('div','law'); c.appendChild(el('div','lt',esc(l.t))); c.appendChild(el('div','lb',esc(l.b))); v.appendChild(c); });
+    v.appendChild(el('div','quote','“The wound is the place where the Light enters you.” — Rumi'));
+    v.appendChild(el('div','eyebrow','the long road'));
+    STAGES.forEach(function(s){ var r=el('div','stagerow'); r.appendChild(el('span','sn',esc(s.n))); r.appendChild(el('span','sf',esc(s.f))); v.appendChild(r); });
+    v.appendChild(el('div','hint','The Iron Monkey wants everything now. The Capricorn knows mastery is built slowly, layer by layer. This path rewards consistency above all.'));
+    v.appendChild(el('div','eyebrow','daily template'));
+    v.appendChild(el('div','hint','Morning (15–20 min): grounding breath → Zhan Zhuang → Microcosmic Orbit → Laogong activation. Evening (10 min): aura combing → cord release → dream intention. Weekly: moon-phase check, salt bath, healing journal.'));
+    v.appendChild(el('div','quote','“Know thyself and thou shalt know the universe and the gods.” — Temple of Apollo'));
+  }
+
+  // ---------- boot ----------
+  document.getElementById('tabs').addEventListener('click', function(e){ var t=e.target.closest('.tab'); if(!t)return; tab=t.dataset.tab; save(); render(); });
+  document.getElementById('back-btn').addEventListener('click', function(){
+    try{ window.parent.postMessage('close-temple','*'); }catch(e){}
+    try{ window.location.href='index.html'; }catch(e){}
+  });
+  render();
+})();
+</script>
+</body>
+</html>

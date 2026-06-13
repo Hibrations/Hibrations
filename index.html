@@ -29,6 +29,20 @@
   --warning: #c89060;
   --bronze: #a87b50;
   --bronze-dim: #6f5536;
+  --amethyst: #9a7bc8;
+  --amethyst-dim: #6f5092;
+  --teal: #46a3a8;
+  --teal-dim: #2f6e70;
+  --indigo: #7d8fd0;
+  --indigo-dim: #4a5494;
+  /* chakra system — surface identity colors (root → crown) */
+  --c-root:   #c75a4d;  --c-root-dim:   #7e3a32;
+  --c-sacral: #cf8447;  --c-sacral-dim: #82522c;
+  --c-solar:  #ccae50;  --c-solar-dim:  #847035;
+  --c-heart:  #5aa96f;  --c-heart-dim:  #356b46;
+  --c-throat: #5b91cc;  --c-throat-dim: #395d84;
+  --c-brow:   #8f7bd4;  --c-brow-dim:   #574a8c;
+  --c-crown:  #c2c8d8;  --c-crown-dim:  #767c8e;
   --pull: #7d8fc7;
   --push: #c78f8f;
   --hinge: #a89b6b;
@@ -213,6 +227,24 @@ nav.tab-bar {
 .temple-card.crimson:active { border-color: var(--crimson); }
 .temple-card.bronze { border-color: var(--bronze-dim); }
 .temple-card.bronze:active { border-color: var(--bronze); }
+.temple-card.amethyst { border-color: var(--amethyst-dim); }
+.temple-card.amethyst:active { border-color: var(--amethyst); }
+.temple-name.amethyst { color: var(--amethyst); }
+.temple-card.teal { border-color: var(--teal-dim); }
+.temple-card.teal:active { border-color: var(--teal); }
+.temple-name.teal { color: var(--teal); }
+.temple-card.indigo { border-color: var(--indigo-dim); }
+.temple-card.indigo:active { border-color: var(--indigo); }
+.temple-name.indigo { color: var(--indigo); }
+/* chakra surface variants */
+.temple-card.c-root   { border-color: var(--c-root-dim); }   .temple-card.c-root:active   { border-color: var(--c-root); }   .temple-name.c-root   { color: var(--c-root); }
+.temple-card.c-sacral { border-color: var(--c-sacral-dim); } .temple-card.c-sacral:active { border-color: var(--c-sacral); } .temple-name.c-sacral { color: var(--c-sacral); }
+.temple-card.c-solar  { border-color: var(--c-solar-dim); }  .temple-card.c-solar:active  { border-color: var(--c-solar); }  .temple-name.c-solar  { color: var(--c-solar); }
+.temple-card.c-heart  { border-color: var(--c-heart-dim); }  .temple-card.c-heart:active  { border-color: var(--c-heart); }  .temple-name.c-heart  { color: var(--c-heart); }
+.temple-card.c-throat { border-color: var(--c-throat-dim); } .temple-card.c-throat:active { border-color: var(--c-throat); } .temple-name.c-throat { color: var(--c-throat); }
+.temple-card.c-brow   { border-color: var(--c-brow-dim); }   .temple-card.c-brow:active   { border-color: var(--c-brow); }   .temple-name.c-brow   { color: var(--c-brow); }
+.temple-card.c-crown  { border-color: var(--c-crown-dim); }  .temple-card.c-crown:active  { border-color: var(--c-crown); }  .temple-name.c-crown  { color: var(--c-crown); }
+.temple-chakra { font-size: 11px; margin-right: 5px; opacity: 0.9; }
 .temple-name { font-size: 14px; font-weight: 500; letter-spacing: 0.02em; margin-bottom: 4px; }
 .temple-name.gold { color: var(--gold); }
 .temple-name.emerald { color: var(--emerald); }
@@ -540,9 +572,10 @@ nav.tab-bar {
 }
 .next-practice-card:hover  { transform: translateY(-1px); border-color: var(--ink-dim); }
 .next-practice-card:active { transform: translateY(0); }
-.next-practice-card.next-inner    { border-left: 3px solid var(--gold); }
-.next-practice-card.next-beast    { border-left: 3px solid var(--crimson); }
-.next-practice-card.next-magnetic { border-left: 3px solid var(--bronze); }
+.next-practice-card.next-inner    { border-left: 3px solid var(--c-brow); }
+.next-practice-card.next-beast    { border-left: 3px solid var(--c-sacral); }
+.next-practice-card.next-magnetic { border-left: 3px solid var(--c-solar); }
+.next-practice-card.next-grimoire { border-left: 3px solid var(--c-crown); }
 .next-practice-name { font-size: 14px; font-weight: 500; color: var(--ink); margin: 0 0 6px; line-height: 1.3; }
 .next-practice-meta { display: flex; gap: 12px; font-size: 11px; color: var(--ink-faint); margin: 0 0 6px; }
 .next-practice-source { text-transform: lowercase; letter-spacing: 0.05em; }
@@ -578,10 +611,11 @@ nav.tab-bar {
   padding: 2px 7px; border-radius: 999px;
   opacity: 0.85;
 }
-.completions-body  { color: #3d7d63; background: rgba(61,125,99,0.18); }
-.completions-inner { color: var(--gold); background: rgba(200,144,96,0.18); }
-.completions-beast { color: var(--crimson); background: rgba(199,143,143,0.18); }
-.completions-magnetic { color: var(--bronze); background: rgba(168,123,80,0.18); }
+.completions-body  { color: var(--c-root); background: rgba(199,90,77,0.18); }
+.completions-inner { color: var(--c-brow); background: rgba(143,123,212,0.18); }
+.completions-beast { color: var(--c-sacral); background: rgba(207,132,71,0.18); }
+.completions-magnetic { color: var(--c-solar); background: rgba(204,174,80,0.18); }
+.completions-grimoire { color: var(--c-crown); background: rgba(194,200,216,0.16); }
 
 /* Evening closing card */
 .closing-card {
@@ -663,10 +697,11 @@ nav.tab-bar {
   padding: 2px 7px; border-radius: 999px;
   opacity: 0.85; flex-shrink: 0;
 }
-.history-body  { color: #3d7d63; background: rgba(61,125,99,0.18); }
-.history-inner { color: var(--gold); background: rgba(200,144,96,0.18); }
-.history-beast { color: var(--crimson); background: rgba(199,143,143,0.18); }
-.history-magnetic { color: var(--bronze); background: rgba(168,123,80,0.18); }
+.history-body  { color: var(--c-root); background: rgba(199,90,77,0.18); }
+.history-inner { color: var(--c-brow); background: rgba(143,123,212,0.18); }
+.history-beast { color: var(--c-sacral); background: rgba(207,132,71,0.18); }
+.history-magnetic { color: var(--c-solar); background: rgba(204,174,80,0.18); }
+.history-grimoire { color: var(--c-crown); background: rgba(194,200,216,0.16); }
 .history-stack {
   display: flex; gap: 4px; flex-wrap: wrap;
   margin-top: 6px; margin-left: 64px;
@@ -1016,6 +1051,15 @@ const Shell = {
       return;
     } else if (app === 'magnetic') {
       Shell.openTemple('magnetic_temple.html', 'magnetic temple');
+      return;
+    } else if (app === 'hibrations') {
+      Shell.openTemple('hibrations.html', 'hibrations');
+      return;
+    } else if (app === 'strings') {
+      Shell.openTemple('strings.html', 'strings & soul');
+      return;
+    } else if (app === 'grimoire') {
+      Shell.openTemple('healing_grimoire.html', 'healing grimoire');
       return;
     }
     window.scrollTo(0, 0);
@@ -1625,6 +1669,16 @@ const Portal = (function() {
       });
     } catch (e) {}
 
+    // Healing Grimoire \u2014 cultivation. Session stores the practice id; map id\u2192stack via the manifest.
+    try {
+      const grim = JSON.parse(localStorage.getItem('grimoire_v1') || '{}');
+      (grim.sessions || []).forEach(s => {
+        const ts = tsOf(s); if (!ts) return;
+        const p = GRIMOIRE_PRACTICES.find(x => x.id === s.id);
+        (s.stack || (p && p.stack) || ['healing']).forEach(k => touch(k, ts));
+      });
+    } catch (e) {}
+
     const brightness = {};
     Object.keys(last).forEach(k => {
       const ts = last[k];
@@ -1727,6 +1781,15 @@ const Portal = (function() {
       if (sec <= 0 || sec >= 9999) return;
       pool.push({
         id: p.id, name: p.name, source: 'beast',
+        stack: p.stack, durationSec: sec, durationLabel: p.durationLabel
+      });
+    });
+    // Healing Grimoire manifest — qigong / reiki / pranic feed energy + healing + field.
+    GRIMOIRE_PRACTICES.forEach(p => {
+      const sec = parseDurationSec(p.durationLabel);
+      if (sec <= 0 || sec >= 9999) return;
+      pool.push({
+        id: p.id, name: p.name, source: 'grimoire',
         stack: p.stack, durationSec: sec, durationLabel: p.durationLabel
       });
     });
@@ -1851,6 +1914,19 @@ const Portal = (function() {
         out.push({
           source: 'magnetic',
           name: s.name || 'magnetic drill',
+          ts: tsOf(s)
+        });
+      });
+    } catch (e) {}
+
+    // Healing Grimoire
+    try {
+      const grim = JSON.parse(localStorage.getItem('grimoire_v1') || '{}');
+      (grim.sessions || []).forEach(s => {
+        if (sessionDateOf(s) !== today) return;
+        out.push({
+          source: 'grimoire',
+          name: s.name || 'healing practice',
           ts: tsOf(s)
         });
       });
@@ -2020,6 +2096,21 @@ const Portal = (function() {
           source: 'magnetic',
           name: s.name || 'magnetic drill',
           stack: s.stack || ['field']
+        });
+      });
+    } catch (e) {}
+
+    // Healing Grimoire
+    try {
+      const grim = JSON.parse(localStorage.getItem('grimoire_v1') || '{}');
+      (grim.sessions || []).forEach(s => {
+        const ts = tsOf(s); if (!ts || ts < cutoff) return;
+        const p = GRIMOIRE_PRACTICES.find(x => x.id === s.id);
+        out.push({
+          ts: ts,
+          source: 'grimoire',
+          name: s.name || 'healing practice',
+          stack: s.stack || (p && p.stack) || ['healing']
         });
       });
     } catch (e) {}
@@ -2271,6 +2362,29 @@ const Portal = (function() {
     { id: 'slowness_drill', name: 'Slowness Drill — Pace Channel', stack: ['field','body'], durationLabel: '30 min' },
     { id: 'posture_reset', name: 'Posture Reset', stack: ['field','body','breath'], durationLabel: '3 min' },
     { id: 'field_test_log', name: 'Field Test Log', stack: ['field'], durationLabel: '5 min' }
+  ];
+
+  // Healing Grimoire manifest — mirrors apps/healing_grimoire.html. Grimoire is cultivation:
+  // its practices feed energy / healing / field (and some body / breath). Ritual practices
+  // carry no durationLabel so they stay out of Next-Practice but still light the pulse.
+  const GRIMOIRE_PRACTICES = [
+    { id: 'zhan_zhuang', name: 'Zhan Zhuang — Standing Pole', stack: ['energy','body'], durationLabel: '10 min' },
+    { id: 'water_qigong', name: 'Water Qigong Flow', stack: ['energy','body'], durationLabel: '12 min' },
+    { id: 'ba_duan_jin', name: 'Eight Pieces of Brocade', stack: ['energy','body'], durationLabel: '10 min' },
+    { id: 'micro_orbit', name: 'Microcosmic Orbit', stack: ['energy','breath'], durationLabel: '5 min' },
+    { id: 'laogong_ball', name: 'Laogong Activation & Energy Ball', stack: ['energy'], durationLabel: '3 min' },
+    { id: 'reiki_self', name: 'Reiki Self-Treatment', stack: ['healing'], durationLabel: '20 min' },
+    { id: 'reiki_distance', name: 'Distance Healing (Level 2)', stack: ['healing'], durationLabel: '10 min' },
+    { id: 'pranic_protocol', name: 'The Six-Step Protocol', stack: ['healing','energy'], durationLabel: '' },
+    { id: 'hand_sensitize', name: 'Hand Sensitizing', stack: ['energy','healing'], durationLabel: '2 min' },
+    { id: 'silver_shell', name: 'The Silver Shell — Shielding', stack: ['field'], durationLabel: '2 min' },
+    { id: 'morning_ground', name: 'Morning Grounding', stack: ['body','field'], durationLabel: '5 min' },
+    { id: 'aura_comb', name: 'Aura Combing', stack: ['field','healing'], durationLabel: '5 min' },
+    { id: 'closing_field', name: 'Closing the Field', stack: ['field'], durationLabel: '3 min' },
+    { id: 'cord_cutting', name: 'Psychic Cord Cutting', stack: ['healing','field'], durationLabel: '5 min' },
+    { id: 'salt_bath', name: 'Salt Bath — Weekly Clearing', stack: ['healing'], durationLabel: '' },
+    { id: 'middle_pillar', name: 'The Middle Pillar', stack: ['energy','healing'], durationLabel: '10 min' },
+    { id: 'solve_coagula', name: 'Solve et Coagula — Contemplation', stack: ['healing'], durationLabel: '' }
   ];
 
   function readBodyLib() {
@@ -2755,22 +2869,21 @@ const Portal = (function() {
     view.appendChild(el('div', 'section-eyebrow', 'jump in'));
     const grid = document.createElement('div');
     grid.className = 'temples-grid';
-    const bodyCard = el('button', 'temple-card emerald');
-    bodyCard.innerHTML = `<div class="temple-name emerald">Body Temple</div><div class="temple-sub">training · vessel</div>`;
-    bodyCard.addEventListener('click', () => Shell.goTo('body'));
-    grid.appendChild(bodyCard);
-    const innerCard = el('button', 'temple-card gold');
-    innerCard.innerHTML = `<div class="temple-name gold">Inner Temple</div><div class="temple-sub">breath · ritual</div>`;
-    innerCard.addEventListener('click', () => Shell.goTo('inner'));
-    grid.appendChild(innerCard);
-    const beastCard = el('button', 'temple-card crimson');
-    beastCard.innerHTML = `<div class="temple-name crimson">Beast Temple</div><div class="temple-sub">primal · field · aura</div>`;
-    beastCard.addEventListener('click', () => Shell.goTo('beast'));
-    grid.appendChild(beastCard);
-    const magCard = el('button', 'temple-card bronze');
-    magCard.innerHTML = `<div class="temple-name bronze">Magnetic Temple</div><div class="temple-sub">charge · dial · field</div>`;
-    magCard.addEventListener('click', () => Shell.goTo('magnetic'));
-    grid.appendChild(magCard);
+    // Ordered by natural priority — mental wellbeing first, then body, then the rest by
+    // cultivation → expression → skill. Colored by chakra (root → crown) for coherence.
+    const mkCard = (color, chakra, name, sub, route) => {
+      const c = el('button', 'temple-card ' + color);
+      c.innerHTML = '<div class="temple-name ' + color + '"><span class="temple-chakra">' + chakra + '</span>' + name + '</div><div class="temple-sub">' + sub + '</div>';
+      c.addEventListener('click', () => Shell.goTo(route));
+      grid.appendChild(c);
+    };
+    mkCard('c-brow',   '💜', 'Inner Temple',       'breath · meditation · daily', 'inner');
+    mkCard('c-root',   '🔴', 'Body Temple',        'training · vessel', 'body');
+    mkCard('c-crown',  '🤍', 'Healing Grimoire',   'qi · reiki · prana', 'grimoire');
+    mkCard('c-solar',  '💛', 'Magnetic Temple',    'charge · dial · field', 'magnetic');
+    mkCard('c-sacral', '🧡', 'Beast Temple',       'primal · field · aura', 'beast');
+    mkCard('c-throat', '💙', 'Hibrations',         'capture · craft · ship', 'hibrations');
+    mkCard('c-heart',  '💚', 'Strings &amp; Soul', 'ukulele · guitar', 'strings');
     view.appendChild(grid);
 
     const heart = document.createElement('div');

@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Strings &amp; Soul</title>
+<style>
+:root {
+  --bg: #0a0908; --bg-elev: #14110f; --bg-card: #1a1614;
+  --border: #2a2420; --border-soft: #1f1a17;
+  --ink: #e8e1d4; --ink-dim: #9a8f80; --ink-faint: #5e554a;
+  --teal: #46a3a8; --teal-dim: #2f6e70; --teal-faint: #1d3d3e;
+  --gold: #c89060; --crimson: #c78f8f;
+  --r-sm: 8px; --r-md: 14px; --r-lg: 20px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { background: var(--bg); color: var(--ink); }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; line-height: 1.55;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  max-width: 680px; margin: 0 auto; min-height: 100vh; }
+.wrap { padding: 18px 16px 80px; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.back-btn { font-size: 13px; color: var(--ink-dim); background: var(--bg-card); border: 1px solid var(--border); border-radius: 999px; padding: 7px 14px; cursor: pointer; }
+.back-btn:active { color: var(--ink); border-color: var(--ink-dim); }
+.brand { text-align: right; }
+.brand-name { font-size: 21px; font-weight: 700; color: var(--teal); letter-spacing: -0.01em; }
+.brand-sub { font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); }
+.tabs { display: flex; gap: 8px; margin: 18px 0; }
+.tab { flex: 1; text-align: center; font-size: 13px; padding: 9px 6px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-card); color: var(--ink-dim); cursor: pointer; }
+.tab.active { color: var(--ink); border-color: var(--teal-dim); background: var(--bg-elev); }
+.eyebrow { font-size: 10.5px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-faint); margin: 22px 0 10px; }
+.eyebrow:first-child { margin-top: 2px; }
+.hint { font-size: 12px; color: var(--ink-faint); font-style: italic; margin-top: 8px; }
+
+/* instrument toggle */
+.seg { display: flex; gap: 6px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 999px; padding: 4px; }
+.seg-btn { flex: 1; text-align: center; font-size: 13px; padding: 8px; border-radius: 999px; color: var(--ink-dim); cursor: pointer; }
+.seg-btn.on { background: var(--teal-faint); color: var(--ink); border: 1px solid var(--teal-dim); }
+
+/* chord grid */
+.chord-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
+.chord-cell { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 10px 4px; text-align: center; cursor: pointer; }
+.chord-cell:active { border-color: var(--teal-dim); }
+.chord-cell.magic { border-color: var(--gold); }
+.chord-cell .cn { font-size: 15px; font-weight: 600; }
+.chord-cell .cm { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); margin-top: 2px; }
+
+/* chord diagram modal */
+.diagram-wrap { text-align: center; padding: 6px 0 2px; }
+.diagram-name { font-size: 24px; font-weight: 700; color: var(--teal); margin-bottom: 4px; }
+svg.chord { display: block; margin: 0 auto; }
+.diagram-fingers { font-size: 13px; color: var(--ink-dim); margin-top: 10px; }
+
+/* practice cards */
+.pcard { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-md); padding: 14px; margin-bottom: 12px; }
+.pcard h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+.pcard .desc { font-size: 13px; color: var(--ink-dim); }
+.pcard .meta { font-size: 11px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 7px; }
+
+/* chord-change drill */
+.drill-row { display: flex; gap: 8px; align-items: center; margin: 10px 0; }
+.drill-sel { flex: 1; background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--ink); font-family: inherit; font-size: 15px; padding: 10px; }
+.drill-arrow { color: var(--teal); font-size: 18px; }
+.drill-timer { font-size: 44px; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; margin: 6px 0; }
+.counter-row { display: flex; align-items: center; justify-content: center; gap: 18px; margin: 8px 0 4px; }
+.counter-btn { width: 54px; height: 54px; border-radius: 50%; border: 1px solid var(--teal-dim); background: var(--teal-faint); color: var(--ink); font-size: 24px; cursor: pointer; }
+.counter-val { font-size: 40px; font-weight: 700; min-width: 70px; text-align: center; font-variant-numeric: tabular-nums; }
+.counter-label { text-align: center; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-faint); }
+.btn { width: 100%; padding: 12px; border-radius: var(--r-md); font-size: 14px; font-weight: 600; border: 1px solid var(--teal-dim); background: var(--teal-faint); color: var(--ink); cursor: pointer; margin-top: 8px; }
+.btn:active { background: var(--teal-dim); }
+.btn.ghost { background: var(--bg-card); border-color: var(--border); color: var(--ink-dim); }
+
+/* metronome */
+.metro-bpm { font-size: 48px; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; color: var(--teal); }
+.metro-label { text-align: center; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 8px; }
+input[type=range] { width: 100%; accent-color: var(--teal); margin: 6px 0; }
+.beats { display: flex; justify-content: center; gap: 10px; margin: 12px 0; }
+.beat-dot { width: 16px; height: 16px; border-radius: 50%; background: var(--bg-card); border: 1px solid var(--border); }
+.beat-dot.on { background: var(--teal); border-color: var(--teal); }
+
+/* strum + progression */
+.row-card { background: var(--bg-card); border: 1px solid var(--border-soft); border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 9px; }
+.row-card .t { font-size: 14px; font-weight: 600; }
+.row-card .p { font-size: 13px; color: var(--ink-dim); margin-top: 3px; letter-spacing: 0.04em; }
+.strum-pattern { font-family: ui-monospace, monospace; font-size: 17px; letter-spacing: 4px; color: var(--teal); margin-top: 4px; }
+.chordline { font-family: ui-monospace, monospace; font-size: 15px; letter-spacing: 1px; color: var(--gold); margin-top: 4px; }
+
+/* tuner */
+.string-btn { display: flex; align-items: center; justify-content: space-between; width: 100%; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-md); padding: 16px 18px; margin-bottom: 9px; cursor: pointer; }
+.string-btn:active { border-color: var(--teal); }
+.string-note { font-size: 22px; font-weight: 700; }
+.string-meta { font-size: 12px; color: var(--ink-faint); }
+.string-play { font-size: 13px; color: var(--teal); }
+
+.overlay { position: fixed; inset: 0; background: var(--bg); z-index: 50; overflow-y: auto; padding: 18px 16px 40px; max-width: 680px; margin: 0 auto; }
+.overlay[hidden] { display: none; }
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: var(--bg-elev); border: 1px solid var(--teal-dim); color: var(--ink); padding: 10px 18px; border-radius: 999px; font-size: 13px; z-index: 80; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <button class="back-btn" id="back-btn">← portal</button>
+    <div class="brand"><div class="brand-name">Strings &amp; Soul</div><div class="brand-sub">ukulele · guitar · the vessel for the song</div></div>
+  </div>
+  <div class="tabs" id="tabs">
+    <div class="tab active" data-tab="chords">chords</div>
+    <div class="tab" data-tab="practice">practice</div>
+    <div class="tab" data-tab="tune">tune</div>
+  </div>
+  <div id="view"></div>
+</div>
+<div class="overlay" id="modal" hidden></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ---------- chord data ----------
+  // frets low->high (left->right on diagram). 0 = open, -1 = muted/x.
+  var UKE_TUNING = ['G', 'C', 'E', 'A'];
+  var GTR_TUNING = ['E', 'A', 'D', 'G', 'B', 'e'];
+  var CHORDS = {
+    ukulele: [
+      { n: 'C', f: [0,0,0,3], fg: 'ring on A-string, 3rd fret', magic: 'I' },
+      { n: 'G', f: [0,2,3,2], fg: 'the magic four', magic: 'V' },
+      { n: 'Am', f: [2,0,0,0], fg: 'one finger — easiest chord on the uke', magic: 'vi' },
+      { n: 'F', f: [2,0,1,0], fg: 'index + middle', magic: 'IV' },
+      { n: 'Em', f: [0,4,3,2], fg: 'the moody one' },
+      { n: 'Dm', f: [2,2,1,0], fg: 'longing' },
+      { n: 'A', f: [2,1,0,0], fg: '' },
+      { n: 'D', f: [2,2,2,0], fg: 'three fingers in a row' },
+      { n: 'C7', f: [0,0,0,1], fg: 'one finger — bluesy' },
+      { n: 'G7', f: [0,2,1,2], fg: '' },
+      { n: 'A7', f: [0,1,0,0], fg: 'one finger' },
+      { n: 'Cmaj7', f: [0,0,0,2], fg: 'dreamy — Cigarettes After Sex territory' }
+    ],
+    guitar: [
+      { n: 'Em', f: [0,2,2,0,0,0], fg: 'two fingers — start here', magic: 'vi' },
+      { n: 'G', f: [3,2,0,0,0,3], fg: 'the magic four', magic: 'I' },
+      { n: 'C', f: [-1,3,2,0,1,0], fg: 'mute the low E' },
+      { n: 'D', f: [-1,-1,0,2,3,2], fg: 'the magic four', magic: 'V' },
+      { n: 'Am', f: [-1,0,2,2,1,0], fg: '', magic: 'vi' },
+      { n: 'E', f: [0,2,2,1,0,0], fg: 'full six strings ring' },
+      { n: 'A', f: [-1,0,2,2,2,0], fg: 'three fingers stacked' },
+      { n: 'Dm', f: [-1,-1,0,2,3,1], fg: 'the sad one' },
+      { n: 'Cadd9', f: [-1,3,2,0,3,3], fg: 'Wish You Were Here' },
+      { n: 'E7', f: [0,2,0,1,0,0], fg: '' },
+      { n: 'A7', f: [-1,0,2,0,2,0], fg: '' },
+      { n: 'Fmaj7', f: [-1,-1,3,2,1,0], fg: 'the easy F — no barre' }
+    ]
+  };
+
+  // ---------- practice content ----------
+  var DAILY_FLOW = [
+    { t: 'Warm-up', d: 'Stretch fingers, shake hands loose, roll wrists. These hands heal AND make music — treat them so.', secs: 120 },
+    { t: 'Chord changes', d: 'Pick two chords. Switch back and forth on the metronome, 60 BPM. One minute per pair. Speed comes from repetition, not force.', secs: 300 },
+    { t: 'Strumming / fingerpicking', d: 'Choose ONE pattern. Play it through a four-chord progression until it flows without thinking.', secs: 300 },
+    { t: 'Play-along', d: 'Put on a song you love. Strum along. It will be messy — that is fine. The ear trains even while the fingers fumble.', secs: 300 },
+    { t: 'Free play', d: 'No rules. Let the hands explore. This is where your own ideas surface — Joey energy, unfiltered.', secs: 180 }
+  ];
+  var STRUMS = [
+    { t: 'All down', p: 'D D D D', d: 'where everyone starts. steady quarter notes.' },
+    { t: 'Old faithful', p: 'D · D U · U D U', d: 'the most common strum in pop. learn this one cold.' },
+    { t: 'Pop / four', p: 'D D U · U D U', d: 'I’m Yours, Riptide.' },
+    { t: 'Gentle eighths', p: 'D U D U D U D U', d: 'soft, even — for the Cigarettes After Sex feel.' }
+  ];
+  var PROGRESSIONS = [
+    { t: 'The magic four · I–V–vi–IV', c: 'C – G – Am – F', d: 'half of all pop songs. I’m Yours lives here.' },
+    { t: 'vi–IV–I–V', c: 'Am – F – C – G', d: 'the emotional cousin.' },
+    { t: '50s / doo-wop', c: 'C – Am – F – G', d: 'Can’t Help Falling In Love.' },
+    { t: 'Riptide — Vance Joy', c: 'Am – G – C', d: 'your first three chords + one. uke anthem.' },
+    { t: 'Apocalypse — Cigarettes After Sex', c: 'Am – F – C – G', d: 'stripped, haunting. let it breathe.' },
+    { t: 'Wish You Were Here — Pink Floyd', c: 'Em – G – A – C – D', d: 'guitar, once you’re ready.' }
+  ];
+  var TUNINGS = {
+    ukulele: [ {s:'G',f:392.00,o:'4th · reentrant high G'}, {s:'C',f:261.63,o:'3rd · lowest'}, {s:'E',f:329.63,o:'2nd'}, {s:'A',f:440.00,o:'1st'} ],
+    guitar: [ {s:'E',f:82.41,o:'6th · low'}, {s:'A',f:110.00,o:'5th'}, {s:'D',f:146.83,o:'4th'}, {s:'G',f:196.00,o:'3rd'}, {s:'B',f:246.94,o:'2nd'}, {s:'E',f:329.63,o:'1st · high'} ]
+  };
+
+  // ---------- state ----------
+  var KEY = 'strings_v1';
+  var state = load();
+  var tab = state.lastTab || 'chords';
+  var inst = state.inst || 'ukulele';
+
+  function load() { try { var r = localStorage.getItem(KEY); if (r) return JSON.parse(r); } catch (e) {} return { inst: 'ukulele', lastTab: 'chords' }; }
+  function save() { state.lastTab = tab; state.inst = inst; try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+  function el(t, c, h) { var n = document.createElement(t); if (c) n.className = c; if (h != null) n.innerHTML = h; return n; }
+  function esc(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  var toastTimer; function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(function(){t.classList.remove('show');},1500); }
+  function buzz(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms);}catch(e){} }
+
+  // ---------- web audio ----------
+  var actx = null;
+  function audio() { if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (actx && actx.state === 'suspended') actx.resume(); return actx; }
+  function tone(freq, dur, type) {
+    var a = audio(); if (!a) return;
+    var o = a.createOscillator(), g = a.createGain();
+    o.type = type || 'sine'; o.frequency.value = freq;
+    o.connect(g); g.connect(a.destination);
+    var t = a.currentTime;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.5, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + (dur || 1.4));
+    o.start(t); o.stop(t + (dur || 1.4) + 0.02);
+  }
+  function click(accent) {
+    var a = audio(); if (!a) return;
+    var o = a.createOscillator(), g = a.createGain();
+    o.frequency.value = accent ? 1500 : 900;
+    o.connect(g); g.connect(a.destination);
+    var t = a.currentTime;
+    g.gain.setValueAtTime(0.5, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+    o.start(t); o.stop(t + 0.06);
+  }
+
+  // ---------- chord diagram (SVG) ----------
+  function chordSVG(chord, tuning) {
+    var n = tuning.length;
+    var W = 30 * (n - 1) + 60, FRETS = 4;
+    var left = 30, top = 40, sp = 30, fh = 34;
+    var maxFret = Math.max.apply(null, chord.f.filter(function (x) { return x > 0; }).concat([1]));
+    var baseFret = maxFret > 4 ? (Math.min.apply(null, chord.f.filter(function (x) { return x > 0; })) ) : 1;
+    var s = '<svg class="chord" width="' + W + '" height="' + (top + fh * FRETS + 28) + '" viewBox="0 0 ' + W + ' ' + (top + fh * FRETS + 28) + '" xmlns="http://www.w3.org/2000/svg">';
+    // strings (vertical)
+    for (var i = 0; i < n; i++) {
+      var x = left + i * sp;
+      s += '<line x1="' + x + '" y1="' + top + '" x2="' + x + '" y2="' + (top + fh * FRETS) + '" stroke="#5e554a" stroke-width="1.5"/>';
+    }
+    // frets (horizontal)
+    for (var fr = 0; fr <= FRETS; fr++) {
+      var y = top + fr * fh;
+      var sw = (fr === 0 && baseFret === 1) ? 4 : 1.5;
+      s += '<line x1="' + left + '" y1="' + y + '" x2="' + (left + (n - 1) * sp) + '" y2="' + y + '" stroke="#7a7062" stroke-width="' + sw + '"/>';
+    }
+    if (baseFret > 1) s += '<text x="' + (left - 14) + '" y="' + (top + fh - 10) + '" fill="#9a8f80" font-size="13" text-anchor="middle">' + baseFret + 'fr</text>';
+    // markers
+    for (var j = 0; j < n; j++) {
+      var xx = left + j * sp, fv = chord.f[j];
+      if (fv === -1) { s += '<text x="' + xx + '" y="' + (top - 12) + '" fill="#c78f8f" font-size="15" text-anchor="middle">×</text>'; }
+      else if (fv === 0) { s += '<circle cx="' + xx + '" cy="' + (top - 16) + '" r="6" fill="none" stroke="#9a8f80" stroke-width="1.5"/>'; }
+      else {
+        var rel = fv - baseFret + 1;
+        var cy = top + (rel - 0.5) * fh;
+        s += '<circle cx="' + xx + '" cy="' + cy + '" r="9" fill="#46a3a8"/>';
+      }
+    }
+    // tuning labels
+    for (var k = 0; k < n; k++) {
+      s += '<text x="' + (left + k * sp) + '" y="' + (top + fh * FRETS + 20) + '" fill="#5e554a" font-size="12" text-anchor="middle">' + tuning[k] + '</text>';
+    }
+    s += '</svg>';
+    return s;
+  }
+
+  // ---------- render ----------
+  function render() {
+    var v = document.getElementById('view'); v.innerHTML = '';
+    document.querySelectorAll('.tab').forEach(function (t) { t.classList.toggle('active', t.dataset.tab === tab); });
+    if (tab === 'chords') renderChords(v);
+    else if (tab === 'practice') renderPractice(v);
+    else renderTune(v);
+    window.scrollTo(0, 0);
+  }
+
+  function instToggle(onChange) {
+    var seg = el('div', 'seg');
+    ['ukulele', 'guitar'].forEach(function (k) {
+      var b = el('div', 'seg-btn' + (inst === k ? ' on' : ''), k);
+      b.addEventListener('click', function () { inst = k; save(); onChange(); });
+      seg.appendChild(b);
+    });
+    return seg;
+  }
+
+  function renderChords(v) {
+    v.appendChild(instToggle(render));
+    v.appendChild(el('div', 'hint', inst === 'ukulele' ? 'Start here. C · Am · F · G unlock half the songs you love.' : 'Em first — two fingers. Then G · D · C and you can play along to almost anything.'));
+    var grid = el('div', 'chord-grid');
+    CHORDS[inst].forEach(function (ch) {
+      var cell = el('div', 'chord-cell' + (ch.magic ? ' magic' : ''));
+      cell.innerHTML = '<div class="cn">' + esc(ch.n) + '</div>' + (ch.magic ? '<div class="cm">' + ch.magic + '</div>' : '');
+      cell.addEventListener('click', function () { openChord(ch); });
+      grid.appendChild(cell);
+    });
+    v.appendChild(grid);
+    v.appendChild(el('div', 'eyebrow', 'the gold marks'));
+    v.appendChild(el('div', 'hint', 'I – V – vi – IV. The four chords behind half of all pop music. Learn these and the radio opens up.'));
+  }
+
+  function openChord(ch) {
+    var m = document.getElementById('modal'); m.innerHTML = ''; m.hidden = false; document.body.style.overflow = 'hidden';
+    var bar = el('div', 'topbar');
+    var back = el('button', 'back-btn', '← chords'); back.addEventListener('click', closeModal); bar.appendChild(back);
+    bar.appendChild(el('div', 'brand-sub', inst));
+    m.appendChild(bar);
+    var wrap = el('div', 'diagram-wrap');
+    wrap.appendChild(el('div', 'diagram-name', esc(ch.n)));
+    wrap.innerHTML += chordSVG(ch, inst === 'ukulele' ? UKE_TUNING : GTR_TUNING);
+    if (ch.fg) wrap.appendChild(el('div', 'diagram-fingers', esc(ch.fg)));
+    m.appendChild(wrap);
+    var play = el('button', 'btn', '♪ hear it (strum)');
+    play.addEventListener('click', function () { strumChord(ch); });
+    m.appendChild(play);
+  }
+
+  function strumChord(ch) {
+    var tuning = inst === 'ukulele' ? [392,261.63,329.63,440] : [82.41,110,146.83,196,246.94,329.63];
+    var i = 0;
+    ch.f.forEach(function (fret, idx) {
+      if (fret === -1) return;
+      var base = tuning[idx];
+      var freq = base * Math.pow(2, fret / 12);
+      setTimeout(function () { tone(freq, 1.2, 'triangle'); }, i * 70);
+      i++;
+    });
+    buzz(15);
+  }
+
+  // ---------- practice ----------
+  function renderPractice(v) {
+    // chord-change drill
+    v.appendChild(el('div', 'eyebrow', 'chord-change drill'));
+    var card = el('div', 'pcard');
+    var row = el('div', 'drill-row');
+    var names = CHORDS[inst].map(function (c) { return c.n; });
+    var selA = el('select', 'drill-sel'), selB = el('select', 'drill-sel');
+    names.forEach(function (n) { selA.appendChild(new Option(n, n)); selB.appendChild(new Option(n, n)); });
+    selA.value = names[0]; selB.value = names[1] || names[0];
+    row.appendChild(selA); row.appendChild(el('span', 'drill-arrow', '⇄')); row.appendChild(selB);
+    card.appendChild(row);
+    var timerEl = el('div', 'drill-timer', '0:60');
+    card.appendChild(timerEl);
+    var cr = el('div', 'counter-row');
+    var minus = el('button', 'counter-btn', '−');
+    var val = el('div', 'counter-val', '0');
+    var plus = el('button', 'counter-btn', '+');
+    cr.appendChild(minus); cr.appendChild(val); cr.appendChild(plus);
+    card.appendChild(cr);
+    card.appendChild(el('div', 'counter-label', 'clean changes'));
+    var count = 0, left = 60, running = false, ivl = null;
+    plus.addEventListener('click', function () { count++; val.textContent = count; buzz(8); });
+    minus.addEventListener('click', function () { if (count > 0) count--; val.textContent = count; });
+    var startBtn = el('button', 'btn', 'start 60 seconds');
+    startBtn.addEventListener('click', function () {
+      if (running) {
+        clearInterval(ivl); running = false; startBtn.textContent = 'start 60 seconds'; return;
+      }
+      count = 0; val.textContent = '0'; left = 60; running = true; audio();
+      startBtn.textContent = 'stop';
+      timerEl.textContent = '0:60';
+      ivl = setInterval(function () {
+        left--; timerEl.textContent = '0:' + (left < 10 ? '0' : '') + left;
+        if (left <= 0) {
+          clearInterval(ivl); running = false; startBtn.textContent = 'start 60 seconds';
+          tone(880, 0.4, 'sine'); buzz([60, 40, 80]);
+          toast(count + ' clean changes — log it in your head, beat it tomorrow');
+        }
+      }, 1000);
+    });
+    card.appendChild(startBtn);
+    card.appendChild(el('div', 'hint', 'one minute, ' + esc(selA.value) + ' ⇄ ' + esc(selB.value) + '. tally every clean switch. tomorrow, beat the number.'));
+    v.appendChild(card);
+
+    // metronome
+    v.appendChild(el('div', 'eyebrow', 'metronome'));
+    v.appendChild(metronome());
+
+    // strums
+    v.appendChild(el('div', 'eyebrow', 'strumming patterns'));
+    STRUMS.forEach(function (s) {
+      var rc = el('div', 'row-card');
+      rc.appendChild(el('div', 't', esc(s.t)));
+      rc.appendChild(el('div', 'strum-pattern', esc(s.p)));
+      rc.appendChild(el('div', 'p', esc(s.d)));
+      v.appendChild(rc);
+    });
+
+    // progressions / songs
+    v.appendChild(el('div', 'eyebrow', 'progressions & your songs'));
+    PROGRESSIONS.forEach(function (pr) {
+      var rc = el('div', 'row-card');
+      rc.appendChild(el('div', 't', esc(pr.t)));
+      rc.appendChild(el('div', 'chordline', esc(pr.c)));
+      rc.appendChild(el('div', 'p', esc(pr.d)));
+      v.appendChild(rc);
+    });
+
+    // daily flow reference
+    v.appendChild(el('div', 'eyebrow', 'the daily 15'));
+    DAILY_FLOW.forEach(function (f) {
+      var rc = el('div', 'row-card');
+      rc.appendChild(el('div', 't', esc(f.t) + ' · ' + Math.round(f.secs / 60) + ' min'));
+      rc.appendChild(el('div', 'p', esc(f.d)));
+      v.appendChild(rc);
+    });
+    v.appendChild(el('div', 'hint', 'Body first — always. The instrument is a vessel for what’s already inside you.'));
+  }
+
+  function metronome() {
+    var card = el('div', 'pcard');
+    var bpm = 60;
+    var bpmEl = el('div', 'metro-bpm', '60');
+    card.appendChild(bpmEl);
+    card.appendChild(el('div', 'metro-label', 'bpm'));
+    var slider = el('input'); slider.type = 'range'; slider.min = 40; slider.max = 200; slider.value = 60;
+    card.appendChild(slider);
+    var beatsWrap = el('div', 'beats');
+    var dots = [];
+    for (var i = 0; i < 4; i++) { var d = el('div', 'beat-dot'); dots.push(d); beatsWrap.appendChild(d); }
+    card.appendChild(beatsWrap);
+    var running = false, ivl = null, beat = 0;
+    slider.addEventListener('input', function () { bpm = +slider.value; bpmEl.textContent = bpm; if (running) { restart(); } });
+    function restart() { clearInterval(ivl); schedule(); }
+    function schedule() {
+      var period = 60000 / bpm;
+      ivl = setInterval(function () {
+        dots.forEach(function (d, i) { d.classList.toggle('on', i === beat); });
+        click(beat === 0);
+        beat = (beat + 1) % 4;
+      }, period);
+    }
+    var btn = el('button', 'btn', 'start');
+    btn.addEventListener('click', function () {
+      if (running) { clearInterval(ivl); running = false; btn.textContent = 'start'; dots.forEach(function (d) { d.classList.remove('on'); }); }
+      else { audio(); running = true; beat = 0; btn.textContent = 'stop'; schedule(); }
+    });
+    card.appendChild(btn);
+    return card;
+  }
+
+  // ---------- tune ----------
+  function renderTune(v) {
+    v.appendChild(instToggle(render));
+    v.appendChild(el('div', 'hint', inst === 'ukulele' ? 'Standard reentrant tuning — G C E A. The high G is the uke’s signature sparkle.' : 'Standard tuning — E A D G B E, low to high. Tap a string, tune by ear.'));
+    v.appendChild(el('div', 'eyebrow', 'tap a string to hear its pitch'));
+    TUNINGS[inst].forEach(function (st) {
+      var b = el('div', 'string-btn');
+      b.innerHTML = '<div><span class="string-note">' + esc(st.s) + '</span> <span class="string-meta">· ' + esc(st.o) + '</span></div><div class="string-play">♪ play</div>';
+      b.addEventListener('click', function () { tone(st.f, 2.2, 'sine'); buzz(12); });
+      v.appendChild(b);
+    });
+    v.appendChild(el('div', 'hint', 'No mic needed — match the string you hear to the string under your fingers. Tune slowly, from below the pitch up.'));
+  }
+
+  function closeModal() { var m = document.getElementById('modal'); m.hidden = true; m.innerHTML = ''; document.body.style.overflow = ''; }
+
+  // ---------- boot ----------
+  document.getElementById('tabs').addEventListener('click', function (e) { var t = e.target.closest('.tab'); if (!t) return; tab = t.dataset.tab; save(); render(); });
+  document.getElementById('back-btn').addEventListener('click', function () {
+    try { window.parent.postMessage('close-temple', '*'); } catch (e) {}
+    try { window.location.href = 'index.html'; } catch (e) {}
+  });
+  render();
+})();
+</script>
+</body>
+</html>

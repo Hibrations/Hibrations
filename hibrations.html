@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hibrations</title>
+<style>
+:root {
+  --bg: #0a0908;
+  --bg-elev: #14110f;
+  --bg-card: #1a1614;
+  --border: #2a2420;
+  --border-soft: #1f1a17;
+  --ink: #e8e1d4;
+  --ink-dim: #9a8f80;
+  --ink-faint: #5e554a;
+  --amethyst: #9a7bc8;
+  --amethyst-dim: #6f5092;
+  --amethyst-faint: #463458;
+  --gold: #c89060;
+  --gold-dim: #8a6440;
+  --crimson: #c78f8f;
+  --joey: #c78f8f;
+  --sophia: #9a7bc8;
+  --lineage: #c89060;
+  --practice: #6ba879;
+  --r-sm: 8px;
+  --r-md: 14px;
+  --r-lg: 20px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { background: var(--bg); color: var(--ink); }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  line-height: 1.55;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  max-width: 680px;
+  margin: 0 auto;
+  min-height: 100vh;
+}
+.wrap { padding: 18px 16px 80px; }
+
+/* header */
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+.back-btn {
+  font-size: 13px; color: var(--ink-dim); background: var(--bg-card);
+  border: 1px solid var(--border); border-radius: 999px; padding: 7px 14px; cursor: pointer;
+}
+.back-btn:active { color: var(--ink); border-color: var(--ink-dim); background: var(--bg-elev); }
+.brand { text-align: right; }
+.brand-name {
+  font-size: 22px; font-weight: 700; letter-spacing: -0.01em;
+  background: linear-gradient(110deg, var(--amethyst), var(--gold));
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.brand-sub { font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); }
+
+/* north star */
+.northstar {
+  margin: 16px 0 14px; padding: 13px 16px; border-left: 2px solid var(--amethyst-dim);
+  background: var(--bg-elev); border-radius: 0 var(--r-md) var(--r-md) 0;
+  font-style: italic; color: var(--ink-dim); font-size: 14px;
+}
+
+/* tabs */
+.tabs { display: flex; gap: 8px; margin: 16px 0 18px; }
+.tab {
+  flex: 1; text-align: center; font-size: 13px; letter-spacing: 0.04em;
+  padding: 9px 6px; border-radius: 999px; border: 1px solid var(--border);
+  background: var(--bg-card); color: var(--ink-dim); cursor: pointer;
+}
+.tab.active { color: var(--ink); border-color: var(--amethyst-dim); background: var(--bg-elev); }
+
+.eyebrow { font-size: 10.5px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-faint); margin: 22px 0 10px; }
+.eyebrow:first-child { margin-top: 4px; }
+
+/* capture */
+.capture-box {
+  width: 100%; min-height: 130px; resize: vertical; background: var(--bg-card);
+  border: 1px solid var(--border); border-radius: var(--r-md); color: var(--ink);
+  font-family: inherit; font-size: 16px; line-height: 1.5; padding: 14px;
+}
+.capture-box:focus { outline: none; border-color: var(--amethyst-dim); }
+.capture-box::placeholder { color: var(--ink-faint); }
+.chip-row { display: flex; flex-wrap: wrap; gap: 7px; margin: 12px 0; }
+.chip {
+  font-size: 12px; padding: 6px 12px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--bg-card); color: var(--ink-dim);
+}
+.chip.on { color: var(--ink); border-color: var(--amethyst-dim); background: var(--bg-elev); }
+.chip.joey.on { border-color: var(--joey); color: var(--joey); }
+.chip.sophia.on { border-color: var(--sophia); color: var(--sophia); }
+.chip.lineage.on { border-color: var(--lineage); color: var(--lineage); }
+.chip.practice.on { border-color: var(--practice); color: var(--practice); }
+.btn-primary {
+  width: 100%; padding: 13px; border-radius: var(--r-md); font-size: 15px; font-weight: 600;
+  border: 1px solid var(--amethyst-dim); background: var(--amethyst-faint); color: var(--ink);
+  cursor: pointer; margin-top: 4px;
+}
+.btn-primary:active { background: var(--amethyst-dim); }
+.hint { font-size: 12px; color: var(--ink-faint); text-align: center; margin-top: 10px; font-style: italic; }
+
+/* tuning strip */
+.tuning {
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-bottom: 16px;
+  background: var(--bg-elev); border: 1px solid var(--border-soft); border-radius: var(--r-md);
+}
+.tuning-icon { font-size: 20px; }
+.tuning-text { font-size: 12.5px; color: var(--ink-dim); font-style: italic; }
+
+/* piece cards */
+.stage-group { margin-bottom: 8px; }
+.stage-head { display: flex; align-items: baseline; gap: 8px; margin: 18px 0 9px; }
+.stage-name { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--amethyst); }
+.stage-count { font-size: 11px; color: var(--ink-faint); }
+.piece {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-md);
+  padding: 12px 14px; margin-bottom: 9px; cursor: pointer;
+}
+.piece:active { border-color: var(--amethyst-dim); }
+.piece.integration { border-color: var(--gold-dim); background: linear-gradient(180deg, var(--bg-card), #1c1712); }
+.piece-title { font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 3px; }
+.piece-title.untitled { color: var(--ink-faint); font-weight: 400; font-style: italic; }
+.piece-excerpt { font-size: 13px; color: var(--ink-dim); margin-bottom: 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.piece-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.tag-pill { font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--border); color: var(--ink-dim); }
+.tag-pill.joey { color: var(--joey); border-color: var(--joey); }
+.tag-pill.sophia { color: var(--sophia); border-color: var(--sophia); }
+.tag-pill.lineage { color: var(--lineage); border-color: var(--lineage); }
+.tag-pill.practice { color: var(--practice); border-color: var(--practice); }
+.integration-mark { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); display: inline-flex; align-items: center; gap: 4px; }
+.piece-track { font-size: 11.5px; color: var(--ink-faint); margin-top: 7px; }
+.piece-chakras { letter-spacing: 2px; margin-top: 6px; font-size: 13px; }
+.empty-line { font-size: 13px; color: var(--ink-faint); font-style: italic; padding: 6px 2px; }
+
+/* detail overlay */
+.overlay {
+  position: fixed; inset: 0; background: var(--bg); z-index: 50; overflow-y: auto;
+  padding: 18px 16px calc(40px + env(safe-area-inset-bottom));
+  max-width: 680px; margin: 0 auto;
+}
+.overlay[hidden] { display: none; }
+.detail-input {
+  width: 100%; background: transparent; border: none; color: var(--ink);
+  font-family: inherit; font-size: 19px; font-weight: 700; padding: 6px 0; margin-bottom: 4px;
+}
+.detail-input:focus { outline: none; }
+.detail-input::placeholder { color: var(--ink-faint); font-weight: 400; }
+.detail-body {
+  width: 100%; min-height: 200px; resize: vertical; background: var(--bg-card);
+  border: 1px solid var(--border); border-radius: var(--r-md); color: var(--ink);
+  font-family: inherit; font-size: 15.5px; line-height: 1.6; padding: 13px; margin: 8px 0 4px;
+}
+.detail-body:focus { outline: none; border-color: var(--amethyst-dim); }
+.field-label { font-size: 10.5px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-faint); margin: 20px 0 9px; }
+.track-row { display: flex; gap: 8px; }
+.track-input {
+  flex: 1; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-sm);
+  color: var(--ink); font-family: inherit; font-size: 14px; padding: 10px 12px;
+}
+.track-input:focus { outline: none; border-color: var(--amethyst-dim); }
+.track-input::placeholder { color: var(--ink-faint); }
+.chakra-palette { display: flex; flex-wrap: wrap; gap: 6px; }
+.chakra-btn {
+  font-size: 18px; width: 40px; height: 40px; border-radius: var(--r-sm); cursor: pointer;
+  border: 1px solid var(--border); background: var(--bg-card); opacity: 0.4; display: flex; align-items: center; justify-content: center;
+}
+.chakra-btn.on { opacity: 1; border-color: var(--amethyst-dim); background: var(--bg-elev); }
+.stage-pills { display: flex; flex-wrap: wrap; gap: 7px; }
+.stage-pill {
+  font-size: 12px; padding: 7px 13px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--bg-card); color: var(--ink-dim);
+}
+.stage-pill.on { color: var(--ink); border-color: var(--amethyst); background: var(--amethyst-faint); }
+.artboy {
+  margin: 20px 0 4px; padding: 13px 15px; border: 1px dashed var(--gold-dim);
+  border-radius: var(--r-md); background: var(--bg-elev); cursor: pointer;
+}
+.artboy-q { font-size: 13.5px; color: var(--gold); font-weight: 600; }
+.artboy-body { font-size: 13px; color: var(--ink-dim); font-style: italic; margin-top: 8px; display: none; }
+.artboy.open .artboy-body { display: block; }
+.detail-actions { display: flex; gap: 10px; margin-top: 26px; }
+.btn-ship {
+  flex: 1; padding: 13px; border-radius: var(--r-md); font-size: 14px; font-weight: 600;
+  border: 1px solid var(--gold-dim); background: #1c1712; color: var(--gold); cursor: pointer;
+}
+.btn-ship:active { background: var(--gold-dim); color: var(--bg); }
+.btn-ship[disabled] { opacity: 0.35; cursor: default; }
+.btn-del {
+  padding: 13px 16px; border-radius: var(--r-md); font-size: 13px;
+  border: 1px solid var(--border); background: var(--bg-card); color: var(--crimson); cursor: pointer;
+}
+.detail-back { font-size: 13px; color: var(--ink-dim); background: var(--bg-card); border: 1px solid var(--border); border-radius: 999px; padding: 7px 14px; cursor: pointer; }
+.detail-stamp { font-size: 11px; color: var(--ink-faint); margin-top: 18px; text-align: center; }
+
+/* shipped */
+.shipped-head { text-align: center; margin: 6px 0 20px; }
+.shipped-count { font-size: 34px; font-weight: 700; color: var(--gold); }
+.shipped-label { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-faint); }
+.shipped-piece { background: var(--bg-card); border: 1px solid var(--border-soft); border-radius: var(--r-md); padding: 13px 15px; margin-bottom: 10px; }
+.shipped-title { font-size: 15px; font-weight: 600; color: var(--ink); }
+.shipped-date { font-size: 11px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 3px; }
+
+/* toast */
+.toast {
+  position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+  background: var(--bg-elev); border: 1px solid var(--amethyst-dim); color: var(--ink);
+  padding: 10px 18px; border-radius: 999px; font-size: 13px; z-index: 80; opacity: 0; transition: opacity 0.2s; pointer-events: none;
+}
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="wrap" id="main">
+  <div class="topbar">
+    <button class="back-btn" id="back-btn">← portal</button>
+    <div class="brand">
+      <div class="brand-name">Hibrations</div>
+      <div class="brand-sub">Artboy · the voice · the work</div>
+    </div>
+  </div>
+
+  <div class="northstar" id="northstar"></div>
+
+  <div class="tabs" id="tabs">
+    <div class="tab active" data-tab="capture">capture</div>
+    <div class="tab" data-tab="desk">the desk</div>
+    <div class="tab" data-tab="shipped">shipped</div>
+  </div>
+
+  <div id="view"></div>
+</div>
+
+<div class="overlay" id="detail" hidden></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ---------- constants ----------
+  var STAGES = ['seed', 'shaping', 'drafting', 'ready'];
+  var STAGE_LABELS = { seed: 'seeds', shaping: 'shaping', drafting: 'drafting', ready: 'ready', shipped: 'shipped' };
+  var STAGE_HINT = {
+    seed: 'the raw download — caught before it dissolved',
+    shaping: 'Joey gave it to you; now it finds its shape',
+    drafting: 'in the words — music on, notebook open',
+    ready: 'polished. waiting for the moment to appear'
+  };
+  var TAGS = [
+    { id: 'joey', label: 'Joey' },
+    { id: 'sophia', label: 'Sophia' },
+    { id: 'lineage', label: 'lineage' },
+    { id: 'practice', label: 'practice' }
+  ];
+  var MEDIUMS = ['post', 'song', 'line', 'thread', 'voice note'];
+  var CHAKRAS = [
+    { e: '🔴', m: 'root · romance · the primal' },
+    { e: '🧡', m: 'sacral · creativity · sexuality' },
+    { e: '💛', m: 'solar plexus · confidence · joy' },
+    { e: '💚', m: 'heart · Hibrations · unconditional love' },
+    { e: '💙', m: 'throat · truth · communication' },
+    { e: '💜', m: 'third eye · intuition · insight' },
+    { e: '🤍', m: 'crown · the divine' },
+    { e: '🖤', m: 'darkness · heavy · honest' },
+    { e: '🩷', m: 'soft love · warmth' }
+  ];
+  var NORTHSTARS = [
+    'Just trying to find my purpose..',
+    'Det er nemlig igennem mine passions jeg fandt medicinen.',
+    'You make me feel less alone.',
+    'Just because someone carries it well — doesn’t mean it’s not heavy.',
+    'I’m so proud of how I lived.',
+    'Deler efter bearbejdelse.',
+    'The pain was the price. And the price was fair.'
+  ];
+  var ARTBOY_PROMPTS = [
+    'What would Artboy say — the soft-hearted puppy that growls and shows teeth when needed?',
+    'Drop the disclaimer. Say the thing you’re learning to say without it.',
+    'Shield down, nervous system regulated, the music playing. Now write it again.',
+    'Not the therapist. The friend who’s been there. What does he tell them?',
+    'Less fucks given. More heart shown. What’s the line underneath the line?'
+  ];
+
+  // ---------- state ----------
+  var KEY = 'hibrations_v1';
+  var state = load();
+  var currentTab = state.lastTab || 'capture';
+  var editingId = null;
+  var captureDraft = { text: '', tags: [], medium: '' };
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (raw) { var p = JSON.parse(raw); if (!p.pieces) p.pieces = []; return p; }
+    } catch (e) {}
+    return { pieces: [], lastTab: 'capture' };
+  }
+  function save() {
+    state.lastTab = currentTab;
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  }
+  function uid() { return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+  // ---------- helpers ----------
+  function el(tag, cls, html) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (html != null) n.innerHTML = html;
+    return n;
+  }
+  function esc(s) {
+    return (s == null ? '' : String(s)).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+  function isIntegration(p) { return p.tags && p.tags.indexOf('joey') > -1 && p.tags.indexOf('sophia') > -1; }
+  function relDate(ts) {
+    if (!ts) return '';
+    var diff = Date.now() - ts, day = 864e5;
+    if (diff < day && new Date(ts).getDate() === new Date().getDate()) return 'today';
+    var d = Math.floor(diff / day);
+    if (d <= 1) return 'yesterday';
+    if (d < 7) return d + 'd ago';
+    if (d < 14) return '1 week ago';
+    if (d < 60) return Math.floor(d / 7) + ' weeks ago';
+    return new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  }
+  var toastTimer;
+  function toast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove('show'); }, 1700);
+  }
+  function buzz(ms) { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) {} }
+
+  // ---------- north star ----------
+  function setNorthstar() {
+    var i = Math.floor(Date.now() / 864e5) % NORTHSTARS.length;
+    document.getElementById('northstar').textContent = NORTHSTARS[i];
+  }
+
+  // ---------- render router ----------
+  function render() {
+    var view = document.getElementById('view');
+    view.innerHTML = '';
+    document.querySelectorAll('.tab').forEach(function (t) {
+      t.classList.toggle('active', t.dataset.tab === currentTab);
+    });
+    if (currentTab === 'capture') renderCapture(view);
+    else if (currentTab === 'desk') renderDesk(view);
+    else renderShipped(view);
+    window.scrollTo(0, 0);
+  }
+
+  // ---------- capture ----------
+  function renderCapture(view) {
+    view.appendChild(el('div', 'eyebrow', 'catch it in the first ninety seconds'));
+
+    var box = el('textarea', 'capture-box');
+    box.id = 'cap-text';
+    box.placeholder = 'what wants to be said?';
+    box.value = captureDraft.text;
+    box.addEventListener('input', function () { captureDraft.text = box.value; });
+    view.appendChild(box);
+
+    var medRow = el('div', 'chip-row');
+    MEDIUMS.forEach(function (m) {
+      var c = el('div', 'chip' + (captureDraft.medium === m ? ' on' : ''), esc(m));
+      c.addEventListener('click', function () {
+        captureDraft.medium = (captureDraft.medium === m ? '' : m);
+        renderCapture(view);
+      });
+      medRow.appendChild(c);
+    });
+    view.appendChild(medRow);
+
+    var tagRow = el('div', 'chip-row');
+    TAGS.forEach(function (t) {
+      var on = captureDraft.tags.indexOf(t.id) > -1;
+      var c = el('div', 'chip ' + t.id + (on ? ' on' : ''), esc(t.label));
+      c.addEventListener('click', function () {
+        var i = captureDraft.tags.indexOf(t.id);
+        if (i > -1) captureDraft.tags.splice(i, 1); else captureDraft.tags.push(t.id);
+        renderCapture(view);
+      });
+      tagRow.appendChild(c);
+    });
+    view.appendChild(tagRow);
+
+    var btn = el('button', 'btn-primary', 'catch it');
+    btn.addEventListener('click', function () {
+      var text = (captureDraft.text || '').trim();
+      if (!text) { toast('nothing to catch yet'); return; }
+      var p = {
+        id: uid(), title: '', body: text, stage: 'seed',
+        tags: captureDraft.tags.slice(), chakras: [],
+        track: { song: '', artist: '' }, medium: captureDraft.medium,
+        createdAt: Date.now(), updatedAt: Date.now(), shippedAt: null
+      };
+      state.pieces.unshift(p);
+      save();
+      captureDraft = { text: '', tags: [], medium: '' };
+      buzz(20);
+      toast('caught — it’s on the desk');
+      renderCapture(view);
+    });
+    view.appendChild(btn);
+    view.appendChild(el('div', 'hint', 'most songs die because you didn’t catch them in the first ninety seconds'));
+
+    // recent seeds
+    var seeds = state.pieces.filter(function (p) { return p.stage === 'seed'; }).slice(0, 5);
+    if (seeds.length) {
+      view.appendChild(el('div', 'eyebrow', 'still raw'));
+      seeds.forEach(function (p) { view.appendChild(pieceCard(p)); });
+    }
+  }
+
+  // ---------- desk ----------
+  function renderDesk(view) {
+    var tune = el('div', 'tuning');
+    tune.appendChild(el('span', 'tuning-icon', '🎧'));
+    tune.appendChild(el('span', 'tuning-text', 'music first — the tuning ritual. drop into ventral vagal before the channel opens.'));
+    view.appendChild(tune);
+
+    var active = state.pieces.filter(function (p) { return p.stage !== 'shipped'; });
+    if (!active.length) {
+      view.appendChild(el('div', 'empty-line', 'the desk is clear. catch something on the capture tab.'));
+      return;
+    }
+    STAGES.forEach(function (stage) {
+      var group = active.filter(function (p) { return p.stage === stage; });
+      if (!group.length) return;
+      var head = el('div', 'stage-head');
+      head.appendChild(el('span', 'stage-name', STAGE_LABELS[stage]));
+      head.appendChild(el('span', 'stage-count', group.length));
+      view.appendChild(head);
+      group.sort(function (a, b) { return b.updatedAt - a.updatedAt; });
+      group.forEach(function (p) { view.appendChild(pieceCard(p)); });
+    });
+  }
+
+  function pieceCard(p) {
+    var card = el('div', 'piece' + (isIntegration(p) ? ' integration' : ''));
+    var title = (p.title || '').trim();
+    if (title) card.appendChild(el('div', 'piece-title', esc(title)));
+    else card.appendChild(el('div', 'piece-title untitled', esc(excerptOf(p.body, 40)) || 'untitled'));
+    if (title && p.body) card.appendChild(el('div', 'piece-excerpt', esc(excerptOf(p.body, 120))));
+
+    var meta = el('div', 'piece-meta');
+    if (isIntegration(p)) {
+      meta.appendChild(el('span', 'integration-mark', '◈ integration'));
+    }
+    (p.tags || []).forEach(function (t) {
+      if (isIntegration(p) && (t === 'joey' || t === 'sophia')) return;
+      meta.appendChild(el('span', 'tag-pill ' + t, esc(t)));
+    });
+    if (p.medium) meta.appendChild(el('span', 'tag-pill', esc(p.medium)));
+    card.appendChild(meta);
+
+    if (p.chakras && p.chakras.length) {
+      card.appendChild(el('div', 'piece-chakras', p.chakras.join(' ')));
+    }
+    if (p.track && p.track.song) {
+      card.appendChild(el('div', 'piece-track', '♪ ' + esc(p.track.song) + (p.track.artist ? ' — ' + esc(p.track.artist) : '')));
+    }
+    card.addEventListener('click', function () { openDetail(p.id); });
+    return card;
+  }
+
+  function excerptOf(body, n) {
+    var s = (body || '').replace(/\s+/g, ' ').trim();
+    return s.length > n ? s.slice(0, n - 1) + '…' : s;
+  }
+
+  // ---------- shipped ----------
+  function renderShipped(view) {
+    var shipped = state.pieces.filter(function (p) { return p.stage === 'shipped'; });
+    shipped.sort(function (a, b) { return (b.shippedAt || 0) - (a.shippedAt || 0); });
+
+    var head = el('div', 'shipped-head');
+    head.appendChild(el('div', 'shipped-count', shipped.length));
+    head.appendChild(el('div', 'shipped-label', shipped.length === 1 ? 'piece made visible' : 'pieces made visible'));
+    view.appendChild(head);
+
+    if (!shipped.length) {
+      view.appendChild(el('div', 'empty-line', 'nothing shipped yet. the question is no longer if — it’s how deeply you’re willing to be seen.'));
+      return;
+    }
+    shipped.forEach(function (p) {
+      var card = el('div', 'shipped-piece' + (isIntegration(p) ? ' integration' : ''));
+      var title = (p.title || '').trim() || excerptOf(p.body, 40) || 'untitled';
+      card.appendChild(el('div', 'shipped-title', esc(title)));
+      if (p.track && p.track.song) card.appendChild(el('div', 'piece-track', '♪ ' + esc(p.track.song) + (p.track.artist ? ' — ' + esc(p.track.artist) : '')));
+      if (p.chakras && p.chakras.length) card.appendChild(el('div', 'piece-chakras', p.chakras.join(' ')));
+      card.appendChild(el('div', 'shipped-date', 'shipped ' + relDate(p.shippedAt)));
+      card.addEventListener('click', function () { openDetail(p.id); });
+      view.appendChild(card);
+    });
+  }
+
+  // ---------- detail ----------
+  function findPiece(id) {
+    for (var i = 0; i < state.pieces.length; i++) if (state.pieces[i].id === id) return state.pieces[i];
+    return null;
+  }
+
+  function openDetail(id) {
+    var p = findPiece(id);
+    if (!p) return;
+    editingId = id;
+    var d = document.getElementById('detail');
+    d.innerHTML = '';
+    d.hidden = false;
+    document.body.style.overflow = 'hidden';
+
+    var bar = el('div', 'topbar');
+    var back = el('button', 'detail-back', '← the desk');
+    back.addEventListener('click', closeDetail);
+    bar.appendChild(back);
+    bar.appendChild(el('div', 'brand-sub', isIntegration(p) ? '◈ integration — both flames' : 'a piece in progress'));
+    d.appendChild(bar);
+
+    var titleI = el('input', 'detail-input');
+    titleI.placeholder = 'title (optional)';
+    titleI.value = p.title || '';
+    titleI.addEventListener('input', function () { p.title = titleI.value; touch(p); });
+    d.appendChild(titleI);
+
+    var bodyT = el('textarea', 'detail-body');
+    bodyT.value = p.body || '';
+    bodyT.addEventListener('input', function () { p.body = bodyT.value; touch(p); });
+    d.appendChild(bodyT);
+
+    // stage
+    d.appendChild(el('div', 'field-label', 'stage'));
+    var stageWrap = el('div', 'stage-pills');
+    STAGES.forEach(function (s) {
+      var pill = el('div', 'stage-pill' + (p.stage === s ? ' on' : ''), STAGE_LABELS[s]);
+      pill.addEventListener('click', function () {
+        p.stage = s; touch(p); buzz(15);
+        openDetail(id);
+      });
+      stageWrap.appendChild(pill);
+    });
+    d.appendChild(stageWrap);
+    if (STAGE_HINT[p.stage]) d.appendChild(el('div', 'hint', STAGE_HINT[p.stage]));
+
+    // tags
+    d.appendChild(el('div', 'field-label', 'voice — who’s speaking'));
+    var tagWrap = el('div', 'chip-row');
+    TAGS.forEach(function (t) {
+      var on = (p.tags || []).indexOf(t.id) > -1;
+      var c = el('div', 'chip ' + t.id + (on ? ' on' : ''), esc(t.label));
+      c.addEventListener('click', function () {
+        if (!p.tags) p.tags = [];
+        var i = p.tags.indexOf(t.id);
+        if (i > -1) p.tags.splice(i, 1); else p.tags.push(t.id);
+        touch(p); openDetail(id);
+      });
+      tagWrap.appendChild(c);
+    });
+    d.appendChild(tagWrap);
+
+    // chakra/emoji language
+    d.appendChild(el('div', 'field-label', 'chakra language — the secondary text'));
+    var pal = el('div', 'chakra-palette');
+    CHAKRAS.forEach(function (ch) {
+      var on = (p.chakras || []).indexOf(ch.e) > -1;
+      var b = el('div', 'chakra-btn' + (on ? ' on' : ''), ch.e);
+      b.title = ch.m;
+      b.addEventListener('click', function () {
+        if (!p.chakras) p.chakras = [];
+        var i = p.chakras.indexOf(ch.e);
+        if (i > -1) p.chakras.splice(i, 1); else p.chakras.push(ch.e);
+        touch(p); openDetail(id);
+      });
+      pal.appendChild(b);
+    });
+    d.appendChild(pal);
+
+    // track / tuning
+    d.appendChild(el('div', 'field-label', 'paired track — music as primary text'));
+    var tr = el('div', 'track-row');
+    var song = el('input', 'track-input'); song.placeholder = 'song';
+    song.value = (p.track && p.track.song) || '';
+    var artist = el('input', 'track-input'); artist.placeholder = 'artist';
+    artist.value = (p.track && p.track.artist) || '';
+    song.addEventListener('input', function () { if (!p.track) p.track = {}; p.track.song = song.value; touch(p); });
+    artist.addEventListener('input', function () { if (!p.track) p.track = {}; p.track.artist = artist.value; touch(p); });
+    tr.appendChild(song); tr.appendChild(artist);
+    d.appendChild(tr);
+
+    // artboy unlock
+    var ab = el('div', 'artboy');
+    var promptI = Math.floor(Date.now() / 36e5) % ARTBOY_PROMPTS.length;
+    ab.appendChild(el('div', 'artboy-q', 'What would Artboy say?'));
+    ab.appendChild(el('div', 'artboy-body', ARTBOY_PROMPTS[promptI]));
+    ab.addEventListener('click', function () { ab.classList.toggle('open'); });
+    d.appendChild(ab);
+
+    // actions
+    var actions = el('div', 'detail-actions');
+    var ship = el('button', 'btn-ship', p.stage === 'shipped' ? 'unship — back to ready' : 'ship it — make it visible');
+    ship.addEventListener('click', function () {
+      if (p.stage === 'shipped') { p.stage = 'ready'; p.shippedAt = null; toast('back on the desk'); }
+      else { p.stage = 'shipped'; p.shippedAt = Date.now(); buzz([30, 40, 60]); toast('◈ shipped — you are no longer invisible'); }
+      touch(p); closeDetail();
+    });
+    actions.appendChild(ship);
+    var del = el('button', 'btn-del', 'delete');
+    del.addEventListener('click', function () {
+      if (confirm('Delete this piece? This can’t be undone.')) {
+        state.pieces = state.pieces.filter(function (x) { return x.id !== id; });
+        save(); closeDetail();
+      }
+    });
+    actions.appendChild(del);
+    d.appendChild(actions);
+
+    d.appendChild(el('div', 'detail-stamp', 'caught ' + relDate(p.createdAt) + (p.updatedAt && p.updatedAt !== p.createdAt ? ' · touched ' + relDate(p.updatedAt) : '')));
+  }
+
+  function touch(p) { p.updatedAt = Date.now(); save(); }
+
+  function closeDetail() {
+    var d = document.getElementById('detail');
+    d.hidden = true; d.innerHTML = '';
+    document.body.style.overflow = '';
+    editingId = null;
+    render();
+  }
+
+  // ---------- tabs + boot ----------
+  document.getElementById('tabs').addEventListener('click', function (e) {
+    var t = e.target.closest('.tab');
+    if (!t) return;
+    currentTab = t.dataset.tab; save(); render();
+  });
+
+  document.getElementById('back-btn').addEventListener('click', function () {
+    try { window.parent.postMessage('close-temple', '*'); } catch (e) {}
+    try { window.location.href = 'index.html'; } catch (e) {}
+  });
+
+  setNorthstar();
+  render();
+})();
+</script>
+</body>
+</html>
