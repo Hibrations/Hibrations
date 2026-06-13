@@ -2651,7 +2651,8 @@ function progressiveOverloadFor(name) {
   if (!w1 || !w2) return null;
   if (w1.unit !== w2.unit) return null;
   if (Math.abs(w1.value - w2.value) > 0.01) return null;
-  const increment = w1.unit === 'kg' ? 2.5 : 5;
+  // Round 29 — increment matches Round 28's ±1 kg pill (consistency: pill and nudge speak the same kilo).
+  const increment = w1.unit === 'kg' ? 1 : 2;
   return { value: +(w1.value + increment).toFixed(2), unit: w1.unit };
 }
 

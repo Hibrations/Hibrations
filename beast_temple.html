@@ -756,6 +756,62 @@ const PRACTICES = [
       '10 min sustained. Notice the difference in how the room responds to vacuum vs emission.'
     ],
     watch: 'Confusing vacuum with collapse or withdrawal. The vacuum is full, dense, magnetic — NOT empty or shrinking. If you feel shrinking, the pole shifted. Anchor in the dantian fullness, the drawing follows. Vacuum is yin POWER, not yin absence.'
+  },
+  // Round 29 — four deep additions: grief, sacred anger, magnetic worship (yin pole), cock-heart-crown alchemical channel
+  {
+    id: 'grief_practice', name: 'Grief Practice (Water Work)',
+    stack: ['body','breath','energy'],
+    durationSec: 1200, durationLabel: '20 min', frequency: 'as needed; weekly during arcs of loss',
+    what: 'The beast is not only fire. The water in him moves grief, and grief moves the body. This practice is the deliberate dissolving of held loss — the missed moments, the absent father, the closed doors, the version of you that did not get to live yet. Move the water and the fire burns clearer.',
+    how: [
+      '5 min activation: sit, hand on heart, hand on belly. Name aloud what you are grieving. Specific. Not "everything"; one thing.',
+      '5 min permission: breathe slowly, let the chest soften. Tears or no tears — the practice is the WILLING, not the producing. Sound is allowed: sigh, hum, low moan, sob.',
+      '5 min movement: stand or kneel. Let the body do what it wants. Rock, sway, hands to face, fists to chest. The body knows what shape grief takes.',
+      '5 min seal: lie on back, hands on heart and belly. Three breaths thanking the water for moving. The grief did not need to be resolved — only honored.'
+    ],
+    watch: 'Performing grief (drama, forced tears) instead of meeting what is actually there. The practice is HONESTY about what is held. If nothing moves today, the practice was still complete — you showed up.'
+  },
+  {
+    id: 'sacred_anger', name: 'Sacred Anger Practice',
+    stack: ['primal','body','field'],
+    durationSec: 600, durationLabel: '10 min', frequency: 'weekly; on-demand when rage rises',
+    what: 'Anger as sexual fire, channeled — not suppressed, not exploded. The beast that contains his rage without armoring against it. The Joey integration. The "no" that comes from sovereignty rather than wound.',
+    how: [
+      '2 min identification: stand. Anchor feet. Name aloud what you are angry about. Be specific. "I am angry at ___ because ___."',
+      '2 min embodiment: let the body load. Fists, jaw, shoulders. Feel the heat rise from belly to chest to throat. Do NOT discharge yet.',
+      '3 min channeling: with the heat fully present, choose a movement. Strike a pillow with measured power. Or roar (low, from belly, not throat). Or push immovable wall. The channel matters — the anger has somewhere to GO.',
+      '2 min integration: breath slows. Heat redistributes. The body cools without losing the underlying current. The anger is not gone — it is INFORMED. You now know what it asks you to do.',
+      '1 min seal: hands at heart. The anger served — it brought a clear "no" into the body. Honor it.'
+    ],
+    watch: 'Two traps: discharge (explosion that empties the charge without giving direction) and suppression (anger stuffed back into the body where it calcifies). The middle path is channeled fire — felt, moved, retained as information.'
+  },
+  {
+    id: 'magnetic_worship', name: 'Magnetic Worship (Being Worshipped)',
+    stack: ['field','primal'],
+    durationSec: 900, durationLabel: '15 min (with partner) or solo visualization', frequency: 'occasional; pair with cultivation arcs',
+    what: 'The companion to Worship Practice (#28). That practice is the active honoring of the feminine. This is its receptive pole — the discipline of being worshipped without flinching, deflecting, or collapsing. Many can give devotion; few can receive it without armor. Both poles complete the work.',
+    how: [
+      'Solo version: sit, eyes closed. Visualize being adored — by a beloved, by the divine, by the room of all who have loved you. Feel the gaze land. Do not deflect with humor or self-deprecation. Do not earn it. Receive.',
+      'With partner (full consent only): sit; partner offers reverent attention — soft eyes, slow words, hands held above without touch. 15 min sustained. You receive without performing, deflecting, or rushing.',
+      'Notice the flinch: the place where receiving becomes unbearable. The throat closes, the chest collapses, the smile gets nervous. Just notice. Do not correct.',
+      'After the discomfort spike: notice the second-wave opening. The body settles into being seen. This is where the worship lands.',
+      'Close: place both hands on heart. "I am worthy of being received."'
+    ],
+    watch: 'Performing worthiness (sitting straight, looking deserving). The practice is RECEIVING, not performing. If you find yourself working, return to the body. The worthiness is not earned — it is yours.'
+  },
+  {
+    id: 'cock_heart_crown', name: 'Cock-Heart-Crown Channel',
+    stack: ['energy','primal','breath'],
+    durationSec: 900, durationLabel: '15 min', frequency: '3× per week during alchemy arcs',
+    what: 'The vertical channel of Taoist sexual alchemy specific to integration. The charge does not just orbit — it also rises through three sacred chambers. Cock (life force, drive, manifest desire). Heart (love, longing, devotion). Crown (presence, transcendence, witness). When the channel is open, the same energy that drives sexual desire becomes devotional love becomes pure presence. The integration of Card 14 made into a circuit.',
+    how: [
+      '3 min ground: sit. Tongue at palate. Feel the cock — alive, warm, present. Not aroused, just acknowledged.',
+      '3 min cock-to-heart: inhale draws charge from cock upward. Pause at heart. Feel the cock-energy becoming heart-energy — the drive becoming love.',
+      '3 min heart-to-crown: inhale continues. Charge rises from heart to crown. Pause at crown. Feel the love becoming presence — the personal becoming witness.',
+      '3 min full circuit: cock → heart → crown → down the front (silver thread of presence falling back to cock) → cock. Continuous. The three chambers in one breath cycle.',
+      '3 min rest: hands at Dan Tian. The channel stays open. The body integrates.'
+    ],
+    watch: 'Skipping the heart. If charge goes cock → crown directly, the integration is incomplete — that is spiritual bypass. The heart is the alchemical mediator. The full circuit always passes through love.'
   }
 ];
 
@@ -1013,55 +1069,59 @@ function renderLibrary(mount) {
   decl.innerHTML = '<strong>the temple that fuels the beast.</strong> every practice multi-stack by design — primal + magnetic + aura threaded into single drills. Joey’s instrument, Sophia’s staying fire baked in from line one. <em>heat is fuel; this is where it lives.</em>';
   mount.appendChild(decl);
 
-  mount.appendChild(el('div', 'section-eyebrow', 'the 34 practices'));
+  mount.appendChild(el('div', 'section-eyebrow', 'the 38 practices'));
 
-  // Round 25 — natural progressive order: grounding → body → energy → transmission
-  // → sound/polarity → sexual cultivation (solo) → advanced sexual → ritual/deity → reflection
+  // Round 25 + 29 — natural progressive order. Round 29 adds grief, sacred anger,
+  // magnetic worship (yin pole), and cock-heart-crown channel into their pedagogical positions.
   const PRACTICES_DISPLAY_ORDER = [
     // Foundation & grounding — must be in the system before anything cultivates
     'earth_rooting',         // 1. draw from source
     'dantian_sealing',       // 2. store it
     'bioenergetic_shaking',  // 3. discharge armor
     'pelvic_dearmoring',     // 4. open the channel
-    'cold_fire',             // 5. cold opens body before cultivation
+    'grief_practice',        // 5. move the water (Round 29)
+    'sacred_anger',          // 6. channel the fire (Round 29)
+    'cold_fire',             // 7. cold opens body before cultivation
     // Body cultivation through training
-    'charged_lift',          // 6. sexual breath into training
-    'bonfire_walk',          // 7. field walked into the world
+    'charged_lift',          // 8. sexual breath into training
+    'bonfire_walk',          // 9. field walked into the world
     // Energy cultivation — building the field
-    'summoning',             // 8. call the charge
-    'field_cultivation',     // 9. fill the body
-    'volume_dial',           // 10. dial the field
-    'off_switch',            // 11. containment
+    'summoning',             // 10. call the charge
+    'field_cultivation',     // 11. fill the body
+    'volume_dial',           // 12. dial the field
+    'off_switch',            // 13. containment
     // Transmission & field application
-    'mirror',                // 12. self-transmission training
-    'public_field',          // 13. applied in social space
-    'living_magnet',         // 14. daily-life integration
+    'mirror',                // 14. self-transmission training
+    'public_field',          // 15. applied in social space
+    'living_magnet',         // 16. daily-life integration
     // Sound, polarity, sexual foundation
-    'toning_bija',           // 15. sound as carrier wave
-    'polarity_flow',         // 16. Shiva/Shakti poles
-    'cock_breath',           // 17. cock as awareness organ
-    'lust_meditation',       // 18. sit with charge
+    'toning_bija',           // 17. sound as carrier wave
+    'polarity_flow',         // 18. Shiva/Shakti poles
+    'cock_breath',           // 19. cock as awareness organ
+    'lust_meditation',       // 20. sit with charge
     // Sexual cultivation — solo
-    'sexual_visualization',  // 19. fantasy as charging tool
-    'tantric_solo',          // 20. deep solo cultivation container
-    'orbit_arousal',         // 21. orbit during arousal
-    'big_draw',              // 22. instant-of-peak redirect
-    'valley_orgasm',         // 23. sustained plateau
+    'sexual_visualization',  // 21. fantasy as charging tool
+    'tantric_solo',          // 22. deep solo cultivation container
+    'orbit_arousal',         // 23. orbit during arousal
+    'big_draw',              // 24. instant-of-peak redirect
+    'valley_orgasm',         // 25. sustained plateau
     // Advanced sexual cultivation
-    'energetic_intercourse', // 24. solo prep for partnered
-    'vacuum_practice',       // 25. receptive pole (yin power)
-    'orbit_walking',         // 26. orbit through space
+    'energetic_intercourse', // 26. solo prep for partnered
+    'vacuum_practice',       // 27. receptive pole (yin power)
+    'cock_heart_crown',      // 28. three-chamber alchemical circuit (Round 29)
+    'orbit_walking',         // 29. orbit through space
     // Ritual + deity work
-    'sigil_edge',            // 27. sexual fire as sigil engine
-    'worship',               // 28. reverence for the feminine
-    'pan_invocation',        // 29. wild masculine deity
-    'aphrodite',             // 30. erotic-receptive deity working
-    'ra_eros',               // 31. sovereignty + erotic together
+    'sigil_edge',            // 30. sexual fire as sigil engine
+    'worship',               // 31. reverence for the feminine
+    'magnetic_worship',      // 32. being-worshipped — yin pole of worship (Round 29)
+    'pan_invocation',        // 33. wild masculine deity
+    'aphrodite',             // 34. erotic-receptive deity working
+    'ra_eros',               // 35. sovereignty + erotic together
     // Sacred integration
-    'charged_reading',       // 32. text + body
+    'charged_reading',       // 36. text + body
     // Reflection & daily integration
-    'shadow_journal',        // 33. name the raw
-    'fuel_cycle'             // 34. weekly five-line check
+    'shadow_journal',        // 37. name the raw
+    'fuel_cycle'             // 38. weekly five-line check
   ];
   const _orderMap = {};
   PRACTICES_DISPLAY_ORDER.forEach((id, i) => { _orderMap[id] = i; });
