@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vocal Temple</title>
+<style>
+:root {
+  --bg: #0a0908; --bg-elev: #14110f; --bg-card: #1a1614;
+  --border: #2a2420; --border-soft: #1f1a17;
+  --ink: #e8e1d4; --ink-dim: #9a8f80; --ink-faint: #5e554a;
+  --azure: #6fa8d8; --azure-dim: #3f6e98; --azure-faint: #243d54;
+  --gold: #c89060; --crimson: #c78f8f;
+  --r-sm: 8px; --r-md: 14px; --r-lg: 20px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { background: var(--bg); color: var(--ink); }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; line-height: 1.55;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  max-width: 680px; margin: 0 auto; min-height: 100vh; }
+.wrap { padding: 18px 16px 80px; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.back-btn { font-size: 13px; color: var(--ink-dim); background: var(--bg-card); border: 1px solid var(--border); border-radius: 999px; padding: 7px 14px; cursor: pointer; }
+.back-btn:active { color: var(--ink); border-color: var(--ink-dim); }
+.brand { text-align: right; }
+.brand-name { font-size: 20px; font-weight: 700; color: var(--azure); letter-spacing: -0.01em; }
+.brand-sub { font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); }
+.tabs { display: flex; gap: 8px; margin: 18px 0; }
+.tab { flex: 1; text-align: center; font-size: 13px; padding: 9px 6px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-card); color: var(--ink-dim); cursor: pointer; }
+.tab.active { color: var(--ink); border-color: var(--azure-dim); background: var(--bg-elev); }
+.eyebrow { font-size: 10.5px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-faint); margin: 22px 0 10px; }
+.eyebrow:first-child { margin-top: 2px; }
+.cat { color: var(--azure); }
+.hint { font-size: 12px; color: var(--ink-faint); font-style: italic; margin-top: 8px; }
+
+.pcard { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-md); margin-bottom: 9px; overflow: hidden; }
+.pcard-head { padding: 13px 14px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.pcard-head:active { background: var(--bg-elev); }
+.pc-name { font-size: 15px; font-weight: 600; }
+.pc-dur { font-size: 11px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; }
+.pcard-body { display: none; padding: 0 14px 14px; }
+.pcard.open .pcard-body { display: block; }
+.pc-section { margin-top: 12px; }
+.pc-label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--azure); margin-bottom: 4px; }
+.pc-text { font-size: 13.5px; color: var(--ink-dim); }
+.pc-actions { display: flex; gap: 9px; margin-top: 16px; }
+.btn { flex: 1; padding: 11px; border-radius: var(--r-md); font-size: 13px; font-weight: 600; border: 1px solid var(--azure-dim); background: var(--azure-faint); color: var(--ink); cursor: pointer; }
+.btn:active { background: var(--azure-dim); }
+.btn.ghost { background: var(--bg-card); border-color: var(--border); color: var(--ink-dim); }
+
+.tov { position: fixed; inset: 0; background: var(--bg); z-index: 60; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; }
+.tov.show { display: flex; }
+.tov-name { font-size: 18px; color: var(--azure); margin-bottom: 8px; }
+.tov-time { font-size: 68px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.tov-btns { display: flex; gap: 12px; margin-top: 28px; }
+.tov-btn { padding: 12px 22px; border-radius: var(--r-md); font-size: 14px; border: 1px solid var(--border); background: var(--bg-card); color: var(--ink); cursor: pointer; }
+.tov-btn.done { border-color: var(--azure-dim); background: var(--azure-faint); }
+
+.row-card { background: var(--bg-card); border: 1px solid var(--border-soft); border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 9px; }
+.row-card .t { font-size: 14px; font-weight: 600; }
+.row-card .p { font-size: 13px; color: var(--ink-dim); margin-top: 3px; }
+
+/* voice tab */
+.pitch-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
+.pitch-btn { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 14px 4px; text-align: center; cursor: pointer; }
+.pitch-btn:active { border-color: var(--azure); background: var(--bg-elev); }
+.pitch-note { font-size: 16px; font-weight: 700; }
+.pitch-hz { font-size: 9px; color: var(--ink-faint); margin-top: 2px; }
+.drone-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-md); padding: 16px; text-align: center; margin-top: 8px; }
+.drone-now { font-size: 30px; font-weight: 700; color: var(--azure); font-variant-numeric: tabular-nums; }
+.drone-label { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 10px; }
+.drone-pick { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 12px 0; }
+.drone-opt { font-size: 13px; padding: 7px 13px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-elev); color: var(--ink-dim); cursor: pointer; }
+.drone-opt.on { border-color: var(--azure-dim); color: var(--ink); background: var(--azure-faint); }
+
+/* resonance — chakra sound map */
+.ch-row { display: flex; align-items: center; gap: 12px; background: var(--bg-card); border: 1px solid var(--border); border-left-width: 3px; border-radius: var(--r-md); padding: 11px 13px; margin-bottom: 8px; }
+.ch-info { flex: 1; }
+.ch-name { font-size: 15px; font-weight: 600; }
+.ch-bija { font-size: 12.5px; color: var(--ink-dim); margin-top: 2px; letter-spacing: 0.02em; }
+.ch-gathers { font-size: 11.5px; color: var(--ink-faint); margin-top: 3px; }
+.ch-tone-btn { width: 46px; height: 46px; flex: 0 0 auto; border-radius: 50%; background: var(--bg-elev); border: 1px solid var(--border); font-size: 18px; cursor: pointer; }
+.ch-tone-btn:active { background: var(--bg-card); }
+
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: var(--bg-elev); border: 1px solid var(--azure-dim); color: var(--ink); padding: 10px 18px; border-radius: 999px; font-size: 13px; z-index: 80; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <button class="back-btn" id="back-btn">← portal</button>
+    <div class="brand"><div class="brand-name">Vocal Temple</div><div class="brand-sub">throat · breath · the voice finding coherence</div></div>
+  </div>
+  <div class="tabs" id="tabs">
+    <div class="tab active" data-tab="warmups">warmups</div>
+    <div class="tab" data-tab="daily">daily</div>
+    <div class="tab" data-tab="voice">pitch</div>
+    <div class="tab" data-tab="resonance">resonance</div>
+  </div>
+  <div id="view"></div>
+</div>
+
+<div class="tov" id="tov">
+  <div class="tov-name" id="tov-name"></div>
+  <div class="tov-time" id="tov-time">0:00</div>
+  <div class="tov-btns">
+    <button class="tov-btn" id="tov-cancel">cancel</button>
+    <button class="tov-btn done" id="tov-done">mark done</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var PRACTICES = [
+    // Breath foundation
+    { id:'diaphragm', cat:'Breath', name:'Diaphragmatic Breath', dur:300, stack:['breath','body'],
+      what:'The engine. The voice rides on breath; an unsupported voice strains the throat. This builds the low, belly-led support every other exercise rests on.',
+      how:'Hand on belly. Inhale silently through the nose — the belly expands, the chest stays quiet. Exhale slow and even. The throat does nothing; the belly does the work.',
+      watch:'Lifting the shoulders or chest on the inhale — that is shallow breathing. Keep it low. The breath drops in, it is not pulled in.' },
+    { id:'hiss', cat:'Breath', name:'The Hiss — Airflow Control', dur:240, stack:['breath','body'],
+      what:'Trains steady, controlled airflow — the foundation of sustained notes and long phrases.',
+      how:'Inhale low. Exhale on a steady "sss" — even, unwavering, as long as you can. The belly slowly draws in to keep the pressure constant. Repeat, extending the length.',
+      watch:'The hiss wobbling or fading means the support collapsed. Keep it level from start to finish.' },
+    // SOVT warmup
+    { id:'lip_trill', cat:'Warmup (SOVT)', name:'Lip Trills', dur:240, stack:['breath','body'],
+      what:'The gentlest, safest warmup there is — semi-occluded vocal tract work. Wakes the cords with zero strain.',
+      how:'Loose lips, blow air through them so they flutter — "brrrr." Add voice underneath. Glide it up and down your range like a motor. Keep it easy.',
+      watch:'If the trill keeps stalling, the lips are too tense or the airflow too weak. Loosen the face, push a little more air.' },
+    { id:'straw', cat:'Warmup (SOVT)', name:'Straw Phonation', dur:300, stack:['breath','body'],
+      what:'The vocal coach’s secret weapon. Phonating through a narrow channel balances the cords and resonance with almost no risk — the fastest way to a warm, free voice.',
+      how:'Hum a "voo" through a thin straw (or pursed lips). Sustain notes, then glide sirens up and down. Feel the gentle back-pressure at the lips. 5 minutes transforms the voice.',
+      watch:'Tension in the jaw or throat — the whole point is ease. If it feels effortful, you are pushing. Let the straw do the work.' },
+    { id:'humming', cat:'Warmup (SOVT)', name:'Humming', dur:240, stack:['breath','body','energy'],
+      what:'Resonance and gentle onset, plus vagus-nerve tone — the hum settles the nervous system as it wakes the voice.',
+      how:'Lips together, "mmm," easy. Feel the buzz on the lips and in the mask of the face. Glide up and down. Let the sound be forward, not stuck in the throat.',
+      watch:'A hum felt only in the throat is placed too far back. Bring the buzz forward to the lips and nose.' },
+    // Resonance / placement
+    { id:'ng', cat:'Resonance', name:'The "Ng" — Forward Placement', dur:240, stack:['breath','body'],
+      what:'The "ng" of "sing" finds the bright, forward placement that lets the voice carry without force.',
+      how:'Sing "ng" (tongue back, soft palate) on a comfortable note. Feel the buzz high in the face. Hold it, then open into "ee" and "ah" keeping the same forward placement.',
+      watch:'Losing the brightness when you open the vowel. Keep the resonance forward as the mouth opens.' },
+    { id:'mask', cat:'Resonance', name:'Mask Placement — "Nay Nay"', dur:180, stack:['breath','body'],
+      what:'A bright, slightly nasal "nay" drives the sound into the mask (cheekbones, nose) — the resonance that gives a voice ping and reach.',
+      how:'On a single note, sing "nay nay nay" with a bratty, forward tone. Then carry that placement into open singing. Five-note scales on "nay" climb the range cleanly.',
+      watch:'Pushing from the throat to get volume. The brightness comes from placement, not effort.' },
+    { id:'vowels', cat:'Resonance', name:'Vowel Shaping', dur:240, stack:['breath','body'],
+      what:'Even tone across all vowels — the difference between a voice that sounds consistent and one that wobbles between sounds.',
+      how:'On one held note, move slowly through "ee – eh – ah – oh – oo." Keep the volume, placement, and support identical as the vowel changes. Then reverse.',
+      watch:'The "ee" going thin and the "oo" going dark. Aim for one even color across all five.' },
+    // Range / agility
+    { id:'sirens', cat:'Range', name:'Sirens — Range Glides', dur:240, stack:['breath','body'],
+      what:'Stretches the full range and smooths the break between chest and head voice.',
+      how:'On an "oo" or a lip trill, glide from your lowest comfortable note to your highest and back — like a slow siren. Smooth, connected, no gear-changes.',
+      watch:'A crack or jump at the passaggio (the break). Glide through it gently; over weeks it smooths. Never force the top.' },
+    { id:'scales', cat:'Range', name:'Five-Note Scales', dur:300, stack:['breath','body'],
+      what:'Pitch accuracy and agility — do-re-mi-fa-sol and back, climbing semitone by semitone.',
+      how:'Pick a vowel or "nay." Sing a five-note scale up and down, then move the whole pattern up a half-step and repeat. Use the Pitch tab’s drone or scale to stay in tune.',
+      watch:'Sliding into notes instead of landing them. Aim for the centre of each pitch cleanly.' },
+    { id:'messa', cat:'Range', name:'Messa di Voce — Dynamic Control', dur:240, stack:['breath','body'],
+      what:'The master’s exercise: swell a single held note from soft to loud and back to soft, keeping it perfectly in tune. Total breath + cord control.',
+      how:'Sustain one comfortable note. Begin barely audible, swell smoothly to full, then taper back to nothing — all on one breath, pitch dead steady.',
+      watch:'The pitch rising as you get louder or sagging as you soften. Hold the centre while the volume moves.' },
+    // Throat / de-armor
+    { id:'jaw_release', cat:'Throat de-armor', name:'Jaw & Tongue Release', dur:180, stack:['body','healing'],
+      what:'A clenched jaw and a tight tongue strangle the voice. This is throat-chakra de-armoring — releasing the held tension that keeps the voice small.',
+      how:'Massage the jaw hinge with your fingers. Let the jaw hang loose, waggle it. Stretch the tongue out fully, then let it flop. Yawn wide several times.',
+      watch:'Holding tension you did not know was there. The voice cannot open through a locked jaw. Soften first, sing second.' },
+    { id:'yawn_sigh', cat:'Throat de-armor', name:'Yawn-Sigh — Larynx Release', dur:180, stack:['body','breath','healing'],
+      what:'Drops a high, squeezed larynx into a relaxed, open position — the open throat that lets sound pour instead of pinch.',
+      how:'Begin a yawn — feel the throat open wide and the larynx drop. On the release, let a relaxed "haaah" sigh fall from high to low. Repeat, savouring the openness.',
+      watch:'Re-tightening the throat the moment you make a real sound. Keep the yawn-space when you sing.' },
+    // Sacred / energetic
+    { id:'toning', cat:'Sacred voice', name:'Toning — Sustained Vowel', dur:300, stack:['breath','energy','healing'],
+      what:'A single sustained vowel held as pure vibration. Not a song — a tuning. Sustained tone raises vagal tone and floods the body with its own resonance.',
+      how:'Inhale low. On the exhale, release one open vowel ("ah" or "oh") — long, even, felt through the whole chest and skull. Let it go where it wants. Repeat for several minutes.',
+      watch:'Performing it. There is no audience. Let the tone be ugly, honest, alive — that is where it works.' },
+    { id:'bija_om', cat:'Sacred voice', name:'OM / Bija Chant', dur:300, stack:['breath','energy','healing'],
+      what:'Seed-sound chanting — OM, or the chakra bijas (LAM VAM RAM YAM HAM OM). The voice as an instrument of energy, not just words.',
+      how:'Chant OM slowly: the "ooo" in the belly, the "mmm" buzzing up to the crown. Or climb the bijas centre by centre, feeling each light up. Three rounds.',
+      watch:'Rushing. The power is in the sustain and the felt vibration, not the repetition count.' },
+    { id:'overtone', cat:'Sacred voice', name:'Overtone Singing', dur:300, stack:['breath','energy','healing'],
+      what:'Advanced. Shaping the mouth to amplify a single harmonic above a sustained drone — two notes from one throat. The deepest listening the voice can do.',
+      how:'Sustain a low, steady "ahh." Slowly shape the mouth from "ah" toward "ee" / "oo", moving the tongue. Listen for the whistling harmonic riding above the drone. Chase it, isolate it.',
+      watch:'Forcing it. The overtone is found by listening and tiny mouth changes, never by pushing. Patience over months.' },
+    { id:'free_song', cat:'Sacred voice', name:'Vocal Devotion — Free Singing', dur:600, stack:['body','breath','healing'],
+      what:'The point of all of it. No exercise, no judge — just the voice, free, singing whatever wants out. Where the throat work becomes the man who is willing to be heard.',
+      how:'Put on a track you love, or sing into silence. No rules, no critique. Let it be off-key, let it crack, let it be loud. Sing like no one is listening, because the unconcealment is the medicine.',
+      watch:'The inner critic that shrinks the voice back down. Notice it, and sing through it anyway. That is the whole work.' }
+  ];
+  var CAT_ORDER = ['Breath','Warmup (SOVT)','Resonance','Range','Throat de-armor','Sacred voice'];
+
+  var DAILY = [
+    { t:'Release', d:'Jaw, tongue, neck. Yawn-sigh a few times. Open the instrument before you play it.', secs:120 },
+    { t:'Breath', d:'Diaphragmatic breath + a few hisses. Find the low support.', secs:120 },
+    { t:'SOVT warmup', d:'Lip trills or straw phonation, gliding the range. The safe wake-up.', secs:300 },
+    { t:'Resonance', d:'Humming → "ng" → "nay". Bring the sound forward into the mask.', secs:180 },
+    { t:'Range', d:'Sirens, then five-note scales climbing by half-steps. Use the Pitch tab.', secs:300 },
+    { t:'Sing', d:'A song, or free devotion. Carry the warm, open, forward voice into real singing.', secs:300 }
+  ];
+
+  // pitch reference — C major across the comfortable male range
+  var PITCHES = [
+    {n:'C3',f:130.81},{n:'D3',f:146.83},{n:'E3',f:164.81},{n:'F3',f:174.61},
+    {n:'G3',f:196.00},{n:'A3',f:220.00},{n:'B3',f:246.94},{n:'C4',f:261.63}
+  ];
+
+  // The weave — vocal sounds for gathering energy. Seed syllable (bija) + vowel tone per centre,
+  // ascending C-major (root→crown) so chanting up the list rises the charge up the spine.
+  var CHAKRA_SOUNDS = [
+    { name:'Root · Muladhara',        color:'#c75a4d', bija:'LAM', vowel:'UH',  freq:130.81, gathers:'grounding, safety, the body',           where:'Earth Rooting · Zhan Zhuang' },
+    { name:'Sacral · Svadhisthana',   color:'#cf8447', bija:'VAM', vowel:'OO',  freq:146.83, gathers:'desire, creativity, the primal waters', where:'Beast cultivation · Water Qigong' },
+    { name:'Solar Plexus · Manipura', color:'#ccae50', bija:'RAM', vowel:'OH',  freq:164.81, gathers:'power, confidence, the inner sun',      where:'Magnetic field work · summoning' },
+    { name:'Heart · Anahata',         color:'#5aa96f', bija:'YAM', vowel:'AH',  freq:174.61, gathers:'love, devotion, connection',           where:'Worship · loving-kindness · free song' },
+    { name:'Throat · Vishuddha',      color:'#5b91cc', bija:'HAM', vowel:'EYE', freq:196.00, gathers:'voice, truth, expression',             where:'all of this temple · toning' },
+    { name:'Third Eye · Ajna',        color:'#8f7bd4', bija:'OM',  vowel:'AYE', freq:220.00, gathers:'intuition, insight, vision',           where:'meditation · microcosmic orbit' },
+    { name:'Crown · Sahasrara',       color:'#c2c8d8', bija:'silence / NG', vowel:'EEE', freq:246.94, gathers:'presence, the divine, unity', where:'the silent sit · the crown' }
+  ];
+
+  var KEY = 'vocal_v1';
+  var state = load();
+  var tab = state.lastTab || 'warmups';
+  var openId = null;
+  function load(){ try{ var r=localStorage.getItem(KEY); if(r){var p=JSON.parse(r); if(!p.sessions)p.sessions=[]; return p;} }catch(e){} return { sessions:[], lastTab:'warmups' }; }
+  function save(){ state.lastTab=tab; try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+  function el(t,c,h){ var n=document.createElement(t); if(c)n.className=c; if(h!=null)n.innerHTML=h; return n; }
+  function esc(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  var toastTimer; function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(function(){t.classList.remove('show');},1600); }
+  function buzz(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms);}catch(e){} }
+  function find(id){ for(var i=0;i<PRACTICES.length;i++) if(PRACTICES[i].id===id) return PRACTICES[i]; return null; }
+  function relDate(ts){ var d=Math.floor((Date.now()-ts)/86400000); if(d<=0)return 'today'; if(d===1)return 'yesterday'; if(d<7)return d+'d ago'; return new Date(ts).toLocaleDateString(undefined,{month:'short',day:'numeric'}); }
+
+  // ---- web audio ----
+  var actx=null, drone=null, droneNote=null;
+  function audio(){ if(!actx){ try{ actx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(actx&&actx.state==='suspended')actx.resume(); return actx; }
+  function tone(freq, dur){ var a=audio(); if(!a)return; var o=a.createOscillator(),g=a.createGain(); o.type='sine'; o.frequency.value=freq; o.connect(g); g.connect(a.destination); var t=a.currentTime; g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.4,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+(dur||2)); o.start(t); o.stop(t+(dur||2)+0.05); }
+  function bell(){ tone(528,1.2); }
+  function startDrone(p){ var a=audio(); if(!a)return; stopDrone(); var o=a.createOscillator(),g=a.createGain(); o.type='triangle'; o.frequency.value=p.f; o.connect(g); g.connect(a.destination); var t=a.currentTime; g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.28,t+0.4); o.start(t); drone={o:o,g:g}; droneNote=p.n; }
+  function stopDrone(){ if(drone){ try{ var t=actx.currentTime; drone.g.gain.exponentialRampToValueAtTime(0.0001,t+0.2); drone.o.stop(t+0.25); }catch(e){} drone=null; droneNote=null; } }
+
+  // ---- render ----
+  function render(){
+    var v=document.getElementById('view'); v.innerHTML='';
+    document.querySelectorAll('.tab').forEach(function(t){ t.classList.toggle('active', t.dataset.tab===tab); });
+    if(tab==='warmups') renderWarmups(v);
+    else if(tab==='daily') renderDaily(v);
+    else if(tab==='voice') renderVoice(v);
+    else renderResonance(v);
+    window.scrollTo(0,0);
+  }
+
+  function renderWarmups(v){
+    CAT_ORDER.forEach(function(cat){
+      var group=PRACTICES.filter(function(p){return p.cat===cat;});
+      if(!group.length) return;
+      v.appendChild(el('div','eyebrow cat', cat));
+      group.forEach(function(p){ v.appendChild(card(p)); });
+    });
+    if(state.sessions.length){
+      v.appendChild(el('div','eyebrow','recently sung'));
+      state.sessions.slice(0,6).forEach(function(s){ var r=el('div','hint', s.name+' · '+relDate(s.at)); r.style.marginTop='2px'; v.appendChild(r); });
+    }
+  }
+
+  function card(p){
+    var c=el('div','pcard'+(openId===p.id?' open':''));
+    var head=el('div','pcard-head');
+    head.appendChild(el('div','pc-name', esc(p.name)));
+    head.appendChild(el('div','pc-dur', Math.round(p.dur/60)+' min'));
+    head.addEventListener('click', function(){ openId=(openId===p.id?null:p.id); render(); });
+    c.appendChild(head);
+    var body=el('div','pcard-body');
+    body.appendChild(sec('what it is', p.what));
+    body.appendChild(sec('how', p.how));
+    body.appendChild(sec('watch for', p.watch));
+    var acts=el('div','pc-actions');
+    var begin=el('button','btn','begin · '+Math.round(p.dur/60)+' min');
+    begin.addEventListener('click', function(e){ e.stopPropagation(); startTimer(p); });
+    acts.appendChild(begin);
+    var log=el('button','btn ghost','log only');
+    log.addEventListener('click', function(e){ e.stopPropagation(); logSession(p); });
+    acts.appendChild(log);
+    body.appendChild(acts);
+    c.appendChild(body);
+    return c;
+  }
+  function sec(label,text){ var s=el('div','pc-section'); s.appendChild(el('div','pc-label',label)); s.appendChild(el('div','pc-text', esc(text))); return s; }
+
+  function logSession(p){ state.sessions.unshift({ id:p.id, name:p.name, stack:p.stack||['body','breath'], at:Date.now() }); if(state.sessions.length>60)state.sessions.length=60; save(); buzz(20); toast('logged — '+p.name); render(); }
+
+  function renderDaily(v){
+    v.appendChild(el('div','hint','The warm-up sequence — body first, always. ~20 minutes from cold voice to free singing.'));
+    DAILY.forEach(function(f,i){
+      var rc=el('div','row-card');
+      rc.appendChild(el('div','t', (i+1)+'. '+esc(f.t)+' · '+Math.round(f.secs/60)+' min'));
+      rc.appendChild(el('div','p', esc(f.d)));
+      v.appendChild(rc);
+    });
+    v.appendChild(el('div','hint','The voice is the last instrument to warm and the first to betray a cold start. Never skip the release.'));
+  }
+
+  function renderVoice(v){
+    v.appendChild(el('div','eyebrow','reference pitch — tap to hear, match by ear'));
+    var grid=el('div','pitch-grid');
+    PITCHES.forEach(function(p){
+      var b=el('div','pitch-btn');
+      b.innerHTML='<div class="pitch-note">'+esc(p.n)+'</div><div class="pitch-hz">'+p.f.toFixed(0)+' Hz</div>';
+      b.addEventListener('click', function(){ tone(p.f, 2.4); buzz(10); });
+      grid.appendChild(b);
+    });
+    v.appendChild(grid);
+    var scaleBtn=el('button','btn','▶ play C major scale');
+    scaleBtn.style.marginTop='10px';
+    scaleBtn.addEventListener('click', function(){ audio(); PITCHES.forEach(function(p,i){ setTimeout(function(){ tone(p.f,0.5); }, i*420); }); });
+    v.appendChild(scaleBtn);
+
+    v.appendChild(el('div','eyebrow','drone — hold a root to sing over'));
+    var dc=el('div','drone-card');
+    dc.appendChild(el('div','drone-now', droneNote ? droneNote+' droning' : '—'));
+    dc.appendChild(el('div','drone-label', droneNote ? 'tap the note again to stop' : 'pick a root note'));
+    var pick=el('div','drone-pick');
+    PITCHES.forEach(function(p){
+      var o=el('div','drone-opt'+(droneNote===p.n?' on':''), esc(p.n));
+      o.addEventListener('click', function(){ if(droneNote===p.n){ stopDrone(); } else { startDrone(p); } renderVoice(v); });
+      pick.appendChild(o);
+    });
+    dc.appendChild(pick);
+    v.appendChild(dc);
+    v.appendChild(el('div','hint','Sing scales and intervals against the drone — your ear learns the centre of each pitch by holding it against a fixed root.'));
+  }
+
+  function renderResonance(v){
+    v.appendChild(el('div','hint','Sound gathers energy. Each centre has a seed syllable (bija) and a vowel tone — chant along with the pitch and the charge draws to that centre. Tap a centre to hear its note; chant from root to crown to feel it rise.'));
+    v.appendChild(el('div','eyebrow cat','the seven centres'));
+    CHAKRA_SOUNDS.forEach(function(c){
+      var row=el('div','ch-row'); row.style.borderLeftColor=c.color;
+      var info=el('div','ch-info');
+      info.innerHTML='<div class="ch-name" style="color:'+c.color+'">'+esc(c.name)+'</div>'+
+        '<div class="ch-bija">chant <b>'+esc(c.bija)+'</b> &middot; vowel &ldquo;'+esc(c.vowel)+'&rdquo;</div>'+
+        '<div class="ch-gathers">gathers '+esc(c.gathers)+' &middot; '+esc(c.where)+'</div>';
+      row.appendChild(info);
+      var btn=el('button','ch-tone-btn','♪'); btn.style.borderColor=c.color; btn.style.color=c.color;
+      btn.addEventListener('click', function(){ tone(c.freq, 2.6); buzz(12); });
+      row.appendChild(btn);
+      v.appendChild(row);
+    });
+    var rise=el('button','btn','▶ chant the rising sequence — root to crown');
+    rise.style.marginTop='8px';
+    rise.addEventListener('click', function(){ audio(); CHAKRA_SOUNDS.forEach(function(c,i){ setTimeout(function(){ tone(c.freq, 0.95); }, i*1000); }); buzz(20); });
+    v.appendChild(rise);
+    v.appendChild(el('div','hint','This is the microcosmic orbit sung — the charge climbing the spine, centre by centre. Pair it with breath: the inhale draws up, the tone releases on the exhale. The colours are the same ones the portal wears.'));
+  }
+
+  // ---- timer ----
+  var tIvl=null, tLeft=0, tP=null;
+  function startTimer(p){
+    tP=p; tLeft=p.dur;
+    document.getElementById('tov-name').textContent=p.name; paint();
+    document.getElementById('tov').classList.add('show'); audio();
+    clearInterval(tIvl);
+    tIvl=setInterval(function(){ tLeft--; paint();
+      if(tLeft>5 && p.dur>120 && tLeft===Math.floor(p.dur/2)){ tone(660,0.25); buzz(30); }
+      if(tLeft<=0){ clearInterval(tIvl); bell(); buzz([60,40,80]); finish(true); }
+    },1000);
+  }
+  function paint(){ var m=Math.floor(Math.max(tLeft,0)/60),s=Math.max(tLeft,0)%60; document.getElementById('tov-time').textContent=m+':'+(s<10?'0':'')+s; }
+  function finish(done){ document.getElementById('tov').classList.remove('show'); clearInterval(tIvl); if(done&&tP)logSession(tP); tP=null; }
+  document.getElementById('tov-cancel').addEventListener('click', function(){ finish(false); });
+  document.getElementById('tov-done').addEventListener('click', function(){ finish(true); });
+
+  document.getElementById('tabs').addEventListener('click', function(e){ var t=e.target.closest('.tab'); if(!t)return; if(tab!=='voice') stopDrone(); tab=t.dataset.tab; save(); render(); });
+  document.getElementById('back-btn').addEventListener('click', function(){ stopDrone(); try{ window.parent.postMessage('close-temple','*'); }catch(e){} try{ window.location.href='index.html'; }catch(e){} });
+  render();
+})();
+</script>
+</body>
+</html>

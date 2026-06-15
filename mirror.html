@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Weekly Mirror</title>
+<style>
+:root {
+  --bg: #0a0908; --bg-elev: #14110f; --bg-card: #1a1614;
+  --border: #2a2420; --border-soft: #1f1a17;
+  --ink: #e8e1d4; --ink-dim: #9a8f80; --ink-faint: #5e554a;
+  --pewter: #9aa2b4; --pewter-dim: #5e6473;
+  --r-sm: 8px; --r-md: 14px; --r-lg: 20px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { background: var(--bg); color: var(--ink); }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; line-height: 1.55;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  max-width: 680px; margin: 0 auto; min-height: 100vh; }
+.wrap { padding: 18px 16px 80px; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.back-btn { font-size: 13px; color: var(--ink-dim); background: var(--bg-card); border: 1px solid var(--border); border-radius: 999px; padding: 7px 14px; cursor: pointer; }
+.back-btn:active { color: var(--ink); border-color: var(--ink-dim); }
+.brand { text-align: right; }
+.brand-name { font-size: 20px; font-weight: 700; color: var(--pewter); letter-spacing: -0.01em; }
+.brand-sub { font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); }
+
+.total { text-align: center; margin: 24px 0 8px; }
+.total-num { font-size: 52px; font-weight: 700; color: var(--pewter); font-variant-numeric: tabular-nums; line-height: 1; }
+.total-label { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-faint); margin-top: 6px; }
+
+.reflection { background: var(--bg-elev); border-left: 2px solid var(--pewter-dim); border-radius: 0 var(--r-md) var(--r-md) 0; padding: 14px 16px; margin: 18px 0; font-size: 14.5px; color: var(--ink-dim); line-height: 1.6; font-style: italic; }
+.reflection b { color: var(--ink); font-style: normal; font-weight: 600; }
+
+.eyebrow { font-size: 10.5px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-faint); margin: 24px 0 10px; }
+
+.t-row { display: grid; grid-template-columns: 14px 1fr auto; gap: 12px; align-items: center; padding: 11px 4px; border-bottom: 1px solid var(--border-soft); }
+.t-dot { width: 10px; height: 10px; border-radius: 50%; }
+.t-name { font-size: 14.5px; }
+.t-name.quiet { color: var(--ink-faint); }
+.t-count { font-size: 14px; font-variant-numeric: tabular-nums; color: var(--ink-dim); }
+.t-count.lead { color: var(--pewter); font-weight: 700; }
+.t-count.zero { color: var(--ink-faint); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.chip { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--border); }
+.chip.fed { color: var(--ink); border-color: var(--pewter-dim); background: var(--bg-elev); }
+.chip.quiet { color: var(--ink-faint); opacity: 0.5; }
+
+.hint { font-size: 12px; color: var(--ink-faint); font-style: italic; margin-top: 10px; }
+.empty { text-align: center; color: var(--ink-faint); font-style: italic; font-size: 14px; padding: 30px 10px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <button class="back-btn" id="back-btn">← portal</button>
+    <div class="brand"><div class="brand-name">The Weekly Mirror</div><div class="brand-sub">what the last 7 days actually made</div></div>
+  </div>
+  <div id="view"></div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var TEMPLES = [
+    { key:'body_temple_v1',     name:'Body Temple',     color:'#c75a4d' },
+    { key:'inner_temple_v1',    name:'Inner Temple',    color:'#8f7bd4' },
+    { key:'beast_temple_v1',    name:'Beast Temple',    color:'#cf8447' },
+    { key:'magnetic_temple_v1', name:'Magnetic Temple', color:'#ccae50' },
+    { key:'grimoire_v1',        name:'Healing Grimoire',color:'#c2c8d8' },
+    { key:'vocal_v1',           name:'Vocal Temple',    color:'#6fa8d8' }
+  ];
+  var STACKS = ['body','breath','energy','field','healing','primal'];
+  var INNER_CAT_STACK = { breath:['breath'], meditation:['energy'], movement:['body','breath'], vocal:['body','breath'], ritual:['energy','healing'] };
+  var GRIM_STACK = {
+    zhan_zhuang:['energy','body'], water_qigong:['energy','body'], ba_duan_jin:['energy','body'], micro_orbit:['energy','breath'],
+    laogong_ball:['energy'], reiki_self:['healing'], reiki_distance:['healing'], pranic_protocol:['healing','energy'],
+    hand_sensitize:['energy','healing'], silver_shell:['field'], morning_ground:['body','field'], aura_comb:['field','healing'],
+    closing_field:['field'], cord_cutting:['healing','field'], salt_bath:['healing'], middle_pillar:['energy','healing'], solve_coagula:['healing']
+  };
+
+  function el(t,c,h){ var n=document.createElement(t); if(c)n.className=c; if(h!=null)n.innerHTML=h; return n; }
+  function esc(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function read(key){ try{ var o=JSON.parse(localStorage.getItem(key)||'{}'); return o.sessions||[]; }catch(e){ return []; } }
+  function tsOf(s){ if(s.at)return Date.parse(s.at); if(s.date)return Date.parse(s.date+'T12:00:00'); return 0; }
+
+  function compute(){
+    var cutoff = Date.now() - 7*86400000;
+    var perTemple = {}; var total = 0; var fed = {};
+    var libCache = {};
+    function innerLib(){ if(libCache.inner) return libCache.inner; var m={}; try{ var o=JSON.parse(localStorage.getItem('inner_temple_v1')||'{}'); (o.library||[]).forEach(function(e){ m[e.id]=e; }); }catch(e){} libCache.inner=m; return m; }
+
+    TEMPLES.forEach(function(t){
+      var sessions = read(t.key).filter(function(s){ var ts=tsOf(s); return ts && ts>=cutoff; });
+      perTemple[t.key] = sessions.length;
+      total += sessions.length;
+      sessions.forEach(function(s){
+        var stacks = [];
+        if(t.key==='body_temple_v1'){ stacks=['body']; if(s.type==='training') stacks.push('breath'); }
+        else if(t.key==='inner_temple_v1'){ var e=innerLib()[s.practiceId]; stacks = e ? (INNER_CAT_STACK[e.category]||['energy']) : ['energy']; }
+        else if(t.key==='grimoire_v1'){ stacks = s.stack || GRIM_STACK[s.id] || ['healing']; }
+        else { stacks = s.stack || []; }
+        stacks.forEach(function(k){ fed[k]=true; });
+      });
+    });
+    return { perTemple:perTemple, total:total, fed:fed };
+  }
+
+  function reflection(data){
+    if(data.total===0){
+      return 'A quiet week in the logs. The mirror shows nothing tended — which may mean you lived it without the app, or that the practice waited for you. Either is information, not a verdict. The wave returns.';
+    }
+    // leader + quiet
+    var lead=null, leadN=-1, quiet=[];
+    TEMPLES.forEach(function(t){ var n=data.perTemple[t.key]; if(n>leadN){ leadN=n; lead=t; } if(n===0) quiet.push(t.name.replace(' Temple','').replace('Healing ','')); });
+    var quietStacks = STACKS.filter(function(k){ return !data.fed[k]; });
+    var parts = [];
+    parts.push('<b>' + esc(lead.name) + '</b> led the week with ' + leadN + (leadN===1?' practice':' practices') + '.');
+    if(quiet.length){
+      parts.push(' ' + esc(quiet.join(quiet.length===2?' and ':', ')) + (quiet.length===1?' stayed dark':' stayed dark') + '.');
+    } else {
+      parts.push(' Every temple got tended.');
+    }
+    if(quietStacks.length && quietStacks.length<6){
+      parts.push(' The <b>' + esc(quietStacks.join(', ')) + '</b> ' + (quietStacks.length===1?'line':'lines') + ' went unfed — worth a glance.');
+    }
+    // closing, rotates daily
+    var closings = [
+      'No score here. Just the shape your week actually made, handed back to you.',
+      'The body keeps an honest ledger. This is it — texture, not judgment.',
+      'See the pattern, then let your sacral decide what next week asks for.',
+      'What led, led for a reason. What went quiet is not a failure — it is a question.',
+      'The mirror does not scold. It only shows. The rest is yours.'
+    ];
+    var ci = Math.floor(Date.now()/86400000) % closings.length;
+    parts.push(' ' + closings[ci]);
+    return parts.join('');
+  }
+
+  function render(){
+    var v=document.getElementById('view'); v.innerHTML='';
+    var data=compute();
+
+    var total=el('div','total');
+    total.appendChild(el('div','total-num', data.total));
+    total.appendChild(el('div','total-label', data.total===1?'practice tended this week':'practices tended this week'));
+    v.appendChild(total);
+
+    if(data.total===0){
+      v.appendChild(el('div','reflection', reflection(data)));
+      v.appendChild(el('div','empty','Open a temple, run one practice, and the mirror will have something to show you.'));
+      return;
+    }
+
+    v.appendChild(el('div','reflection', reflection(data)));
+
+    v.appendChild(el('div','eyebrow','by temple'));
+    var leadN=Math.max.apply(null, TEMPLES.map(function(t){return data.perTemple[t.key];}));
+    TEMPLES.forEach(function(t){
+      var n=data.perTemple[t.key];
+      var row=el('div','t-row');
+      var dot=el('div','t-dot'); dot.style.background = n? t.color : 'var(--ink-faint)'; dot.style.opacity = n? '1':'0.4';
+      row.appendChild(dot);
+      row.appendChild(el('div','t-name'+(n?'':' quiet'), esc(t.name)));
+      row.appendChild(el('div','t-count'+(n===0?' zero':(n===leadN?' lead':'')), n));
+      v.appendChild(row);
+    });
+
+    v.appendChild(el('div','eyebrow','fuel lines fed'));
+    var chips=el('div','chips');
+    STACKS.forEach(function(k){
+      chips.appendChild(el('div','chip '+(data.fed[k]?'fed':'quiet'), k));
+    });
+    v.appendChild(chips);
+    v.appendChild(el('div','hint','Fed = touched at least once in the last 7 days. A quiet line is a nudge, never a scold.'));
+  }
+
+  document.getElementById('back-btn').addEventListener('click', function(){ try{ window.parent.postMessage('close-temple','*'); }catch(e){} try{ window.location.href='index.html'; }catch(e){} });
+  render();
+})();
+</script>
+</body>
+</html>

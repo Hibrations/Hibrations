@@ -43,6 +43,10 @@
   --c-throat: #5b91cc;  --c-throat-dim: #395d84;
   --c-brow:   #8f7bd4;  --c-brow-dim:   #574a8c;
   --c-crown:  #c2c8d8;  --c-crown-dim:  #767c8e;
+  /* additional surface accents */
+  --azure: #6fa8d8;  --azure-dim: #3f6e98;
+  --mystic: #a86fc0; --mystic-dim: #6f4082;
+  --pewter: #9aa2b4; --pewter-dim: #5e6473;
   --pull: #7d8fc7;
   --push: #c78f8f;
   --hinge: #a89b6b;
@@ -244,6 +248,9 @@ nav.tab-bar {
 .temple-card.c-throat { border-color: var(--c-throat-dim); } .temple-card.c-throat:active { border-color: var(--c-throat); } .temple-name.c-throat { color: var(--c-throat); }
 .temple-card.c-brow   { border-color: var(--c-brow-dim); }   .temple-card.c-brow:active   { border-color: var(--c-brow); }   .temple-name.c-brow   { color: var(--c-brow); }
 .temple-card.c-crown  { border-color: var(--c-crown-dim); }  .temple-card.c-crown:active  { border-color: var(--c-crown); }  .temple-name.c-crown  { color: var(--c-crown); }
+.temple-card.azure  { border-color: var(--azure-dim); }  .temple-card.azure:active  { border-color: var(--azure); }  .temple-name.azure  { color: var(--azure); }
+.temple-card.mystic { border-color: var(--mystic-dim); } .temple-card.mystic:active { border-color: var(--mystic); } .temple-name.mystic { color: var(--mystic); }
+.temple-card.pewter { border-color: var(--pewter-dim); } .temple-card.pewter:active { border-color: var(--pewter); } .temple-name.pewter { color: var(--pewter); }
 .temple-chakra { font-size: 11px; margin-right: 5px; opacity: 0.9; }
 .temple-name { font-size: 14px; font-weight: 500; letter-spacing: 0.02em; margin-bottom: 4px; }
 .temple-name.gold { color: var(--gold); }
@@ -616,6 +623,7 @@ nav.tab-bar {
 .completions-beast { color: var(--c-sacral); background: rgba(207,132,71,0.18); }
 .completions-magnetic { color: var(--c-solar); background: rgba(204,174,80,0.18); }
 .completions-grimoire { color: var(--c-crown); background: rgba(194,200,216,0.16); }
+.completions-vocal { color: var(--azure); background: rgba(111,168,216,0.16); }
 
 /* Evening closing card */
 .closing-card {
@@ -702,6 +710,7 @@ nav.tab-bar {
 .history-beast { color: var(--c-sacral); background: rgba(207,132,71,0.18); }
 .history-magnetic { color: var(--c-solar); background: rgba(204,174,80,0.18); }
 .history-grimoire { color: var(--c-crown); background: rgba(194,200,216,0.16); }
+.history-vocal { color: var(--azure); background: rgba(111,168,216,0.16); }
 .history-stack {
   display: flex; gap: 4px; flex-wrap: wrap;
   margin-top: 6px; margin-left: 64px;
@@ -1074,6 +1083,15 @@ const Shell = {
       return;
     } else if (app === 'grimoire') {
       Shell.openTemple('healing_grimoire.html', 'healing grimoire');
+      return;
+    } else if (app === 'vocal') {
+      Shell.openTemple('vocal.html', 'vocal temple');
+      return;
+    } else if (app === 'tarot') {
+      Shell.openTemple('tarot.html', 'tarot');
+      return;
+    } else if (app === 'mirror') {
+      Shell.openTemple('mirror.html', 'the weekly mirror');
       return;
     }
     window.scrollTo(0, 0);
@@ -1693,6 +1711,15 @@ const Portal = (function() {
       });
     } catch (e) {}
 
+    // Vocal Temple \u2014 cultivation of the throat. Sessions carry a stack array (body/breath, +energy/healing for sacred voice).
+    try {
+      const vocal = JSON.parse(localStorage.getItem('vocal_v1') || '{}');
+      (vocal.sessions || []).forEach(s => {
+        const ts = tsOf(s); if (!ts) return;
+        (s.stack || ['body','breath']).forEach(k => touch(k, ts));
+      });
+    } catch (e) {}
+
     const brightness = {};
     Object.keys(last).forEach(k => {
       const ts = last[k];
@@ -1946,6 +1973,19 @@ const Portal = (function() {
       });
     } catch (e) {}
 
+    // Vocal Temple
+    try {
+      const vocal = JSON.parse(localStorage.getItem('vocal_v1') || '{}');
+      (vocal.sessions || []).forEach(s => {
+        if (sessionDateOf(s) !== today) return;
+        out.push({
+          source: 'vocal',
+          name: s.name || 'vocal practice',
+          ts: tsOf(s)
+        });
+      });
+    } catch (e) {}
+
     out.sort((a, b) => a.ts - b.ts);
     return out;
   }
@@ -2125,6 +2165,20 @@ const Portal = (function() {
           source: 'grimoire',
           name: s.name || 'healing practice',
           stack: s.stack || (p && p.stack) || ['healing']
+        });
+      });
+    } catch (e) {}
+
+    // Vocal Temple
+    try {
+      const vocal = JSON.parse(localStorage.getItem('vocal_v1') || '{}');
+      (vocal.sessions || []).forEach(s => {
+        const ts = tsOf(s); if (!ts || ts < cutoff) return;
+        out.push({
+          ts: ts,
+          source: 'vocal',
+          name: s.name || 'vocal practice',
+          stack: s.stack || ['body','breath']
         });
       });
     } catch (e) {}
@@ -2982,10 +3036,13 @@ const Portal = (function() {
     mkCard('c-brow',   '💜', 'Inner Temple',       'breath · meditation · daily', 'inner');
     mkCard('c-root',   '🔴', 'Body Temple',        'training · vessel', 'body');
     mkCard('c-crown',  '🤍', 'Healing Grimoire',   'qi · reiki · prana', 'grimoire');
+    mkCard('azure',    '🎙️', 'Vocal Temple',       'breath · voice · range', 'vocal');
     mkCard('c-solar',  '💛', 'Magnetic Temple',    'charge · dial · field', 'magnetic');
     mkCard('c-sacral', '🧡', 'Beast Temple',       'primal · field · aura', 'beast');
     mkCard('c-throat', '💙', 'Hibrations',         'capture · craft · ship', 'hibrations');
     mkCard('c-heart',  '💚', 'Strings &amp; Soul', 'ukulele · guitar', 'strings');
+    mkCard('mystic',   '🔮', 'Tarot',              'draw · deck · card XIV', 'tarot');
+    mkCard('pewter',   '🪞', 'The Weekly Mirror',  'the week, reflected', 'mirror');
     view.appendChild(grid);
 
     const heart = document.createElement('div');

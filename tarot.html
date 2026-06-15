@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tarot — The Integration</title>
+<style>
+:root {
+  --bg: #0a0908; --bg-elev: #14110f; --bg-card: #1a1614;
+  --border: #2a2420; --border-soft: #1f1a17;
+  --ink: #e8e1d4; --ink-dim: #9a8f80; --ink-faint: #5e554a;
+  --mystic: #a86fc0; --mystic-dim: #6f4082; --mystic-faint: #3d2348;
+  --gold: #c89060; --crimson: #c0584c;
+  --r-sm: 8px; --r-md: 14px; --r-lg: 20px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { background: var(--bg); color: var(--ink); }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; line-height: 1.55;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  max-width: 680px; margin: 0 auto; min-height: 100vh; }
+.wrap { padding: 18px 16px 80px; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.back-btn { font-size: 13px; color: var(--ink-dim); background: var(--bg-card); border: 1px solid var(--border); border-radius: 999px; padding: 7px 14px; cursor: pointer; }
+.back-btn:active { color: var(--ink); border-color: var(--ink-dim); }
+.brand { text-align: right; }
+.brand-name { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; background: linear-gradient(110deg, var(--mystic), var(--gold)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.brand-sub { font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); }
+.tabs { display: flex; gap: 8px; margin: 18px 0; }
+.tab { flex: 1; text-align: center; font-size: 13px; padding: 9px 6px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-card); color: var(--ink-dim); cursor: pointer; }
+.tab.active { color: var(--ink); border-color: var(--mystic-dim); background: var(--bg-elev); }
+.eyebrow { font-size: 10.5px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-faint); margin: 22px 0 10px; }
+.eyebrow:first-child { margin-top: 2px; }
+.hint { font-size: 12px; color: var(--ink-faint); font-style: italic; margin-top: 8px; }
+
+.btn { width: 100%; padding: 13px; border-radius: var(--r-md); font-size: 14px; font-weight: 600; border: 1px solid var(--mystic-dim); background: var(--mystic-faint); color: var(--ink); cursor: pointer; margin-top: 8px; }
+.btn:active { background: var(--mystic-dim); }
+.btn.ghost { background: var(--bg-card); border-color: var(--border); color: var(--ink-dim); }
+
+/* a drawn card */
+.card-face { background: linear-gradient(180deg, var(--bg-card), #181320); border: 1px solid var(--mystic-dim); border-radius: var(--r-lg); padding: 22px 18px; text-align: center; margin-top: 6px; }
+.card-face.integration { border-color: var(--gold); background: linear-gradient(180deg, #1c1712, #1a1320); }
+.card-num { font-size: 12px; letter-spacing: 0.3em; color: var(--mystic); }
+.card-name { font-size: 24px; font-weight: 700; margin: 6px 0 14px; }
+.card-glyph { font-size: 40px; line-height: 1; margin-bottom: 12px; }
+.card-up { font-size: 14.5px; color: var(--ink); line-height: 1.6; }
+.card-shadow { font-size: 13px; color: var(--ink-dim); margin-top: 12px; }
+.card-shadow b { color: var(--crimson); font-weight: 600; letter-spacing: 0.04em; }
+.card-prompt { font-size: 14px; font-style: italic; color: var(--mystic); margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+
+/* three-card spread */
+.spread { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.spread-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-md); padding: 13px 15px; }
+.spread-pos { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--mystic); }
+.spread-name { font-size: 16px; font-weight: 600; margin: 2px 0 4px; }
+.spread-up { font-size: 13px; color: var(--ink-dim); }
+
+/* deck list */
+.deck-row { display: flex; align-items: center; gap: 12px; padding: 11px 4px; border-bottom: 1px solid var(--border-soft); cursor: pointer; }
+.deck-row:active { background: var(--bg-elev); }
+.deck-num { font-size: 12px; color: var(--ink-faint); min-width: 34px; letter-spacing: 0.1em; }
+.deck-name { font-size: 14.5px; font-weight: 500; }
+.deck-name.integration { color: var(--gold); }
+.deck-body { display: none; padding: 4px 4px 14px 50px; }
+.deck-row-wrap.open .deck-body { display: block; }
+.deck-up { font-size: 13.5px; color: var(--ink-dim); }
+.deck-prompt { font-size: 13px; font-style: italic; color: var(--mystic); margin-top: 8px; }
+
+/* card XIV page */
+.xiv-hero { text-align: center; padding: 10px 0 4px; }
+.xiv-flames { font-size: 44px; letter-spacing: 6px; }
+.xiv-title { font-size: 22px; font-weight: 700; margin-top: 8px; background: linear-gradient(110deg, var(--gold), var(--crimson)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.xiv-sub { font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-faint); margin-top: 4px; }
+.xiv-block { background: var(--bg-card); border-left: 2px solid var(--gold); border-radius: 0 var(--r-md) var(--r-md) 0; padding: 14px 16px; margin-top: 14px; }
+.xiv-label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-bottom: 5px; }
+.xiv-text { font-size: 14px; color: var(--ink-dim); line-height: 1.62; }
+
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: var(--bg-elev); border: 1px solid var(--mystic-dim); color: var(--ink); padding: 10px 18px; border-radius: 999px; font-size: 13px; z-index: 80; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <button class="back-btn" id="back-btn">← portal</button>
+    <div class="brand"><div class="brand-name">Tarot</div><div class="brand-sub">the major arcana · the integration</div></div>
+  </div>
+  <div class="tabs" id="tabs">
+    <div class="tab active" data-tab="draw">draw</div>
+    <div class="tab" data-tab="deck">the deck</div>
+    <div class="tab" data-tab="xiv">card XIV</div>
+  </div>
+  <div id="view"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var DECK = [
+    { n:0, name:'The Fool', g:'🌅', up:'The leap. Beginnings, innocence, the step off the cliff with the sun on your face — trust before proof.', sh:'recklessness; refusing to look down; the leap taken to escape rather than to begin.', q:'Where is life asking you to leap before you feel ready?' },
+    { n:1, name:'The Magician', g:'🜍', up:'As above, so below. You already hold every tool. The will that turns intention into matter.', sh:'manipulation; scattered power; all talk, no transmutation.', q:'What could you begin right now with what you already have?' },
+    { n:2, name:'The High Priestess', g:'🌙', up:'The veil and the inner knowing — the Pisces-moon depths. What you sense before you can prove it.', sh:'intuition ignored; secrets kept from yourself.', q:'What does your body already know that your mind won’t admit?' },
+    { n:3, name:'The Empress', g:'🌿', up:'Venus, abundance, the sensual creative womb. Pleasure as generativity — let it grow.', sh:'smothering; creative block; neglect of the senses.', q:'What wants to be nurtured into form right now?' },
+    { n:4, name:'The Emperor', g:'🜨', up:'Structure, the Capricorn builder, the throne. The order that protects the fire.', sh:'rigidity; domination; the tyrant father.', q:'Where do you need a firmer container, not more fire?' },
+    { n:5, name:'The Hierophant', g:'🔑', up:'Lineage, the teacher, the tradition you study — the mystery school.', sh:'dogma; conformity; outsourcing your truth to an authority.', q:'Whose map are you following — and is it still yours?' },
+    { n:6, name:'The Lovers', g:'🜔', up:'Union, the choice of the heart, two frequencies becoming a field. Sacred eros, alignment.', sh:'disharmony; choosing from fear; split values.', q:'What does love — not fear — actually choose here?' },
+    { n:7, name:'The Chariot', g:'🜂', up:'Will harnessing opposing forces, the forward drive. Victory by holding the reins.', sh:'force without direction; burnout; the ego at the wheel.', q:'Are the horses pulling together, or against each other?' },
+    { n:8, name:'Strength', g:'🦁', up:'The gentle hand on the lion. Power through softness — the primal led by love, not whipped by force.', sh:'self-doubt; suppression; brute force mistaken for strength.', q:'What in you needs taming with tenderness, not a whip?' },
+    { n:9, name:'The Hermit', g:'🏮', up:'The sensual hermit’s lantern. Withdrawal to find the inner light — then the return to share it.', sh:'isolation; hiding; refusing to come back out.', q:'Is this solitude cultivation — or is it hiding?' },
+    { n:10, name:'Wheel of Fortune', g:'🎡', up:'The turning. Fate and cycle, the moment shifting. Ride the wave; the calm follows.', sh:'resisting change; victimhood; clinging to the high point.', q:'What is turning that you’re trying to hold still?' },
+    { n:11, name:'Justice', g:'⚖️', up:'The blade and the scales — truth, consequence, action aligned with value. Aletheia’s edge.', sh:'avoidance; dishonesty; the imbalance you won’t correct.', q:'Where is your life out of true with what you know?' },
+    { n:12, name:'The Hanged Man', g:'🜄', up:'The willing surrender, the inverted view, the pause that reveals. Letting go to see anew.', sh:'stalling; martyrdom; suspension dressed up as patience.', q:'What would you see if you stopped struggling and hung still?' },
+    { n:13, name:'Death', g:'💀', up:'Not the end — the dismemberment, the necessary ending, the Isis work. What dies so the new can be gathered.', sh:'clinging to the corpse; fear of the transformation that is already happening.', q:'What is already dead that you’re still carrying?' },
+    { n:14, name:'The Integration', g:'🔥', up:'Temperance, reborn. The two flames in one body — gold sacred, red primal, halo and horns. The alchemy of opposites blended into a third thing. Artboy. The whole work, made image.', sh:'splitting; choosing one fire and exiling the other; balance faked instead of forged.', q:'Which flame are you exiling today — and how would it feel to hold both?', integration:true },
+    { n:15, name:'The Devil', g:'⛓️', up:'The chain you could slip if you looked. Shadow, appetite, the primal disowned and so in control of you. The gold is in the dark.', sh:'bondage; shame; the cage mistaken for the self.', q:'What appetite owns you because you won’t look at it directly?' },
+    { n:16, name:'The Tower', g:'🗼', up:'The lightning, the false structure collapsing. Sudden truth that frees by destroying. The shield falls.', sh:'clinging to the rubble; fearing the collapse that would free you.', q:'What false tower is asking to fall?' },
+    { n:17, name:'The Star', g:'⭐', up:'After the Tower, the quiet hope. The water poured, the wound becoming the well. Renewal, faith, being seen.', sh:'despair; disconnection; faithlessness after the fall.', q:'Where is hope quietly returning, if you let it?' },
+    { n:18, name:'The Moon', g:'🌕', up:'The Pisces depths, the dream, the not-yet-known. Intuition and illusion — the path through dark water.', sh:'deception; fear; losing the path in the fog.', q:'What feeling are you being asked to trust through the fog?' },
+    { n:19, name:'The Sun', g:'☀️', up:'Joy, vitality, the radiant yes. The solar self uncovered — warmth that needs no permission.', sh:'ego inflation; forced positivity; a fire that burns others.', q:'Where can you simply shine without apology?' },
+    { n:20, name:'Judgement', g:'🎺', up:'The call, the awakening, rising to answer your own name. The reckoning that resurrects.', sh:'self-condemnation; ignoring the call; staying in the grave.', q:'What are you being called to rise into?' },
+    { n:21, name:'The World', g:'🌍', up:'Completion, wholeness, the dance at the centre. The journey integrated, the cosmos felt in the body.', sh:'incompletion; stuckness near the finish; fear of arrival.', q:'What cycle is ready to be honoured as complete?' }
+  ];
+
+  var ROMAN = ['0','I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII','XIII','XIV','XV','XVI','XVII','XVIII','XIX','XX','XXI'];
+
+  var KEY = 'tarot_v1';
+  var state = load();
+  var tab = state.lastTab || 'draw';
+  var openCard = null;
+  function load(){ try{ var r=localStorage.getItem(KEY); if(r)return JSON.parse(r); }catch(e){} return { lastTab:'draw' }; }
+  function save(){ state.lastTab=tab; try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+  function el(t,c,h){ var n=document.createElement(t); if(c)n.className=c; if(h!=null)n.innerHTML=h; return n; }
+  function esc(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function buzz(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms);}catch(e){} }
+  var toastTimer; function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(function(){t.classList.remove('show');},1500); }
+  function todayKey(){ var d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+  function draw(){ return DECK[Math.floor(Math.random()*DECK.length)]; }
+  function cardByNum(n){ for(var i=0;i<DECK.length;i++) if(DECK[i].n===n) return DECK[i]; return null; }
+
+  function render(){
+    var v=document.getElementById('view'); v.innerHTML='';
+    document.querySelectorAll('.tab').forEach(function(t){ t.classList.toggle('active', t.dataset.tab===tab); });
+    if(tab==='draw') renderDraw(v);
+    else if(tab==='deck') renderDeck(v);
+    else renderXIV(v);
+    window.scrollTo(0,0);
+  }
+
+  function cardFace(c){
+    var f=el('div','card-face'+(c.integration?' integration':''));
+    f.appendChild(el('div','card-num', ROMAN[c.n] + ' · major arcana'));
+    f.appendChild(el('div','card-glyph', c.g));
+    f.appendChild(el('div','card-name', esc(c.name)));
+    f.appendChild(el('div','card-up', esc(c.up)));
+    f.appendChild(el('div','card-shadow', '<b>shadow</b> &middot; ' + esc(c.sh)));
+    f.appendChild(el('div','card-prompt', esc(c.q)));
+    return f;
+  }
+
+  function renderDraw(v){
+    // daily card
+    v.appendChild(el('div','eyebrow','today’s card'));
+    if(state.dailyDate!==todayKey()){
+      var prompt=el('div','hint','One card for the day. Breathe, hold a question, and draw.');
+      v.appendChild(prompt);
+      var b=el('button','btn','draw the day’s card');
+      b.addEventListener('click', function(){ state.dailyDate=todayKey(); state.dailyCardN=draw().n; save(); buzz(20); render(); });
+      v.appendChild(b);
+    } else {
+      v.appendChild(cardFace(cardByNum(state.dailyCardN)));
+    }
+    // three-card spread
+    v.appendChild(el('div','eyebrow','three cards — past · present · what’s emerging'));
+    var sb=el('button','btn ghost','draw a three-card spread');
+    sb.addEventListener('click', function(){
+      var picks=[]; var used={};
+      while(picks.length<3){ var c=draw(); if(!used[c.n]){ used[c.n]=1; picks.push(c); } }
+      state.spread=picks.map(function(c){return c.n;}); save(); buzz([20,30,20]); render();
+    });
+    v.appendChild(sb);
+    if(state.spread && state.spread.length===3){
+      var labels=['past','present','emerging'];
+      var sp=el('div','spread');
+      state.spread.forEach(function(n,i){
+        var c=cardByNum(n);
+        var sc=el('div','spread-card'+(c.integration?'':''));
+        sc.appendChild(el('div','spread-pos', labels[i]));
+        sc.appendChild(el('div','spread-name', ROMAN[c.n]+' · '+esc(c.name)));
+        sc.appendChild(el('div','spread-up', esc(c.up)));
+        sp.appendChild(sc);
+      });
+      v.appendChild(sp);
+    }
+  }
+
+  function renderDeck(v){
+    v.appendChild(el('div','eyebrow','the 22 major arcana — the soul’s journey'));
+    DECK.forEach(function(c){
+      var wrap=el('div','deck-row-wrap'+(openCard===c.n?' open':''));
+      var row=el('div','deck-row');
+      row.appendChild(el('div','deck-num', ROMAN[c.n]));
+      row.appendChild(el('div','deck-name'+(c.integration?' integration':''), c.g+' '+esc(c.name)));
+      row.addEventListener('click', function(){ openCard=(openCard===c.n?null:c.n); render(); });
+      wrap.appendChild(row);
+      var body=el('div','deck-body');
+      body.appendChild(el('div','deck-up', esc(c.up)));
+      body.appendChild(el('div','card-shadow', '<b>shadow</b> &middot; '+esc(c.sh)));
+      body.appendChild(el('div','deck-prompt', esc(c.q)));
+      wrap.appendChild(body);
+      v.appendChild(wrap);
+    });
+  }
+
+  function renderXIV(v){
+    var hero=el('div','xiv-hero');
+    hero.appendChild(el('div','xiv-flames','🔥 ✦ 🔥'));
+    hero.appendChild(el('div','xiv-title','Card XIV — The Integration'));
+    hero.appendChild(el('div','xiv-sub','temperance, reborn'));
+    v.appendChild(hero);
+
+    var blocks=[
+      ['the image','Artboy stands holding two flames — the gold sacred flame in one hand, the red primal flame in the other. Halo and horns in one body. He is not choosing between them; he is the vessel that holds both without being torn.'],
+      ['the meaning','Temperance is the alchemist’s card: the blending of opposites into a third thing that neither could be alone. Sacred and primal. Joey and Sophia. The fire that eats and the fire that sings — proven to be the same fire. The whole HaloHorns work, compressed into one glyph.'],
+      ['the practice','Integration is not transcendence. You do not rise above the primal; you metabolise it until the spark inside it is free. The Beast Temple feeds one flame, the Inner Temple tends the other, and Card XIV is the state where they stop being two.'],
+      ['the shadow','Splitting. Choosing one fire and exiling the other — the spiritual bypass that starves the body, or the appetite that drowns the spirit. Faking balance instead of forging it. The card asks, always: which flame are you exiling today?'],
+      ['the body question','Read the two flames and feel your chest. Which one are you holding fully, and which one are you holding at arm’s length? What would it cost — and what would it free — to hold both at once?']
+    ];
+    blocks.forEach(function(b){
+      var d=el('div','xiv-block');
+      d.appendChild(el('div','xiv-label', b[0]));
+      d.appendChild(el('div','xiv-text', b[1]));
+      v.appendChild(d);
+    });
+  }
+
+  document.getElementById('tabs').addEventListener('click', function(e){ var t=e.target.closest('.tab'); if(!t)return; tab=t.dataset.tab; save(); render(); });
+  document.getElementById('back-btn').addEventListener('click', function(){ try{ window.parent.postMessage('close-temple','*'); }catch(e){} try{ window.location.href='index.html'; }catch(e){} });
+  render();
+})();
+</script>
+</body>
+</html>
