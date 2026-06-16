@@ -375,6 +375,8 @@ main { padding: 0 22px; }
     <div class="timer-label" id="timer-label">step</div>
     <div class="timer-display" id="timer-display">00:00</div>
   </div>
+  <button class="timer-stop" id="timer-wiki">wiki</button>
+  <button class="timer-stop" id="timer-skip">skip ⏭</button>
   <button class="timer-stop" id="timer-stop">stop</button>
 </div>
 
@@ -999,6 +1001,10 @@ let currentView = 'home';
 let activeSession = null;
 let timerInterval = null;
 let timerEnd = 0;
+let timerOnComplete = null;
+let guidedActive = false;
+let guidedIdx = 0;
+let wakeLock = null;
 
 function loadState() {
   try {
@@ -1485,7 +1491,7 @@ function renderSession() {
   exitRow.style.marginBottom = '14px';
   const exitBtn = el('button', 'subtle', '← exit (progress saved)');
   exitBtn.style.cursor = 'pointer';
-  exitBtn.addEventListener('click', () => { activeSession = null; render(); });
+  exitBtn.addEventListener('click', () => { stopGuided(); activeSession = null; render(); });
   exitRow.appendChild(exitBtn);
   wrap.appendChild(exitRow);
 
@@ -1502,6 +1508,20 @@ function renderSession() {
     introBlock.open = true;
     introBlock.innerHTML = `<summary>intention</summary><div class="text">${escapeHtml(s.intro)}</div>`;
     wrap.appendChild(introBlock);
+  }
+
+  // Guided voice player — hands-free; set the phone down and follow.
+  if (!s.steps.every(e => e.done)) {
+    const guideRow = document.createElement('div');
+    guideRow.style.margin = '2px 0 16px';
+    const gBtn = el('button', 'btn-primary', guidedActive ? '■ stop guided' : '▶ play guided · voice');
+    gBtn.style.width = '100%';
+    gBtn.addEventListener('click', () => { if (guidedActive) { stopGuided(); render(); } else { playGuided(); } });
+    guideRow.appendChild(gBtn);
+    const gh = el('div', 'session-sub', 'set the phone down — the voice leads you through, hands-free.');
+    gh.style.textAlign = 'center'; gh.style.marginTop = '6px';
+    guideRow.appendChild(gh);
+    wrap.appendChild(guideRow);
   }
 
   // Find next un-done step for active highlight
@@ -1644,9 +1664,87 @@ function closeSession() {
   });
   saveState();
   activeSession = null;
-  stopTimer();
+  stopGuided();
   toast('session kept');
   render();
+}
+
+// ============================================================
+// GUIDED VOICE — hands-free play (Web Speech + Wake Lock)
+// ============================================================
+function speak(text) {
+  try {
+    if (!('speechSynthesis' in window) || !text) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.88; u.pitch = 1.0; u.volume = 1.0;
+    speechSynthesis.speak(u);
+  } catch (e) {}
+}
+
+function requestWake() {
+  try {
+    if ('wakeLock' in navigator) {
+      navigator.wakeLock.request('screen').then(w => { wakeLock = w; }).catch(() => {});
+    }
+  } catch (e) {}
+}
+function releaseWake() {
+  try { if (wakeLock) { wakeLock.release(); wakeLock = null; } } catch (e) {}
+}
+
+function stopGuided() {
+  guidedActive = false;
+  timerOnComplete = null;
+  try { if ('speechSynthesis' in window) speechSynthesis.cancel(); } catch (e) {}
+  stopTimer();
+  releaseWake();
+}
+
+function playGuided() {
+  if (!activeSession) return;
+  guidedActive = true;
+  requestWake();
+  guidedStep(0, true);
+}
+
+function skipGuided() {
+  if (!guidedActive) { stopTimer(); return; }
+  timerOnComplete = null;
+  try { if ('speechSynthesis' in window) speechSynthesis.cancel(); } catch (e) {}
+  stopTimer();
+  guidedStep(guidedIdx + 1, false);
+}
+
+function readWiki() {
+  if (!activeSession) return;
+  const st = guidedActive ? activeSession.steps[guidedIdx] : activeSession.steps.find(s => !s.done);
+  if (!st) return;
+  const lib = getLibEntry(st.libraryId);
+  const body = (lib && lib.execution) ? lib.execution : (st.cues || '');
+  speak(st.name + '. ' + body);
+}
+
+function guidedStep(i, first) {
+  if (!activeSession || !guidedActive) return;
+  guidedIdx = i;
+  const steps = activeSession.steps;
+  for (let k = 0; k < i; k++) steps[k].done = true;
+  if (i >= steps.length) {
+    steps.forEach(st => { st.done = true; });
+    const closing = activeSession.closing ? activeSession.closing + ' ' : '';
+    speak(closing + 'The practice is complete. The day is yours now.');
+    guidedActive = false;
+    releaseWake();
+    render();
+    return;
+  }
+  const step = steps[i];
+  const lead = first ? (activeSession.practiceName + '. ') : '';
+  speak(lead + step.name + '. ' + (step.cues || ''));
+  render();
+  const dur = step.duration > 0 ? step.duration : 60;
+  startTimer(dur, step.name, () => guidedStep(i + 1, false));
 }
 
 // ============================================================
@@ -1658,8 +1756,9 @@ let timerDurationSec = 0;
 let midpointFired = false;
 let lastMinuteMark = 0;
 
-function startTimer(seconds, label) {
+function startTimer(seconds, label, onComplete) {
   stopTimer();
+  timerOnComplete = onComplete || null;
   timerEnd = Date.now() + seconds * 1000;
   timerStartMs = Date.now();
   timerDurationSec = seconds;
@@ -1702,7 +1801,9 @@ function updateTimer() {
 
   if (remaining === 0) {
     bell();
+    const cb = timerOnComplete; timerOnComplete = null;
     setTimeout(stopTimer, 1200);
+    if (cb) setTimeout(cb, 1500);
   }
 }
 
@@ -1760,7 +1861,9 @@ function bell() {
   } catch (e) {}
 }
 
-document.getElementById('timer-stop').addEventListener('click', stopTimer);
+document.getElementById('timer-stop').addEventListener('click', () => { if (guidedActive) { stopGuided(); render(); } else { stopTimer(); } });
+document.getElementById('timer-skip').addEventListener('click', () => { if (guidedActive) { skipGuided(); } else { stopTimer(); } });
+document.getElementById('timer-wiki').addEventListener('click', readWiki);
 
 // ============================================================
 // PRACTICES

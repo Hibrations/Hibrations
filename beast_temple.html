@@ -252,7 +252,9 @@ main { padding: 22px; }
   <div class="timer-label" id="timer-label"></div>
   <div class="timer-display" id="timer-display">00:00</div>
   <div class="timer-controls">
+    <button class="timer-btn" id="timer-wiki">wiki</button>
     <button class="timer-btn" id="timer-cancel">cancel</button>
+    <button class="timer-btn" id="timer-skip">skip ⏭</button>
     <button class="timer-btn primary" id="timer-done">mark done</button>
   </div>
 </div>
@@ -1022,6 +1024,18 @@ function minuteTick() {
 // ============================================================
 // TIMER
 // ============================================================
+// guided voice — speak the practice name + how-steps spaced across the duration
+let gvCues=[], gvIdx=0, gvTotal=0, gvWake=null, gvFull='';
+function gvSpeak(t){ try{ if(!('speechSynthesis' in window)||!t) return; speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(t); u.rate=0.88; speechSynthesis.speak(u); }catch(e){} }
+function gvHowCues(how){ if(Array.isArray(how)) return how.slice(); return String(how||'').split(/(?<=[.!?])\s+/).filter(function(s){return s.trim().length;}); }
+function gvWakeReq(){ try{ if('wakeLock' in navigator) navigator.wakeLock.request('screen').then(function(w){gvWake=w;}).catch(function(){}); }catch(e){} }
+function gvWakeRel(){ try{ if(gvWake){ gvWake.release(); gvWake=null; } }catch(e){} }
+function gvStart(p, durSec){ gvCues=[p.name].concat(gvHowCues(p.how)); gvFull=p.name+'. '+(p.what?p.what+'. ':'')+gvHowCues(p.how).join(' '); gvIdx=0; gvTotal=durSec||0; gvWakeReq(); gvSpeak(gvCues[0]); gvIdx=1; }
+function gvTick(elapsed){ if(!gvCues.length||gvTotal<=0) return; var seg=gvTotal/gvCues.length; while(gvIdx<gvCues.length && elapsed>=gvIdx*seg){ gvSpeak(gvCues[gvIdx]); gvIdx++; } }
+function gvSkip(){ if(gvIdx<gvCues.length){ gvSpeak(gvCues[gvIdx]); gvIdx++; } }
+function gvWiki(){ gvSpeak(gvFull); }
+function gvStop(){ try{ if('speechSynthesis' in window) speechSynthesis.cancel(); }catch(e){} gvWakeRel(); }
+
 let timerStartMs = 0;
 let timerDurationSec = 0;
 let midpointFired = false;
@@ -1035,6 +1049,7 @@ function startTimer(practiceId) {
   timerEnd = Date.now() + (p.durationSec || 0) * 1000;
   timerStartMs = Date.now();
   timerDurationSec = p.durationSec || 0;
+  gvStart(p, p.durationSec || 0);
   midpointFired = false;
   lastMinuteMark = 0;
   document.getElementById('timer-label').textContent = p.name;
@@ -1051,6 +1066,7 @@ function tickTimer() {
   // Round 5.1 — midpoint chime + minute ticks
   if (timerDurationSec > 0) {
     const elapsed = (Date.now() - timerStartMs) / 1000;
+    gvTick(elapsed);
     if (timerDurationSec > 60 && !midpointFired && elapsed >= timerDurationSec / 2 && remaining > 5) {
       midpointFired = true;
       softChime();
@@ -1072,6 +1088,7 @@ function tickTimer() {
   }
 }
 function stopTimer(finished) {
+  gvStop();
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
   document.getElementById('timer-overlay').classList.remove('active');
   document.getElementById('timer-display').classList.remove('flash');
@@ -1080,6 +1097,7 @@ function stopTimer(finished) {
   }
 }
 function cancelTimer() {
+  gvStop();
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
   document.getElementById('timer-overlay').classList.remove('active');
   document.getElementById('timer-display').classList.remove('flash');
@@ -1322,7 +1340,9 @@ document.getElementById('back-btn').addEventListener('click', () => {
   try { window.location.href = 'index.html'; } catch (e) {}
 });
 
+document.getElementById('timer-wiki').addEventListener('click', gvWiki);
 document.getElementById('timer-cancel').addEventListener('click', cancelTimer);
+document.getElementById('timer-skip').addEventListener('click', gvSkip);
 document.getElementById('timer-done').addEventListener('click', () => stopTimer(true));
 
 // ============================================================

@@ -102,7 +102,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sa
   <div class="tov-name" id="tov-name"></div>
   <div class="tov-time" id="tov-time">0:00</div>
   <div class="tov-btns">
+    <button class="tov-btn" id="tov-wiki">wiki</button>
     <button class="tov-btn" id="tov-cancel">cancel</button>
+    <button class="tov-btn" id="tov-skip">skip ⏭</button>
     <button class="tov-btn done" id="tov-done">mark done</button>
   </div>
 </div>
@@ -313,15 +315,29 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sa
   }
 
   // ---------- timer ----------
+  // guided voice — speak the practice name + how-steps spaced across the duration
+  var gvCues=[], gvIdx=0, gvTotal=0, gvWake=null, gvFull='';
+  function gvSpeak(t){ try{ if(!('speechSynthesis' in window)||!t) return; speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(t); u.rate=0.88; speechSynthesis.speak(u); }catch(e){} }
+  function gvHowCues(how){ if(Array.isArray(how)) return how.slice(); return String(how||'').split(/(?<=[.!?])\s+/).filter(function(s){return s.trim().length;}); }
+  function gvWakeReq(){ try{ if('wakeLock' in navigator) navigator.wakeLock.request('screen').then(function(w){gvWake=w;}).catch(function(){}); }catch(e){} }
+  function gvWakeRel(){ try{ if(gvWake){ gvWake.release(); gvWake=null; } }catch(e){} }
+  function gvStart(p, durSec){ gvCues=[p.name].concat(gvHowCues(p.how)); gvFull=p.name+'. '+(p.what?p.what+'. ':'')+gvHowCues(p.how).join(' '); gvIdx=0; gvTotal=durSec||0; gvWakeReq(); gvSpeak(gvCues[0]); gvIdx=1; }
+  function gvTick(elapsed){ if(!gvCues.length||gvTotal<=0) return; var seg=gvTotal/gvCues.length; while(gvIdx<gvCues.length && elapsed>=gvIdx*seg){ gvSpeak(gvCues[gvIdx]); gvIdx++; } }
+  function gvSkip(){ if(gvIdx<gvCues.length){ gvSpeak(gvCues[gvIdx]); gvIdx++; } }
+  function gvWiki(){ gvSpeak(gvFull); }
+  function gvStop(){ try{ if('speechSynthesis' in window) speechSynthesis.cancel(); }catch(e){} gvWakeRel(); }
+
   var tIvl=null, tLeft=0, tP=null;
   function startTimer(p){
     tP=p; tLeft=p.dur;
+    gvStart(p, p.dur);
     document.getElementById('tov-name').textContent=p.name;
     paint(); document.getElementById('tov').classList.add('show');
     try{ if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)(); if(actx&&actx.state==='suspended')actx.resume(); }catch(e){}
     clearInterval(tIvl);
     tIvl=setInterval(function(){
       tLeft--; paint();
+      gvTick(p.dur - tLeft);
       if(tLeft>5 && p.dur>120 && tLeft===Math.floor(p.dur/2)) { try{ softTick(660); }catch(e){} buzz(30); }
       if(tLeft<=0){ clearInterval(tIvl); bell(); buzz([60,40,80]); finishTimer(true); }
     },1000);
@@ -329,10 +345,13 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sa
   function softTick(f){ try{ if(!actx)return; var o=actx.createOscillator(),g=actx.createGain(); o.frequency.value=f; o.connect(g); g.connect(actx.destination); var t=actx.currentTime; g.gain.setValueAtTime(0.18,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.25); o.start(t); o.stop(t+0.3);}catch(e){} }
   function paint(){ var m=Math.floor(Math.max(tLeft,0)/60),s=Math.max(tLeft,0)%60; document.getElementById('tov-time').textContent=m+':'+(s<10?'0':'')+s; }
   function finishTimer(done){
+    gvStop();
     document.getElementById('tov').classList.remove('show'); clearInterval(tIvl);
     if(done && tP){ logSession(tP); }
     tP=null;
   }
+  document.getElementById('tov-wiki').addEventListener('click', gvWiki);
+  document.getElementById('tov-skip').addEventListener('click', gvSkip);
   document.getElementById('tov-cancel').addEventListener('click', function(){ finishTimer(false); });
   document.getElementById('tov-done').addEventListener('click', function(){ finishTimer(true); });
 
