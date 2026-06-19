@@ -666,7 +666,8 @@ let lastMinuteMark = 0;
 
 // guided voice — speak the practice name + how-steps spaced across the duration
 let gvCues=[], gvIdx=0, gvTotal=0, gvWake=null, gvFull='';
-function gvSpeak(t){ try{ if(!('speechSynthesis' in window)||!t) return; speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(t); u.rate=0.88; speechSynthesis.speak(u); }catch(e){} }
+function gvVoice(){ try{ var vs=speechSynthesis.getVoices()||[]; var en=vs.filter(function(v){return /^en[-_]?/i.test(v.lang);}); if(!en.length) return null; var male=en.filter(function(v){return /male/i.test(v.name)&&!/female/i.test(v.name);}); if(male.length) return male[0]; var named=en.filter(function(v){return /daniel|arthur|oliver|george|james|alex|fred|aaron|reed|tom/i.test(v.name);}); if(named.length) return named[0]; return en[0]; }catch(e){ return null; } }
+function gvSpeak(t){ try{ if(!('speechSynthesis' in window)||!t) return; speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(t); u.rate=0.88; u.lang='en-US'; var v=gvVoice(); if(v){ u.voice=v; u.lang=v.lang; } speechSynthesis.speak(u); }catch(e){} }
 function gvHowCues(how){ if(Array.isArray(how)) return how.slice(); return String(how||'').split(/(?<=[.!?])\s+/).filter(function(s){return s.trim().length;}); }
 function gvWakeReq(){ try{ if('wakeLock' in navigator) navigator.wakeLock.request('screen').then(function(w){gvWake=w;}).catch(function(){}); }catch(e){} }
 function gvWakeRel(){ try{ if(gvWake){ gvWake.release(); gvWake=null; } }catch(e){} }

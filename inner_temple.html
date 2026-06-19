@@ -546,45 +546,6 @@ const DEFAULT_LIBRARY = [
     regressions: 'Just cat-cow + child\'s pose + down dog.',
     videoUrl: ytSearch('lower body mobility flow morning') },
 
-  // ===== VOCAL =====
-  { id: 'vocal_humming', name: 'Humming warmup', category: 'vocal', defaultDuration: 180, equipment: [],
-    setup: 'Stand or sit upright. Soft jaw, tongue resting on the floor of the mouth.',
-    execution: 'Hum at a comfortable mid-pitch. Feel the buzz on the lips. Slide up and down a fifth, finding the resonance. 2–3 min.',
-    mistakes: 'Pushing volume. Tightening the throat.',
-    breath: 'Diaphragmatic. The hum should feel effortless.',
-    progressions: 'Add lip trills. Hum melodies.',
-    regressions: 'Single pitch only.',
-    integrations: 'hum DOWN the body — start at crown, slide into chest, into belly, into perineum. each region wakes differently. great pre-training for full-body coordination.',
-    videoUrl: ytSearch('humming vocal warmup') },
-
-  { id: 'lip_trills', name: 'Lip trills', category: 'vocal', defaultDuration: 180, equipment: [],
-    setup: 'Relaxed lips, slightly pursed. Stand or sit upright.',
-    execution: 'Blow air through the lips so they vibrate. Add tone — slide up and down across your range. 2–3 min.',
-    mistakes: 'Tensing the lips (then they won\'t vibrate). Going too high too fast.',
-    breath: 'Steady support from the diaphragm.',
-    progressions: 'Lip trill scales and arpeggios.',
-    regressions: 'Just trill without pitch first.',
-    videoUrl: ytSearch('lip trills vocal warmup') },
-
-  { id: 'vocal_scales', name: 'Vocal scales', category: 'vocal', defaultDuration: 300, equipment: [],
-    setup: 'Stand upright, ribs lifted, shoulders relaxed.',
-    execution: 'Sing 5-note scales (do-re-mi-fa-sol) on a vowel — "ah" or "oh". Move up by half-steps until comfortable max, then back down. Use a tuning app or piano if available.',
-    mistakes: 'Pushing past comfortable range. Tightening throat for high notes.',
-    breath: 'Support each note from the diaphragm, not the throat.',
-    progressions: 'Octave scales. Different vowels. Different consonants ("ma", "na", "lah").',
-    regressions: 'Just one comfortable scale, no transposing.',
-    videoUrl: ytSearch('vocal scales beginner') },
-
-  { id: 'mantra_chant', name: 'Mantra chanting', category: 'vocal', defaultDuration: 600, equipment: [],
-    setup: 'Sit upright. Eyes soft or closed.',
-    execution: 'Choose a mantra (Om, So Hum, Om Mani Padme Hum, or your own). Chant it aloud at a comfortable pitch and pace. Feel the vibration in the chest, throat, head. 108 repetitions traditional (use a mala or count loosely).',
-    mistakes: 'Mechanical repetition without attention. Pushing volume.',
-    breath: 'Each chant on one breath. Take a full inhale between.',
-    progressions: 'Longer sessions. Whispered or silent mantra.',
-    regressions: 'Shorter (10 reps). Single syllable (Om).',
-    integrations: 'feel the vibration in the BONES. each chant a mini-cleansing of the throat. great pre-podcast or pre-recording. settles the voice into the body.',
-    videoUrl: ytSearch('mantra chanting practice') },
-
   // ===== RITUAL =====
   { id: 'theta_wake', name: 'Theta wake window', category: 'ritual', defaultDuration: 300, equipment: [],
     setup: 'Just woke up. Don\'t reach for the phone. Stay in bed or move to a window.',
@@ -972,21 +933,6 @@ const DEFAULT_DATA = {
         { id: 'op-c', libraryId: 'silent_sit', letter: 'C', name: 'Rest in the field', duration: 120, cues: 'no doing. just notice what was moved.' }
       ],
       closing: 'water. note what you noticed.'
-    },
-    {
-      id: 'vocal_warmup',
-      name: 'Vocal Warmup',
-      subtitle: 'before singing, recording, or vocal work',
-      type: 'vocal',
-      duration: '~12 min',
-      intro: 'Wake the instrument. Open the throat. Find the resonance.',
-      steps: [
-        { id: 'vw-a', libraryId: 'breath_of_fire', letter: 'A', name: 'Activate the diaphragm', duration: 120, cues: 'short rounds. feel the pump.' },
-        { id: 'vw-b', libraryId: 'vocal_humming', letter: 'B', name: 'Hum slides', duration: 180, cues: 'find the buzz on the lips.' },
-        { id: 'vw-c', libraryId: 'lip_trills', letter: 'C', name: 'Lip trills', duration: 180, cues: 'across the range, no force.' },
-        { id: 'vw-d', libraryId: 'vocal_scales', letter: 'D', name: 'Scales', duration: 240, cues: '5-note scales. up by half-steps.' }
-      ],
-      closing: 'sip warm water. the voice is open.'
     }
   ],
   schedule: { morning: 'solar_gate', evening: 'evening_winddown' },
@@ -1672,12 +1618,27 @@ function closeSession() {
 // ============================================================
 // GUIDED VOICE — hands-free play (Web Speech + Wake Lock)
 // ============================================================
+function pickVoice() {
+  try {
+    var vs = speechSynthesis.getVoices() || [];
+    var en = vs.filter(function (v) { return /^en[-_]?/i.test(v.lang); });
+    if (!en.length) return null;
+    var male = en.filter(function (v) { return /male/i.test(v.name) && !/female/i.test(v.name); });
+    if (male.length) return male[0];
+    var named = en.filter(function (v) { return /daniel|arthur|oliver|george|james|alex|fred|aaron|reed|tom/i.test(v.name); });
+    if (named.length) return named[0];
+    return en[0];
+  } catch (e) { return null; }
+}
+
 function speak(text) {
   try {
     if (!('speechSynthesis' in window) || !text) return;
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.rate = 0.88; u.pitch = 1.0; u.volume = 1.0;
+    u.lang = 'en-US';
+    const v = pickVoice(); if (v) { u.voice = v; u.lang = v.lang; }
     speechSynthesis.speak(u);
   } catch (e) {}
 }

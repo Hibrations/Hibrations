@@ -547,6 +547,19 @@ nav.tab-bar {
 .plan-stack-empty { font-size: 11px; color: var(--ink-faint); font-style: italic; }
 
 /* Stack Pulse — fuel-line recency glance (Round 7) */
+.hrv-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-md); padding: 13px 15px; margin-bottom: 16px; }
+.hrv-card.hrv-gentle { border-color: var(--c-throat-dim); }
+.hrv-card.hrv-balanced { border-color: var(--c-heart-dim); }
+.hrv-card.hrv-strong { border-color: var(--c-solar-dim); }
+.hrv-eyebrow { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 8px; }
+.hrv-reading { font-size: 13.5px; color: var(--ink-dim); line-height: 1.55; }
+.hrv-reading b { color: var(--ink); font-weight: 600; }
+.hrv-trend { font-size: 11px; color: var(--ink-faint); margin-top: 9px; font-variant-numeric: tabular-nums; letter-spacing: 0.04em; }
+.hrv-input-row { display: flex; gap: 8px; }
+.hrv-input { flex: 1; background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--ink); font-size: 16px; padding: 10px 12px; }
+.hrv-input:focus { outline: none; border-color: var(--c-throat-dim); }
+.hrv-save { padding: 10px 20px; border-radius: var(--r-sm); border: 1px solid var(--c-throat-dim); background: var(--bg-elev); color: var(--ink); font-size: 14px; cursor: pointer; }
+.hrv-hint { font-size: 11.5px; color: var(--ink-faint); font-style: italic; margin-top: 9px; }
 .stack-pulse { padding: 0 0 22px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .stack-pulse-eyebrow { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-faint); opacity: 0.55; }
 .stack-pulse-chips { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; max-width: 340px; }
@@ -1461,20 +1474,18 @@ const Portal = (function() {
   let openFlowCardId = null;
   const FLOW_PRACTICE_STEPS = {
     solar_gate: [
-      'Phase I — coherent breathing, 5 in / 5 out',
-      'Phase II — microcosmic orbit, slow nasal, ~10 min',
-      'Phase III — Ra sphere, golden sovereignty',
-      'Phase IV — sigil set or intention from fullness',
-      'Phase V — gratitude, anchor at the dantian',
-      'Phase VI — open the eyes, the day begins'
+      'A · Glass of water — slow sips, feel it land',
+      'B · Theta wake window — no phone, just be here',
+      'C · Breath — box or 4-7-8, what the body wants',
+      'D · Movement — qigong or sun salutation, breath leads',
+      'E · Silent sit — nothing to do',
+      'F · Intention — what does this day ask?'
     ],
-    evening_wind_down: [
-      'Phase I — long exhales, parasympathetic shift',
-      'Phase II — slow body scan, crown to feet',
-      'Phase III — release the day, name what was kept',
-      'Phase IV — close cords from heavy interactions',
-      'Phase V — seal the field for sleep',
-      'Phase VI — drop into the dream substrate'
+    evening_winddown: [
+      'A · Light mobility — gentle, nothing intense',
+      'B · 4-7-8 breath — let the exhale carry you down',
+      'C · Gratitude — three things, feel each',
+      'D · Body scan — top to toe, release the tension'
     ],
     off_switch: [
       '15 sec — identify where the charge is sitting (sacral, chest, eyes, field)',
@@ -1640,6 +1651,53 @@ const Portal = (function() {
   // Stack Pulse (Round 7) \u2014 reads all three temple session logs and surfaces
   // which fuel lines have been touched this week. Bright = <2d, mid = 2-7d, dim = >7d or never.
   // Signal not score: no streaks, no numbers \u2014 just luminosity.
+  // ---- HRV-aware morning (manual entry — no connector/web-API exists for the watch) ----
+  const HRV_KEY = 'portal_hrv_v1';
+  function loadHrv() { try { return JSON.parse(localStorage.getItem(HRV_KEY) || '{}'); } catch (e) { return {}; } }
+  function logHrv(date, v) {
+    const d = loadHrv(); if (!d.entries) d.entries = [];
+    d.entries = d.entries.filter(e => e.date !== date);
+    d.entries.unshift({ date: date, hrv: v, at: Date.now() });
+    if (d.entries.length > 120) d.entries = d.entries.slice(0, 120);
+    try { localStorage.setItem(HRV_KEY, JSON.stringify(d)); } catch (e) {}
+  }
+  function hrvReading(today, history) {
+    const recent = (history || []).filter(n => n > 0).slice(0, 7);
+    if (recent.length < 3) return { tier: 'baseline', text: 'Logged. A few more mornings and the app can read each day against your own baseline.' };
+    const avg = Math.round(recent.reduce((a, b) => a + b, 0) / recent.length);
+    const ratio = today / avg;
+    if (ratio < 0.85) return { tier: 'gentle', text: '<b>Gentle day.</b> ' + today + ' ms is under your ~' + avg + ' ms baseline — the system reads under-recovered. Keep the morning soft: breath, orbit, rest over intensity. Honour the calm between the waves.' };
+    if (ratio > 1.15) return { tier: 'strong', text: '<b>Strong day.</b> ' + today + ' ms is above your ~' + avg + ' ms baseline — well-recovered. Green light: the body can take load and depth today.' };
+    return { tier: 'balanced', text: '<b>Balanced.</b> ' + today + ' ms sits around your ~' + avg + ' ms baseline. Practice as the day asks — nothing to push, nothing to guard against.' };
+  }
+  function renderHrv(view) {
+    const data = loadHrv();
+    const today = dailyTodayKey();
+    const entry = (data.entries || []).find(e => e.date === today);
+    const card = el('div', 'hrv-card');
+    if (!entry) {
+      card.appendChild(el('div', 'hrv-eyebrow', 'morning check · glance at the watch'));
+      const row = el('div', 'hrv-input-row');
+      const inp = document.createElement('input');
+      inp.className = 'hrv-input'; inp.type = 'number'; inp.inputMode = 'numeric'; inp.placeholder = 'HRV (ms)';
+      const submit = () => { const v = parseInt(inp.value, 10); if (!v || v <= 0) return; logHrv(today, v); render(); };
+      const btn = el('button', 'hrv-save', 'log');
+      btn.addEventListener('click', submit);
+      inp.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+      row.appendChild(inp); row.appendChild(btn);
+      card.appendChild(row);
+      card.appendChild(el('div', 'hrv-hint', 'your morning HRV from the Watch 3 — the day gets read against your own baseline.'));
+    } else {
+      const hist = (data.entries || []).filter(e => e.date !== today).sort((a, b) => b.date.localeCompare(a.date)).map(e => e.hrv);
+      const r = hrvReading(entry.hrv, hist);
+      card.className = 'hrv-card hrv-' + r.tier;
+      card.appendChild(el('div', 'hrv-eyebrow', 'morning check'));
+      const reading = el('div', 'hrv-reading'); reading.innerHTML = r.text; card.appendChild(reading);
+      if (hist.length) card.appendChild(el('div', 'hrv-trend', 'recent · ' + hist.slice(0, 7).join(' · ') + ' ms'));
+    }
+    view.appendChild(card);
+  }
+
   function readStackPulse() {
     const now = Date.now();
     const dayMs = 24 * 60 * 60 * 1000;
@@ -2729,7 +2787,7 @@ const Portal = (function() {
 
   const SCHEDULE_KEY = 'portal_flow_schedule_v1';
   const DEFAULT_MORNING = { name: 'Solar Gate', source: 'inner', durationLabel: '~30 min', meta: '6 steps', id: 'solar_gate' };
-  const DEFAULT_EVENING = { name: 'Wind-Down', source: 'inner', durationLabel: '~15 min', meta: '4 steps', id: 'evening_wind_down' };
+  const DEFAULT_EVENING = { name: 'Wind-Down', source: 'inner', durationLabel: '~15 min', meta: '4 steps', id: 'evening_winddown' };
 
   function loadSchedule() {
     try { return JSON.parse(localStorage.getItem(SCHEDULE_KEY)) || {}; }
@@ -2935,6 +2993,7 @@ const Portal = (function() {
     }
     view.appendChild(hero);
 
+    renderHrv(view);
     renderStackPulse(view);
     renderNextPractice(view);
 
@@ -3010,7 +3069,7 @@ const Portal = (function() {
         onBegin: eRoute ? () => executeBegin(eRoute, eveningVal.id, eveningVal.name) : null,
         beginLabel: eRoute ? 'begin' : null,
         eyebrow: 'evening', name: eveningVal.name,
-        sub: eveningVal.id === 'evening_wind_down' ? "drop the day. long exhales. give the system the signal that it's safe to sleep." : '',
+        sub: eveningVal.id === 'evening_winddown' ? "drop the day. long exhales. give the system the signal that it's safe to sleep." : '',
         meta: eMeta
       }));
     }
@@ -3039,8 +3098,7 @@ const Portal = (function() {
     mkCard('c-root',   '🔴', 'Body Temple',        'training · vessel', 'body');
     mkCard('c-crown',  '🤍', 'Healing Grimoire',   'qi · reiki · prana', 'grimoire');
     mkCard('azure',    '🎙️', 'Vocal Temple',       'breath · voice · range', 'vocal');
-    mkCard('c-solar',  '💛', 'Magnetic Temple',    'charge · dial · field', 'magnetic');
-    mkCard('c-sacral', '🧡', 'Beast Temple',       'primal · field · aura', 'beast');
+    mkCard('c-sacral', '🧡', 'Beast Temple',       'primal · field · charge · aura', 'beast');
     mkCard('c-throat', '💙', 'Hibrations',         'capture · craft · ship', 'hibrations');
     mkCard('c-heart',  '💚', 'Strings &amp; Soul', 'ukulele · guitar', 'strings');
     mkCard('mystic',   '🔮', 'Tarot',              'draw · deck · card XIV', 'tarot');
