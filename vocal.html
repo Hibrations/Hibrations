@@ -43,6 +43,23 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sa
 .pc-section { margin-top: 12px; }
 .pc-label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--azure); margin-bottom: 4px; }
 .pc-text { font-size: 13.5px; color: var(--ink-dim); }
+.pcard-inner { padding: 13px 14px; }
+.pcard-inner .pc-name { margin-bottom: 3px; }
+.pcard-inner .pc-dur { margin-bottom: 2px; }
+.step-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.step-action-btn { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); padding: 7px 12px; border: 1px solid var(--border); border-radius: 999px; background: none; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
+.step-action-btn:active { border-color: var(--ink); color: var(--ink); }
+.step-action-btn.accent { color: var(--azure); border-color: var(--azure); }
+.step-notes, .step-form { margin-top: 12px; display: none; }
+.step-notes.open, .step-form.open { display: block; }
+.step-notes textarea { width: 100%; box-sizing: border-box; font-size: 14px; background: var(--bg); color: var(--ink); border: 1px solid var(--border); border-radius: var(--r-md); padding: 8px 10px; min-height: 70px; }
+.step-notes-prompt { font-size: 11px; color: var(--ink-faint); font-style: italic; margin-bottom: 6px; }
+.step-form { background: var(--bg-elev); border: 1px solid var(--border-soft); border-radius: var(--r-md); padding: 14px 16px; }
+.form-section { margin-bottom: 12px; }
+.form-section:last-child { margin-bottom: 0; }
+.form-label { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--azure); margin-bottom: 4px; }
+.form-text { font-size: 13.5px; color: var(--ink); line-height: 1.55; }
+.form-text.muted { color: var(--ink-dim); }
 .pc-actions { display: flex; gap: 9px; margin-top: 16px; }
 .btn { flex: 1; padding: 11px; border-radius: var(--r-md); font-size: 13px; font-weight: 600; border: 1px solid var(--azure-dim); background: var(--azure-faint); color: var(--ink); cursor: pointer; }
 .btn:active { background: var(--azure-dim); }
@@ -118,78 +135,146 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sa
   var PRACTICES = [
     // Breath foundation
     { id:'diaphragm', cat:'Breath', name:'Diaphragmatic Breath', dur:300, stack:['breath','body'],
-      what:'The engine. The voice rides on breath; an unsupported voice strains the throat. This builds the low, belly-led support every other exercise rests on.',
-      how:'Hand on belly. Inhale silently through the nose — the belly expands, the chest stays quiet. Exhale slow and even. The throat does nothing; the belly does the work.',
-      watch:'Lifting the shoulders or chest on the inhale — that is shallow breathing. Keep it low. The breath drops in, it is not pulled in.' },
+      setup:'Stand tall or sit upright, one hand on the belly, one on the chest. Shoulders soft and down, jaw loose. The voice rides on breath — an unsupported voice strains the throat, so this is the engine everything else rests on.',
+      execution:'Inhale silently through the nose and let the breath drop low — the belly hand moves out, the chest hand stays still. Do not pull the air in; let it fall in as the belly releases. Exhale slow and even through softly pursed lips, the belly drawing gently back. The throat does nothing; the belly does the work. Several minutes, until low breathing feels like the default.',
+      mistakes:'Lifting the shoulders or chest on the inhale (shallow, clavicular breathing). Forcing the belly out instead of letting it release. Tensing the throat to meter the air.',
+      breath:'This IS the breath practice — silent low inhale, long even exhale. Build toward a 1:2 inhale-to-exhale ratio.',
+      integrations:'The foundation under every other vocal exercise, and a vagal down-regulator in its own right. Pairs with the Inner Temple breathwork and opens every singing session.',
+      progressions:'Add the hiss for airflow control; lengthen the exhale; lie down with a book on the belly to feel the movement clearly.',
+      regressions:'One hand on the belly, three slow low breaths — 60 seconds.' },
     { id:'hiss', cat:'Breath', name:'The Hiss — Airflow Control', dur:240, stack:['breath','body'],
-      what:'Trains steady, controlled airflow — the foundation of sustained notes and long phrases.',
-      how:'Inhale low. Exhale on a steady "sss" — even, unwavering, as long as you can. The belly slowly draws in to keep the pressure constant. Repeat, extending the length.',
-      watch:'The hiss wobbling or fading means the support collapsed. Keep it level from start to finish.' },
+      setup:'Stand tall, hand on the belly, low diaphragmatic support already found. This trains steady, controlled airflow — the foundation of sustained notes and long phrases.',
+      execution:'Inhale low and silent. Exhale on a steady, level "sss" — even and unwavering, as long as you comfortably can. The belly draws slowly inward to keep the air pressure constant as the lungs empty. Rest, then repeat, extending the length a little each round.',
+      mistakes:'The hiss wobbling, surging, or fading — the support collapsed. Emptying in a rush. Tightening the throat to control the air instead of using the belly.',
+      breath:'Pure breath management: constant pressure metered by the belly, not the throat. Keep the "sss" dead level start to finish.',
+      integrations:'Builds the sustain behind long phrases and held notes — the bridge from breath work to phonation. Feeds messa di voce later.',
+      progressions:'Extend the hiss; vary to "sh" and "fff"; then transfer the same steadiness to a sustained voiced note.',
+      regressions:'One short, level hiss of 5–8 seconds, feeling the belly meter the air.' },
     // SOVT warmup
     { id:'lip_trill', cat:'Warmup (SOVT)', name:'Lip Trills', dur:240, stack:['breath','body'],
-      what:'The gentlest, safest warmup there is — semi-occluded vocal tract work. Wakes the cords with zero strain.',
-      how:'Loose lips, blow air through them so they flutter — "brrrr." Add voice underneath. Glide it up and down your range like a motor. Keep it easy.',
-      watch:'If the trill keeps stalling, the lips are too tense or the airflow too weak. Loosen the face, push a little more air.' },
+      setup:'Face and lips loose, breath low. The gentlest, safest warmup there is — semi-occluded vocal tract work that wakes the cords with almost zero strain.',
+      execution:'Let the lips go loose and blow a steady stream of air through them so they flutter — "brrrr," like a motorboat. Add voice underneath the flutter. Then glide that buzzing sound smoothly up and down your range like a slow siren. Keep it easy and continuous.',
+      mistakes:'Lips too tense or airflow too weak, so the trill keeps stalling. Pushing for volume. Tightening the throat as the pitch rises.',
+      breath:'Steady, generous airflow from the belly keeps the lips fluttering — the breath does the work, the lips just ride it.',
+      integrations:'The classic safe wake-up before real singing; the semi-occlusion balances cord closure against breath pressure. Leads straight into straw phonation and sirens.',
+      progressions:'Trill through wider glides; add five-note scales on the trill; switch to tongue trills ("rrrr").',
+      regressions:'Sustain the trill on one comfortable note for a few seconds, no gliding.' },
     { id:'straw', cat:'Warmup (SOVT)', name:'Straw Phonation', dur:300, stack:['breath','body'],
-      what:'The vocal coach’s secret weapon. Phonating through a narrow channel balances the cords and resonance with almost no risk — the fastest way to a warm, free voice.',
-      how:'Hum a "voo" through a thin straw (or pursed lips). Sustain notes, then glide sirens up and down. Feel the gentle back-pressure at the lips. 5 minutes transforms the voice.',
-      watch:'Tension in the jaw or throat — the whole point is ease. If it feels effortful, you are pushing. Let the straw do the work.' },
+      setup:'Have a thin straw ready (or just purse the lips). Sit or stand tall, breath low. Straw phonation is the vocal coach’s secret weapon — phonating through a narrow channel balances the cords and resonance with almost no risk.',
+      execution:'Hum a "voo" through the straw, gentle and continuous, feeling the soft back-pressure build at the lips. Sustain comfortable notes, then glide slow sirens up and down the range. Five minutes of this genuinely transforms the warmth and freedom of the voice.',
+      mistakes:'Tension in the jaw, tongue, or throat — the entire point is ease. Blowing too hard. Treating it as effortful; let the straw’s back-pressure do the balancing.',
+      breath:'Smooth, moderate airflow — enough to keep the tone steady against the resistance, never forced.',
+      integrations:'The fastest route to a warm, free, balanced voice; safe even on tired or sick days. The bridge from lip trills into open singing.',
+      progressions:'Glide wider; sing a melody through the straw; then remove it and keep the same easy placement on an open vowel.',
+      regressions:'A few sustained "voo" notes through the straw, no gliding, 60–90 seconds.' },
     { id:'humming', cat:'Warmup (SOVT)', name:'Humming', dur:240, stack:['breath','body','energy'],
-      what:'Resonance and gentle onset, plus vagus-nerve tone — the hum settles the nervous system as it wakes the voice.',
-      how:'Lips together, "mmm," easy. Feel the buzz on the lips and in the mask of the face. Glide up and down. Let the sound be forward, not stuck in the throat.',
-      watch:'A hum felt only in the throat is placed too far back. Bring the buzz forward to the lips and nose.' },
+      setup:'Lips together but jaw and face soft, teeth slightly apart inside. Humming gives resonance, gentle onset, and vagus-nerve tone — it settles the nervous system as it wakes the voice.',
+      execution:'On a soft "mmm," let an easy hum begin. Feel the buzz on the lips and across the mask of the face (nose, cheekbones). Glide gently up and down, keeping the sound forward and bright, never stuck back in the throat. A few minutes, savouring the vibration.',
+      mistakes:'A hum felt only in the throat — placed too far back. Clamping the jaw. Pushing for volume instead of seeking the forward buzz.',
+      breath:'Easy low breath; the hum should feel almost effortless, the buzz doing the work.',
+      integrations:'Wakes forward placement and soothes the nervous system at once (sustained humming is a simple vagal toner). Pairs with the "ng" and "nay".',
+      progressions:'Hum into "ng," then open to "mee–may–mah" keeping the buzz forward; glide wider.',
+      regressions:'A few seconds of easy humming on one note, feeling for the lip buzz.' },
     // Resonance / placement
     { id:'ng', cat:'Resonance', name:'The "Ng" — Forward Placement', dur:240, stack:['breath','body'],
-      what:'The "ng" of "sing" finds the bright, forward placement that lets the voice carry without force.',
-      how:'Sing "ng" (tongue back, soft palate) on a comfortable note. Feel the buzz high in the face. Hold it, then open into "ee" and "ah" keeping the same forward placement.',
-      watch:'Losing the brightness when you open the vowel. Keep the resonance forward as the mouth opens.' },
+      setup:'Find the "ng" of "sing" — tongue back and up against the soft palate, mouth relaxed. This finds the bright, forward placement that lets the voice carry without force.',
+      execution:'Sing "ng" on a comfortable note and feel the buzz high and forward in the face. Hold it, then slowly open into "ee" and "ah" while keeping that exact forward resonance. Climb gently through a few notes, returning to "ng" whenever the brightness slips back.',
+      mistakes:'Losing the forward brightness the moment the vowel opens. Letting the sound fall back into the throat. Tightening the tongue root.',
+      breath:'Steady low support; the resonance, not raw air pressure, gives the carrying power.',
+      integrations:'Teaches the bright "ping" that lets a voice cut through without shouting. Pairs with mask placement and vowel shaping.',
+      progressions:'Carry the placement into full words and phrases; five-note scales on "ng→ah."',
+      regressions:'Sustain "ng" on one note, finding the high facial buzz.' },
     { id:'mask', cat:'Resonance', name:'Mask Placement — "Nay Nay"', dur:180, stack:['breath','body'],
-      what:'A bright, slightly nasal "nay" drives the sound into the mask (cheekbones, nose) — the resonance that gives a voice ping and reach.',
-      how:'On a single note, sing "nay nay nay" with a bratty, forward tone. Then carry that placement into open singing. Five-note scales on "nay" climb the range cleanly.',
-      watch:'Pushing from the throat to get volume. The brightness comes from placement, not effort.' },
+      setup:'Sit or stand tall, face forward. A bright, slightly nasal "nay" drives the sound into the mask — cheekbones and nose — the resonance that gives a voice ping and reach.',
+      execution:'On a single comfortable note, sing "nay nay nay" with a bright, almost bratty, forward tone, feeling it buzz in the cheekbones. Then carry that placement straight into open singing without losing the brightness. Climb five-note scales on "nay," keeping every note forward.',
+      mistakes:'Pushing from the throat for volume — brightness comes from placement, not effort. Going fully nasal (air down the nose) instead of forward-resonant. Tensing the neck on the climb.',
+      breath:'Consistent low support; let the bright placement carry the note rather than forcing more air.',
+      integrations:'The "twang"/mask resonance that gives a voice projection and edge. Pairs with "ng" and feeds confident open singing.',
+      progressions:'Move "nay" scales higher; blend the brightness into a rounder tone so it carries without sounding harsh.',
+      regressions:'A few "nay"s on one note, just finding the cheekbone buzz.' },
     { id:'vowels', cat:'Resonance', name:'Vowel Shaping', dur:240, stack:['breath','body'],
-      what:'Even tone across all vowels — the difference between a voice that sounds consistent and one that wobbles between sounds.',
-      how:'On one held note, move slowly through "ee – eh – ah – oh – oo." Keep the volume, placement, and support identical as the vowel changes. Then reverse.',
-      watch:'The "ee" going thin and the "oo" going dark. Aim for one even color across all five.' },
+      setup:'One comfortable sustained note, breath supported. The goal is even tone across all vowels — the difference between a voice that sounds consistent and one that wobbles between sounds.',
+      execution:'On one held note, move slowly through "ee – eh – ah – oh – oo," keeping volume, placement, and support identical as the vowel shape changes. Listen for any vowel that thins, darkens, or jumps. Then reverse the order, smoothing the transitions until the colour is even.',
+      mistakes:'The "ee" going thin and pinched, the "oo" going dark and swallowed. Changing volume or placement with the vowel. Moving too fast to hear the seams.',
+      breath:'Constant, even support throughout — the breath does not change as the vowel does.',
+      integrations:'Evens out the instrument so lyrics sit on one consistent tone. Pairs with scales and any song work.',
+      progressions:'Do it on scales and across the passaggio; match vowels on moving melodies.',
+      regressions:'Just "ee–ah–oo" on one note, aiming for the same brightness on each.' },
     // Range / agility
     { id:'sirens', cat:'Range', name:'Sirens — Range Glides', dur:240, stack:['breath','body'],
-      what:'Stretches the full range and smooths the break between chest and head voice.',
-      how:'On an "oo" or a lip trill, glide from your lowest comfortable note to your highest and back — like a slow siren. Smooth, connected, no gear-changes.',
-      watch:'A crack or jump at the passaggio (the break). Glide through it gently; over weeks it smooths. Never force the top.' },
+      setup:'On an "oo" or a lip trill, breath low and easy. Sirens stretch the full range and smooth the break between chest and head voice (the passaggio).',
+      execution:'Glide from your lowest comfortable note up to your highest and back down — one long, smooth, connected siren, no gear-changes or cracks. Let the sound thin and lighten as it rises rather than dragging weight up. Repeat, letting the top open a little more each time without forcing.',
+      mistakes:'A crack or hard jump at the passaggio. Forcing chest voice too high. Holding the breath at the top instead of keeping it flowing.',
+      breath:'Continuous flow throughout the glide; slightly more support as you ascend, never a held breath.',
+      integrations:'The single best tool for connecting registers into one seamless voice. Do them on the lip trill first, then open vowels.',
+      progressions:'Widen the range over weeks; siren on open vowels; add octave-and-a-half glides.',
+      regressions:'Small sirens within a comfortable fifth, smoothing just the easy middle.' },
     { id:'scales', cat:'Range', name:'Five-Note Scales', dur:300, stack:['breath','body'],
-      what:'Pitch accuracy and agility — do-re-mi-fa-sol and back, climbing semitone by semitone.',
-      how:'Pick a vowel or "nay." Sing a five-note scale up and down, then move the whole pattern up a half-step and repeat. Use the Pitch tab’s drone or scale to stay in tune.',
-      watch:'Sliding into notes instead of landing them. Aim for the centre of each pitch cleanly.' },
+      setup:'Pick a vowel or "nay," and have the Pitch tab’s drone or scale ready to check tuning. This builds pitch accuracy and agility — five notes up and down, climbing by half-steps.',
+      execution:'Sing a five-note scale (do-re-mi-fa-sol and back) up and down, landing each note cleanly in its centre. Then move the whole pattern up a half-step and repeat, climbing as high as stays easy, then descend. Use the drone to hear yourself against true pitch.',
+      mistakes:'Sliding or scooping into notes instead of landing them. Speeding up and blurring the pitches. Pushing the top of the climb past easy.',
+      breath:'Steady support per phrase; reset the low breath between scale patterns.',
+      integrations:'Trains the ear and the agility behind melodies. Pairs with the Pitch tab and vowel work.',
+      progressions:'Faster runs, wider patterns (octave scales, arpeggios), a different vowel each climb.',
+      regressions:'A single five-note scale up and down on one comfortable key, slowly.' },
     { id:'messa', cat:'Range', name:'Messa di Voce — Dynamic Control', dur:240, stack:['breath','body'],
-      what:'The master’s exercise: swell a single held note from soft to loud and back to soft, keeping it perfectly in tune. Total breath + cord control.',
-      how:'Sustain one comfortable note. Begin barely audible, swell smoothly to full, then taper back to nothing — all on one breath, pitch dead steady.',
-      watch:'The pitch rising as you get louder or sagging as you soften. Hold the centre while the volume moves.' },
+      setup:'One comfortable sustained note, full breath, total focus. Messa di voce is the master’s exercise: swell a single held note from soft to loud and back to soft, perfectly in tune.',
+      execution:'Begin the note barely audible (pianissimo), swell it smoothly and continuously up to full volume, then taper it back down to nothing — all on one breath, the pitch held dead steady throughout. The crescendo and decrescendo should be even arcs, with no lurches.',
+      mistakes:'The pitch rising as you get louder and sagging as you soften. Lurching the volume instead of a smooth arc. Running out of breath before the taper.',
+      breath:'Exquisite control — the belly meters a slowly rising and falling pressure while pitch stays constant.',
+      integrations:'The ultimate integration of breath, cord control, and pitch; the foundation of expressive dynamics. Pairs with the hiss and sustained toning.',
+      progressions:'Longer swells, higher notes, then apply dynamic shaping to phrases in real songs.',
+      regressions:'A short swell — soft to medium and back — on one easy note, pitch steady.' },
     // Throat / de-armor
     { id:'jaw_release', cat:'Throat de-armor', name:'Jaw & Tongue Release', dur:180, stack:['body','healing'],
-      what:'A clenched jaw and a tight tongue strangle the voice. This is throat-chakra de-armoring — releasing the held tension that keeps the voice small.',
-      how:'Massage the jaw hinge with your fingers. Let the jaw hang loose, waggle it. Stretch the tongue out fully, then let it flop. Yawn wide several times.',
-      watch:'Holding tension you did not know was there. The voice cannot open through a locked jaw. Soften first, sing second.' },
+      setup:'Sit or stand, hands free to touch the face. A clenched jaw and tight tongue strangle the voice — this is throat-chakra de-armoring, releasing the held tension that keeps the voice small.',
+      execution:'Massage the jaw hinge (just in front of the ears) in slow circles. Let the jaw hang loose and waggle it gently side to side. Stick the tongue all the way out, hold, then let it flop back soft. Yawn wide several times, feeling the whole throat and face open.',
+      mistakes:'Holding tension you did not know was there and singing through it anyway. Forcing the jaw open instead of letting it hang. Rushing past the release to get to the singing.',
+      breath:'Slow, easy breaths; let each exhale soften the jaw and tongue further.',
+      integrations:'Releases the physical armor over the throat chakra — the voice cannot open through a locked jaw. Pairs with the yawn-sigh and emotional-release work.',
+      progressions:'Add neck and shoulder release; sigh on the release; map where you habitually clench.',
+      regressions:'Three slow jaw waggles and one big yawn — 30 seconds before singing.' },
     { id:'yawn_sigh', cat:'Throat de-armor', name:'Yawn-Sigh — Larynx Release', dur:180, stack:['body','breath','healing'],
-      what:'Drops a high, squeezed larynx into a relaxed, open position — the open throat that lets sound pour instead of pinch.',
-      how:'Begin a yawn — feel the throat open wide and the larynx drop. On the release, let a relaxed "haaah" sigh fall from high to low. Repeat, savouring the openness.',
-      watch:'Re-tightening the throat the moment you make a real sound. Keep the yawn-space when you sing.' },
+      setup:'Comfortable stance, throat relaxed. This drops a high, squeezed larynx into a relaxed, open position — the open throat that lets sound pour instead of pinch.',
+      execution:'Begin a real yawn and feel the throat open wide and the larynx drop low. At the peak, release a relaxed "haaah" sigh that falls freely from a high pitch down to a low one — no control, just a falling sigh on the open throat. Repeat, savouring the spacious feeling each time.',
+      mistakes:'Re-tightening the throat the instant you make a real, pitched sound. Forcing the sigh. Raising the larynx (a swallowed, strained feeling).',
+      breath:'A full, relaxed breath into the yawn; the sigh rides a free, unforced exhale.',
+      integrations:'Resets a high, tense larynx to the open-throat feeling you want to keep while singing. Pairs with jaw release and straw phonation.',
+      progressions:'Keep the yawn-space while singing actual notes and phrases; catch and undo larynx-rise in songs.',
+      regressions:'One yawn and one falling sigh, just feeling the throat open.' },
     // Sacred / energetic
     { id:'toning', cat:'Sacred voice', name:'Toning — Sustained Vowel', dur:300, stack:['breath','energy','healing'],
-      what:'A single sustained vowel held as pure vibration. Not a song — a tuning. Sustained tone raises vagal tone and floods the body with its own resonance.',
-      how:'Inhale low. On the exhale, release one open vowel ("ah" or "oh") — long, even, felt through the whole chest and skull. Let it go where it wants. Repeat for several minutes.',
-      watch:'Performing it. There is no audience. Let the tone be ugly, honest, alive — that is where it works.' },
+      setup:'Sit upright and undisturbed, eyes soft or closed. Toning is a single sustained vowel held as pure vibration — not a song, a tuning. Sustained tone raises vagal tone and floods the body with its own resonance.',
+      execution:'Inhale low. On the exhale, release one open vowel — "ah" or "oh" — long, even, and felt through the whole chest and skull. Do not aim for a pretty sound; aim for vibration you can feel. Let the pitch settle wherever the body wants it. Repeat for several minutes, sinking into the resonance.',
+      mistakes:'Performing it — there is no audience. Controlling the pitch instead of letting the body choose. Too quiet to actually vibrate the bones.',
+      breath:'Low inhale, long even toned exhale; let the breath fully empty before the next.',
+      integrations:'Voice as vibrational medicine — settles the nervous system and clears the throat centre. Pairs with bija chant and the Inner Temple energy work.',
+      progressions:'Tone into specific body regions; find pitches that resonate different cavities; extend the session.',
+      regressions:'Three long "ah" tones, eyes closed, feeling the chest buzz.' },
     { id:'bija_om', cat:'Sacred voice', name:'OM / Bija Chant', dur:300, stack:['breath','energy','healing'],
-      what:'Seed-sound chanting — OM, or the chakra bijas (LAM VAM RAM YAM HAM OM). The voice as an instrument of energy, not just words.',
-      how:'Chant OM slowly: the "ooo" in the belly, the "mmm" buzzing up to the crown. Or climb the bijas centre by centre, feeling each light up. Three rounds.',
-      watch:'Rushing. The power is in the sustain and the felt vibration, not the repetition count.' },
+      setup:'Sit upright, spine long, eyes closed. Seed-sound chanting — OM, or the chakra bijas (LAM VAM RAM YAM HAM OM) — uses the voice as an instrument of energy, not just words.',
+      execution:'For OM: chant slowly, the "ooo" resonating in the belly, the "mmm" buzzing up to the crown, each round long and felt. For the bijas: climb centre by centre — LAM root, VAM sacrum, RAM solar plexus, YAM heart, HAM throat, OM third eye — feeling each light up as you sound it. Three rounds.',
+      mistakes:'Rushing — the power is in the sustain and the felt vibration, not the repetition count. Chanting from the throat only. Treating it as rote.',
+      breath:'A full low breath before each seed sound; let the tone last the whole exhale.',
+      integrations:'Tunes the energy centres through sound; sustained toning also raises vagal tone. Pairs with the microcosmic orbit and the Healing Temple practices.',
+      progressions:'Hold each bija longer; add the felt sense of each chakra opening; combine with colour and light visualisation.',
+      regressions:'Three slow OMs, feeling belly-to-crown.' },
     { id:'overtone', cat:'Sacred voice', name:'Overtone Singing', dur:300, stack:['breath','energy','healing'],
-      what:'Advanced. Shaping the mouth to amplify a single harmonic above a sustained drone — two notes from one throat. The deepest listening the voice can do.',
-      how:'Sustain a low, steady "ahh." Slowly shape the mouth from "ah" toward "ee" / "oo", moving the tongue. Listen for the whistling harmonic riding above the drone. Chase it, isolate it.',
-      watch:'Forcing it. The overtone is found by listening and tiny mouth changes, never by pushing. Patience over months.' },
+      setup:'Quiet space, patient mind. Overtone singing is advanced — shaping the mouth to amplify a single harmonic above a sustained drone, so two notes sound from one throat. The deepest listening the voice can do.',
+      execution:'Sustain a low, steady "ahh" drone. Very slowly shape the mouth from "ah" toward "ee," then toward "oo," moving the tongue forward and back and changing the lip opening. Listen for a faint whistling harmonic riding above the drone. When you catch it, make tiny adjustments to brighten and isolate it. Chase it by listening, not pushing.',
+      mistakes:'Forcing it — the overtone is found by listening and tiny mouth changes, never by pushing harder. Impatience; this takes weeks to months. Letting the drone waver.',
+      breath:'A rock-steady drone needs steady support; the harmonic only emerges over an unwavering fundamental.',
+      integrations:'Trains exquisite listening and mouth-resonance control. Pairs with toning and deep sound-healing work.',
+      progressions:'Stabilise and move the overtone melodically; explore different fundamentals; layer in throat-singing over time.',
+      regressions:'Sustain the slow "ah→ee" morph and listen for any shimmer above the tone — no pressure to "get" it.' },
     { id:'free_song', cat:'Sacred voice', name:'Vocal Devotion — Free Singing', dur:600, stack:['body','breath','healing'],
-      what:'The point of all of it. No exercise, no judge — just the voice, free, singing whatever wants out. Where the throat work becomes the man who is willing to be heard.',
-      how:'Put on a track you love, or sing into silence. No rules, no critique. Let it be off-key, let it crack, let it be loud. Sing like no one is listening, because the unconcealment is the medicine.',
-      watch:'The inner critic that shrinks the voice back down. Notice it, and sing through it anyway. That is the whole work.' }
+      setup:'Put on a track you love, or sit in silence. This is the point of all of it — no exercise, no judge, just the voice, free, singing whatever wants out. Where the throat work becomes the man who is willing to be heard.',
+      execution:'Sing. Out loud, fully. Let it be off-key, let it crack, let it be too loud. Follow the song or improvise into the silence — no rules, no critique. When the inner critic appears and tries to shrink the voice, notice it and sing straight through it. The unconcealment is the medicine; being heard, even by yourself, is the practice.',
+      mistakes:'The inner critic that shrinks the voice back down — the whole work is to sing through it anyway. Stopping the moment it sounds imperfect. Keeping it quiet and safe.',
+      breath:'Everything the warmups built — low support, open throat, forward placement — now in service of free expression. Do not police it; let the body sing.',
+      integrations:'The destination of the whole Vocal Temple — the voice as unconcealment, the shrink-to-fit reflex undone in real time. Pairs with the Hibrations being-seen work.',
+      progressions:'Sing for others; record yourself; bring written songs and your own lyrics into it.',
+      regressions:'One song, alone, door closed — just let it out for two minutes.' }
   ];
   var CAT_ORDER = ['Breath','Warmup (SOVT)','Resonance','Range','Throat de-armor','Sacred voice'];
 
@@ -223,7 +308,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sa
   var KEY = 'vocal_v1';
   var state = load();
   var tab = state.lastTab || 'warmups';
-  var openId = null;
+  var formOpenId = null;
+  var noteOpenId = null;
   function load(){ try{ var r=localStorage.getItem(KEY); if(r){var p=JSON.parse(r); if(!p.sessions)p.sessions=[]; return p;} }catch(e){} return { sessions:[], lastTab:'warmups' }; }
   function save(){ state.lastTab=tab; try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
   function el(t,c,h){ var n=document.createElement(t); if(c)n.className=c; if(h!=null)n.innerHTML=h; return n; }
@@ -265,26 +351,41 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sa
     }
   }
 
+  function ytSearch(name){ return 'https://www.youtube.com/results?search_query='+encodeURIComponent(name+' vocal exercise'); }
+  function vWikiText(p){ return p.name+'. '+(p.setup?p.setup+' ':'')+(p.execution||'')+(p.breath?' Breath: '+p.breath:''); }
+  function vSpeak(t){ try{ if(!('speechSynthesis' in window)||!t) return; speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(t); u.rate=0.9; u.lang='en-US'; var vs=speechSynthesis.getVoices()||[]; var en=vs.filter(function(v){return /^en[-_]?/i.test(v.lang);}); var male=en.filter(function(v){return /male/i.test(v.name)&&!/female/i.test(v.name);}); var voice=male[0]||en[0]; if(voice){u.voice=voice;u.lang=voice.lang;} speechSynthesis.speak(u); }catch(e){} }
   function card(p){
-    var c=el('div','pcard'+(openId===p.id?' open':''));
-    var head=el('div','pcard-head');
-    head.appendChild(el('div','pc-name', esc(p.name)));
-    head.appendChild(el('div','pc-dur', Math.round(p.dur/60)+' min'));
-    head.addEventListener('click', function(){ openId=(openId===p.id?null:p.id); render(); });
-    c.appendChild(head);
-    var body=el('div','pcard-body');
-    body.appendChild(sec('what it is', p.what));
-    body.appendChild(sec('how', p.how));
-    body.appendChild(sec('watch for', p.watch));
-    var acts=el('div','pc-actions');
-    var begin=el('button','btn','begin · '+Math.round(p.dur/60)+' min');
-    begin.addEventListener('click', function(e){ e.stopPropagation(); startTimer(p); });
-    acts.appendChild(begin);
-    var log=el('button','btn ghost','log only');
-    log.addEventListener('click', function(e){ e.stopPropagation(); logSession(p); });
-    acts.appendChild(log);
-    body.appendChild(acts);
-    c.appendChild(body);
+    var open=(formOpenId===p.id), noteOpen=(noteOpenId===p.id);
+    var c=el('div','pcard');
+    var inner=el('div','pcard-inner');
+    inner.appendChild(el('div','pc-name', esc(p.name)));
+    inner.appendChild(el('div','pc-dur', Math.round(p.dur/60)+' min'));
+    var acts=el('div','step-actions');
+    var formBtn=el('button','step-action-btn accent', open?'hide form':'form');
+    formBtn.addEventListener('click', function(){ formOpenId = open?null:p.id; render(); });
+    acts.appendChild(formBtn);
+    var watch=el('button','step-action-btn','watch \u25b6');
+    watch.addEventListener('click', function(){ window.open(ytSearch(p.name),'_blank','noopener'); });
+    acts.appendChild(watch);
+    var t=el('button','step-action-btn','begin timer'); t.addEventListener('click', function(){ startTimer(p); }); acts.appendChild(t);
+    var note=el('button','step-action-btn', noteOpen?'hide note':'note'); note.addEventListener('click', function(){ noteOpenId = noteOpen?null:p.id; render(); }); acts.appendChild(note);
+    var wiki=el('button','step-action-btn','wiki \u2192'); wiki.addEventListener('click', function(){ vSpeak(vWikiText(p)); }); acts.appendChild(wiki);
+    var log=el('button','step-action-btn','log'); log.addEventListener('click', function(){ logSession(p); }); acts.appendChild(log);
+    inner.appendChild(acts);
+    if(open){
+      var html='';
+      function fs(label,val,muted){ if(val) html+='<div class="form-section"><div class="form-label">'+label+'</div><div class="form-text'+(muted?' muted':'')+'">'+esc(val)+'</div></div>'; }
+      fs('setup',p.setup); fs('execution',p.execution); fs('common mistakes',p.mistakes,true); fs('breath',p.breath,true); fs('integration',p.integrations); fs('progressions',p.progressions); fs('regressions',p.regressions);
+      var fp=el('div','step-form open'); fp.innerHTML=html; inner.appendChild(fp);
+    }
+    if(noteOpen){
+      var np=el('div','step-notes open');
+      np.appendChild(el('div','step-notes-prompt','what landed in the voice'));
+      var ta=document.createElement('textarea'); ta.value=(state.notes&&state.notes[p.id])||''; ta.placeholder='\u2026';
+      ta.addEventListener('input', function(e){ if(!state.notes)state.notes={}; state.notes[p.id]=e.target.value; save(); });
+      np.appendChild(ta); inner.appendChild(np);
+    }
+    c.appendChild(inner);
     return c;
   }
   function sec(label,text){ var s=el('div','pc-section'); s.appendChild(el('div','pc-label',label)); s.appendChild(el('div','pc-text', esc(text))); return s; }

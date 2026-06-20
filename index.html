@@ -840,6 +840,22 @@ nav.tab-bar {
 .portal-moon-guide .pmg-cta { display: block; margin-top: 4px; font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); transition: color 0.15s; }
 .portal-moon-guide:active .pmg-cta { color: var(--gold); }
 .portal-moon-guide.lunar-hint .pmg-cta { color: var(--gold); }
+.portal-hpath { margin: 16px 0 4px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-md); padding: 13px 15px; }
+.portal-hpath-eyebrow { font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 10px; }
+.hpath-track { display: flex; gap: 4px; margin-bottom: 11px; }
+.hpath-dot { flex: 1; height: 6px; border-radius: 3px; background: var(--border); cursor: pointer; transition: background 0.15s; }
+.hpath-dot.done { background: var(--c-crown); }
+.hpath-dot.current { background: var(--gold); }
+.hpath-stage { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.hpath-focus { font-size: 12px; color: var(--ink-dim); line-height: 1.5; margin-top: 3px; }
+.hpath-ex { display: block; width: 100%; text-align: left; margin-top: 11px; background: none; border: none; border-top: 1px solid var(--border-soft); padding: 9px 0 0; cursor: pointer; }
+.hpath-ex .hpe-label { display: block; font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); }
+.hpath-ex .hpe-name { display: block; font-size: 12.5px; color: var(--c-crown); margin-top: 3px; }
+.hpath-ex .hpe-cue { display: block; font-size: 11.5px; font-style: italic; color: var(--ink-dim); margin-top: 2px; line-height: 1.45; }
+.hpath-ex:active .hpe-name { color: var(--gold); }
+.hpath-nav { display: flex; gap: 8px; margin-top: 11px; }
+.hpath-nav button { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); background: none; border: 1px solid var(--border); border-radius: 999px; padding: 4px 11px; cursor: pointer; }
+.hpath-nav button:active { color: var(--gold); border-color: var(--gold); }
 .schedule-list { display: flex; flex-direction: column; gap: 14px; }
 .schedule-day { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-md); padding: 14px 16px; }
 .schedule-day-name { font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-dim); margin-bottom: 10px; }
@@ -1095,7 +1111,7 @@ const Shell = {
       Shell.openTemple('strings.html', 'strings & soul');
       return;
     } else if (app === 'grimoire') {
-      Shell.openTemple('healing_grimoire.html', 'healing grimoire');
+      Shell.openTemple('healing_temple.html', 'healing temple');
       return;
     } else if (app === 'vocal') {
       Shell.openTemple('vocal.html', 'vocal temple');
@@ -1696,6 +1712,48 @@ const Portal = (function() {
       if (hist.length) card.appendChild(el('div', 'hrv-trend', 'recent · ' + hist.slice(0, 7).join(' · ') + ' ms'));
     }
     view.appendChild(card);
+  }
+
+  // ── The Healing Path — current-step status + a suggested exercise (mirrors the lunar guide). Stages from healing_grimoire.html STAGES. ──
+  const HEALING_PATH = [
+    { name: 'Awakening', focus: 'Feel and activate the palms — daily energy ball, breathwork. → consistent sensation on demand.', ex: 'Laogong Activation & Energy Ball', cue: 'rub the palms, hold the ball, feel it grow dense.' },
+    { name: 'Foundation', focus: 'Daily qigong, Dan Tian building, grounding. → a 30-min daily practice established.', ex: 'Zhan Zhuang — Standing Pole', cue: 'stand still, build the field. the stillness is the work.' },
+    { name: 'Initiation', focus: 'Reiki Level 1 attunement, Pranic study begins. → first formal healing on another.', ex: 'Reiki Self-Treatment', cue: 'hands-on, the 12 positions. healing begins with self.' },
+    { name: 'Deepening', focus: 'Moon-cycle practice, Kabbalistic study, scanning refinement. → read the field of a stranger.', ex: 'The Middle Pillar', cue: 'light the spheres of the Tree; refine the scan.' },
+    { name: 'Integration', focus: 'Reiki Level 2, distance healing, shadow work. → distance healing working.', ex: 'Distance Healing (Level 2)', cue: 'send across space — where your Pisces gift excels.' },
+    { name: 'Mastery Path', focus: 'Your own synthesis begins; teach what you know. → students appear naturally.', ex: 'Microcosmic Orbit', cue: 'circulate your own current; what you embody, you teach.' },
+    { name: 'Iron Monkey Builds', focus: 'Your unique system emerges from the synthesis. → others call you a healer.', ex: 'Solve et Coagula — Contemplation', cue: 'dissolve and reconstitute — the system that is you.' }
+  ];
+  const HPATH_KEY = 'portal_healing_path_v1';
+  function loadHPath() { try { const d = JSON.parse(localStorage.getItem(HPATH_KEY) || '{}'); return (typeof d.stage === 'number') ? d.stage : 0; } catch (e) { return 0; } }
+  function setHPath(i) { try { localStorage.setItem(HPATH_KEY, JSON.stringify({ stage: i })); } catch (e) {} }
+
+  function renderHealingPath(view) {
+    const cur = Math.max(0, Math.min(HEALING_PATH.length - 1, loadHPath()));
+    const s = HEALING_PATH[cur];
+    const wrap = el('div', 'portal-hpath');
+    wrap.appendChild(el('div', 'portal-hpath-eyebrow', 'the healing path · where you are'));
+    const track = el('div', 'hpath-track');
+    HEALING_PATH.forEach((st, i) => {
+      const dot = el('div', 'hpath-dot' + (i < cur ? ' done' : i === cur ? ' current' : ''));
+      dot.title = st.name;
+      dot.addEventListener('click', () => { setHPath(i); render(); });
+      track.appendChild(dot);
+    });
+    wrap.appendChild(track);
+    wrap.appendChild(el('div', 'hpath-stage', s.name));
+    wrap.appendChild(el('div', 'hpath-focus', s.focus));
+    const ex = el('button', 'hpath-ex');
+    ex.innerHTML = '<span class="hpe-label">suggested · this step</span>' +
+      '<span class="hpe-name">' + escapeHtml(s.ex) + '</span>' +
+      '<span class="hpe-cue">' + escapeHtml(s.cue) + '</span>';
+    ex.addEventListener('click', () => Shell.goTo('grimoire'));
+    wrap.appendChild(ex);
+    const nav = el('div', 'hpath-nav');
+    if (cur > 0) { const b = el('button', null, '‹ back'); b.addEventListener('click', () => { setHPath(cur - 1); render(); }); nav.appendChild(b); }
+    if (cur < HEALING_PATH.length - 1) { const b = el('button', null, 'advance ›'); b.addEventListener('click', () => { setHPath(cur + 1); render(); }); nav.appendChild(b); }
+    wrap.appendChild(nav);
+    view.appendChild(wrap);
   }
 
   function readStackPulse() {
@@ -2496,7 +2554,12 @@ const Portal = (function() {
     { id: 'voice_prosody', name: 'Voice Prosody Drill', stack: ['field','breath','healing'], durationLabel: '8 min' },
     { id: 'slowness_drill', name: 'Slowness Drill — Pace Channel', stack: ['field','body'], durationLabel: '30 min' },
     { id: 'posture_reset', name: 'Posture Reset', stack: ['field','body','breath'], durationLabel: '3 min' },
-    { id: 'field_test_log', name: 'Field Test Log', stack: ['field'], durationLabel: '5 min' }
+    { id: 'field_test_log', name: 'Field Test Log', stack: ['field'], durationLabel: '5 min' },
+    { id: 'the_vacuum', name: 'The Vacuum — Drawing the Field', stack: ['field','primal','energy'], durationLabel: '10 min' },
+    { id: 'the_emission', name: 'The Emission — Radiating the Heart-Field', stack: ['field','energy','primal'], durationLabel: '10 min' },
+    { id: 'feed_the_beast', name: 'Feeding the Beast — Charge Accumulation', stack: ['primal','energy','breath'], durationLabel: '20–30 min' },
+    { id: 'vacuum_emission_dial', name: 'The Vacuum–Emission Dial', stack: ['field','primal','breath'], durationLabel: '5–10 min' },
+    { id: 'magnetic_stillness', name: 'The Magnetic Stillness', stack: ['field','primal'], durationLabel: '10 min' }
   ];
 
   // Healing Grimoire manifest — mirrors apps/healing_grimoire.html. Grimoire is cultivation:
@@ -2993,9 +3056,8 @@ const Portal = (function() {
     }
     view.appendChild(hero);
 
+    renderHealingPath(view);
     renderHrv(view);
-    renderStackPulse(view);
-    renderNextPractice(view);
 
     view.appendChild(el('div', 'section-eyebrow', "today's flow"));
 
@@ -3083,6 +3145,9 @@ const Portal = (function() {
     flowAddBtn.addEventListener('click', openAddToFlow);
     view.appendChild(flowAddBtn);
 
+    renderStackPulse(view);
+    renderNextPractice(view);
+
     view.appendChild(el('div', 'section-eyebrow', 'jump in'));
     const grid = document.createElement('div');
     grid.className = 'temples-grid';
@@ -3096,7 +3161,7 @@ const Portal = (function() {
     };
     mkCard('c-brow',   '💜', 'Inner Temple',       'breath · meditation · daily', 'inner');
     mkCard('c-root',   '🔴', 'Body Temple',        'training · vessel', 'body');
-    mkCard('c-crown',  '🤍', 'Healing Grimoire',   'qi · reiki · prana', 'grimoire');
+    mkCard('c-crown',  '🤍', 'Healing Temple',   'qi · reiki · prana', 'grimoire');
     mkCard('azure',    '🎙️', 'Vocal Temple',       'breath · voice · range', 'vocal');
     mkCard('c-sacral', '🧡', 'Beast Temple',       'primal · field · charge · aura', 'beast');
     mkCard('c-throat', '💙', 'Hibrations',         'capture · craft · ship', 'hibrations');
