@@ -796,6 +796,26 @@ const DEFAULT_LIBRARY = [
     integrations: 'Zen tradition. The simplest and the hardest meditation — opposite of effortful concentration. pure presence with no object. perfect counter to overstuffed energetic practice.',
     videoUrl: ytSearch('shikantaza just sitting zen meditation') },
 
+  { id: 'wordless_body_sit', name: 'Wordless body sit', category: 'meditation', defaultDuration: 600, equipment: [],
+    setup: 'Sit upright, spine long, hands resting. Eyes closed or soft. Nothing to perform, no one to be for.',
+    execution: 'Drop language. For the whole sit, refuse to narrate — no naming what you feel, no inner commentary. Just the body, transmitting and receiving. When a word arises, let it dissolve back into sensation. Sit as a field, not as a thinker. 10 min.',
+    mistakes: 'Turning it into a meditation ABOUT not-talking. The instant you describe the silence, you left it. Come back wordless.',
+    breath: 'Untouched. Let it breathe you — watching it is already too much doing.',
+    progressions: 'Carry the wordless state into a slow walk, then into a conversation where you say less and transmit more.',
+    regressions: 'Start at 4 min. Use one anchor word (\'here\') only when you fully scatter.',
+    integrations: 'came into the Beast Temple from the Magnetic work — pure presence, charge without performance. the state-of-mind root under every field practice.',
+    videoUrl: ytSearch('wordless awareness presence meditation') },
+
+  { id: 'inner_smile', name: 'Inner smile', category: 'meditation', defaultDuration: 480, equipment: [],
+    setup: 'Sit upright, spine long. Soften the face. Bring up a faint half-smile and let the eyes soften with it.',
+    execution: 'Taoist practice. Smile down into the body: first the eyes, then pour the warmth into each organ in turn — heart, lungs, liver, kidneys, spleen — thanking each, softening each. Then smile down the front line to the navel and gather the warmth there. The organs relax under a kind gaze.',
+    mistakes: 'Forcing a big grin. Rushing past organs that feel numb — those are the ones that most need the smile.',
+    breath: 'Slow and low. The smile rides the exhale down into the body.',
+    progressions: 'Add the microcosmic orbit after gathering at the navel — the smile primes the channel.',
+    regressions: 'Just smile into the heart and belly for 3 min.',
+    integrations: 'classic Taoist qigong — warmth and self-kindness as the base state. dissolves the shrink-to-fit contraction; the body learns it is welcome.',
+    videoUrl: ytSearch('inner smile meditation taoist') },
+
   { id: 'spinal_wave', name: 'Spinal wave (cat-cow flow)', category: 'movement', defaultDuration: 480, equipment: ['mat (optional)'],
     setup: 'Tabletop position — hands under shoulders, knees under hips. Knees on a mat or padding.',
     execution: 'Inhale: drop belly, lift sternum, look slightly up (cow). Exhale: round spine, drop head, draw belly to spine (cat). Move slowly between the two — feel each vertebra wave. 5 min. Then transition to standing — gentle figure-8 with hips and shoulders for 3 min.',
@@ -933,6 +953,21 @@ const DEFAULT_DATA = {
         { id: 'op-c', libraryId: 'silent_sit', letter: 'C', name: 'Rest in the field', duration: 120, cues: 'no doing. just notice what was moved.' }
       ],
       closing: 'water. note what you noticed.'
+    },
+    {
+      id: 'vocal_practice',
+      name: 'Vocal',
+      subtitle: 'voice warm-up — open the throat gate',
+      type: 'vocal',
+      duration: '~8 min',
+      intro: 'The voice is a gate. Warm the instrument before the day asks you to speak — or sing.',
+      steps: [
+        { id: 'vp-a', libraryId: 'diaphragm_activation', letter: 'A', name: 'Activate the diaphragm', duration: 120, cues: 'hand on belly. breath drops low, ribs widen.' },
+        { id: 'vp-b', libraryId: 'hum_slides', letter: 'B', name: 'Hum slides', duration: 120, cues: 'easy sirens up and down. feel the buzz move.' },
+        { id: 'vp-c', libraryId: 'lip_trills', letter: 'C', name: 'Lip trills', duration: 120, cues: 'lips loose, glide through the range.' },
+        { id: 'vp-d', libraryId: 'vocal_scales', letter: 'D', name: 'Scales', duration: 120, cues: 'five-note runs. open the vowels, let it ring.' }
+      ],
+      closing: 'the gate is open. speak, sing, or carry it into the day.'
     }
   ],
   schedule: { morning: 'solar_gate', evening: 'evening_winddown' },
@@ -1159,7 +1194,7 @@ const LIBRARY_DISPLAY_ORDER = [
   'silent_sit', 'body_scan', 'felt_sense_scan', 'standing_meditation', 'walking_meditation',
   'loving_kindness', 'tonglen', 'mantra_japa', 'visualization', 'twin_flames_visualization',
   'card_14_integration', 'trataka', 'vipassana', 'self_inquiry', 'aletheia_dialogue',
-  'open_awareness', 'witness_consciousness',
+  'open_awareness', 'witness_consciousness', 'wordless_body_sit', 'inner_smile',
   // Movement — warm-up → flows → deeper
   'spinal_wave', 'sun_salutation_a', 'sun_salutation_b', 'qigong_opening', 'lower_body_flow', 'yin_pose',
   // Vocal — warm-up → exercises → seed/devotional
