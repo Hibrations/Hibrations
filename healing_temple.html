@@ -62,6 +62,25 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sa
 .form-label { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--indigo); margin-bottom: 4px; }
 .form-text { font-size: 13.5px; color: var(--ink); line-height: 1.55; }
 .form-text.muted { color: var(--ink-dim); }
+.hpath { margin: 0 0 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-md); padding: 13px 15px; }
+.hpath-eyebrow { font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 10px; }
+.hpath-track { display: flex; gap: 4px; margin-bottom: 11px; }
+.hpath-dot { flex: 1; height: 6px; border-radius: 3px; background: var(--border); cursor: pointer; transition: background 0.15s; }
+.hpath-dot.done { background: var(--c-crown); }
+.hpath-dot.current { background: var(--gold); }
+.hpath-stage { font-size: 14px; font-weight: 600; color: var(--ink); }
+.hpath-focus { font-size: 12px; color: var(--ink-dim); line-height: 1.5; margin-top: 3px; }
+.hpath-sug { display: flex; align-items: flex-start; gap: 8px; margin-top: 11px; border-top: 1px solid var(--border-soft); padding-top: 10px; }
+.hpath-ex { flex: 1; text-align: left; background: none; border: none; padding: 0; cursor: pointer; }
+.hpath-ex .hpe-label { display: block; font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); }
+.hpath-ex .hpe-name { display: block; font-size: 13px; color: var(--indigo); margin-top: 3px; }
+.hpath-ex .hpe-cue { display: block; font-size: 11.5px; font-style: italic; color: var(--ink-dim); margin-top: 2px; line-height: 1.45; }
+.hpath-ex:active .hpe-name { color: var(--gold); }
+.hpath-roll { flex: none; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); background: none; border: 1px solid var(--border); border-radius: 999px; padding: 5px 9px; cursor: pointer; white-space: nowrap; }
+.hpath-roll:active { color: var(--indigo); border-color: var(--indigo); }
+.hpath-nav { display: flex; gap: 8px; margin-top: 11px; }
+.hpath-navbtn { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); background: none; border: 1px solid var(--border); border-radius: 999px; padding: 4px 11px; cursor: pointer; }
+.hpath-navbtn:active { color: var(--gold); border-color: var(--gold); }
 .pc-actions { display: flex; gap: 9px; margin-top: 16px; }
 .btn { flex: 1; padding: 11px; border-radius: var(--r-md); font-size: 13px; font-weight: 600; border: 1px solid var(--indigo-dim); background: var(--indigo-faint); color: var(--ink); cursor: pointer; }
 .btn:active { background: var(--indigo-dim); }
@@ -379,7 +398,53 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sa
     window.scrollTo(0,0);
   }
 
+  // ── The Healing Path — current step + a rotatable suggestion. Stage shared with the portal via portal_healing_path_v1. ──
+  var HPATH_KEY = 'portal_healing_path_v1';
+  var HSTAGES = [
+    { name: 'Awakening', focus: 'Feel and activate the palms — daily energy ball, breathwork. → consistent sensation on demand.', pool: ['laogong_ball','hand_sensitize','morning_ground','micro_orbit'] },
+    { name: 'Foundation', focus: 'Daily qigong, Dan Tian building, grounding. → a 30-min daily practice established.', pool: ['zhan_zhuang','ba_duan_jin','water_qigong','micro_orbit'] },
+    { name: 'Initiation', focus: 'Reiki Level 1 attunement, Pranic study begins. → first formal healing on another.', pool: ['reiki_self','hand_sensitize','pranic_protocol'] },
+    { name: 'Deepening', focus: 'Moon-cycle practice, Kabbalistic study, scanning refinement. → read the field of a stranger.', pool: ['middle_pillar','pranic_protocol','aura_comb','ra_solar_sphere'] },
+    { name: 'Integration', focus: 'Reiki Level 2, distance healing, shadow work. → distance healing working.', pool: ['reiki_distance','cord_cutting','solve_coagula','closing_field'] },
+    { name: 'Mastery Path', focus: 'Your own synthesis begins; teach what you know. → students appear naturally.', pool: ['solve_coagula','body_of_light','middle_pillar','ra_solar_sphere'] },
+    { name: 'Iron Monkey Builds', focus: 'Your unique system emerges from the synthesis. → others call you a healer.', pool: ['solve_coagula','body_of_light','surya_gazing','solar_breath'] }
+  ];
+  var hpSuggestId = null;
+  function hpLoad(){ try{ var d=JSON.parse(localStorage.getItem(HPATH_KEY)||'{}'); return (typeof d.stage==='number')?d.stage:0; }catch(e){ return 0; } }
+  function hpSet(i){ try{ localStorage.setItem(HPATH_KEY, JSON.stringify({stage:i})); }catch(e){} }
+  function hpFind(id){ for(var i=0;i<PRACTICES.length;i++) if(PRACTICES[i].id===id) return PRACTICES[i]; return null; }
+  function hpCue(p){ var s=String(p.setup||p.execution||''); var m=s.match(/^.*?[.!?]/); return m?m[0]:s.slice(0,90); }
+  function hpPick(cur){ var pool=HSTAGES[cur].pool||[]; if(!pool.length) return null; if(hpSuggestId && pool.indexOf(hpSuggestId)>=0) return hpSuggestId; hpSuggestId=pool[Math.floor(Math.random()*pool.length)]; return hpSuggestId; }
+  function hpReroll(cur){ var pool=HSTAGES[cur].pool||[]; if(pool.length<2) return; var n=hpSuggestId, t=0; while(n===hpSuggestId && t<12){ n=pool[Math.floor(Math.random()*pool.length)]; t++; } hpSuggestId=n; }
+  function renderHealingPathPanel(){
+    var cur=Math.max(0,Math.min(HSTAGES.length-1,hpLoad()));
+    var s=HSTAGES[cur];
+    var wrap=el('div','hpath');
+    wrap.appendChild(el('div','hpath-eyebrow','the healing path · where you are'));
+    var track=el('div','hpath-track');
+    HSTAGES.forEach(function(st,i){ var dot=el('div','hpath-dot'+(i<cur?' done':i===cur?' current':'')); dot.title=st.name; dot.addEventListener('click',function(){ hpSet(i); hpSuggestId=null; render(); }); track.appendChild(dot); });
+    wrap.appendChild(track);
+    wrap.appendChild(el('div','hpath-stage', esc(s.name)));
+    wrap.appendChild(el('div','hpath-focus', esc(s.focus)));
+    var pid=hpPick(cur), p=pid?hpFind(pid):null;
+    if(p){
+      var sug=el('div','hpath-sug');
+      var btn=el('button','hpath-ex');
+      btn.innerHTML='<span class="hpe-label">suggested · this step</span><span class="hpe-name">'+esc(p.name)+'</span><span class="hpe-cue">'+esc(hpCue(p))+'</span>';
+      btn.addEventListener('click',function(){ formOpenId=p.id; render(); });
+      sug.appendChild(btn);
+      var roll=el('button','hpath-roll','↻ another'); roll.addEventListener('click',function(){ hpReroll(cur); render(); }); sug.appendChild(roll);
+      wrap.appendChild(sug);
+    }
+    var nav=el('div','hpath-nav');
+    if(cur>0){ var b=el('button','hpath-navbtn','‹ back'); b.addEventListener('click',function(){ hpSet(cur-1); hpSuggestId=null; render(); }); nav.appendChild(b); }
+    if(cur<HSTAGES.length-1){ var b2=el('button','hpath-navbtn','advance ›'); b2.addEventListener('click',function(){ hpSet(cur+1); hpSuggestId=null; render(); }); nav.appendChild(b2); }
+    wrap.appendChild(nav);
+    return wrap;
+  }
+
   function renderPractices(v){
+    v.appendChild(renderHealingPathPanel());
     // today's window from the moon
     var mi=moonIndex(), m=LUNAR[mi];
     var win=el('div','hint','tonight ' + m.g + ' ' + m.n.toLowerCase() + ' — ' + m.w);

@@ -1716,45 +1716,20 @@ const Portal = (function() {
 
   // ── The Healing Path — current-step status + a suggested exercise (mirrors the lunar guide). Stages from healing_grimoire.html STAGES. ──
   const HEALING_PATH = [
-    { name: 'Awakening', focus: 'Feel and activate the palms — daily energy ball, breathwork. → consistent sensation on demand.', ex: 'Laogong Activation & Energy Ball', cue: 'rub the palms, hold the ball, feel it grow dense.' },
-    { name: 'Foundation', focus: 'Daily qigong, Dan Tian building, grounding. → a 30-min daily practice established.', ex: 'Zhan Zhuang — Standing Pole', cue: 'stand still, build the field. the stillness is the work.' },
-    { name: 'Initiation', focus: 'Reiki Level 1 attunement, Pranic study begins. → first formal healing on another.', ex: 'Reiki Self-Treatment', cue: 'hands-on, the 12 positions. healing begins with self.' },
-    { name: 'Deepening', focus: 'Moon-cycle practice, Kabbalistic study, scanning refinement. → read the field of a stranger.', ex: 'The Middle Pillar', cue: 'light the spheres of the Tree; refine the scan.' },
-    { name: 'Integration', focus: 'Reiki Level 2, distance healing, shadow work. → distance healing working.', ex: 'Distance Healing (Level 2)', cue: 'send across space — where your Pisces gift excels.' },
-    { name: 'Mastery Path', focus: 'Your own synthesis begins; teach what you know. → students appear naturally.', ex: 'Microcosmic Orbit', cue: 'circulate your own current; what you embody, you teach.' },
-    { name: 'Iron Monkey Builds', focus: 'Your unique system emerges from the synthesis. → others call you a healer.', ex: 'Solve et Coagula — Contemplation', cue: 'dissolve and reconstitute — the system that is you.' }
+    { name: 'Awakening', focus: 'Feel and activate the palms — daily energy ball, breathwork. → consistent sensation on demand.', pool: ['laogong_ball','hand_sensitize','morning_ground','micro_orbit'] },
+    { name: 'Foundation', focus: 'Daily qigong, Dan Tian building, grounding. → a 30-min daily practice established.', pool: ['zhan_zhuang','ba_duan_jin','water_qigong','micro_orbit'] },
+    { name: 'Initiation', focus: 'Reiki Level 1 attunement, Pranic study begins. → first formal healing on another.', pool: ['reiki_self','hand_sensitize','pranic_protocol'] },
+    { name: 'Deepening', focus: 'Moon-cycle practice, Kabbalistic study, scanning refinement. → read the field of a stranger.', pool: ['middle_pillar','pranic_protocol','aura_comb','ra_solar_sphere'] },
+    { name: 'Integration', focus: 'Reiki Level 2, distance healing, shadow work. → distance healing working.', pool: ['reiki_distance','cord_cutting','solve_coagula','closing_field'] },
+    { name: 'Mastery Path', focus: 'Your own synthesis begins; teach what you know. → students appear naturally.', pool: ['solve_coagula','body_of_light','middle_pillar','ra_solar_sphere'] },
+    { name: 'Iron Monkey Builds', focus: 'Your unique system emerges from the synthesis. → others call you a healer.', pool: ['solve_coagula','body_of_light','surya_gazing','solar_breath'] }
   ];
   const HPATH_KEY = 'portal_healing_path_v1';
   function loadHPath() { try { const d = JSON.parse(localStorage.getItem(HPATH_KEY) || '{}'); return (typeof d.stage === 'number') ? d.stage : 0; } catch (e) { return 0; } }
   function setHPath(i) { try { localStorage.setItem(HPATH_KEY, JSON.stringify({ stage: i })); } catch (e) {} }
 
-  function renderHealingPath(view) {
-    const cur = Math.max(0, Math.min(HEALING_PATH.length - 1, loadHPath()));
-    const s = HEALING_PATH[cur];
-    const wrap = el('div', 'portal-hpath');
-    wrap.appendChild(el('div', 'portal-hpath-eyebrow', 'the healing path · where you are'));
-    const track = el('div', 'hpath-track');
-    HEALING_PATH.forEach((st, i) => {
-      const dot = el('div', 'hpath-dot' + (i < cur ? ' done' : i === cur ? ' current' : ''));
-      dot.title = st.name;
-      dot.addEventListener('click', () => { setHPath(i); render(); });
-      track.appendChild(dot);
-    });
-    wrap.appendChild(track);
-    wrap.appendChild(el('div', 'hpath-stage', s.name));
-    wrap.appendChild(el('div', 'hpath-focus', s.focus));
-    const ex = el('button', 'hpath-ex');
-    ex.innerHTML = '<span class="hpe-label">suggested · this step</span>' +
-      '<span class="hpe-name">' + escapeHtml(s.ex) + '</span>' +
-      '<span class="hpe-cue">' + escapeHtml(s.cue) + '</span>';
-    ex.addEventListener('click', () => Shell.goTo('grimoire'));
-    wrap.appendChild(ex);
-    const nav = el('div', 'hpath-nav');
-    if (cur > 0) { const b = el('button', null, '‹ back'); b.addEventListener('click', () => { setHPath(cur - 1); render(); }); nav.appendChild(b); }
-    if (cur < HEALING_PATH.length - 1) { const b = el('button', null, 'advance ›'); b.addEventListener('click', () => { setHPath(cur + 1); render(); }); nav.appendChild(b); }
-    wrap.appendChild(nav);
-    view.appendChild(wrap);
-  }
+  // The Healing Path panel moved into the Healing Temple (R52). The portal keeps HEALING_PATH
+  // (now with per-stage pools) + loadHPath only, to feed the path's current step into "feed the dim lines".
 
   function readStackPulse() {
     const now = Date.now();
@@ -1968,11 +1943,36 @@ const Portal = (function() {
     return out;
   }
 
+  function buildHealingPathCard() {
+    try {
+      const cur = Math.max(0, Math.min(HEALING_PATH.length - 1, loadHPath()));
+      const pool = HEALING_PATH[cur].pool || [];
+      if (!pool.length) return null;
+      const pid = pool[Math.floor(Math.random() * pool.length)];
+      const gp = GRIMOIRE_PRACTICES.find(x => x.id === pid);
+      if (!gp) return null;
+      const card = document.createElement('button');
+      card.className = 'next-practice-card next-grimoire';
+      card.innerHTML =
+        '<div class="next-practice-name">' + escapeHtml(gp.name) + '</div>' +
+        '<div class="next-practice-meta">' +
+          '<span class="next-practice-source">healing path · ' + escapeHtml(HEALING_PATH[cur].name.toLowerCase()) + '</span>' +
+          '<span class="next-practice-duration">' + escapeHtml(gp.durationLabel || '') + '</span>' +
+        '</div>' +
+        '<div class="next-practice-stack">' + stackChips(gp.stack) + '</div>' +
+        '<div class="next-practice-target-hint">your step on the healing path</div>';
+      card.addEventListener('click', () => executeBegin('grimoire', gp.id, gp.name));
+      return card;
+    } catch (e) { return null; }
+  }
+
   function renderNextPractice(view) {
     const suggestions = buildNextPractices();
-    if (!suggestions.length) return;
+    const hpCard = buildHealingPathCard();
+    if (!suggestions.length && !hpCard) return;
     const wrap = el('div', 'next-practice');
     wrap.appendChild(el('div', 'next-practice-eyebrow', 'feed the dim lines'));
+    if (hpCard) wrap.appendChild(hpCard);
     suggestions.forEach(s => {
       const card = document.createElement('button');
       card.className = 'next-practice-card next-' + s.source;
@@ -2581,7 +2581,11 @@ const Portal = (function() {
     { id: 'cord_cutting', name: 'Psychic Cord Cutting', stack: ['healing','field'], durationLabel: '5 min' },
     { id: 'salt_bath', name: 'Salt Bath — Weekly Clearing', stack: ['healing'], durationLabel: '' },
     { id: 'middle_pillar', name: 'The Middle Pillar', stack: ['energy','healing'], durationLabel: '10 min' },
-    { id: 'solve_coagula', name: 'Solve et Coagula — Contemplation', stack: ['healing'], durationLabel: '' }
+    { id: 'solve_coagula', name: 'Solve et Coagula — Contemplation', stack: ['healing'], durationLabel: '' },
+    { id: 'ra_solar_sphere', name: 'Ra Light — Solar Sphere', stack: ['energy','field'], durationLabel: '10 min' },
+    { id: 'solar_breath', name: 'Solar Breath — Drawing the Sun', stack: ['energy','breath'], durationLabel: '8 min' },
+    { id: 'surya_gazing', name: 'Surya — Soft Sun Gazing', stack: ['energy','field'], durationLabel: '5 min' },
+    { id: 'body_of_light', name: 'Body of Light', stack: ['energy','field'], durationLabel: '10 min' }
   ];
 
   function readBodyLib() {
@@ -3055,7 +3059,6 @@ const Portal = (function() {
     }
     view.appendChild(hero);
 
-    renderHealingPath(view);
     renderHrv(view);
 
     view.appendChild(el('div', 'section-eyebrow', "today's flow"));
