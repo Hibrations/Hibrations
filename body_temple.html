@@ -1018,14 +1018,36 @@ const DEFAULT_LIBRARY = [
     regressions: 'Lighter, focus on stretch.',
     videoUrl: ytSearch('incline dumbbell curl') },
 
-  { id: 'cable_curl', name: 'Cable curl', primary: ['biceps'], secondary: ['forearms'], equipment: ['cable machine'], mechanic: 'pull', type: 'isolation',
-    setup: 'Low cable, straight bar or rope. Stand tall, elbows pinned, slight forward lean.',
-    execution: 'Curl with constant tension. Squeeze at the top, full stretch at the bottom.',
-    mistakes: 'Swinging. Elbows drifting back.',
-    breath: 'Exhale up.',
-    progressions: 'Drop sets. Pause at peak.',
-    regressions: 'Lighter weight.',
-    videoUrl: ytSearch('cable curl') },
+
+  { id: 'weighted_pullup', name: 'Weighted pull-up', primary: ['lats','biceps'], secondary: ['rear delts','core','forearms'], equipment: ['pull-up bar','dip belt'], mechanic: 'pull', type: 'compound',
+    setup: 'Dip belt with a plate, or a dumbbell pinched between the feet. Grip slightly wider than shoulders, palms forward. Dead hang, core braced, shoulder blades set down and back.',
+    execution: 'Pull the elbows down to the ribs and drive the chest to the bar; control the descent to a full hang. Heavy and honest — 3 to 6 hard reps. This is the V-taper strength builder: load the lats and let irradiation carry it — crush the bar, brace the abs, squeeze the glutes.',
+    mistakes: 'Kipping or swinging to cheat the load. Half range (chin-over only). Shoulders shrugging up at the top.',
+    breath: 'Big brace at the bottom, exhale through the sticking point.',
+    progressions: 'Add load weekly — myofibrillar range, 3 to 6 reps at 80%+ effort. 5-second eccentrics. Weighted archer pull-ups.',
+    regressions: 'Bodyweight pull-ups. Band-assisted. Heavy lat pulldown with a pause.',
+    integrations: 'the breath braces the whole cylinder — Sherrington’s law: grip and glutes amplify the lats. the strongest pull comes from the most connected body.',
+    videoUrl: ytSearch('weighted pull up') },
+
+  { id: 'straight_arm_pulldown', name: 'Straight-arm pulldown', primary: ['lats'], secondary: ['core','triceps long head'], equipment: ['cable machine'], mechanic: 'pull', type: 'isolation',
+    setup: 'Stand at a high cable with a straight bar or rope, arms extended overhead, slight hip hinge, chest proud. Elbows soft but locked for the set.',
+    execution: 'Keeping the arms nearly straight, drive the bar down in an arc to the thighs using only the lats — feel them shorten. Control the return to a full overhead stretch. This isolates lat WIDTH, the core of the V-taper, with zero bicep involvement.',
+    mistakes: 'Bending the elbows and turning it into a pushdown. Using momentum. Cutting the overhead stretch short.',
+    breath: 'Exhale as the bar comes down. Inhale into the stretch.',
+    progressions: 'Pause and squeeze at the bottom. Single-arm for a deeper stretch. Slow eccentric.',
+    regressions: 'Lighter cable. Dumbbell pullover on a bench.',
+    integrations: 'pure lat isolation — the width line. feel the back become a wing on every rep; this is the shape, not the strength.',
+    videoUrl: ytSearch('straight arm pulldown') },
+
+  { id: 'rear_delt_fly', name: 'Rear-delt fly', primary: ['rear delts'], secondary: ['mid-traps','rhomboids'], equipment: ['dumbbells'], mechanic: 'pull', type: 'isolation',
+    setup: 'Seated or hinged at the hips, light dumbbells hanging, palms facing. Chest down toward the thighs, spine long, a slight elbow bend locked in.',
+    execution: 'Raise the dumbbells out and back in a wide arc, leading with the elbows, until the upper arms are in line with the body. Squeeze the rear delts and mid-back at the top, lower with control. Builds the 3D delt and the rear width that completes the V from behind.',
+    mistakes: 'Swinging or using momentum. Turning it into a row (elbows too bent). Shrugging the traps up.',
+    breath: 'Exhale on the raise.',
+    progressions: 'Pause at the top. Cable reverse fly for constant tension. Higher reps, 15 to 25.',
+    regressions: 'Lighter dumbbells. Reverse pec-deck machine.',
+    integrations: 'the back of the shoulder most men neglect — round delts read as power from every angle. light weight, honest reps.',
+    videoUrl: ytSearch('rear delt fly') },
 
   // ===== PUSH =====
   { id: 'incline_db_press', name: 'Incline DB press', primary: ['upper chest'], secondary: ['front delts','triceps'], equipment: ['dumbbells','bench'], mechanic: 'push', type: 'compound',
@@ -1130,23 +1152,17 @@ const DEFAULT_LIBRARY = [
     regressions: 'Lighter, seated for stability.',
     videoUrl: ytSearch('overhead tricep extension') },
 
-  { id: 'arnold_press', name: 'Arnold press', primary: ['front delts','side delts'], secondary: ['triceps','upper chest'], equipment: ['dumbbells','bench'], mechanic: 'push', type: 'compound',
-    setup: 'Seated. DBs at chest level, palms facing you (supinated). Elbows in front.',
-    execution: 'Press up while rotating palms outward. Top position: arms locked, palms forward. Reverse on the way down.',
-    mistakes: 'Rushing the rotation. Hyperextending lower back.',
-    breath: 'Exhale on press.',
-    progressions: 'Heavier load. Standing variation.',
-    regressions: 'Lighter, slow tempo.',
-    videoUrl: ytSearch('arnold press') },
 
-  { id: 'skull_crusher', name: 'Skull crusher', primary: ['triceps'], secondary: [], equipment: ['ez-bar','bench'], mechanic: 'push', type: 'isolation',
-    setup: 'Lie on bench. EZ-bar overhead, arms straight. Elbows pointing up (not flared).',
-    execution: 'Hinge at the elbows only — lower the bar to forehead or just behind. Drive back to extension.',
-    mistakes: 'Elbows flaring wide. Using shoulders to press. Losing control near the head.',
-    breath: 'Inhale down, exhale up.',
-    progressions: 'Heavier load. Slower eccentric.',
-    regressions: 'DB version. Lighter weight.',
-    videoUrl: ytSearch('skull crusher') },
+
+  { id: 'kb_strict_press', name: 'Kettlebell strict press', primary: ['front delts','side delts'], secondary: ['triceps','core','grip'], equipment: ['kettlebell'], mechanic: 'push', type: 'compound',
+    setup: 'Clean a kettlebell to the rack — bell resting on the forearm, elbow tight to the ribs, wrist straight. Stand tall, glutes and abs braced, feet rooted.',
+    execution: 'Press the bell straight overhead, knuckles to the ceiling, without leaning back — drive the head "through the window" as the arm locks out, biceps by the ear. Lower under control to the rack. Strict, grinding strength for the shoulder — the top of the V.',
+    mistakes: 'Leaning back to fake the press (loss of brace). Pressing around the head instead of through. Elbow flaring out at the start.',
+    breath: 'Brace and hold through the grind, exhale at lockout.',
+    progressions: 'Heavier bell. Double-KB strict press. Lower reps, 3 to 5, for pure strength.',
+    regressions: 'Lighter bell. Half-kneeling press for stability. KB push press (use the legs).',
+    integrations: 'Sherrington again — grip the bell hard, squeeze the glutes, and the press finds strength it did not have loose. the whole body presses.',
+    videoUrl: ytSearch('kettlebell strict press') },
 
   // ===== SQUAT =====
   { id: 'back_squat', name: 'Back squat', primary: ['quads','glutes'], secondary: ['hamstrings','core','spinal erectors'], equipment: ['barbell','rack'], mechanic: 'squat', type: 'compound',
@@ -1206,14 +1222,16 @@ const DEFAULT_LIBRARY = [
     regressions: 'Bodyweight only. Static split squat.',
     videoUrl: ytSearch('walking lunge') },
 
-  { id: 'step_up', name: 'Step-up', primary: ['quads','glutes'], secondary: ['hamstrings','calves'], equipment: ['box','dumbbells'], mechanic: 'squat', type: 'compound',
-    setup: 'Box at knee height (or below for easier). Stand facing it. DBs at sides if loaded.',
-    execution: 'Plant the full front foot on the box. Drive through the front heel — no push from the back foot. Stand up tall on the box. Lower with control.',
-    mistakes: 'Pushing off the back foot. Box too high (knee shoots past toes).',
-    breath: 'Exhale up.',
-    progressions: 'Higher box. Heavier DBs. Pause at the top.',
-    regressions: 'Lower box. Bodyweight.',
-    videoUrl: ytSearch('step up exercise') },
+
+  { id: 'kb_front_squat', name: 'Kettlebell front squat', primary: ['quads','glutes'], secondary: ['core','upper back'], equipment: ['kettlebell'], mechanic: 'squat', type: 'compound',
+    setup: 'Two kettlebells in the rack (or one in a goblet hold), elbows tight, chest tall, feet shoulder-width, toes slightly out. Brace the abs hard against the front load.',
+    execution: 'Sit straight down between the heels, knees tracking over the toes, torso upright — the front rack forces it. Descend to at least parallel, then drive the floor away and stand tall. The front load hammers the quads and bulletproofs the brace.',
+    mistakes: 'Chest collapsing forward. Elbows dropping out of the rack. Heels rising. Cutting depth.',
+    breath: 'Big brace at the top, hold through the bottom, exhale on the drive up.',
+    progressions: 'Heavier doubles. Pause at the bottom. Tempo — 3-second descent.',
+    regressions: 'Single-KB goblet squat. Box squat to depth. Bodyweight.',
+    integrations: 'the front rack teaches the upright spine the back squat wants — grip, brace, root through the feet. an honest home substitute for the barbell.',
+    videoUrl: ytSearch('kettlebell front squat') },
 
   // ===== HINGE =====
   { id: 'romanian_deadlift', name: 'Romanian deadlift', primary: ['hamstrings','glutes'], secondary: ['lower back','forearms'], equipment: ['barbell'], mechanic: 'hinge', type: 'compound',
@@ -1321,24 +1339,17 @@ const DEFAULT_LIBRARY = [
     regressions: 'Lighter band/cable.',
     videoUrl: ytSearch('pallof press') },
 
-  { id: 'bird_dog', name: 'Bird dog', primary: ['core','spinal erectors'], secondary: ['glutes','shoulders'], equipment: ['bodyweight'], mechanic: 'core', type: 'isolation',
-    setup: 'Hands and knees. Spine flat. Core braced.',
-    execution: 'Extend opposite arm and leg until parallel with the floor. Hold 1-2 sec. Squeeze the glute. Return slowly. Switch sides.',
-    mistakes: 'Letting the hips rotate open. Lower back arching.',
-    breath: 'Exhale on extension.',
-    progressions: 'Slower tempo. Touch elbow to opposite knee under the body between reps.',
-    regressions: 'Move arm only or leg only.',
-    integrations: 'eyes closed, feel the diagonal energy line crossing the dan tien (low belly). this is dead-bug for the spine — and for the central channel.',
-    videoUrl: ytSearch('bird dog exercise') },
 
-  { id: 'glute_bridge', name: 'Glute bridge', primary: ['glutes'], secondary: ['hamstrings','core'], equipment: ['bodyweight'], mechanic: 'hinge', type: 'compound',
-    setup: 'Lie on back. Knees bent, feet flat, heels close to glutes. Arms at sides.',
-    execution: 'Drive through the heels. Lift hips until body is in a straight line knees-to-shoulders. Squeeze glutes hard at the top. Lower with control.',
-    mistakes: 'Pushing through toes only. Hyperextending lower back at the top.',
-    breath: 'Exhale on lift.',
-    progressions: 'Single-leg. Add weight. Pause at the top.',
-    regressions: 'Smaller range. Hold the top instead of reps.',
-    videoUrl: ytSearch('glute bridge') },
+
+  { id: 'stomach_vacuum', name: 'Stomach vacuum', primary: ['transverse abdominis'], secondary: ['core'], equipment: ['bodyweight'], mechanic: 'core', type: 'isolation',
+    setup: 'Stand tall, or on all fours / lying for more feedback. Empty the lungs completely with a full exhale. Relax the upper body.',
+    execution: 'With the breath fully out, draw the navel up and IN toward the spine — as if zipping the lower belly behind the ribs. Hold the vacuum 15 to 20 seconds, breathing shallow through the nose if needed, then release. Trains the transverse abdominis — the internal corset that cinches the waist, the often-missed half of the V-taper (a smaller waist makes the shoulders read wider).',
+    mistakes: 'Just sucking the chest up instead of drawing the lower belly in. Holding the breath rigidly — breathe shallow. Bracing outward; this is the opposite, a hollowing.',
+    breath: 'Full exhale first; the vacuum is held on empty.',
+    progressions: 'Longer holds, up to 60 sec. More rounds. Different positions — seated, quadruped, lying.',
+    regressions: 'Shorter holds, 5 to 10 sec. Lying down, where the TVA is easiest to feel.',
+    integrations: 'the waist side of the taper — you cannot out-train a wide waist, but you can cinch it. also wakes the deep core that protects the spine under heavy load.',
+    videoUrl: ytSearch('stomach vacuum exercise') },
 
   // ===== MOBILITY =====
   { id: 'cat_cow', name: 'Cat-cow', primary: ['spine'], secondary: ['hips','shoulders'], equipment: ['bodyweight'], mechanic: 'mobility', type: 'mobility',
@@ -1476,6 +1487,16 @@ const DEFAULT_LIBRARY = [
     videoUrl: ytSearch('shadowbox conditioning workout') },
 
   // ===== POWER + CARRIES (May 2026 expansion) =====
+  { id: 'kb_clean_press', name: 'Kettlebell clean & press', primary: ['shoulders','glutes','posterior chain'], secondary: ['core','grip','quads'], equipment: ['kettlebell'], mechanic: 'push', type: 'power',
+    setup: 'Kettlebell between the feet, hips back, spine long. This is a clean (hinge) flowing into a press (overhead) — the single most complete kettlebell strength lift.',
+    execution: 'Hike the bell back, then snap the hips to clean it to the rack — guiding it around the hand, not letting it crash. From a stable rack, press it overhead to lockout (strict, or a push-press with leg drive on heavier bells). Lower to the rack, then back to the floor. Strength and power, head to toe, in one movement.',
+    mistakes: 'Letting the bell bang the wrist on the clean — guide it, do not swing it. Pressing before the rack is stable. Losing the brace between clean and press.',
+    breath: 'Sharp exhale on the clean snap; brace and exhale at the press lockout.',
+    progressions: 'Heavier bell. Double-KB clean & press. Ladders, 1 to 5 reps. EMOM for density.',
+    regressions: 'Lighter bell. Clean and push-press. Train the clean and the press separately first.',
+    integrations: 'the whole chain in one lift — hips, back, grip, shoulder, brace. with the gym shut, this single movement keeps you strong everywhere.',
+    videoUrl: ytSearch('kettlebell clean and press') },
+
   { id: 'push_press', name: 'Push press', primary: ['shoulders','triceps'], secondary: ['quads','glutes','core'], equipment: ['barbell','rack'], mechanic: 'push', type: 'compound',
     setup: 'Bar at front-rack position, elbows slightly forward of bar. Feet hip-width. Brace.',
     execution: 'Quick dip at the knees (4-6 inches), then explosive drive up through the legs. Bar travels straight up as legs lock out. Lock arms overhead. Lower with control to rack position.',
@@ -1593,13 +1614,13 @@ const DEFAULT_DATA = {
       duration: '55–70 min',
       warmup: ['3 min easy bike or rower','Band pull-aparts × 20','Cat-cow × 10','Scapular pull-ups × 10','1 light set of pull-ups or pulldowns × 6'],
       exercises: [
-        { id: 'pull-a', libraryId: 'pullup', letter: 'A', name: 'Pull-up', alt: 'or assisted / lat pulldown if needed', sets: 4, reps: '5–8', rest: 120, cues: 'hang from full extension. pull elbows down, not chin up.' },
-        { id: 'pull-b', libraryId: 'barbell_row', letter: 'B', name: 'Barbell row', alt: 'or chest-supported row', sets: 3, reps: '8–10', rest: 90, cues: 'hinge at hips. row to lower chest. spine long.' },
-        { id: 'pull-c', libraryId: 'lat_pulldown_close', letter: 'C', name: 'Lat pulldown — close grip', alt: '', sets: 3, reps: '10–12', rest: 75, cues: 'lean back slightly. drive elbows to ribs. squeeze.' },
-        { id: 'pull-d', libraryId: 'cable_row', letter: 'D', name: 'Cable row', alt: 'or one-arm DB row', sets: 3, reps: '10–12', rest: 75, cues: 'squeeze at the back. controlled negative.' },
-        { id: 'pull-e', libraryId: 'face_pull', letter: 'E', name: 'Face pull', alt: '', sets: 3, reps: '12–15', rest: 60, cues: 'external rotation at the end. rear delt focus.' },
-        { id: 'pull-f', libraryId: 'hammer_curl', letter: 'F', name: 'Hammer curl', alt: '', sets: 3, reps: '10–12', rest: 60, cues: 'neutral grip. no swing.' },
-        { id: 'pull-g', libraryId: 'incline_db_curl', letter: 'G', name: 'Incline DB curl', alt: '', sets: 2, reps: '12–15', rest: 60, cues: 'full stretch at bottom. squeeze at top.' }
+        { id: 'pull-a', libraryId: 'weighted_pullup', letter: 'A', name: 'Weighted pull-up', alt: 'or bodyweight / assisted', sets: 4, reps: '4–6', rest: 180, cues: 'crush the bar, brace, squeeze glutes — irradiation. full hang to chest. add load weekly.' },
+        { id: 'pull-b', libraryId: 'barbell_row', letter: 'B', name: 'Barbell row (Pendlay)', alt: 'or chest-supported row', sets: 4, reps: '5–6', rest: 150, cues: 'flat-back hinge. explode to the lower chest. heavy and clean.' },
+        { id: 'pull-c', libraryId: 'lat_pulldown', letter: 'C', name: 'Lat pulldown — wide grip', alt: '', sets: 3, reps: '10–12', rest: 90, cues: 'lean back slightly, drive elbows down and back. lat WIDTH.' },
+        { id: 'pull-d', libraryId: 'straight_arm_pulldown', letter: 'D', name: 'Straight-arm pulldown', alt: 'or DB pullover', sets: 3, reps: '12–15', rest: 60, cues: 'arms long, pull with the lats only. feel the wing.' },
+        { id: 'pull-e', libraryId: 'rear_delt_fly', letter: 'E', name: 'Rear-delt fly', alt: 'or face pull', sets: 3, reps: '15–20', rest: 60, cues: 'lead with the elbows, squeeze the rear delt.' },
+        { id: 'pull-f', libraryId: 'hammer_curl', letter: 'F', name: 'Hammer curl', alt: '', sets: 3, reps: '8–10', rest: 75, cues: 'neutral grip, no swing. heavier here.' },
+        { id: 'pull-g', libraryId: 'incline_db_curl', letter: 'G', name: 'Incline DB curl', alt: '', sets: 2, reps: '12–15', rest: 60, cues: 'full stretch at the bottom, squeeze at the top.' }
       ],
       cooldown: ['2 min easy bike',"Child's pose with side reach × 1 min/side",'Lat stretch in doorway × 30 sec/side','Long exhales 4-4-8 × 1 min']
     },
@@ -1611,13 +1632,13 @@ const DEFAULT_DATA = {
       duration: '55–70 min',
       warmup: ['3 min easy bike','Doorway pec stretch × 30 sec each side','Arm circles × 20 each direction','Band overhead press × 15','1 light set of incline press × 8'],
       exercises: [
-        { id: 'push-a', libraryId: 'incline_db_press', letter: 'A', name: 'Incline DB press', alt: 'or incline barbell', sets: 4, reps: '6–8', rest: 120, cues: 'shoulder blades down and in. control the lower.' },
-        { id: 'push-b', libraryId: 'overhead_press', letter: 'B', name: 'Overhead press', alt: 'standing — barbell or DB', sets: 3, reps: '6–8', rest: 120, cues: 'glutes braced. press the bar past your face.' },
-        { id: 'push-c', libraryId: 'flat_db_press', letter: 'C', name: 'Flat DB press', alt: 'or dips', sets: 3, reps: '8–10', rest: 90, cues: 'full stretch. drive feet into floor.' },
-        { id: 'push-d', libraryId: 'lateral_raise', letter: 'D', name: 'Lateral raise', alt: '', sets: 4, reps: '12–15', rest: 60, cues: 'pinky slightly up. lead with the elbow.' },
-        { id: 'push-e', libraryId: 'cable_fly', letter: 'E', name: 'Cable fly', alt: 'or push-up finisher', sets: 3, reps: '12–15', rest: 60, cues: 'meet hands at the centerline. pause.' },
-        { id: 'push-f', libraryId: 'tricep_pushdown', letter: 'F', name: 'Tricep pushdown', alt: '', sets: 3, reps: '10–12', rest: 60, cues: 'elbows pinned. lock out at the bottom.' },
-        { id: 'push-g', libraryId: 'overhead_tricep_extension', letter: 'G', name: 'Overhead tricep extension', alt: '', sets: 2, reps: '12–15', rest: 60, cues: 'full stretch overhead. control.' }
+        { id: 'push-a', libraryId: 'overhead_press', letter: 'A', name: 'Overhead press', alt: 'or KB strict press (home)', sets: 4, reps: '4–6', rest: 180, cues: 'glutes + grip braced (irradiation). press through the window. the V starts at the shoulders.' },
+        { id: 'push-b', libraryId: 'incline_db_press', letter: 'B', name: 'Incline DB press', alt: 'or incline barbell', sets: 4, reps: '6–8', rest: 150, cues: 'shoulder blades down and in, control the lower. upper chest = the V front.' },
+        { id: 'push-c', libraryId: 'lateral_raise', letter: 'C', name: 'Lateral raise', alt: '', sets: 4, reps: '12–20', rest: 60, cues: 'lead with the elbow, light and perfect. delt CAPS = width.' },
+        { id: 'push-d', libraryId: 'flat_db_press', letter: 'D', name: 'Flat DB press', alt: 'or dips', sets: 3, reps: '8–10', rest: 90, cues: 'full stretch, drive the feet into the floor.' },
+        { id: 'push-e', libraryId: 'cable_fly', letter: 'E', name: 'Cable fly', alt: 'or push-up finisher', sets: 3, reps: '12–15', rest: 60, cues: 'meet at the centerline, pause and squeeze.' },
+        { id: 'push-f', libraryId: 'tricep_pushdown', letter: 'F', name: 'Tricep pushdown', alt: '', sets: 3, reps: '10–12', rest: 60, cues: 'elbows pinned, lock out at the bottom.' },
+        { id: 'push-g', libraryId: 'overhead_tricep_extension', letter: 'G', name: 'Overhead tricep extension', alt: '', sets: 2, reps: '12–15', rest: 60, cues: 'full stretch overhead, control.' }
       ],
       cooldown: ['2 min easy walk or bike','Doorway pec stretch × 30 sec/side','Triceps overhead stretch × 30 sec/side','Long exhales 4-4-8 × 1 min']
     },
@@ -1629,14 +1650,14 @@ const DEFAULT_DATA = {
       duration: '60–75 min',
       warmup: ['3–5 min bike or incline walk','Bodyweight squats × 15','Walking lunges × 10/leg',"Hip openers (90/90, world's greatest stretch) × 1 min",'2 light sets of squat × 5–8'],
       exercises: [
-        { id: 'legs-a', libraryId: 'back_squat', letter: 'A', name: 'Back squat', alt: '', sets: 4, reps: '6–8', rest: 180, cues: 'bar on traps. brace the core. sit between heels. knees track over toes.' },
-        { id: 'legs-b', libraryId: 'romanian_deadlift', letter: 'B', name: 'Romanian deadlift', alt: '', sets: 3, reps: '8–10', rest: 90, cues: 'hinge at hips. soft knee. spine long. feel the hamstring stretch.' },
-        { id: 'legs-c', libraryId: 'leg_press', letter: 'C', name: 'Leg press', alt: 'or Bulgarian split squat', sets: 3, reps: '10–12', rest: 90, cues: "don't lock knees at the top. full range." },
-        { id: 'legs-d', libraryId: 'hip_thrust', letter: 'D', name: 'Hip thrust', alt: '', sets: 3, reps: '10–12', rest: 90, cues: 'glutes drive the bar. ribs down. squeeze at the top.' },
-        { id: 'legs-e', libraryId: 'lying_leg_curl', letter: 'E', name: 'Lying leg curl', alt: '', sets: 3, reps: '10–12', rest: 60, cues: 'slow eccentric. full contraction.' },
-        { id: 'legs-f', libraryId: 'standing_calf_raise', letter: 'F', name: 'Standing calf raise', alt: '', sets: 4, reps: '12–15', rest: 60, cues: 'pause at the top. full stretch at the bottom.' },
-        { id: 'legs-g', libraryId: 'hanging_leg_raise', letter: 'G', name: 'Hanging leg raise', alt: '', sets: 3, reps: '8–12', rest: 60, cues: 'no swing. control.' },
-        { id: 'legs-h', libraryId: 'plank', letter: 'H', name: 'Plank', alt: '', sets: 2, reps: '45–60 sec', rest: 45, cues: 'glutes tight. ribs down. breathe.' }
+        { id: 'legs-a', libraryId: 'back_squat', letter: 'A', name: 'Back squat', alt: 'or KB front squat (home)', sets: 4, reps: '4–6', rest: 180, cues: 'grip the floor with the feet, brace, spread the floor (irradiation). sit between the heels.' },
+        { id: 'legs-b', libraryId: 'romanian_deadlift', letter: 'B', name: 'Romanian deadlift', alt: '', sets: 3, reps: '6–8', rest: 150, cues: 'hinge, soft knee, long spine. feel the hamstring load.' },
+        { id: 'legs-c', libraryId: 'bulgarian_split_squat', letter: 'C', name: 'Bulgarian split squat', alt: 'or leg press', sets: 3, reps: '8–12', rest: 90, cues: 'rear foot up, drop straight down. unilateral truth.' },
+        { id: 'legs-d', libraryId: 'hip_thrust', letter: 'D', name: 'Hip thrust', alt: '', sets: 3, reps: '8–12', rest: 90, cues: 'glutes drive, ribs down, squeeze at the top.' },
+        { id: 'legs-e', libraryId: 'lying_leg_curl', letter: 'E', name: 'Lying leg curl', alt: '', sets: 3, reps: '10–12', rest: 60, cues: 'slow eccentric, full contraction.' },
+        { id: 'legs-f', libraryId: 'standing_calf_raise', letter: 'F', name: 'Standing calf raise', alt: '', sets: 4, reps: '10–15', rest: 60, cues: 'pause at the top, full stretch at the bottom.' },
+        { id: 'legs-g', libraryId: 'hanging_leg_raise', letter: 'G', name: 'Hanging leg raise', alt: '', sets: 3, reps: '8–12', rest: 60, cues: 'no swing, control. keep the waist tight, not thick.' },
+        { id: 'legs-h', libraryId: 'stomach_vacuum', letter: 'H', name: 'Stomach vacuum', alt: 'or Pallof press', sets: 3, reps: '20 sec hold', rest: 45, cues: 'full exhale, draw the navel to the spine. the corset that cinches the waist.' }
       ],
       cooldown: ['2 min easy walk','Pigeon stretch × 1 min/side','Couch stretch × 1 min/side','Hamstring stretch × 30 sec/side','Long exhales 4-4-8 × 1 min']
     },
@@ -1648,14 +1669,14 @@ const DEFAULT_DATA = {
       duration: '45–55 min',
       warmup: ['3 min easy rower','Arm circles, band pull-aparts','Scap work — pull-aparts and dislocates'],
       exercises: [
-        { id: 'uh-a1', libraryId: 'lat_pulldown', letter: 'A1', name: 'Lat pulldown — wide grip', alt: 'superset with A2', sets: 3, reps: '12–15', rest: 0, cues: 'lean slightly. drive elbows down and back.' },
-        { id: 'uh-a2', libraryId: 'incline_db_press', letter: 'A2', name: 'Incline DB press — lighter', alt: 'rest 75 sec after', sets: 3, reps: '12–15', rest: 75, cues: 'mind-muscle. stretch the chest.' },
-        { id: 'uh-b1', libraryId: 'cable_row', letter: 'B1', name: 'Cable row', alt: 'superset with B2', sets: 3, reps: '12–15', rest: 0, cues: 'squeeze rhomboids.' },
-        { id: 'uh-b2', libraryId: 'cable_fly', letter: 'B2', name: 'Cable fly', alt: 'rest 60 sec after', sets: 3, reps: '12–15', rest: 60, cues: 'meet hands at midline. pause.' },
-        { id: 'uh-c1', libraryId: 'lateral_raise', letter: 'C1', name: 'Lateral raise', alt: 'superset with C2', sets: 4, reps: '15–20', rest: 0, cues: 'lead with elbow. light weight, perfect form.' },
-        { id: 'uh-c2', libraryId: 'face_pull', letter: 'C2', name: 'Face pull', alt: 'rest 60 sec after', sets: 4, reps: '15–20', rest: 60, cues: 'rotate at the end. rear delt squeeze.' },
-        { id: 'uh-d1', libraryId: 'cable_curl', letter: 'D1', name: 'Cable curl', alt: 'superset with D2', sets: 3, reps: '12–15', rest: 0, cues: 'no swing. constant tension.' },
-        { id: 'uh-d2', libraryId: 'tricep_pushdown', letter: 'D2', name: 'Tricep pushdown', alt: 'rest 60 sec after', sets: 3, reps: '12–15', rest: 60, cues: 'lock out. squeeze.' },
+        { id: 'uh-a1', libraryId: 'lat_pulldown', letter: 'A1', name: 'Lat pulldown — wide grip', alt: 'superset with A2', sets: 3, reps: '12–15', rest: 0, cues: 'lean slightly, drive elbows down and back. width.' },
+        { id: 'uh-a2', libraryId: 'incline_db_press', letter: 'A2', name: 'Incline DB press — lighter', alt: 'rest 75 sec after', sets: 3, reps: '12–15', rest: 75, cues: 'mind-muscle, stretch the chest.' },
+        { id: 'uh-b1', libraryId: 'straight_arm_pulldown', letter: 'B1', name: 'Straight-arm pulldown', alt: 'superset with B2', sets: 3, reps: '15', rest: 0, cues: 'lats only, feel the wing.' },
+        { id: 'uh-b2', libraryId: 'lateral_raise', letter: 'B2', name: 'Lateral raise', alt: 'rest 60 sec after', sets: 3, reps: '15–20', rest: 60, cues: 'light, perfect, lead with the elbow.' },
+        { id: 'uh-c1', libraryId: 'rear_delt_fly', letter: 'C1', name: 'Rear-delt fly', alt: 'superset with C2', sets: 3, reps: '15–20', rest: 0, cues: 'squeeze the rear delt.' },
+        { id: 'uh-c2', libraryId: 'cable_fly', letter: 'C2', name: 'Cable fly', alt: 'rest 60 sec after', sets: 3, reps: '15', rest: 60, cues: 'meet at midline, pause.' },
+        { id: 'uh-d1', libraryId: 'hammer_curl', letter: 'D1', name: 'Hammer curl', alt: 'superset with D2', sets: 3, reps: '12–15', rest: 0, cues: 'no swing, constant tension.' },
+        { id: 'uh-d2', libraryId: 'tricep_pushdown', letter: 'D2', name: 'Tricep pushdown', alt: 'rest 60 sec after', sets: 3, reps: '12–15', rest: 60, cues: 'lock out, squeeze.' },
         { id: 'uh-e', libraryId: 'hanging_leg_raise', letter: 'E', name: 'Hanging leg raise', alt: '', sets: 3, reps: '10–15', rest: 60, cues: 'control the lower.' }
       ],
       cooldown: ['2 min easy bike','Lat stretch + pec stretch','Long exhales 4-4-8 × 1 min']
@@ -2392,24 +2413,24 @@ document.getElementById('modal-overlay').addEventListener('click', e => {
 // ============================================================
 const ROTATION_POOLS = {
   pull: {
-    A: ['pullup', 'lat_pulldown', 'lat_pulldown_close'],                       // vertical pull
-    B: ['barbell_row', 'cable_row', 'db_row', 'pendlay_row', 'kb_renegade_row'], // horizontal pull (+ KB Round 18)
-    C: ['conventional_deadlift', 'romanian_deadlift', 'trap_bar_deadlift', 'kb_single_arm_dl'], // hip hinge (+ KB Round 18)
-    D: ['cable_curl', 'hammer_curl', 'incline_db_curl'],                       // biceps
-    E: ['face_pull']                                                            // rear delt (single — won't rotate yet)
+    A: ['pullup', 'weighted_pullup', 'lat_pulldown', 'lat_pulldown_close'],    // vertical pull
+    B: ['barbell_row', 'cable_row', 'db_row', 'pendlay_row', 'kb_renegade_row'], // horizontal pull (+ KB)
+    C: ['conventional_deadlift', 'romanian_deadlift', 'trap_bar_deadlift', 'kb_single_arm_dl'], // hip hinge (+ KB)
+    D: ['hammer_curl', 'incline_db_curl'],                                     // biceps
+    E: ['face_pull', 'rear_delt_fly', 'straight_arm_pulldown']                 // rear delt + lat width
   },
   push: {
     A: ['bench_press', 'flat_db_press', 'incline_db_press'],                   // horizontal push
-    B: ['overhead_press', 'db_shoulder_press', 'arnold_press', 'push_press', 'kb_bottoms_up_press'], // vertical push (+ KB Round 18)
-    C: ['dips', 'skull_crusher', 'tricep_pushdown', 'overhead_tricep_extension'], // triceps
+    B: ['overhead_press', 'db_shoulder_press', 'push_press', 'kb_strict_press', 'kb_bottoms_up_press'], // vertical push (+ KB)
+    C: ['dips', 'tricep_pushdown', 'overhead_tricep_extension'],               // triceps
     D: ['lateral_raise'],                                                       // lateral delt (single)
     E: ['cable_fly', 'doorway_pec']                                            // chest fly
   },
   legs: {
-    A: ['back_squat', 'front_squat', 'goblet_squat', 'leg_press'],             // squat pattern
-    B: ['walking_lunge', 'bulgarian_split_squat', 'step_up', 'pistol_squat'],  // lunge pattern
-    C: ['lying_leg_curl', 'romanian_deadlift', 'kb_single_arm_dl'],            // hamstring (+ KB Round 18)
-    D: ['hip_thrust', 'glute_bridge'],                                         // hip/glute
+    A: ['back_squat', 'front_squat', 'kb_front_squat', 'goblet_squat', 'leg_press'], // squat pattern (+ KB)
+    B: ['walking_lunge', 'bulgarian_split_squat', 'pistol_squat'],             // lunge pattern
+    C: ['lying_leg_curl', 'romanian_deadlift', 'kb_single_arm_dl'],            // hamstring (+ KB)
+    D: ['hip_thrust'],                                                          // hip/glute
     E: ['standing_calf_raise']                                                  // calf (single)
   }
 };
