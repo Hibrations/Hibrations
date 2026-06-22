@@ -3546,4 +3546,123 @@ function makeExerciseEditor(ex, idx, list) {
   const restIn = document.createElement('input');
   restIn.type = 'number'; restIn.min = '0';
   restIn.value = ex.rest; restIn.placeholder = 'rest s';
-  restIn.addEventListener('input', e
+  restIn.addEventListener('input', e => ex.rest = parseInt(e.target.value) || 0);
+  grid.appendChild(restIn);
+
+  const cuesIn = document.createElement('input');
+  cuesIn.className = 'editor-ex-cues';
+  cuesIn.value = ex.cues || '';
+  cuesIn.placeholder = 'cues';
+  cuesIn.addEventListener('input', e => ex.cues = e.target.value);
+  grid.appendChild(cuesIn);
+
+  wrap.appendChild(grid);
+
+  const removeBtn = el('button', 'icon-btn editor-ex-remove', '× remove');
+  removeBtn.addEventListener('click', () => { list.splice(idx, 1); render(); });
+  wrap.appendChild(removeBtn);
+
+  return wrap;
+}
+
+// nextLetter — the next A/B/C… letter for a new exercise slot in a custom plan.
+function nextLetter(n) { return String.fromCharCode(65 + (n % 26)); }
+
+// savePlan — persist the plan currently being edited.
+function savePlan() {
+  const p = editingPlan;
+  if (!p) return;
+  if (!p.name || !String(p.name).trim()) { toast('name the plan first'); return; }
+  const idx = state.plans.findIndex(pl => pl.id === p.id);
+  if (idx >= 0) state.plans[idx] = p;
+  else state.plans.push(p);
+  saveState();
+  editingPlan = null;
+  setView('plans');
+  toast('saved');
+}
+
+// openLibraryPickerModal — add a library-linked exercise to a custom plan (form + wiki travel with it).
+function openLibraryPickerModal(p) {
+  const candidates = state.library.slice();
+  const modal = document.getElementById('modal');
+  modal.innerHTML = `
+    <div class="modal-header">
+      <div class="modal-title">add from library</div>
+      <button class="modal-close" id="modal-close-btn">×</button>
+    </div>
+    <div class="subtle" style="margin-bottom:14px; line-height:1.5;">
+      pick an exercise to add — it links to the library, so form + wiki travel with it.
+    </div>
+    <div class="library-search-wrap"><input id="libpick-search" placeholder="search…"></div>
+    <div class="lib-grid" id="libpick-grid"></div>`;
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('modal-close-btn').onclick = closeModal;
+  const fillGrid = (q) => {
+    const grid = document.getElementById('libpick-grid');
+    grid.innerHTML = '';
+    const qq = (q || '').toLowerCase().trim();
+    candidates.forEach(c => {
+      if (qq && !(c.name + ' ' + (c.primary || []).join(' ')).toLowerCase().includes(qq)) return;
+      const card = document.createElement('button');
+      card.className = 'lib-card';
+      card.innerHTML = `
+        <span class="lib-mech-tag lib-mech-${c.mechanic}">${escapeHtml(c.mechanic)}</span>
+        <div class="lib-card-info">
+          <div class="lib-card-name">${escapeHtml(c.name)}</div>
+          <div class="lib-card-muscles">${escapeHtml((c.primary || []).join(', '))}</div>
+        </div>`;
+      card.addEventListener('click', () => {
+        p.exercises.push({ id: uid('ex'), libraryId: c.id, letter: nextLetter(p.exercises.length), name: c.name, alt: '', sets: 3, reps: '8–12', rest: 90, cues: '' });
+        closeModal();
+        render();
+        toast('added ' + c.name);
+      });
+      grid.appendChild(card);
+    });
+  };
+  document.getElementById('libpick-search').addEventListener('input', e => fillGrid(e.target.value));
+  fillGrid('');
+}
+
+// renderHistory — logged sessions, most recent first.
+function renderHistory() {
+  const wrap = document.createElement('div');
+  wrap.appendChild(el('div', 'today-eyebrow', 'history'));
+  const sessions = (state.sessions || []);
+  if (!sessions.length) {
+    wrap.appendChild(el('div', 'subtle', 'no sessions logged yet. begin one from today or the plans tab.'));
+    return wrap;
+  }
+  sessions.forEach(s => {
+    const card = el('div', 'today-card');
+    card.style.marginBottom = '12px';
+    card.appendChild(el('div', 'today-name', s.planName || s.name || 'session'));
+    card.appendChild(el('div', 'today-sub', s.date ? formatDate(s.date) : ''));
+    const done = (s.exercises || []).filter(e => e.done);
+    done.forEach(e => {
+      const parts = [e.name];
+      if (e.sets) parts.push(e.sets + '×' + (e.reps || ''));
+      if (e.weight > 0) parts.push(formatKg(e.weight));
+      const row = el('div', 'subtle', parts.join(' · '));
+      row.style.fontSize = '13px';
+      row.style.marginTop = '4px';
+      card.appendChild(row);
+    });
+    if (!done.length && s.type === 'altmode') card.appendChild(el('div', 'subtle', 'logged'));
+    if (s.finalNotes) {
+      const n = el('div', 'subtle', s.finalNotes);
+      n.style.fontStyle = 'italic';
+      n.style.marginTop = '6px';
+      card.appendChild(n);
+    }
+    wrap.appendChild(card);
+  });
+  return wrap;
+}
+
+// ── boot ──
+render();
+</script>
+</body>
+</html>
