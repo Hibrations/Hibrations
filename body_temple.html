@@ -682,6 +682,11 @@ main { padding: 0 22px; }
 .alt-view-name { font-size: 28px; font-weight: 300; letter-spacing: -0.01em; margin-bottom: 6px; }
 .alt-view-sub { color: var(--ink-dim); font-size: 14px; margin-bottom: 20px; }
 .alt-view-desc { color: var(--ink); font-size: 15px; line-height: 1.65; margin-bottom: 20px; }
+.alt-view-flow { margin: 0 0 20px; border-top: 1px solid var(--border-soft); }
+.alt-flow-row { display: flex; align-items: baseline; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border-soft); }
+.alt-flow-letter { font-size: 11px; letter-spacing: 0.1em; color: var(--emerald); min-width: 18px; }
+.alt-flow-name { flex: 1; font-size: 14px; color: var(--ink); }
+.alt-flow-reps { font-size: 12px; color: var(--ink-dim); white-space: nowrap; }
 .alt-view-prompts {
   background: var(--bg-elev);
   border-left: 2px solid var(--emerald-dim);
@@ -1049,6 +1054,16 @@ const DEFAULT_LIBRARY = [
     integrations: 'the back of the shoulder most men neglect — round delts read as power from every angle. light weight, honest reps.',
     videoUrl: ytSearch('rear delt fly') },
 
+  { id: 'inverted_row', name: 'Inverted row', primary: ['lats','mid-back'], secondary: ['biceps','rear delts','core'], equipment: ['bodyweight'], mechanic: 'pull', type: 'compound',
+    setup: 'Lie under a sturdy table edge, a low bar, or a broomstick across two chairs. Grip the edge, body in a straight line, heels on the floor (or elevated to make it harder).',
+    execution: 'Pull the chest up to the edge by driving the elbows down and back and squeezing the shoulder blades together; lower with control to a full hang. The horizontal pull that builds the back and lats with no weights — the bodyweight stand-in for rows and pull-ups.',
+    mistakes: 'Hips sagging or piking. Pulling with the arms only (lead with the elbows, squeeze the back). Half range.',
+    breath: 'Exhale on the pull, inhale on the lower.',
+    progressions: 'Feet elevated. Slower eccentric. Pause at the top. Work toward pull-ups if a bar appears.',
+    regressions: 'More upright body (feet further under you). Bend the knees.',
+    integrations: 'the no-equipment back builder — horizontal for thickness and, feet-up, hits the lats for the width the taper needs.',
+    videoUrl: ytSearch('inverted row bodyweight') },
+
   // ===== PUSH =====
   { id: 'incline_db_press', name: 'Incline DB press', primary: ['upper chest'], secondary: ['front delts','triceps'], equipment: ['dumbbells','bench'], mechanic: 'push', type: 'compound',
     setup: 'Bench at 30°. Lie back, DBs at chest level, palms forward. Shoulder blades down and in.',
@@ -1163,6 +1178,16 @@ const DEFAULT_LIBRARY = [
     regressions: 'Lighter bell. Half-kneeling press for stability. KB push press (use the legs).',
     integrations: 'Sherrington again — grip the bell hard, squeeze the glutes, and the press finds strength it did not have loose. the whole body presses.',
     videoUrl: ytSearch('kettlebell strict press') },
+
+  { id: 'pike_pushup', name: 'Pike push-up', primary: ['front delts','side delts'], secondary: ['triceps','upper chest'], equipment: ['bodyweight'], mechanic: 'push', type: 'compound',
+    setup: 'From a downward-dog / pike position — hips high, hands shoulder-width, head between the arms. The higher the hips and the more vertical the torso, the harder it is.',
+    execution: 'Bend the elbows and lower the crown of the head toward the floor just in front of the hands, then press back to lockout. The vertical torso shifts the load to the shoulders — the bodyweight answer to the overhead press, and the key to delts (the V-taper top) without weights.',
+    mistakes: 'Hips dropping toward a regular push-up (kills the shoulder emphasis). Flaring the elbows wide. Half range — get the head to the floor.',
+    breath: 'Inhale down, exhale on the press.',
+    progressions: 'Feet elevated on a step or wall (toward a handstand push-up). Slow eccentrics. Deficit with hands on books.',
+    regressions: 'Hips lower / torso more diagonal. Knees down. Pike against a wall.',
+    integrations: 'builds the shoulders that make the frame read wide — the most important bodyweight move for the V-taper top.',
+    videoUrl: ytSearch('pike push up') },
 
   // ===== SQUAT =====
   { id: 'back_squat', name: 'Back squat', primary: ['quads','glutes'], secondary: ['hamstrings','core','spinal erectors'], equipment: ['barbell','rack'], mechanic: 'squat', type: 'compound',
@@ -1465,6 +1490,66 @@ const DEFAULT_LIBRARY = [
     integrations: 'spinal articulation under load — the antidote to "always brace, never bend." builds segmental control the spine asks for.',
     videoUrl: ytSearch('jefferson curl tutorial') },
 
+  { id: 'neck_release', name: 'Neck release', primary: ['neck'], secondary: [], equipment: ['bodyweight'], mechanic: 'mobility', type: 'mobility',
+    setup: 'Sit or stand tall, shoulders relaxed down, jaw soft, spine long, crown lifted.',
+    execution: 'Drop the right ear slowly toward the right shoulder and hold, breathing into the left side of the neck. Roll the chin down across the chest to the other side. Then a few slow yes/no nods and gentle half-circles (no crunching the back of the neck). 30–45 seconds each direction.',
+    mistakes: 'Forcing the range or grinding the neck backward. Hunching the shoulders up to meet the ear. Holding the breath.',
+    breath: 'Slow; exhale as you sink into each stretch.',
+    progressions: 'Light hand assist for a deeper side stretch. Add chin tucks for the deep neck flexors.',
+    regressions: 'Smaller range, no hand assist.',
+    integrations: 'the neck carries the day’s screen-tension. release it first — the whole posture above the shoulders softens.',
+    videoUrl: ytSearch('neck mobility routine') },
+
+  { id: 'shoulder_cars', name: 'Shoulder CARs', primary: ['shoulders'], secondary: ['upper back'], equipment: ['bodyweight'], mechanic: 'mobility', type: 'mobility',
+    setup: 'Stand or sit tall, arms at the sides, core lightly braced so only the shoulders move.',
+    execution: 'Controlled Articular Rotations: slowly draw the biggest circle possible with one straight arm — forward, up by the ear, back, and down — moving through every degree with tension, like moving through honey. 3–5 slow reps each direction, each arm. Finish with cross-body and overhead reaches.',
+    mistakes: 'Rushing or using momentum. Letting the ribs flare or the body sway to fake range. Shrugging.',
+    breath: 'Steady; do not hold it through the slow grind.',
+    progressions: 'Wider, slower CARs. Add a towel or band pass-through overhead.',
+    regressions: 'Smaller circles. Bend the elbow.',
+    integrations: 'owns the full shoulder range the overhead press and pull-up demand — mobility that protects the joint you are about to load.',
+    videoUrl: ytSearch('shoulder CARs controlled articular rotations') },
+
+  { id: 'thread_needle', name: 'Thread the needle', primary: ['thoracic spine'], secondary: ['shoulders','obliques'], equipment: ['bodyweight'], mechanic: 'mobility', type: 'mobility',
+    setup: 'On all fours, hands under shoulders, knees under hips, spine neutral.',
+    execution: 'Reach the right arm up toward the ceiling, opening the chest. Then thread it UNDER the body, palm up, reaching far to the left until the right shoulder and temple rest on the floor. Feel the rotation through the upper back, hold a breath or two, then unwind and reach up again. 5–8 slow reps each side.',
+    mistakes: 'Rotating from the lower back instead of the mid-back. Collapsing the hips to one side. Rushing the rotation.',
+    breath: 'Inhale to open, exhale to thread under.',
+    progressions: 'Reach the top arm further overhead for more rotation. Hold an end-range breath.',
+    regressions: 'Smaller range; keep the hips stacked over the knees.',
+    integrations: 'frees the thoracic spine — the stiff mid-back that rounds under desk work and steals shoulder and squat position.',
+    videoUrl: ytSearch('thread the needle stretch thoracic') },
+
+  { id: 'downward_dog', name: 'Downward dog', primary: ['hamstrings','calves'], secondary: ['shoulders','spine'], equipment: ['bodyweight'], mechanic: 'mobility', type: 'mobility',
+    setup: 'From all fours, tuck the toes and lift the hips up and back into an inverted V. Hands shoulder-width, feet hip-width.',
+    execution: 'Press the floor away through the hands, lengthen the spine, reach the hips up and back. Pedal the feet — bend one knee then the other — to stretch each calf and hamstring. Then settle both heels toward the floor and hold, spine long. 30–60 seconds.',
+    mistakes: 'Rounding the upper back to force the heels down. Locking the elbows hard. Letting the head hang heavy.',
+    breath: 'Slow and full; lengthen on each exhale.',
+    progressions: 'Walk the dog with deeper heel drops. Three-legged dog. Down-dog to cobra flow.',
+    regressions: 'Bend the knees generously — a straight spine matters more than straight legs. Hands on a step.',
+    integrations: 'one shape that opens shoulders, spine, hamstrings, and calves at once — the whole posterior line in a single hold.',
+    videoUrl: ytSearch('downward dog stretch') },
+
+  { id: 'deep_squat_hold', name: 'Deep squat hold', primary: ['hips','ankles'], secondary: ['groin','knees'], equipment: ['bodyweight'], mechanic: 'mobility', type: 'mobility',
+    setup: 'Feet shoulder-width or a touch wider, toes turned slightly out. Arms ready to balance.',
+    execution: 'Sink all the way down into a deep squat, heels staying down, sitting between the ankles. Use the elbows to gently press the knees out and lift the chest. Relax into the bottom and breathe; optionally shift side to side and rotate. 30–90 seconds.',
+    mistakes: 'Heels lifting (force them down or elevate them slightly). Chest collapsing forward. Bouncing.',
+    breath: 'Deep belly breaths into the bottom; each exhale sinks a little lower.',
+    progressions: 'Longer holds. Thoracic rotations from the bottom. Work toward heels flat, no support.',
+    regressions: 'Heels on a rolled towel. Hold a doorframe for support. Less depth.',
+    integrations: 'the human resting position — restores hip, knee, and ankle range the chair stole, and bulletproofs the bottom of the squat.',
+    videoUrl: ytSearch('deep squat hold malasana mobility') },
+
+  { id: 'wrist_mobility', name: 'Wrist mobility', primary: ['wrists','forearms'], secondary: [], equipment: ['bodyweight'], mechanic: 'mobility', type: 'mobility',
+    setup: 'On all fours (or kneeling at a table edge). Wrists and forearms ready.',
+    execution: 'Fingers pointing forward, rock weight gently forward and back over the wrists. Then turn the hands to point the fingers toward the knees (palms down) and rock back to stretch the forearms. Add palms-up versions and slow wrist circles. 20–30 seconds per position.',
+    mistakes: 'Loading too aggressively too soon (wrists are sensitive). Holding the breath. Skipping it before pressing.',
+    breath: 'Easy; exhale into each stretch.',
+    progressions: 'More bodyweight over the wrists. Fingertip and knuckle work.',
+    regressions: 'Less weight; do it kneeling at a wall or table instead of the floor.',
+    integrations: 'preps the wrists for every push-up, plank, and floor press — the small joint that quietly limits bodyweight pressing.',
+    videoUrl: ytSearch('wrist mobility warm up') },
+
   // ===== MMA CONDITIONING (May 2026 expansion) =====
   { id: 'heavy_bag', name: 'Heavy bag rounds', primary: ['shoulders','core','cardio'], secondary: ['lats','triceps','legs'], equipment: ['heavy bag','wraps'], mechanic: 'push', type: 'conditioning',
     setup: 'Wrap hands. Stance: lead foot forward, weight balanced, hands up. Bag at chest height.',
@@ -1680,6 +1765,48 @@ const DEFAULT_DATA = {
         { id: 'uh-e', libraryId: 'hanging_leg_raise', letter: 'E', name: 'Hanging leg raise', alt: '', sets: 3, reps: '10–15', rest: 60, cues: 'control the lower.' }
       ],
       cooldown: ['2 min easy bike','Lat stretch + pec stretch','Long exhales 4-4-8 × 1 min']
+    },
+    {
+      id: 'mobility',
+      name: 'Mobility & Stretch',
+      subtitle: 'whole-body — joints, fascia, breath',
+      type: 'training',
+      duration: '20–30 min',
+      warmup: ['A few slow breaths to arrive','Gentle full-body shake-out','Roll the shoulders, wrists, and ankles a few times'],
+      exercises: [
+        { id: 'mob-a', libraryId: 'neck_release', letter: 'A', name: 'Neck release', alt: '', sets: 1, reps: '30 sec/side', rest: 0, cues: 'ear toward shoulder, breathe into the long side. no grinding back.' },
+        { id: 'mob-b', libraryId: 'shoulder_cars', letter: 'B', name: 'Shoulder CARs', alt: '', sets: 1, reps: '5/direction', rest: 0, cues: 'biggest slow circle, like moving through honey. only the shoulder moves.' },
+        { id: 'mob-c', libraryId: 'cat_cow', letter: 'C', name: 'Cat-cow', alt: '', sets: 1, reps: '10 slow', rest: 0, cues: 'breathe with the spine — inhale open, exhale round.' },
+        { id: 'mob-d', libraryId: 'thread_needle', letter: 'D', name: 'Thread the needle', alt: '', sets: 1, reps: '6/side', rest: 0, cues: 'open the chest, then thread under. rotate the mid-back, not the low back.' },
+        { id: 'mob-e', libraryId: 'downward_dog', letter: 'E', name: 'Downward dog', alt: '', sets: 1, reps: '45 sec', rest: 0, cues: 'pedal the feet, lengthen the spine, then settle the heels.' },
+        { id: 'mob-f', libraryId: 'world_greatest', letter: 'F', name: "World's greatest stretch", alt: '', sets: 1, reps: '5/side', rest: 0, cues: 'lunge, rotate, reach. open the whole front line.' },
+        { id: 'mob-g', libraryId: 'deep_squat_hold', letter: 'G', name: 'Deep squat hold', alt: '', sets: 1, reps: '60 sec', rest: 0, cues: 'heels down, elbows press the knees out, chest tall. breathe into the bottom.' },
+        { id: 'mob-h', libraryId: 'ninetynine', letter: 'H', name: '90/90 hip stretch', alt: '', sets: 1, reps: '1 min/side', rest: 0, cues: 'sit tall, rotate the hips slowly. breathe into the tight side.' },
+        { id: 'mob-i', libraryId: 'pigeon', letter: 'I', name: 'Pigeon stretch', alt: '', sets: 1, reps: '1 min/side', rest: 0, cues: 'square the hips. let the glute release on the exhale.' },
+        { id: 'mob-j', libraryId: 'couch_stretch', letter: 'J', name: 'Couch stretch', alt: '', sets: 1, reps: '1 min/side', rest: 0, cues: 'rear foot up, tuck the pelvis. opens the chair-sitting hip flexor.' },
+        { id: 'mob-k', libraryId: 'doorway_pec', letter: 'K', name: 'Doorway pec stretch', alt: '', sets: 1, reps: '45 sec/side', rest: 0, cues: 'forearm on the frame, step through. open the chest the desk closes.' },
+        { id: 'mob-l', libraryId: 'wrist_mobility', letter: 'L', name: 'Wrist mobility', alt: '', sets: 1, reps: '30 sec/position', rest: 0, cues: 'gentle rocks over the wrists, both directions. preps the hands for pressing.' }
+      ],
+      cooldown: ['Lie still for 1–2 min','Long exhales 4-4-8 × 1 min','Notice what opened']
+    },
+    {
+      id: 'home_bw',
+      name: 'Home — Bodyweight Strength',
+      subtitle: 'full-body · no equipment · just you and the floor',
+      type: 'training',
+      duration: '30–45 min',
+      warmup: ['3–5 min easy movement — jog in place, jumping jacks','Arm circles + shoulder CARs','Bodyweight squats × 15','Cat-cow × 10','A few slow push-ups to feel the shoulders'],
+      exercises: [
+        { id: 'hb-a', libraryId: 'pike_pushup', letter: 'A', name: 'Pike push-up', alt: 'feet on a step to progress', sets: 4, reps: '6–10', rest: 90, cues: 'hips high, head to the floor between the hands. shoulders = the V-taper top.' },
+        { id: 'hb-b', libraryId: 'inverted_row', letter: 'B', name: 'Inverted row', alt: 'pull-ups if you have a bar', sets: 4, reps: '8–12', rest: 90, cues: 'under a table edge, body a line. drive the elbows down, squeeze the back.' },
+        { id: 'hb-c', libraryId: 'pushup', letter: 'C', name: 'Push-up', alt: 'feet elevated / archer for more', sets: 3, reps: 'AMRAP −2', rest: 75, cues: 'full range, body a straight line. chest + triceps.' },
+        { id: 'hb-d', libraryId: 'bulgarian_split_squat', letter: 'D', name: 'Bulgarian split squat', alt: 'or reverse lunges', sets: 3, reps: '10–15/side', rest: 75, cues: 'rear foot on a chair, drop straight down. unilateral leg strength.' },
+        { id: 'hb-e', libraryId: 'pistol_squat', letter: 'E', name: 'Pistol squat', alt: 'box pistol / hold a doorframe', sets: 3, reps: '3–6/side', rest: 75, cues: 'one leg, sit all the way down and stand. control the descent.' },
+        { id: 'hb-f', libraryId: 'dips', letter: 'F', name: 'Dips', alt: 'between two sturdy chairs', sets: 3, reps: '8–12', rest: 75, cues: 'lean forward for chest, upright for triceps. full range.' },
+        { id: 'hb-g', libraryId: 'plank', letter: 'G', name: 'Plank', alt: 'or hollow-body hold', sets: 3, reps: '30–45 sec', rest: 45, cues: 'glutes tight, ribs down, body a line. breathe.' },
+        { id: 'hb-h', libraryId: 'stomach_vacuum', letter: 'H', name: 'Stomach vacuum', alt: 'or hanging leg raise', sets: 3, reps: '20 sec hold', rest: 30, cues: 'full exhale, navel to spine. cinch the waist.' }
+      ],
+      cooldown: ['2 min easy walk or shake-out','Couch stretch × 1 min/side','Doorway pec stretch × 30 sec/side','Long exhales 4-4-8 × 1 min']
     }
   ],
   altModes: [
@@ -1689,9 +1816,6 @@ const DEFAULT_DATA = {
     { id: 'zone2', name: 'Zone 2', subtitle: 'cardio base — the engine', duration: '30–45 min',
       description: "Heart rate ~105–125 bpm (60–70% max). You can hold a conversation but it's getting harder. Stationary bike, incline treadmill, rowing, or swimming — Pisces Moon will love the pool. Builds the cardiovascular floor under everything else.",
       prompts: ['Which modality does the body lean toward today?','Indoor or pool?','Anything to listen to, or full presence with the breath?'] },
-    { id: 'mobility', name: 'Mobility', subtitle: 'gentle — joints, fascia, breath', duration: '15–25 min',
-      description: "Cat-cow, hip openers (90/90, world's greatest stretch), pigeon, couch stretch, doorway pec stretch, child's pose with side reach. 60 seconds per movement. Long exhales throughout — let the body unwind into the stretch, don't force it.",
-      prompts: ['Where is the body holding today?','What asks for attention first?','Can the breath get longer than the stretch is uncomfortable?'] },
     { id: 'zen', name: 'Zen Day', subtitle: 'sunday — sauna, light walk, mobility', duration: 'unscheduled',
       description: "No structure. No minimums. Sauna, a light walk, some mobility if the body asks for it. The point of zen day is *not* to optimize. Let the wave settle. Read, write, be still. Tomorrow the body asks again.",
       prompts: ['What does true rest look like today?','Is there anything the body is asking *not* to do?','Where is the calm between waves?'] },
@@ -1976,6 +2100,21 @@ function renderAltMode() {
     <div class="alt-view-name">${escapeHtml(mode.name)}</div>
     <div class="alt-view-sub">${escapeHtml(mode.subtitle)}</div>
     <div class="alt-view-desc">${escapeHtml(mode.description)}</div>`;
+  if (mode.exercises && mode.exercises.length) {
+    const flow = document.createElement('div');
+    flow.className = 'alt-view-flow';
+    mode.exercises.forEach(ex => {
+      const row = document.createElement('div');
+      row.className = 'alt-flow-row';
+      row.innerHTML =
+        '<span class="alt-flow-letter">' + escapeHtml(ex.letter) + '</span>' +
+        '<span class="alt-flow-name">' + escapeHtml(ex.name) + '</span>' +
+        '<span class="alt-flow-reps">' + escapeHtml(ex.reps || '') + '</span>';
+      flow.appendChild(row);
+    });
+    card.appendChild(flow);
+  }
+
   if (mode.prompts && mode.prompts.length) {
     const prompts = document.createElement('ul');
     prompts.className = 'alt-view-prompts';
@@ -1983,7 +2122,13 @@ function renderAltMode() {
     card.appendChild(prompts);
   }
 
-  const logBtn = el('button', 'btn-primary', 'log as done');
+  if (mode.exercises && mode.exercises.length) {
+    const beginBtn = el('button', 'btn-primary', 'begin flow');
+    beginBtn.addEventListener('click', () => startAltFlow(mode.id));
+    card.appendChild(beginBtn);
+  }
+
+  const logBtn = el('button', mode.exercises && mode.exercises.length ? 'btn-secondary' : 'btn-primary', 'log as done');
   logBtn.addEventListener('click', () => {
     state.sessions.unshift({ id: uid('s'), date: TODAY(), planId: mode.id, planName: mode.name, type: 'altmode', exercises: [], finalNotes: '' });
     saveState();
@@ -2497,6 +2642,27 @@ function startSession(planId) {
     warmup: plan.warmup || [],
     cooldown: plan.cooldown || [],
     duration: plan.duration,
+    finalNotes: ''
+  };
+  render();
+}
+
+// Start a guided session from an alt-mode that carries an exercises flow (e.g. Mobility).
+function startAltFlow(modeId) {
+  const mode = getAlt(modeId);
+  if (!mode || !mode.exercises || !mode.exercises.length) return;
+  activeSession = {
+    date: TODAY(),
+    planId: mode.id,
+    planName: mode.name,
+    exercises: mode.exercises.map(ex => ({
+      id: ex.id, libraryId: ex.libraryId, name: ex.name, letter: ex.letter, alt: ex.alt,
+      sets: ex.sets, reps: ex.reps, rest: ex.rest, cues: ex.cues,
+      done: false, notes: '', notesOpen: false, formOpen: false
+    })),
+    warmup: mode.warmup || [],
+    cooldown: mode.cooldown || [],
+    duration: mode.duration,
     finalNotes: ''
   };
   render();
@@ -3380,150 +3546,4 @@ function makeExerciseEditor(ex, idx, list) {
   const restIn = document.createElement('input');
   restIn.type = 'number'; restIn.min = '0';
   restIn.value = ex.rest; restIn.placeholder = 'rest s';
-  restIn.addEventListener('input', e => ex.rest = parseInt(e.target.value) || 0);
-  grid.appendChild(restIn);
-
-  wrap.appendChild(grid);
-
-  const altIn = document.createElement('input');
-  altIn.value = ex.alt || ''; altIn.placeholder = 'alternative (optional)';
-  altIn.style.fontSize = '13px'; altIn.style.marginBottom = '6px';
-  altIn.addEventListener('input', e => ex.alt = e.target.value);
-  wrap.appendChild(altIn);
-
-  const cuesIn = document.createElement('input');
-  cuesIn.value = ex.cues || ''; cuesIn.placeholder = 'cues — what to remember mid-set';
-  cuesIn.style.fontSize = '13px';
-  cuesIn.addEventListener('input', e => ex.cues = e.target.value);
-  wrap.appendChild(cuesIn);
-
-  const ctrls = document.createElement('div');
-  ctrls.className = 'editor-ex-controls';
-  const moves = document.createElement('div');
-  moves.className = 'move-btns';
-  const up = el('button', 'icon-btn', '↑');
-  up.addEventListener('click', () => { if (idx === 0) return; [list[idx-1], list[idx]] = [list[idx], list[idx-1]]; relabel(list); render(); });
-  moves.appendChild(up);
-  const down = el('button', 'icon-btn', '↓');
-  down.addEventListener('click', () => { if (idx === list.length - 1) return; [list[idx+1], list[idx]] = [list[idx], list[idx+1]]; relabel(list); render(); });
-  moves.appendChild(down);
-  ctrls.appendChild(moves);
-
-  const del = el('button', 'icon-btn', '×');
-  del.style.color = 'var(--crimson)';
-  del.addEventListener('click', () => { list.splice(idx, 1); relabel(list); render(); });
-  ctrls.appendChild(del);
-
-  wrap.appendChild(ctrls);
-  return wrap;
-}
-
-function nextLetter(n) { return String.fromCharCode(65 + (n % 26)); }
-function relabel(list) { list.forEach((ex, i) => ex.letter = nextLetter(i)); }
-
-function openLibraryPickerModal(plan) {
-  const modal = document.getElementById('modal');
-  modal.innerHTML = `
-    <div class="modal-header">
-      <div class="modal-title">pick from library</div>
-      <button class="modal-close" id="modal-close-btn">×</button>
-    </div>
-    <div class="library-search-wrap">
-      <input id="lib-pick-search" placeholder="search…">
-    </div>
-    <div class="lib-grid" id="lib-pick-grid"></div>`;
-  document.getElementById('modal-overlay').classList.add('open');
-  document.getElementById('modal-close-btn').onclick = closeModal;
-  const renderPickGrid = (q) => {
-    const grid = document.getElementById('lib-pick-grid');
-    grid.innerHTML = '';
-    const qq = (q || '').toLowerCase().trim();
-    state.library.forEach(libEx => {
-      if (qq) {
-        const hay = (libEx.name + ' ' + (libEx.primary || []).join(' ')).toLowerCase();
-        if (!hay.includes(qq)) return;
-      }
-      const card = document.createElement('button');
-      card.className = 'lib-card';
-      card.innerHTML = `
-        <span class="lib-mech-tag lib-mech-${libEx.mechanic}">${escapeHtml(libEx.mechanic)}</span>
-        <div class="lib-card-info">
-          <div class="lib-card-name">${escapeHtml(libEx.name)}</div>
-          <div class="lib-card-muscles">${escapeHtml((libEx.primary || []).join(', '))}</div>
-        </div>`;
-      card.addEventListener('click', () => {
-        plan.exercises.push({
-          id: uid('ex'),
-          libraryId: libEx.id,
-          letter: nextLetter(plan.exercises.length),
-          name: libEx.name,
-          alt: '',
-          sets: 3,
-          reps: '8\u201312',
-          rest: 90,
-          cues: ''
-        });
-        closeModal();
-        render();
-        toast('added');
-      });
-      grid.appendChild(card);
-    });
-  };
-  document.getElementById('lib-pick-search').addEventListener('input', e => renderPickGrid(e.target.value));
-  renderPickGrid('');
-}
-
-function savePlan() {
-  const p = editingPlan;
-  if (!p.name.trim()) {
-    toast('plan needs a name');
-    return;
-  }
-  p.warmup = (p.warmup || []).map(s => s.trim()).filter(Boolean);
-  p.cooldown = (p.cooldown || []).map(s => s.trim()).filter(Boolean);
-  p.exercises = p.exercises.filter(ex => ex.name && ex.name.trim());
-  const idx = state.plans.findIndex(pl => pl.id === p.id);
-  if (idx >= 0) state.plans[idx] = p;
-  else state.plans.push(p);
-  saveState();
-  editingPlan = null;
-  toast('kept');
-  setView('plans');
-}
-
-function renderHistory() {
-  const wrap = document.createElement('div');
-  wrap.appendChild(el('div', 'today-eyebrow', 'history'));
-  wrap.appendChild(el('div', 'session-sub', 'what the body has done.'));
-  if (!state.sessions.length) {
-    const empty = document.createElement('div');
-    empty.className = 'empty';
-    empty.innerHTML = `<div class="empty-msg">no sessions yet</div><div class="empty-sub">first one writes the line.</div>`;
-    wrap.appendChild(empty);
-    return wrap;
-  }
-  const list = document.createElement('div');
-  list.className = 'history-list';
-  state.sessions.slice(0, 50).forEach(s => {
-    const item = document.createElement('div');
-    item.className = 'history-item';
-    const doneCount = s.exercises ? s.exercises.filter(e => e.done).length : 0;
-    const totalCount = s.exercises ? s.exercises.length : 0;
-    item.innerHTML = `
-      <div class="history-date">${formatDate(s.date)}</div>
-      <div class="history-name">${escapeHtml(s.planName)}</div>
-      ${s.type === 'training' ? `<div class="history-stats">${doneCount}/${totalCount} movements</div>` : `<div class="history-stats">mode</div>`}
-      ${s.finalNotes ? `<div class="history-notes">${escapeHtml(s.finalNotes)}</div>` : ''}`;
-    list.appendChild(item);
-  });
-  wrap.appendChild(list);
-  return wrap;
-}
-
-setHeaderDate();
-render();
-setInterval(setHeaderDate, 60 * 1000);
-</script>
-</body>
-</html>
+  restIn.addEventListener('input', e
