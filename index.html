@@ -879,6 +879,51 @@ nav.tab-bar {
 .schedule-add-mid .act { text-align: center; padding: 9px; border: 1px dashed var(--border); border-radius: var(--r-sm); color: var(--ink-dim); font-size: 12.5px; letter-spacing: 0.04em; transition: all 0.15s; }
 .schedule-add-mid:active .act { border-color: var(--c-brow); color: var(--ink); }
 </style>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  /* ── Codex × Pleroma skin (R55) — serif voice, calm panels, 2-col temple grid ── */
+  body, .app-inner { font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
+  .app-inner { background-image: radial-gradient(110% 38% at 80% -6%, rgba(143,123,212,0.07), transparent 60%); }
+
+  .portal-date-big { font-family: 'Cormorant Garamond', serif; font-weight: 500; font-size: 52px; letter-spacing: 0.01em; line-height: 0.94; margin-bottom: 6px; }
+  .portal-arc { font-size: 12.5px; }
+  .portal-moon-glyph { font-size: 12px; }
+  .portal-moon { font-size: 10px; opacity: 0.82; }
+  .portal-moon-guide .pmg-text { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 16px; line-height: 1.45; }
+
+  .section-eyebrow { letter-spacing: 0.26em; }
+
+  .stack-pulse, .next-practice {
+    background: rgba(236,230,218,0.022); border: 1px solid var(--border);
+    border-radius: var(--r-md); padding: 15px 16px; margin: 0 0 14px;
+  }
+  .stack-pulse { align-items: stretch; }
+  .stack-pulse-eyebrow { opacity: 1; align-self: flex-start; }
+  .stack-pulse-chips { max-width: none; justify-content: space-between; }
+
+  .day-card-name { font-family: 'Cormorant Garamond', serif; font-weight: 500; font-size: 21px; }
+
+  .temples-grid { grid-template-columns: 1fr 1fr; gap: 11px; }
+  .temple-card {
+    text-align: left; padding: 14px 14px 14px 16px; border-radius: 14px;
+    position: relative; overflow: hidden; border-color: var(--border);
+    background: rgba(236,230,218,0.022);
+  }
+  .temple-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--ink-faint); }
+  .temple-card.c-root::before   { background: var(--c-root); }
+  .temple-card.c-sacral::before { background: var(--c-sacral); }
+  .temple-card.c-heart::before  { background: var(--c-heart); }
+  .temple-card.c-throat::before { background: var(--c-throat); }
+  .temple-card.c-brow::before   { background: var(--c-brow); }
+  .temple-card.c-crown::before  { background: var(--c-crown); }
+  .temple-card.azure::before    { background: var(--azure); }
+  .temple-card.mystic::before   { background: var(--mystic); }
+  .temple-card.pewter::before   { background: var(--pewter); }
+  .temple-name { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 500; display: flex; align-items: center; gap: 8px; line-height: 1.1; }
+  .temple-chakra { font-size: 15px; }
+  .temple-sub { font-size: 10px; color: var(--ink-faint); margin-top: 4px; letter-spacing: 0.02em; }
+</style>
 </head>
 <body>
 
@@ -3143,7 +3188,7 @@ const Portal = (function() {
     view.appendChild(timeline);
 
     // "+ add to today's flow" button
-    const flowAddBtn = el('button', 'flow-add-btn', '+ add to today\u2019s flow');
+    const flowAddBtn = el('button', 'flow-add-btn', '+ add to today’s flow');
     flowAddBtn.addEventListener('click', openAddToFlow);
     view.appendChild(flowAddBtn);
 
@@ -3153,8 +3198,6 @@ const Portal = (function() {
     view.appendChild(el('div', 'section-eyebrow', 'jump in'));
     const grid = document.createElement('div');
     grid.className = 'temples-grid';
-    // Ordered by natural priority — mental wellbeing first, then body, then the rest by
-    // cultivation → expression → skill. Colored by chakra (root → crown) for coherence.
     const mkCard = (color, chakra, name, sub, route) => {
       const c = el('button', 'temple-card ' + color);
       c.innerHTML = '<div class="temple-name ' + color + '"><span class="temple-chakra">' + chakra + '</span>' + name + '</div><div class="temple-sub">' + sub + '</div>';
@@ -3172,36 +3215,14 @@ const Portal = (function() {
     mkCard('pewter',   '🪞', 'The Weekly Mirror',  'the week, reflected', 'mirror');
     view.appendChild(grid);
 
-    const heart = document.createElement('div');
-    heart.className = 'heart-note';
-    heart.innerHTML = `<div class="heart-note-text">${escapeHtml(HEART_NOTES[train.planId] || '')}</div>`;
-    view.appendChild(heart);
-
-    renderCompletions(view);
-    renderClosing(view);
-
     mount.appendChild(view);
   }
 
-  // Round 14 — wire portal timer controls (once, on script load)
-  try {
-    document.getElementById('portal-timer-cancel').addEventListener('click', cancelPortalTimer);
-    document.getElementById('portal-timer-done').addEventListener('click', () => stopPortalTimer(true));
-  } catch (e) {}
+  Shell.setDateTitle();
+  render();
 
   return { render };
 })();
-
-// ============================================================
-// BOOT
-// ============================================================
-render();
-
-function render() {
-  Portal.render();
-  document.getElementById('shell-title').textContent = 'portal · daily practice';
-  Shell.setDateTitle();
-}
 </script>
 </body>
 </html>
