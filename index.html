@@ -923,6 +923,17 @@ nav.tab-bar {
   .temple-name { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 500; display: flex; align-items: center; gap: 8px; line-height: 1.1; }
   .temple-chakra { font-size: 15px; }
   .temple-sub { font-size: 10px; color: var(--ink-faint); margin-top: 4px; letter-spacing: 0.02em; }
+
+  /* stack pulse as colored level-bars (match mockup) */
+  .stack-pulse-chips { display: flex; gap: 7px; max-width: none; justify-content: space-between; width: 100%; }
+  .stack-pulse-chip { flex: 1; text-align: center; padding: 0; background: none; border-radius: 0; }
+  .stack-pulse-chip .sp-bar { display: block; height: 36px; border-radius: 5px; background: rgba(236,230,218,0.05); position: relative; overflow: hidden; }
+  .stack-pulse-chip .sp-bar i { position: absolute; bottom: 0; left: 0; right: 0; display: block; }
+  .stack-pulse-chip .sp-label { display: block; font-size: 8.5px; letter-spacing: 0.05em; color: var(--ink-faint); margin-top: 6px; text-transform: uppercase; }
+
+  /* smaller moon orb */
+  .portal-moon-glyph { display: inline-block; width: 22px; height: 22px; border-radius: 50%; font-size: 0; vertical-align: middle; background: radial-gradient(circle at 36% 30%, #f6f1e3, #cdd0d6 56%, #6f7280 100%); box-shadow: inset -4px -3px 8px rgba(0,0,0,0.45); }
+  .portal-moon { gap: 9px; }
 </style>
 </head>
 <body>
@@ -1876,11 +1887,11 @@ const Portal = (function() {
     const order = ['body', 'breath', 'energy', 'field', 'healing', 'primal'];
     order.forEach(k => {
       const s = PLAN_STACKS[k]; if (!s) return;
-      const chip = document.createElement('span');
-      chip.className = 'stack-pulse-chip ' + data.brightness[k];
-      chip.style.color = s.color;
-      chip.style.background = s.bg;
-      chip.textContent = s.label;
+      const b = data.brightness[k];
+      const h = b === 'bright' ? 85 : b === 'mid' ? 52 : 24;
+      const chip = document.createElement('div');
+      chip.className = 'stack-pulse-chip ' + b;
+      chip.innerHTML = '<span class="sp-bar"><i style="height:' + h + '%;background:' + s.color + ';"></i></span><span class="sp-label">' + s.label + '</span>';
       const ts = data.last[k];
       if (ts) {
         const ageDays = Math.floor((Date.now() - ts) / (24 * 3600 * 1000));
