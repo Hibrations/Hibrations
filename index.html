@@ -1871,6 +1871,21 @@ const Portal = (function() {
       });
     } catch (e) {}
 
+    // Breath & Energy Temple — sessions carry a stack array; breath+energy always, tags mapped to canonical lines.
+    try {
+      const breathT = JSON.parse(localStorage.getItem('breath_temple_v1') || '{}');
+      (breathT.sessions || []).forEach(s => {
+        const ts = tsOf(s); if (!ts) return;
+        touch('breath', ts); touch('energy', ts);
+        (s.stack || []).forEach(k => {
+          if (k === 'sexual') touch('primal', ts);
+          else if (k === 'healing' || k === 'therapeutic') touch('healing', ts);
+          else if (k === 'polarity') touch('field', ts);
+          else if (k === 'breath' || k === 'energy') touch(k, ts);
+        });
+      });
+    } catch (e) {}
+
     const brightness = {};
     Object.keys(last).forEach(k => {
       const ts = last[k];
@@ -1922,6 +1937,22 @@ const Portal = (function() {
     if (/sec/i.test(label)) return n;
     return n * 60;
   }
+
+  // Breath & Energy manifest (canonical list lives in breath_temple.html; stacks mapped to portal lines).
+  const BREATH_PRACTICES = [
+    { id: 'daily_anchor',    name: 'The Daily Anchor \u00b7 20-Min Orbit',  stack: ['breath','energy','primal'], durationLabel: '20 min' },
+    { id: 'coherent_breath', name: 'Coherent Breathing \u00b7 5\u20136/min', stack: ['breath'],            durationLabel: '6 min' },
+    { id: 'felt_sense',      name: 'Felt-Sense Calibration',                stack: ['energy','breath'],   durationLabel: '5 min' },
+    { id: 'wim_hof',         name: 'Wim Hof Method',                        stack: ['breath','energy'],   durationLabel: '12 min' },
+    { id: 'nadi_shodhana',   name: 'Nadi Shodhana \u00b7 Alternate Nostril', stack: ['breath'],          durationLabel: '5 min' },
+    { id: 'earth_rooting',   name: 'Earth Rooting',                         stack: ['energy'],            durationLabel: '5 min' },
+    { id: 'square_breath',   name: 'Square Breath \u00b7 Prana Absorption', stack: ['breath','energy'],   durationLabel: '20 min' },
+    { id: 'dantian_sealing', name: 'Dantian Sealing',                       stack: ['energy'],            durationLabel: '5 min' },
+    { id: 'toning_bija',     name: 'Toning & Bija Sounding',                stack: ['energy','healing'],  durationLabel: '5 min' },
+    { id: 'polarity_flow',   name: 'Polarity Flow',                         stack: ['field','primal'],    durationLabel: '5 min' },
+    { id: 'pelvic_breath',   name: 'Pelvic-Floor-Coordinated Breath',       stack: ['breath','primal'],   durationLabel: '5 min' },
+    { id: 'sexual_drawing',  name: 'Sexual Energy Drawing',                 stack: ['primal','energy'],   durationLabel: '10 min' }
+  ];
 
   function buildNextPractices() {
     const pulse = readStackPulse();
@@ -1982,6 +2013,16 @@ const Portal = (function() {
       if (sec <= 0 || sec >= 9999) return;
       pool.push({
         id: p.id, name: p.name, source: 'grimoire',
+        stack: p.stack, durationSec: sec, durationLabel: p.durationLabel
+      });
+    });
+
+    // Breath & Energy manifest \u2014 feeds breath + energy (and primal/field/healing where tagged).
+    BREATH_PRACTICES.forEach(p => {
+      const sec = parseDurationSec(p.durationLabel);
+      if (sec <= 0 || sec >= 9999) return;
+      pool.push({
+        id: p.id, name: p.name, source: 'breath',
         stack: p.stack, durationSec: sec, durationLabel: p.durationLabel
       });
     });
@@ -2954,6 +2995,7 @@ const Portal = (function() {
     if (src === 'body') return 'body';
     if (src === 'beast') return 'beast';
     if (src === 'magnetic') return 'magnetic';
+    if (src === 'breath') return 'breath';
     return null;
   }
 

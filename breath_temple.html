@@ -93,6 +93,20 @@ main { padding: 22px; }
 }
 
 .practice-list { display: flex; flex-direction: column; gap: 10px; }
+.cat-group { margin-bottom: 9px; }
+.cat-header {
+  width: 100%; display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px; text-align: left;
+  background: var(--bg-elev); border: 1px solid var(--border);
+  border-radius: var(--r-md); transition: border-color 0.15s;
+}
+.cat-group.open .cat-header { border-color: var(--crimson-dim); border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.cat-label { flex: 1; font-family: 'Cormorant Garamond', serif; font-weight: 500; font-size: 17px; color: var(--ink); letter-spacing: 0.01em; line-height: 1.2; }
+.cat-count { font-size: 11px; color: var(--ink-faint); letter-spacing: 0.08em; font-variant-numeric: tabular-nums; }
+.cat-chevron { color: var(--ink-faint); font-size: 17px; transition: transform 0.2s; }
+.cat-group.open .cat-chevron { transform: rotate(90deg); color: var(--crimson); }
+.cat-body { display: none; flex-direction: column; gap: 10px; padding: 10px 0 4px; }
+.cat-group.open .cat-body { display: flex; }
 .practice-card {
   background: var(--bg-card); border: 1px solid var(--border);
   border-radius: var(--r-md); overflow: hidden;
@@ -591,6 +605,26 @@ const STACK_COLORS = {
 // ============================================================
 // STATE
 // ============================================================
+// ============================================================
+// CATEGORIES — collapsible browse paths
+// ============================================================
+const CATEGORIES = [
+  { key: 'anchor',     label: 'The daily anchor',                    ids: ['daily_anchor'] },
+  { key: 'foundation', label: 'Foundation \u00b7 Tier 1',             ids: ['coherent_breath','nasal_reset','felt_sense'] },
+  { key: 'capacity',   label: 'Capacity \u00b7 Tier 2',               ids: ['wim_hof','tummo'] },
+  { key: 'pranayama',  label: 'Pranayama \u00b7 Tier 3',              ids: ['nadi_shodhana','ujjayi','kapalabhati','bhastrika'] },
+  { key: 'sources',    label: 'Sources & storage',                   ids: ['earth_rooting','square_breath','sun_moon_breath','nature_charging','dantian_sealing'] },
+  { key: 'soundpol',   label: 'Sound & polarity',                    ids: ['toning_bija','polarity_flow'] },
+  { key: 'sexual',     label: 'Sexual & shamanic breath \u00b7 Tier 4', ids: ['pelvic_breath','sexual_drawing','breath_edging','orbit_arousal'] },
+  { key: 'deep',       label: 'Hands & therapeutic \u00b7 Tier 5',     ids: ['hands_online','connected_breathing'] }
+];
+let expandedCats = {};
+function expandCatFor(practiceId) {
+  for (var i = 0; i < CATEGORIES.length; i++) {
+    if (CATEGORIES[i].ids.indexOf(practiceId) >= 0) { expandedCats[CATEGORIES[i].key] = true; return; }
+  }
+}
+
 const STORAGE_KEY = 'breath_temple_v1';
 let state = loadState();
 let currentTab = 'library';
@@ -780,6 +814,7 @@ function promptToLog() {
   const p = PRACTICES.find(x => x.id === activeSession.practiceId);
   if (!p) { activeSession = null; return; }
   openCardId = p.id;
+  expandCatFor(p.id);
   showCompleteCard(p);
   render();
 }
@@ -842,86 +877,89 @@ function render() {
 
 function renderLibrary(mount) {
   const decl = el('div', 'declaration');
-  decl.innerHTML = '<strong>breath is the carrier wave.</strong> the gate that opens the other fires — sexual stamina is breath training, erection quality is pelvic-floor-and-breath coordination, energy transmission is moving energy by definition. <em>cultivation before circulation. ground before sky. seal what you gather.</em>';
+  decl.innerHTML = '<strong>breath is the carrier wave.</strong> the gate that opens the other fires \u2014 sexual stamina is breath training, erection quality is pelvic-floor-and-breath coordination, energy transmission is moving energy by definition. <em>cultivation before circulation. ground before sky. seal what you gather.</em>';
   mount.appendChild(decl);
 
   const banner = el('div', 'anchor-banner');
   banner.innerHTML =
     '<div class="ab-eyebrow">the anchor for this season</div>' +
-    '<div class="ab-text">Twenty minutes a day of slow nasal breathing in microcosmic orbit posture. <em>One practice you’ll actually do — it trains nasal default, capacity, pelvic awareness, the orbit, and felt-sense all at once.</em></div>';
+    '<div class="ab-text">Twenty minutes a day of slow nasal breathing in microcosmic orbit posture. <em>One practice you\u2019ll actually do \u2014 it trains nasal default, capacity, pelvic awareness, the orbit, and felt-sense all at once.</em></div>';
   mount.appendChild(banner);
 
-  mount.appendChild(el('div', 'section-eyebrow', 'the practices'));
+  mount.appendChild(el('div', 'section-eyebrow', 'the 23 practices \u00b7 choose a path'));
 
-  // Pedagogical order: anchor first, then foundation → moving → capacity →
-  // pranayama → sources → storage → sound → polarity → sexual/shamanic → therapeutic.
-  const PRACTICES_DISPLAY_ORDER = [
-    'daily_anchor',
-    'coherent_breath', 'nasal_reset', 'felt_sense',
-    'wim_hof', 'tummo',
-    'nadi_shodhana', 'ujjayi', 'kapalabhati', 'bhastrika',
-    'earth_rooting', 'square_breath', 'sun_moon_breath', 'nature_charging',
-    'dantian_sealing',
-    'toning_bija',
-    'polarity_flow',
-    'pelvic_breath', 'sexual_drawing', 'breath_edging', 'orbit_arousal',
-    'hands_online',
-    'connected_breathing'
-  ];
-  const _orderMap = {};
-  PRACTICES_DISPLAY_ORDER.forEach((id, i) => { _orderMap[id] = i; });
-  const _sortedPractices = [...PRACTICES].sort((a, b) => {
-    const ai = _orderMap[a.id] !== undefined ? _orderMap[a.id] : 999;
-    const bi = _orderMap[b.id] !== undefined ? _orderMap[b.id] : 999;
-    return ai - bi;
-  });
+  const byId = {};
+  PRACTICES.forEach(p => { byId[p.id] = p; });
 
-  const list = el('div', 'practice-list');
-  _sortedPractices.forEach((p, idx) => {
-    const card = el('div', 'practice-card' + (openCardId === p.id ? ' open' : ''));
-    card.setAttribute('data-practice', p.id);
+  CATEGORIES.forEach(cat => {
+    const practices = cat.ids.map(id => byId[id]).filter(Boolean);
+    if (!practices.length) return;
+    const isOpen = !!expandedCats[cat.key];
+    const group = el('div', 'cat-group' + (isOpen ? ' open' : ''));
 
-    const summary = el('button', 'practice-summary');
-    summary.innerHTML =
-      '<div class="practice-num">' + (idx + 1) + '</div>' +
-      '<div class="practice-info">' +
-        '<div class="practice-name">' + escapeHtml(p.name) + '</div>' +
-        '<div class="practice-stack">' + stackChipsHtml(p.stack) + '</div>' +
-        '<div class="practice-meta">' +
-          '<span>' + escapeHtml(p.durationLabel) + '</span>' +
-          '<span>' + escapeHtml(p.frequency) + '</span>' +
-        '</div>' +
-      '</div>' +
-      '<div class="practice-toggle">+</div>';
-    summary.addEventListener('click', () => {
-      openCardId = (openCardId === p.id) ? null : p.id;
+    const header = el('button', 'cat-header');
+    header.innerHTML =
+      '<span class="cat-label">' + escapeHtml(cat.label) + '</span>' +
+      '<span class="cat-count">' + practices.length + '</span>' +
+      '<span class="cat-chevron">\u203a</span>';
+    header.addEventListener('click', () => {
+      expandedCats[cat.key] = !expandedCats[cat.key];
       render();
     });
-    card.appendChild(summary);
+    group.appendChild(header);
 
-    const detail = el('div', 'practice-detail');
-    let detailHtml = '';
-    detailHtml += '<div class="detail-section"><h4>what it is</h4><p>' + escapeHtml(p.what) + '</p></div>';
-    detailHtml += '<div class="detail-section"><h4>how to do it</h4><ul>' +
-      p.how.map(li => '<li>' + escapeHtml(li) + '</li>').join('') + '</ul></div>';
-    detailHtml += '<div class="detail-watch"><strong>watch for</strong><br>' + escapeHtml(p.watch) + '</div>';
-    detail.innerHTML = detailHtml;
-
-    const actions = el('div', 'detail-actions');
-    if (p.durationSec > 0) {
-      const beginBtn = el('button', 'btn-begin', 'begin practice · ' + p.durationLabel);
-      beginBtn.addEventListener('click', () => startTimer(p.id));
-      actions.appendChild(beginBtn);
+    const body = el('div', 'cat-body');
+    if (isOpen) {
+      practices.forEach((p, idx) => body.appendChild(buildPracticeCard(p, idx + 1)));
     }
-    const logBtn = el('button', 'btn-log', p.durationSec > 0 ? 'log without timer' : 'log this practice');
-    logBtn.addEventListener('click', () => logSessionDirect(p.id));
-    actions.appendChild(logBtn);
-    detail.appendChild(actions);
-
-    card.appendChild(detail);
-    list.appendChild(card);
+    group.appendChild(body);
+    mount.appendChild(group);
   });
-  mount.appendChild(list);
+}
+
+function buildPracticeCard(p, num) {
+  const card = el('div', 'practice-card' + (openCardId === p.id ? ' open' : ''));
+  card.setAttribute('data-practice', p.id);
+
+  const summary = el('button', 'practice-summary');
+  summary.innerHTML =
+    '<div class="practice-num">' + num + '</div>' +
+    '<div class="practice-info">' +
+      '<div class="practice-name">' + escapeHtml(p.name) + '</div>' +
+      '<div class="practice-stack">' + stackChipsHtml(p.stack) + '</div>' +
+      '<div class="practice-meta">' +
+        '<span>' + escapeHtml(p.durationLabel) + '</span>' +
+        '<span>' + escapeHtml(p.frequency) + '</span>' +
+      '</div>' +
+    '</div>' +
+    '<div class="practice-toggle">+</div>';
+  summary.addEventListener('click', () => {
+    openCardId = (openCardId === p.id) ? null : p.id;
+    render();
+  });
+  card.appendChild(summary);
+
+  const detail = el('div', 'practice-detail');
+  let detailHtml = '';
+  detailHtml += '<div class="detail-section"><h4>what it is</h4><p>' + escapeHtml(p.what) + '</p></div>';
+  detailHtml += '<div class="detail-section"><h4>how to do it</h4><ul>' +
+    p.how.map(li => '<li>' + escapeHtml(li) + '</li>').join('') + '</ul></div>';
+  detailHtml += '<div class="detail-watch"><strong>watch for</strong><br>' + escapeHtml(p.watch) + '</div>';
+  detail.innerHTML = detailHtml;
+
+  const actions = el('div', 'detail-actions');
+  if (p.durationSec > 0) {
+    const beginBtn = el('button', 'btn-begin', 'begin practice \u00b7 ' + p.durationLabel);
+    beginBtn.addEventListener('click', () => startTimer(p.id));
+    actions.appendChild(beginBtn);
+  }
+  const logBtn = el('button', 'btn-log', p.durationSec > 0 ? 'log without timer' : 'log this practice');
+  logBtn.addEventListener('click', () => logSessionDirect(p.id));
+  actions.appendChild(logBtn);
+  detail.appendChild(actions);
+
+  card.appendChild(detail);
+  return card;
 }
 
 function renderHistory(mount) {
@@ -991,6 +1029,7 @@ function checkPortalAutoStart() {
       const practice = PRACTICES.find(p => p.id === flag.practiceId);
       if (practice) {
         openCardId = practice.id;
+        expandCatFor(practice.id);
         render();
         setTimeout(() => startTimer(practice.id), 350);
       }

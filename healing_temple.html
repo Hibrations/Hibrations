@@ -43,6 +43,15 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sa
 .pcard-body { display: none; padding: 0 14px 14px; }
 .pcard.open .pcard-body { display: block; }
 .pc-section { margin-top: 12px; }
+.cat-group { margin-bottom: 9px; }
+.cat-header { width: 100%; display: flex; align-items: center; gap: 10px; padding: 13px 15px; text-align: left; background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--r-md); transition: border-color 0.15s; }
+.cat-group.open .cat-header { border-color: var(--gold); border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.cat-label { flex: 1; font-family: 'Cormorant Garamond', serif; font-weight: 500; font-size: 16px; color: var(--ink); letter-spacing: 0; text-transform: none; }
+.cat-count { font-size: 11px; color: var(--ink-faint); letter-spacing: 0.06em; font-variant-numeric: tabular-nums; }
+.cat-chevron { color: var(--ink-faint); font-size: 16px; transition: transform 0.2s; }
+.cat-group.open .cat-chevron { transform: rotate(90deg); color: var(--gold); }
+.cat-body { display: none; flex-direction: column; gap: 8px; padding: 9px 0 3px; }
+.cat-group.open .cat-body { display: flex; }
 .pc-label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--indigo); margin-bottom: 4px; }
 .pc-text { font-size: 13.5px; color: var(--ink-dim); }
 .pcard-inner { padding: 13px 14px; }
@@ -365,6 +374,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sa
   var tab = state.lastTab || 'practices';
   var formOpenId = null;
   var noteOpenId = null;
+  var expandedCats = {};
   function load(){ try{ var r=localStorage.getItem(KEY); if(r){var p=JSON.parse(r); if(!p.sessions)p.sessions=[]; return p;} }catch(e){} return { sessions:[], lastTab:'practices' }; }
   function save(){ state.lastTab=tab; try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
 
@@ -455,8 +465,16 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sa
     CAT_ORDER.forEach(function(cat){
       var group=PRACTICES.filter(function(p){return p.cat===cat;});
       if(!group.length) return;
-      v.appendChild(el('div','eyebrow stage-name', cat));
-      group.forEach(function(p){ v.appendChild(practiceCard(p)); });
+      var isOpen=!!expandedCats[cat];
+      var grp=el('div','cat-group'+(isOpen?' open':''));
+      var hdr=el('button','cat-header');
+      hdr.innerHTML='<span class="cat-label">'+esc(cat)+'</span><span class="cat-count">'+group.length+'</span><span class="cat-chevron">\u203a</span>';
+      hdr.addEventListener('click', function(){ expandedCats[cat]=!expandedCats[cat]; render(); });
+      grp.appendChild(hdr);
+      var body=el('div','cat-body');
+      if(isOpen){ group.forEach(function(p){ body.appendChild(practiceCard(p)); }); }
+      grp.appendChild(body);
+      v.appendChild(grp);
     });
     // recent
     if(state.sessions.length){
