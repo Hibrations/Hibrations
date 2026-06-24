@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Breath &amp; Energy Temple</title>
+<style>
+:root {
+  --bg: #08090a;
+  --bg-elev: #0f1214;
+  --bg-card: #13171a;
+  --border: #21282c;
+  --border-soft: #181d20;
+  --ink: #e1e6e8;
+  --ink-dim: #8a9499;
+  --ink-faint: #545d61;
+  --crimson: #5d93a6;
+  --crimson-dim: #3d6675;
+  --bronze: #a8895a;
+  --bronze-dim: #7a6440;
+  --r-sm: 8px;
+  --r-md: 14px;
+  --r-lg: 20px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body {
+  background: var(--bg); color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font-size: 16px; line-height: 1.55; min-height: 100vh;
+  overscroll-behavior-y: contain; -webkit-font-smoothing: antialiased;
+}
+body {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) calc(env(safe-area-inset-bottom) + 40px) env(safe-area-inset-left);
+  max-width: 720px; margin: 0 auto;
+}
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; padding: 0; }
+textarea {
+  font: inherit; color: inherit;
+  background: var(--bg-elev); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 12px 14px; width: 100%;
+  outline: none; transition: border-color 0.15s ease;
+  resize: vertical; min-height: 70px; line-height: 1.5;
+}
+textarea:focus { border-color: var(--crimson); }
+::placeholder { color: var(--ink-faint); }
+
+header.shell-header {
+  padding: 18px 22px 14px;
+  display: flex; align-items: center; gap: 12px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.back-btn {
+  font-size: 12px; letter-spacing: 0.1em; text-transform: lowercase;
+  color: var(--ink-dim); padding: 8px 14px;
+  border: 1px solid var(--border); border-radius: 999px;
+  transition: all 0.15s;
+}
+.back-btn:active { color: var(--ink); border-color: var(--ink-dim); background: var(--bg-elev); }
+.shell-title { flex: 1; text-align: center; font-size: 13px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--crimson); margin-right: 90px; }
+
+.tab-bar { display: flex; gap: 6px; padding: 14px 22px 4px; border-bottom: 1px solid var(--border-soft); }
+.tab-btn {
+  flex: 1; padding: 10px 12px; font-size: 11px;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-faint); text-align: center;
+  border-bottom: 2px solid transparent; transition: all 0.15s;
+}
+.tab-btn.active { color: var(--crimson); border-bottom-color: var(--crimson); }
+
+main { padding: 22px; }
+
+.declaration {
+  background: var(--bg-elev); border: 1px solid var(--border-soft);
+  border-left: 2px solid var(--crimson);
+  border-radius: 0 var(--r-md) var(--r-md) 0;
+  padding: 14px 18px; margin-bottom: 22px;
+  font-size: 13px; color: var(--ink-dim); font-style: italic; line-height: 1.6;
+}
+.declaration strong { font-style: normal; color: var(--ink); font-weight: 500; }
+
+.anchor-banner {
+  background: linear-gradient(135deg, rgba(93,147,166,0.12), rgba(176,143,199,0.08));
+  border: 1px solid var(--crimson-dim); border-radius: var(--r-md);
+  padding: 14px 18px; margin-bottom: 22px;
+}
+.anchor-banner .ab-eyebrow { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--crimson); margin-bottom: 6px; }
+.anchor-banner .ab-text { font-size: 13px; color: var(--ink); line-height: 1.6; }
+.anchor-banner .ab-text em { color: var(--ink-dim); font-style: italic; }
+
+.section-eyebrow {
+  font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--ink-faint); margin: 10px 0 14px;
+}
+
+.practice-list { display: flex; flex-direction: column; gap: 10px; }
+.practice-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--r-md); overflow: hidden;
+  transition: border-color 0.15s;
+}
+.practice-card.open { border-color: var(--crimson-dim); }
+.practice-summary {
+  width: 100%; padding: 16px 18px;
+  display: flex; align-items: flex-start; gap: 12px;
+  text-align: left; cursor: pointer;
+  position: relative;
+}
+.practice-num {
+  flex: 0 0 22px; height: 22px; border-radius: 50%;
+  border: 1.5px solid var(--bronze-dim);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: var(--bronze); margin-top: 2px;
+}
+.practice-info { flex: 1; min-width: 0; }
+.practice-name { font-size: 16px; font-weight: 400; line-height: 1.3; margin-bottom: 6px; color: var(--ink); }
+.practice-stack { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 6px; }
+.practice-stack-chip {
+  font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 999px; font-weight: 500;
+}
+.practice-meta { font-size: 11px; color: var(--ink-faint); letter-spacing: 0.04em; }
+.practice-meta span + span::before { content: '  ·  '; opacity: 0.5; }
+.practice-toggle {
+  position: absolute; right: 16px; top: 18px;
+  color: var(--ink-faint); font-size: 18px; transition: transform 0.2s;
+}
+.practice-card.open .practice-toggle { transform: rotate(45deg); color: var(--crimson); }
+
+.practice-detail {
+  display: none; padding: 0 18px 18px;
+  border-top: 1px solid var(--border-soft);
+  background: linear-gradient(180deg, var(--bg-elev) 0%, var(--bg-card) 100%);
+}
+.practice-card.open .practice-detail { display: block; }
+.detail-section { margin-top: 16px; }
+.detail-section h4 {
+  font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--bronze); font-weight: 500; margin-bottom: 6px;
+}
+.detail-section p { font-size: 14px; color: var(--ink); line-height: 1.6; }
+.detail-section ul { list-style: none; padding: 0; margin: 0; }
+.detail-section li {
+  font-size: 14px; color: var(--ink-dim); line-height: 1.55;
+  padding: 5px 0 5px 18px; position: relative;
+}
+.detail-section li::before {
+  content: '▸'; position: absolute; left: 2px; top: 5px;
+  color: var(--crimson-dim); font-size: 11px;
+}
+.detail-watch {
+  margin-top: 14px; padding: 12px 14px;
+  background: rgba(93,147,166,0.08); border-left: 2px solid var(--crimson-dim);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  font-size: 13px; color: var(--ink-dim); font-style: italic; line-height: 1.55;
+}
+.detail-watch strong { font-style: normal; color: var(--crimson); font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; font-size: 10px; }
+
+.detail-actions { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+.btn-begin {
+  flex: 1; min-width: 140px;
+  background: var(--crimson); color: #08090a;
+  font-weight: 500; padding: 14px 18px; border-radius: var(--r-md);
+  font-size: 14px; letter-spacing: 0.04em; transition: background 0.15s;
+}
+.btn-begin:active { background: var(--crimson-dim); }
+.btn-log {
+  flex: 1; min-width: 140px;
+  background: transparent; color: var(--ink);
+  border: 1px solid var(--border); padding: 14px 18px; border-radius: var(--r-md);
+  font-size: 14px; letter-spacing: 0.04em; transition: all 0.15s;
+}
+.btn-log:active { border-color: var(--ink-dim); background: var(--bg-elev); }
+
+#timer-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(8,9,10,0.96); backdrop-filter: blur(8px);
+  display: none; flex-direction: column; align-items: center; justify-content: center;
+  padding: 22px;
+}
+#timer-overlay.active { display: flex; }
+.timer-label { font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--bronze); margin-bottom: 18px; text-align: center; }
+.timer-display {
+  font-variant-numeric: tabular-nums;
+  font-size: 80px; font-weight: 200; color: var(--ink);
+  letter-spacing: -0.02em; line-height: 1;
+  margin-bottom: 30px;
+}
+.timer-display.flash { color: var(--crimson); }
+.timer-controls { display: flex; gap: 12px; }
+.timer-btn {
+  font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase;
+  padding: 12px 22px; border-radius: 999px;
+  border: 1px solid var(--border); color: var(--ink-dim);
+  transition: all 0.15s;
+}
+.timer-btn:active { border-color: var(--ink); color: var(--ink); }
+.timer-btn.primary { border-color: var(--crimson-dim); color: var(--crimson); }
+
+.complete-card {
+  background: var(--bg-card); border: 1px solid var(--crimson-dim);
+  border-radius: var(--r-lg); padding: 24px;
+  margin-top: 18px; text-align: center;
+}
+.complete-msg { font-size: 16px; color: var(--ink); margin-bottom: 8px; font-weight: 300; letter-spacing: 0.02em; }
+.complete-sub { font-size: 13px; color: var(--ink-dim); font-style: italic; margin-bottom: 18px; }
+.complete-card textarea { background: var(--bg); text-align: left; margin-bottom: 14px; }
+.complete-card .btn-begin { width: 100%; flex: none; min-width: 0; }
+
+.history-list { display: flex; flex-direction: column; gap: 10px; }
+.history-item {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--r-md); padding: 14px 16px;
+}
+.history-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+.history-name { font-size: 14px; color: var(--ink); }
+.history-date { font-size: 11px; color: var(--ink-faint); letter-spacing: 0.04em; }
+.history-stack { display: flex; gap: 4px; flex-wrap: wrap; margin: 4px 0; }
+.history-stack .practice-stack-chip { font-size: 8px; padding: 2px 6px; }
+.history-notes {
+  font-size: 13px; color: var(--ink-dim); font-style: italic; line-height: 1.5;
+  margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-soft);
+}
+.history-empty {
+  text-align: center; padding: 48px 20px; color: var(--ink-faint);
+  font-size: 14px; font-style: italic;
+}
+
+#toast {
+  position: fixed; bottom: 24px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--bg-card); border: 1px solid var(--border);
+  color: var(--ink); padding: 12px 20px; border-radius: 999px;
+  font-size: 13px; letter-spacing: 0.04em;
+  opacity: 0; pointer-events: none; transition: all 0.25s ease; z-index: 90;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header class="shell-header">
+  <button class="back-btn" id="back-btn">← portal</button>
+  <div class="shell-title">breath &amp; energy</div>
+</header>
+
+<div class="tab-bar">
+  <button class="tab-btn active" data-tab="library">library</button>
+  <button class="tab-btn" data-tab="history">history</button>
+</div>
+
+<main id="mount"></main>
+
+<div id="timer-overlay">
+  <div class="timer-label" id="timer-label"></div>
+  <div class="timer-display" id="timer-display">00:00</div>
+  <div class="timer-controls">
+    <button class="timer-btn" id="timer-wiki">wiki</button>
+    <button class="timer-btn" id="timer-cancel">cancel</button>
+    <button class="timer-btn" id="timer-skip">skip ⏭</button>
+    <button class="timer-btn primary" id="timer-done">mark done</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ============================================================
+// THE BREATH & ENERGY PRACTICES
+// drawn from breath_and_energy.md — five tiers, seven sources,
+// three dantians, sound, polarity, the deepened orbit.
+// ============================================================
+const PRACTICES = [
+  {
+    id: 'daily_anchor', name: 'The Daily Anchor · 20-Min Orbit',
+    stack: ['breath','energy','sexual'],
+    durationSec: 1200, durationLabel: '20 min', frequency: 'daily — the one that matters',
+    what: 'The single practice that trains everything at once: nasal-breathing default, breath capacity, pelvic-floor awareness, the deepened microcosmic orbit, and felt-sense of subtle current. If you do nothing else, do this. Twenty minutes of slow nasal breathing in orbit posture.',
+    how: [
+      'Sit upright. Tongue lightly on the roof of the mouth, just behind the front teeth — this closes the circuit between the Governing and Conception vessels.',
+      'Attention starts at the perineum — the actual Hui Yin point, between anus and genitals. Not the tailbone.',
+      'One full orbit per breath cycle: inhale draws energy up the spine, exhale spreads it down the front of the body.',
+      'Slow it down — one orbit per breath, not three. The slower the orbit, the deeper the channel carves.',
+      'Let energy settle one or two breaths at each station: lower dantian, heart, third eye, crown, back of head, kidneys.',
+      'Close down: rub palms warm, lay them over the lower belly, sit still — practice complete, energy stored.'
+    ],
+    watch: 'Forcing energy through a stuck point. Don’t push — soften, breathe at that point, let the body release what it can when it can. Forcing creates kinks; patience opens channels.'
+  },
+  {
+    id: 'coherent_breath', name: 'Coherent Breathing · 5–6/min',
+    stack: ['breath'],
+    durationSec: 360, durationLabel: '6 min', frequency: 'daily baseline',
+    what: 'Tier 1, Foundation. Default nasal breathing, slow — 5–6 breaths per minute as resting baseline. This alone changes nervous-system tone, sleep, focus, sexual stamina, and erection quality over weeks. It is the hidden prerequisite for everything above.',
+    how: [
+      'Mouth closed. Breathe only through the nose.',
+      'In for 5, out for 5 — roughly six breaths a minute. No strain, no holding.',
+      'Let the belly move first, then the ribs. Shoulders stay quiet.',
+      'This is the Solar Gate Phase I breath — the ground the whole architecture stands on.'
+    ],
+    watch: 'Mouth-breathing as the default. If the mouth drifts open, the advanced practices won’t take root. Mouth-tape at night if it drifts in sleep.'
+  },
+  {
+    id: 'nasal_reset', name: 'Nasal Reset & Drift-Check',
+    stack: ['breath'],
+    durationSec: 0, durationLabel: 'anytime', frequency: 'throughout the day',
+    what: 'The all-day micro-practice that makes Tier 1 stick. Catch yourself mouth-breathing or breathing fast and shallow, and reset — close the mouth, breathe through the nose, slow it down.',
+    how: [
+      'Notice: is the mouth open? Is the breath high in the chest? Is it fast?',
+      'Close the mouth. Drop the breath into the belly.',
+      'Three slow nasal breaths to re-baseline.',
+      'Return to whatever you were doing — now breathing clean.'
+    ],
+    watch: 'Treating it as a chore. It’s a reflex you’re re-grooving. A dozen tiny resets a day rewires the default faster than one long session.'
+  },
+  {
+    id: 'felt_sense', name: 'Felt-Sense Calibration',
+    stack: ['energy','breath'],
+    durationSec: 300, durationLabel: '5 min', frequency: 'daily, 2 weeks',
+    what: 'Moving Energy, Stage 1. The prerequisite for moving energy — knowing what energy actually feels like in your body so you can navigate it. Skip this and you’re moving imagination, not current.',
+    how: [
+      'Sit, breathe slowly, scan the body.',
+      'Notice anything moving without you directing it — tingling, warmth, currents, density, magnetic pull.',
+      'Don’t move them. Just feel them. Pure observation.',
+      'Five minutes daily for two weeks builds this faster than any visualization practice.'
+    ],
+    watch: 'Trying to make something happen. This stage is receptive only. You’re learning the territory before you try to travel it.'
+  },
+  {
+    id: 'wim_hof', name: 'Wim Hof Method',
+    stack: ['capacity','breath'],
+    durationSec: 900, durationLabel: '10–15 min', frequency: 'daily',
+    what: 'Tier 2, Capacity. The most accessible entry into capacity training — lung volume, CO2 tolerance, retention. This is where energy starts to appear: the buzz, the heat, the altered states, because it shifts blood chemistry and nervous-system state.',
+    how: [
+      'Three rounds of 30 deep breaths — full inhale, relaxed exhale, no force.',
+      'After round 30: exhale and hold on empty lungs. Build from 30 sec toward 2+ min.',
+      'When the urge to breathe comes hard, inhale fully and hold 15 sec on full lungs.',
+      'Repeat for three rounds. Sit afterward and feel the field.'
+    ],
+    watch: 'Never do retentions in or near water, driving, or standing. Don’t skip ahead to Tummo — Wim Hof is the on-ramp.'
+  },
+  {
+    id: 'tummo', name: 'Tummo · Inner Fire',
+    stack: ['capacity','energy'],
+    durationSec: 600, durationLabel: '10 min', frequency: 'when Wim Hof is steady',
+    what: 'Tier 2, deeper. Tibetan inner-fire breathing — slower, more meditative, deeper internal heat than Wim Hof. The next door after Wim Hof runs clean.',
+    how: [
+      'Sit upright. Breathe full and slow, visualizing a flame at the navel.',
+      'Each inhale fans the flame; each exhale draws heat up the central channel.',
+      'Build internal heat gradually — meditative, not forceful.',
+      'Close by sealing the heat into the lower belly.'
+    ],
+    watch: 'Tummo without a steady Wim Hof base tends to scatter the system rather than build it. Lay the foundation first.'
+  },
+  {
+    id: 'nadi_shodhana', name: 'Nadi Shodhana · Alternate Nostril',
+    stack: ['pranayama','breath'],
+    durationSec: 300, durationLabel: '5 min', frequency: 'daily',
+    what: 'Tier 3, Pranayama. The most foundational and gentlest pranayama — balances the ida and pingala channels (the two energetic streams alongside the spine). Daily practice trains the nervous system to switch sides at will. The safest starting pranayama.',
+    how: [
+      'Right thumb closes the right nostril; ring finger closes the left.',
+      'Close right, inhale left. Close left, exhale right.',
+      'Inhale right. Close right, exhale left. That’s one round.',
+      'Slow, even, no strain. Build to five minutes.'
+    ],
+    watch: 'Pick one pranayama and deepen it before adding others. Start here before Ujjayi, Kapalabhati, or Bhastrika.'
+  },
+  {
+    id: 'ujjayi', name: 'Ujjayi · Victorious Breath',
+    stack: ['pranayama','sexual'],
+    durationSec: 300, durationLabel: '5 min', frequency: 'as a layer',
+    what: 'Tier 3. Slight throat constriction, audible breath like a distant ocean. Builds heat and focus — and it’s the breath used in many tantric and sexual practices, which makes it a bridge to Tier 4.',
+    how: [
+      'Gently narrow the back of the throat, as if fogging a mirror with the mouth closed.',
+      'Inhale and exhale through the nose with that soft constriction — audible, steady.',
+      'Let the sound carry the attention. Even, smooth, unhurried.',
+      'Use it as the breath underneath sexual energy work.'
+    ],
+    watch: 'Gripping the throat hard. The constriction is slight — a whisper, not a clench.'
+  },
+  {
+    id: 'kapalabhati', name: 'Kapalabhati · Breath of Fire',
+    stack: ['pranayama','capacity'],
+    durationSec: 180, durationLabel: '3 min', frequency: 'morning only',
+    what: 'Tier 3. Rapid, forceful exhales with passive inhales. Energizing — wakes the solar plexus and third chakra. A clearing, igniting breath.',
+    how: [
+      'Sharp, forceful exhales through the nose, pumping from the belly.',
+      'Let the inhale happen passively between exhales.',
+      'Rounds of 30–50 pumps, rest, repeat.',
+      'Finish with a few slow full breaths.'
+    ],
+    watch: 'Don’t do it lying down or right before sleep. Stop if light-headed.'
+  },
+  {
+    id: 'bhastrika', name: 'Bhastrika · Bellows Breath',
+    stack: ['pranayama','capacity'],
+    durationSec: 120, durationLabel: '2 min', frequency: 'sparingly',
+    what: 'Tier 3, power tool. Vigorous full breaths in and out — stronger than Kapalabhati. Use sparingly; it’s a high-octane pranayama, not a daily staple.',
+    how: [
+      'Forceful full inhale and forceful full exhale through the nose, equal force both ways.',
+      'Rounds of 10–20 breaths, then rest and breathe normally.',
+      'Two or three rounds is plenty.',
+      'Ground afterward — feet, lower belly.'
+    ],
+    watch: 'Easy to overdo. If the system frays, drop back to Nadi Shodhana and coherent breathing for a week.'
+  },
+  {
+    id: 'earth_rooting', name: 'Earth Rooting',
+    stack: ['earth','energy'],
+    durationSec: 300, durationLabel: '5 min', frequency: 'daily, foundation',
+    what: 'The first source, always. The most important and most neglected — slow, stable, vast, the ground that keeps every more-volatile form safe. Two weeks daily shifts your felt baseline of stability.',
+    how: [
+      'Stand or sit. Feel the soles of the feet and the perineum.',
+      'Send roots down into bedrock — deep, dense, slow.',
+      'Inhale: draw warm dense earth energy up through soles and perineum into the lower belly.',
+      'Exhale: drain tension and excess down the roots into the ground.'
+    ],
+    watch: 'Skipping earth and reaching for sky or sun first. Sky without ground makes you spacey and anxious. Earth is always the first draw.'
+  },
+  {
+    id: 'square_breath', name: 'Square Breath · Prana Absorption',
+    stack: ['breath','energy'],
+    durationSec: 1200, durationLabel: '20 min', frequency: 'when energy is low',
+    what: 'Drawing prana / qi from the air — the simplest source. Twenty minutes substantially raises available energy. The box pattern with absorption on the holds.',
+    how: [
+      'In 4, hold full 4, out 4, hold empty 4. Build toward 6 or 8.',
+      'On the holds, sense prana absorbing through the whole body, not just the lungs.',
+      'Keep the count even and the body soft.',
+      'End by condensing what you’ve gathered down into the lower dantian.'
+    ],
+    watch: 'Straining the holds. Absorption happens in a relaxed body — tension blocks the very thing you’re drawing.'
+  },
+  {
+    id: 'sun_moon_breath', name: 'Sun & Moon Breathing',
+    stack: ['energy','earth'],
+    durationSec: 300, durationLabel: '5 min', frequency: 'morning / evening',
+    what: 'Two clean sources. Sun: yang, electric, projective, warming — morning light breathed into the solar plexus. Moon: yin, magnetic, receptive, cooling — silver light into the lower belly, tied to sexual cultivation.',
+    how: [
+      'Sun (morning): closed eyes toward morning light, breathe gold into the solar plexus where it stores naturally. Five minutes.',
+      'Moon (evening / full moon): silver light breathed into the lower belly, amplifying sexual charge and intuition.',
+      'Always after earth grounding.',
+      'Seal into the lower dantian to close.'
+    ],
+    watch: 'Never the midday sun on closed eyes, and never stare at the sun. Morning and late-afternoon light only.'
+  },
+  {
+    id: 'nature_charging', name: 'Tree & Water Charging',
+    stack: ['earth','energy'],
+    durationSec: 0, durationLabel: 'situational', frequency: 'when near nature',
+    what: 'Two more inexhaustible sources. Large old trees are reservoirs of slow deep energy and exchange freely. Water — lakes, ocean, rivers, even a long cold finish — charges sharply; it’s what the Wim Hof breath exploits.',
+    how: [
+      'Tree: back or palms to the trunk. Breathe with it. Send earth energy up through your feet into its roots; let it return through your hands. Replenishing for both, depleting to neither.',
+      'Water: immerse or sit near moving water. Breathe slow and deep.',
+      'Cold finish: 30–60 sec cold with deep breathing concentrates qi sharply.',
+      'Always close by sealing into the lower dantian.'
+    ],
+    watch: 'Never draw from other people, sick or polluted rooms, or places that feel off. The clean sources are inexhaustible — the cheap ones cost you.'
+  },
+  {
+    id: 'dantian_sealing', name: 'Dantian Sealing',
+    stack: ['energy','earth'],
+    durationSec: 300, durationLabel: '5 min', frequency: 'after every energy session',
+    what: 'The step almost everyone skips — storing energy so it doesn’t dissipate within hours. Drawing is easy; sealing is the harder skill that makes cultivation stick. Almost everything you draw should end up in the lower dantian — it’s your savings account.',
+    how: [
+      'Gather — accumulate until you feel warmth, tingling, fullness.',
+      'Condense — on each exhale, spiral it inward and down into the lower dantian, into a sphere the size of an orange. Spirals condense; straight lines dissipate.',
+      'Seal — wrap the sphere in a denser shell of gold or silver light. Several breaths of just sealing.',
+      'Close down — rub palms warm, lay them over the lower belly, sit still at least three minutes.'
+    ],
+    watch: 'Never accumulate raw sexual or unrefined energy in the upper dantian (third eye) — headaches, insomnia, ringing ears, wired-but-tired. Passing through on the orbit is fine; storing there is the classic overload.'
+  },
+  {
+    id: 'toning_bija', name: 'Toning & Bija Sounding',
+    stack: ['sound','energy'],
+    durationSec: 300, durationLabel: '5 min', frequency: 'daily or as needed',
+    what: 'Voice carries energy through the body better than almost anything. Sustained toning measurably raises vagal tone and heart-rate-variability — the parasympathetic state erotic and meditative openness both require. It’s also de-armoring: it moves through throat, chest, and belly, the exact places chronic tension braces.',
+    how: [
+      'Open toning: long low "ahhh" / "ohhh" on every exhale, held to the end of the breath. Feel where it vibrates.',
+      'Bija seed sounds through the centres, three each, slow: LAM (root), VAM (sacral), RAM (solar plexus), YAM (heart), HAM (throat), OM (third eye), silence (crown).',
+      'Humming for the simplest vagus-nerve stimulation — a few minutes shifts state.',
+      'Keep the tone in the belly and chest, not throat-trapped.'
+    ],
+    watch: 'Trapping the sound in the throat. Let it drop into the body — the vibration is the medicine, not the volume.'
+  },
+  {
+    id: 'polarity_flow', name: 'Polarity Flow',
+    stack: ['polarity','sexual'],
+    durationSec: 300, durationLabel: '5 min', frequency: 'a few times a week',
+    what: 'Erotic charge arises from polarity — not gender, but energetic pole. One pole penetrates (directive, focused, electric — yang); the other receives (flowing, surrendering, magnetic — yin). Charge happens when poles are differentiated. The solo work: inhabit your dominant pole fully, then cultivate the other so you have range.',
+    how: [
+      'Find the yang pole: breath sharp and directive, spine structural, attention forward and focused. Hold it.',
+      'Shift to the yin pole: breath soft and receiving, body open, attention drawing inward — active receiving, not passivity.',
+      'Move slowly between the two, feeling the texture of each.',
+      'Growth edge for most: the yin / receptive — the capacity to be moved and to draw.'
+    ],
+    watch: 'Mistaking the yin pole for collapse. Receptive is active — full, magnetic, drawing. Passivity is flat; receiving has charge.'
+  },
+  {
+    id: 'pelvic_breath', name: 'Pelvic-Floor-Coordinated Breath',
+    stack: ['sexual','breath'],
+    durationSec: 300, durationLabel: '5 min', frequency: 'daily',
+    what: 'Tier 4, Sexual / Shamanic Breath — the bridge where Joey and Sophia share the same body in practice. Reverses the unconscious clenching most men carry. Builds erection quality and ejaculation control through awareness, not force.',
+    how: [
+      'Inhale → release the pelvic floor, let it soften and drop.',
+      'Exhale → gently lift it — a quarter of a full kegel, no more.',
+      'Slow and unforced, coordinated with the breath.',
+      'Over weeks this becomes the felt foundation of all sexual breath.'
+    ],
+    watch: 'Full hard kegels. Force here re-armors the exact muscles you’re trying to free. A quarter-lift, gentle.'
+  },
+  {
+    id: 'sexual_drawing', name: 'Sexual Energy Drawing',
+    stack: ['sexual','energy'],
+    durationSec: 600, durationLabel: '10 min', frequency: 'a few times a week',
+    what: 'Tier 4. Arousal energy, when at the genitals, drawn upward through the body via breath and intention — the core practice of Taoist and Tantric sexual cultivation. The vessel learns to move sexual current instead of dumping it.',
+    how: [
+      'Generate gentle arousal or simply sense the energy at the genitals.',
+      'Inhale: sexual energy moves up the spine.',
+      'Exhale: it spreads through the heart, brain, and whole body.',
+      'Keep the Ujjayi or slow nasal breath underneath it. Seal into the lower dantian to finish.'
+    ],
+    watch: 'Pulling energy into the head and leaving it there. Always spread it through heart and body and seal it low. Sexual energy stored high overloads the upper dantian.'
+  },
+  {
+    id: 'breath_edging', name: 'Edging with Breath',
+    stack: ['sexual','breath'],
+    durationSec: 0, durationLabel: 'self-paced', frequency: 'as practice',
+    what: 'Tier 4. Approach the orgasm threshold, then breathe the energy upward instead of releasing it through ejaculation. Over time the orgasm becomes circulatory, not local — the vessel holds and moves the charge.',
+    how: [
+      'Approach the threshold slowly. Notice the point of no return before it arrives.',
+      'At the edge, stop the stimulation and take a slow, deep, full breath.',
+      'Draw the energy up the spine on the inhale; spread it on the exhale.',
+      'Repeat the rise and the draw. Let the charge build and circulate rather than discharge.'
+    ],
+    watch: 'White-knuckling. This is breath-led, not grip-led. If it becomes a fight, slow down and breathe — the breath is the regulator, not willpower.'
+  },
+  {
+    id: 'orbit_arousal', name: 'Microcosmic Orbit in Arousal',
+    stack: ['sexual','energy'],
+    durationSec: 600, durationLabel: '10 min', frequency: 'as practice',
+    what: 'Tier 4. The same orbit from the Daily Anchor, run consciously while sexually aroused. The energy is more vivid, the channel more visible — the practice becomes embodied instead of imagined. Where spiritual practice and sexual practice fully integrate.',
+    how: [
+      'Bring the body to a steady, sustainable arousal — not at the edge.',
+      'Run the orbit: up the spine on the inhale, down the front on the exhale.',
+      'Let the heightened charge make the channel vivid. Notice where it flows and where it sticks.',
+      'Soften the sticky points; don’t force. Seal low at the close.'
+    ],
+    watch: 'Chasing the arousal instead of riding it. The point is to move current, not to climb toward release. Keep it circulatory.'
+  },
+  {
+    id: 'hands_online', name: 'Hands Online · Field Between the Palms',
+    stack: ['energy','healing'],
+    durationSec: 300, durationLabel: '5 min', frequency: 'once felt-sense is reliable',
+    what: 'Moving Energy, Stage 3. Once felt-sense is reliable, the hands come into the practice — first sensing the field, then moving energy through your own body. The foundation of qi gong healing, reiki, and hands-on bodywork — months out, not weeks.',
+    how: [
+      'Rub palms briskly until warm. Hold them an inch apart.',
+      'Feel the field between them — the buzz, the magnetic resistance, the heat. It has thickness.',
+      'Move them slowly closer and farther, feeling the field stretch and compress.',
+      'Once reliable, move energy through your own body — over the heart, the dantian, the third eye, anywhere that needs warmth.'
+    ],
+    watch: 'Reaching for partner / client work too early. The vessel comes first. Hands on another body is months away, when you can hold current without flooding.'
+  },
+  {
+    id: 'connected_breathing', name: 'Conscious Connected Breathing',
+    stack: ['therapeutic','breath'],
+    durationSec: 1800, durationLabel: '30–90 min · medicine', frequency: 'occasional deep dives',
+    what: 'Tier 5, Therapeutic / Holotropic. Long sessions, no pauses between in and out, deep emotional release. This is medicine, not daily practice — for stuck material that talking can’t reach.',
+    how: [
+      'Lie down. Breathe in a continuous circle — no pause at the top or bottom.',
+      'Keep it going for 30–90 minutes, often with music, sometimes with a facilitator.',
+      'Let whatever surfaces move — tears, anger, laughter, shaking, grief. It is the practice, not an interruption.',
+      'Rest a long time afterward. Ground, hydrate, integrate.'
+    ],
+    watch: 'Using this for daily regulation. It’s a deep dive, not a tool for nervous-system tone. Best done when something genuinely wants to come up — and ideally with support the first times.'
+  }
+];
+
+const STACK_COLORS = {
+  breath:      { c: '#8fb8c7', bg: 'rgba(143,184,199,0.18)' },
+  capacity:    { c: '#c89060', bg: 'rgba(200,144,96,0.18)' },
+  pranayama:   { c: '#6ba879', bg: 'rgba(107,168,121,0.18)' },
+  energy:      { c: '#b08fc7', bg: 'rgba(176,143,199,0.18)' },
+  earth:       { c: '#a8895a', bg: 'rgba(168,137,90,0.18)' },
+  sound:       { c: '#c7a96b', bg: 'rgba(199,169,107,0.18)' },
+  sexual:      { c: '#c78f8f', bg: 'rgba(199,143,143,0.18)' },
+  polarity:    { c: '#9a86c4', bg: 'rgba(154,134,196,0.18)' },
+  healing:     { c: '#7fae9a', bg: 'rgba(127,174,154,0.18)' },
+  therapeutic: { c: '#b06a5c', bg: 'rgba(176,106,92,0.18)' }
+};
+
+// ============================================================
+// STATE
+// ============================================================
+const STORAGE_KEY = 'breath_temple_v1';
+let state = loadState();
+let currentTab = 'library';
+let openCardId = null;
+let activeSession = null;
+let timerInterval = null;
+let timerEnd = 0;
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return { sessions: [] };
+    return JSON.parse(raw);
+  } catch (e) { return { sessions: [] }; }
+}
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch (e) {}
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function el(tag, cls, txt) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (txt !== undefined) e.textContent = txt;
+  return e;
+}
+function uid(p) { return (p || 'x') + '-' + Math.random().toString(36).slice(2, 9); }
+function fmtTime(sec) {
+  const m = Math.floor(sec / 60), s = sec % 60;
+  return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+}
+function fmtDateTime(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }).toLowerCase() +
+    ' · ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+}
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+}
+function stackChipsHtml(stack) {
+  if (!stack || !stack.length) return '';
+  return stack.map(k => {
+    const s = STACK_COLORS[k]; if (!s) return '';
+    return '<span class="practice-stack-chip" style="color:' + s.c + ';background:' + s.bg + '">' + k + '</span>';
+  }).join('');
+}
+
+// ============================================================
+// AUDIO BELL
+// ============================================================
+let audioCtx = null;
+function ensureAudio() { if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } }
+function bell() {
+  try { if (navigator.vibrate) navigator.vibrate([200, 100, 300, 100, 400]); } catch (e) {}
+  if (!audioCtx) return;
+  [440, 660].forEach(freq => {
+    const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.frequency.value = freq; o.type = 'sine';
+    g.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.18, audioCtx.currentTime + 0.04);
+    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1.2);
+    o.start(); o.stop(audioCtx.currentTime + 1.3);
+  });
+}
+function softChime() {
+  try { if (navigator.vibrate) navigator.vibrate(100); } catch (e) {}
+  if (!audioCtx) return;
+  const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.frequency.value = 660; o.type = 'sine';
+  g.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.08, audioCtx.currentTime + 0.04);
+  g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.7);
+  o.start(); o.stop(audioCtx.currentTime + 0.75);
+}
+function minuteTick() {
+  try { if (navigator.vibrate) navigator.vibrate(30); } catch (e) {}
+  if (!audioCtx) return;
+  const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.frequency.value = 880; o.type = 'sine';
+  g.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.04, audioCtx.currentTime + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.18);
+  o.start(); o.stop(audioCtx.currentTime + 0.2);
+}
+
+// ============================================================
+// TIMER — guided voice
+// ============================================================
+let gvCues=[], gvIdx=0, gvTotal=0, gvWake=null, gvFull='';
+function gvVoice(){ try{ var vs=speechSynthesis.getVoices()||[]; var en=vs.filter(function(v){return /^en[-_]?/i.test(v.lang);}); if(!en.length) return null; var male=en.filter(function(v){return /male/i.test(v.name)&&!/female/i.test(v.name);}); if(male.length) return male[0]; var named=en.filter(function(v){return /daniel|arthur|oliver|george|james|alex|fred|aaron|reed|tom/i.test(v.name);}); if(named.length) return named[0]; return en[0]; }catch(e){ return null; } }
+function gvSpeak(t){ try{ if(!('speechSynthesis' in window)||!t) return; speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(t); u.rate=0.88; u.lang='en-US'; var v=gvVoice(); if(v){ u.voice=v; u.lang=v.lang; } speechSynthesis.speak(u); }catch(e){} }
+function gvHowCues(how){ if(Array.isArray(how)) return how.slice(); return String(how||'').split(/(?<=[.!?])\s+/).filter(function(s){return s.trim().length;}); }
+function gvWakeReq(){ try{ if('wakeLock' in navigator) navigator.wakeLock.request('screen').then(function(w){gvWake=w;}).catch(function(){}); }catch(e){} }
+function gvWakeRel(){ try{ if(gvWake){ gvWake.release(); gvWake=null; } }catch(e){} }
+function gvStart(p, durSec){ gvCues=[p.name].concat(gvHowCues(p.how)); gvFull=p.name+'. '+(p.what?p.what+'. ':'')+gvHowCues(p.how).join(' '); gvIdx=0; gvTotal=durSec||0; gvWakeReq(); gvSpeak(gvCues[0]); gvIdx=1; }
+function gvTick(elapsed){ if(!gvCues.length||gvTotal<=0) return; var seg=gvTotal/gvCues.length; while(gvIdx<gvCues.length && elapsed>=gvIdx*seg){ gvSpeak(gvCues[gvIdx]); gvIdx++; } }
+function gvSkip(){ if(gvIdx<gvCues.length){ gvSpeak(gvCues[gvIdx]); gvIdx++; } }
+function gvWiki(){ gvSpeak(gvFull); }
+function gvStop(){ try{ if('speechSynthesis' in window) speechSynthesis.cancel(); }catch(e){} gvWakeRel(); }
+
+let timerStartMs = 0;
+let timerDurationSec = 0;
+let midpointFired = false;
+let lastMinuteMark = 0;
+
+function startTimer(practiceId) {
+  ensureAudio();
+  const p = PRACTICES.find(x => x.id === practiceId);
+  if (!p) return;
+  activeSession = { practiceId: p.id, name: p.name, stack: p.stack };
+  timerEnd = Date.now() + (p.durationSec || 0) * 1000;
+  timerStartMs = Date.now();
+  timerDurationSec = p.durationSec || 0;
+  gvStart(p, p.durationSec || 0);
+  midpointFired = false;
+  lastMinuteMark = 0;
+  document.getElementById('timer-label').textContent = p.name;
+  document.getElementById('timer-overlay').classList.add('active');
+  tickTimer();
+  timerInterval = setInterval(tickTimer, 250);
+}
+function tickTimer() {
+  const remaining = Math.max(0, Math.ceil((timerEnd - Date.now()) / 1000));
+  const display = document.getElementById('timer-display');
+  display.textContent = fmtTime(remaining);
+  display.classList.toggle('flash', remaining <= 5 && remaining > 0);
+
+  if (timerDurationSec > 0) {
+    const elapsed = (Date.now() - timerStartMs) / 1000;
+    gvTick(elapsed);
+    if (timerDurationSec > 60 && !midpointFired && elapsed >= timerDurationSec / 2 && remaining > 5) {
+      midpointFired = true;
+      softChime();
+    }
+    if (timerDurationSec > 180) {
+      const minute = Math.floor(elapsed / 60);
+      const totalMinutes = Math.floor(timerDurationSec / 60);
+      if (minute > lastMinuteMark && minute < totalMinutes && remaining > 5) {
+        lastMinuteMark = minute;
+        minuteTick();
+      }
+    }
+  }
+
+  if (remaining === 0) {
+    bell();
+    clearInterval(timerInterval); timerInterval = null;
+    setTimeout(() => stopTimer(true), 600);
+  }
+}
+function stopTimer(finished) {
+  gvStop();
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  document.getElementById('timer-overlay').classList.remove('active');
+  document.getElementById('timer-display').classList.remove('flash');
+  if (finished && activeSession) {
+    promptToLog();
+  }
+}
+function cancelTimer() {
+  gvStop();
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  document.getElementById('timer-overlay').classList.remove('active');
+  document.getElementById('timer-display').classList.remove('flash');
+  activeSession = null;
+}
+
+// ============================================================
+// LOG / COMPLETE
+// ============================================================
+function promptToLog() {
+  if (!activeSession) return;
+  const p = PRACTICES.find(x => x.id === activeSession.practiceId);
+  if (!p) { activeSession = null; return; }
+  openCardId = p.id;
+  showCompleteCard(p);
+  render();
+}
+function showCompleteCard(p) {
+  setTimeout(() => {
+    const card = document.querySelector('[data-practice="' + p.id + '"] .practice-detail');
+    if (!card) return;
+    const existing = card.querySelector('.complete-card');
+    if (existing) return;
+    const cc = el('div', 'complete-card');
+    cc.innerHTML =
+      '<div class="complete-msg">breath held.</div>' +
+      '<div class="complete-sub">what moved? where did the energy gather? what released?</div>' +
+      '<textarea id="complete-notes" placeholder="optional — leave blank if it doesn’t want words"></textarea>' +
+      '<button class="btn-begin" id="save-session">save to history</button>';
+    card.appendChild(cc);
+    document.getElementById('save-session').addEventListener('click', () => {
+      const notes = (document.getElementById('complete-notes').value || '').trim();
+      saveSession(p, notes);
+      activeSession = null;
+      toast('saved to history');
+      render();
+    });
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 50);
+}
+function logSessionDirect(practiceId) {
+  const p = PRACTICES.find(x => x.id === practiceId);
+  if (!p) return;
+  saveSession(p, '');
+  toast('logged');
+  render();
+}
+function saveSession(practice, notes) {
+  state.sessions.unshift({
+    id: uid('s'),
+    practiceId: practice.id,
+    name: practice.name,
+    stack: practice.stack,
+    at: new Date().toISOString(),
+    notes: notes
+  });
+  if (state.sessions.length > 200) state.sessions = state.sessions.slice(0, 200);
+  saveState();
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function render() {
+  const mount = document.getElementById('mount');
+  mount.innerHTML = '';
+
+  if (currentTab === 'library') {
+    renderLibrary(mount);
+  } else {
+    renderHistory(mount);
+  }
+}
+
+function renderLibrary(mount) {
+  const decl = el('div', 'declaration');
+  decl.innerHTML = '<strong>breath is the carrier wave.</strong> the gate that opens the other fires — sexual stamina is breath training, erection quality is pelvic-floor-and-breath coordination, energy transmission is moving energy by definition. <em>cultivation before circulation. ground before sky. seal what you gather.</em>';
+  mount.appendChild(decl);
+
+  const banner = el('div', 'anchor-banner');
+  banner.innerHTML =
+    '<div class="ab-eyebrow">the anchor for this season</div>' +
+    '<div class="ab-text">Twenty minutes a day of slow nasal breathing in microcosmic orbit posture. <em>One practice you’ll actually do — it trains nasal default, capacity, pelvic awareness, the orbit, and felt-sense all at once.</em></div>';
+  mount.appendChild(banner);
+
+  mount.appendChild(el('div', 'section-eyebrow', 'the practices'));
+
+  // Pedagogical order: anchor first, then foundation → moving → capacity →
+  // pranayama → sources → storage → sound → polarity → sexual/shamanic → therapeutic.
+  const PRACTICES_DISPLAY_ORDER = [
+    'daily_anchor',
+    'coherent_breath', 'nasal_reset', 'felt_sense',
+    'wim_hof', 'tummo',
+    'nadi_shodhana', 'ujjayi', 'kapalabhati', 'bhastrika',
+    'earth_rooting', 'square_breath', 'sun_moon_breath', 'nature_charging',
+    'dantian_sealing',
+    'toning_bija',
+    'polarity_flow',
+    'pelvic_breath', 'sexual_drawing', 'breath_edging', 'orbit_arousal',
+    'hands_online',
+    'connected_breathing'
+  ];
+  const _orderMap = {};
+  PRACTICES_DISPLAY_ORDER.forEach((id, i) => { _orderMap[id] = i; });
+  const _sortedPractices = [...PRACTICES].sort((a, b) => {
+    const ai = _orderMap[a.id] !== undefined ? _orderMap[a.id] : 999;
+    const bi = _orderMap[b.id] !== undefined ? _orderMap[b.id] : 999;
+    return ai - bi;
+  });
+
+  const list = el('div', 'practice-list');
+  _sortedPractices.forEach((p, idx) => {
+    const card = el('div', 'practice-card' + (openCardId === p.id ? ' open' : ''));
+    card.setAttribute('data-practice', p.id);
+
+    const summary = el('button', 'practice-summary');
+    summary.innerHTML =
+      '<div class="practice-num">' + (idx + 1) + '</div>' +
+      '<div class="practice-info">' +
+        '<div class="practice-name">' + escapeHtml(p.name) + '</div>' +
+        '<div class="practice-stack">' + stackChipsHtml(p.stack) + '</div>' +
+        '<div class="practice-meta">' +
+          '<span>' + escapeHtml(p.durationLabel) + '</span>' +
+          '<span>' + escapeHtml(p.frequency) + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="practice-toggle">+</div>';
+    summary.addEventListener('click', () => {
+      openCardId = (openCardId === p.id) ? null : p.id;
+      render();
+    });
+    card.appendChild(summary);
+
+    const detail = el('div', 'practice-detail');
+    let detailHtml = '';
+    detailHtml += '<div class="detail-section"><h4>what it is</h4><p>' + escapeHtml(p.what) + '</p></div>';
+    detailHtml += '<div class="detail-section"><h4>how to do it</h4><ul>' +
+      p.how.map(li => '<li>' + escapeHtml(li) + '</li>').join('') + '</ul></div>';
+    detailHtml += '<div class="detail-watch"><strong>watch for</strong><br>' + escapeHtml(p.watch) + '</div>';
+    detail.innerHTML = detailHtml;
+
+    const actions = el('div', 'detail-actions');
+    if (p.durationSec > 0) {
+      const beginBtn = el('button', 'btn-begin', 'begin practice · ' + p.durationLabel);
+      beginBtn.addEventListener('click', () => startTimer(p.id));
+      actions.appendChild(beginBtn);
+    }
+    const logBtn = el('button', 'btn-log', p.durationSec > 0 ? 'log without timer' : 'log this practice');
+    logBtn.addEventListener('click', () => logSessionDirect(p.id));
+    actions.appendChild(logBtn);
+    detail.appendChild(actions);
+
+    card.appendChild(detail);
+    list.appendChild(card);
+  });
+  mount.appendChild(list);
+}
+
+function renderHistory(mount) {
+  mount.appendChild(el('div', 'section-eyebrow', 'recent sessions'));
+  if (!state.sessions.length) {
+    const empty = el('div', 'history-empty', 'nothing logged yet. open the library, hold a practice, save the breath.');
+    mount.appendChild(empty);
+    return;
+  }
+  const list = el('div', 'history-list');
+  state.sessions.slice(0, 50).forEach(s => {
+    const item = el('div', 'history-item');
+    let html =
+      '<div class="history-row">' +
+        '<div class="history-name">' + escapeHtml(s.name) + '</div>' +
+        '<div class="history-date">' + escapeHtml(fmtDateTime(s.at)) + '</div>' +
+      '</div>' +
+      '<div class="history-stack">' + stackChipsHtml(s.stack || []) + '</div>';
+    if (s.notes) {
+      html += '<div class="history-notes">' + escapeHtml(s.notes) + '</div>';
+    }
+    item.innerHTML = html;
+    list.appendChild(item);
+  });
+  mount.appendChild(list);
+}
+
+// ============================================================
+// EVENTS
+// ============================================================
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentTab = btn.dataset.tab;
+    render();
+  });
+});
+
+document.getElementById('back-btn').addEventListener('click', () => {
+  try { window.parent.postMessage('close-temple', '*'); } catch (e) {}
+  try { window.location.href = 'index.html'; } catch (e) {}
+});
+
+document.getElementById('timer-wiki').addEventListener('click', gvWiki);
+document.getElementById('timer-cancel').addEventListener('click', cancelTimer);
+document.getElementById('timer-skip').addEventListener('click', gvSkip);
+document.getElementById('timer-done').addEventListener('click', () => stopTimer(true));
+
+// ============================================================
+// BOOT
+// ============================================================
+render();
+
+function checkPortalAutoStart() {
+  try {
+    const raw = localStorage.getItem('portal_auto_start_v1');
+    if (!raw) return;
+    const flag = JSON.parse(raw);
+    if (flag.temple !== 'breath') return;
+    if (!flag.timestamp || (Date.now() - flag.timestamp > 60000)) {
+      localStorage.removeItem('portal_auto_start_v1');
+      return;
+    }
+    localStorage.removeItem('portal_auto_start_v1');
+    if (flag.practiceId) {
+      const practice = PRACTICES.find(p => p.id === flag.practiceId);
+      if (practice) {
+        openCardId = practice.id;
+        render();
+        setTimeout(() => startTimer(practice.id), 350);
+      }
+    }
+  } catch (e) {}
+}
+checkPortalAutoStart();
+</script>
+
+<style>
+/* ── Codex × Pleroma skin ── */
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;}.practice-name{font-family:'Cormorant Garamond',serif;font-weight:500;}.eyebrow,.section-eyebrow{letter-spacing:0.24em;}
+</style>
+</body>
+</html>

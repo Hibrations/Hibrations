@@ -918,6 +918,7 @@ nav.tab-bar {
   .temple-card.c-brow::before   { background: var(--c-brow); }
   .temple-card.c-crown::before  { background: var(--c-crown); }
   .temple-card.azure::before    { background: var(--azure); }
+  .temple-card.breath::before   { background: #5d93a6; }
   .temple-card.mystic::before   { background: var(--mystic); }
   .temple-card.pewter::before   { background: var(--pewter); }
   .temple-name { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 500; display: flex; align-items: center; gap: 8px; line-height: 1.1; }
@@ -1154,8 +1155,11 @@ const Shell = {
     } else if (app === 'inner') {
       Shell.openTemple('inner_temple.html', 'inner temple');
       return;
+    } else if (app === 'breath') {
+      Shell.openTemple('breath_temple.html', 'breath & energy');
+      return;
     } else if (app === 'beast') {
-      Shell.openTemple('beast_temple.html', 'beast temple');
+      Shell.openTemple('beast_temple.html', 'lover temple');
       return;
     } else if (app === 'magnetic') {
       Shell.openTemple('magnetic_temple.html', 'magnetic temple');
@@ -2501,7 +2505,7 @@ const Portal = (function() {
         '<button class="modal-close" id="mclose">\u2715</button>' +
       '</div>' +
       '<div class="section-header">from a temple library</div>' +
-      '<button class="plan-add-btn lib-trigger" id="plan-from-lib">search Body / Inner / Beast practices</button>' +
+      '<button class="plan-add-btn lib-trigger" id="plan-from-lib">search Body / Inner / Lover practices</button>' +
       '<div class="section-header">or pick a quick preset</div>' +
       '<div class="plan-preset-grid">' + presetHtml + '</div>' +
       '<div class="section-header">or name your own</div>' +
@@ -3216,10 +3220,11 @@ const Portal = (function() {
       grid.appendChild(c);
     };
     mkCard('c-brow',   '🌌', 'Inner Temple',       'breath · meditation · daily', 'inner');
+    mkCard('breath',   '🌬️', 'Breath &amp; Energy',    'orbit · prana · cultivation', 'breath');
     mkCard('c-root',   '🏋️', 'Body Temple',        'training · vessel', 'body');
     mkCard('c-crown',  '🌿', 'Healing Temple',   'qi · reiki · prana', 'grimoire');
     mkCard('azure',    '🎙️', 'Vocal Temple',       'breath · voice · range', 'vocal');
-    mkCard('c-sacral', '🔥', 'Beast Temple',       'primal · field · charge · aura', 'beast');
+    mkCard('c-sacral', '🔥', 'Lover Temple',       'primal · lover · sacred bodywork', 'beast');
     mkCard('c-throat', '🎨', 'Hibrations',         'capture · craft · ship', 'hibrations');
     mkCard('c-heart',  '🎸', 'Strings &amp; Soul', 'ukulele · guitar', 'strings');
     mkCard('mystic',   '🔮', 'Tarot',              'draw · deck · card XIV', 'tarot');
