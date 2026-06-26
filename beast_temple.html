@@ -1668,7 +1668,7 @@ function checkPortalAutoStart() {
         openCardId = practice.id;
         expandCatFor(practice.id);
         render();
-        setTimeout(() => startTimer(practice.id), 350);
+        if (!flag.openOnly) setTimeout(() => startTimer(practice.id), 350);
       }
     }
   } catch (e) {}

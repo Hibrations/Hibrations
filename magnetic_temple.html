@@ -981,14 +981,14 @@ function checkPortalAutoStart() {
     }
     localStorage.removeItem('portal_auto_start_v1');
     if (flag.practiceId === 'off_switch') {
-      setTimeout(() => startTimerForPractice(OFF_SWITCH), 350);
+      if (!flag.openOnly) setTimeout(() => startTimerForPractice(OFF_SWITCH), 350);
       return;
     }
     const drill = DRILLS.find(d => d.id === flag.practiceId);
     if (drill) {
       openCardId = drill.id;
       render();
-      setTimeout(() => startTimer(drill.id), 350);
+      if (!flag.openOnly) setTimeout(() => startTimer(drill.id), 350);
     }
   } catch (e) {}
 }

@@ -624,7 +624,26 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sa
     try{ window.parent.postMessage('close-temple','*'); }catch(e){}
     try{ window.location.href='index.html'; }catch(e){}
   });
+  function checkPortalAutoStart(){
+    try{
+      var raw = localStorage.getItem('portal_auto_start_v1');
+      if(!raw) return;
+      var flag = JSON.parse(raw);
+      if(flag.temple !== 'grimoire') return;
+      if(!flag.timestamp || (Date.now()-flag.timestamp > 60000)){ localStorage.removeItem('portal_auto_start_v1'); return; }
+      localStorage.removeItem('portal_auto_start_v1');
+      var p = PRACTICES.find(function(x){ return x.id === flag.practiceId; });
+      if(!p) return;
+      tab = 'practices';
+      if(p.cat) expandedCats[p.cat] = true;
+      formOpenId = p.id;
+      render();
+      if(!flag.openOnly && p.dur) setTimeout(function(){ startTimer(p); }, 350);
+    }catch(e){}
+  }
+
   render();
+  checkPortalAutoStart();
 })();
 </script>
 

@@ -1519,11 +1519,12 @@ const Portal = (function() {
   }
 
   // Auto-start flag for temple-side handlers (consumed on temple boot)
-  function setPortalAutoStart(temple, practiceId) {
+  function setPortalAutoStart(temple, practiceId, openOnly) {
     try {
       localStorage.setItem('portal_auto_start_v1', JSON.stringify({
         temple: temple,
         practiceId: practiceId,
+        openOnly: !!openOnly,
         timestamp: Date.now()
       }));
     } catch (e) {}
@@ -1531,10 +1532,15 @@ const Portal = (function() {
 
   // Dispatch begin: portal timer for short single-step drills,
   // deep-link + auto-start for multi-step practices, body training, or longer practices.
-  function executeBegin(temple, practiceId, displayName) {
+  function executeBegin(temple, practiceId, displayName, openOnly) {
     if (!temple) return;
     if (temple === 'body') {
       Shell.goTo('body');
+      return;
+    }
+    if (openOnly) {
+      setPortalAutoStart(temple, practiceId, true);
+      Shell.goTo(temple);
       return;
     }
     if (temple === 'inner' && MULTI_STEP_INNER.has(practiceId)) {
@@ -2068,7 +2074,7 @@ const Portal = (function() {
         '</div>' +
         '<div class="next-practice-stack">' + stackChips(gp.stack) + '</div>' +
         '<div class="next-practice-target-hint">your step on the healing path</div>';
-      card.addEventListener('click', () => executeBegin('grimoire', gp.id, gp.name));
+      card.addEventListener('click', () => executeBegin('grimoire', gp.id, gp.name, true));
       return card;
     } catch (e) { return null; }
   }
@@ -2110,7 +2116,7 @@ const Portal = (function() {
           : '');
       card.addEventListener('click', (e) => {
         if (e.target.closest('.moon-swap-btn')) return;
-        executeBegin(cur.source, p.id, p.name);
+        executeBegin(cur.source, p.id, p.name, true);
       });
       const swap = card.querySelector('.moon-swap-btn');
       if (swap) swap.addEventListener('click', (e) => {
@@ -2144,7 +2150,7 @@ const Portal = (function() {
         '<div class="next-practice-target-hint">feeds the ' + escapeHtml(s.targetStack) + ' line</div>';
       // Begin the specific suggested practice (inline portal timer for short ones,
       // deep-link + auto-start for the rest) — not just open the temple's home.
-      card.addEventListener('click', () => executeBegin(s.source, s.id, s.name));
+      card.addEventListener('click', () => executeBegin(s.source, s.id, s.name, true));
       wrap.appendChild(card);
     });
     view.appendChild(wrap);
