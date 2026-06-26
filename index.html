@@ -933,7 +933,13 @@ nav.tab-bar {
   .stack-pulse-chip .sp-label { display: block; font-size: 8.5px; letter-spacing: 0.05em; color: var(--ink-faint); margin-top: 6px; text-transform: uppercase; }
 
   /* smaller moon orb */
-  .portal-moon-glyph { display: inline-block; width: 22px; height: 22px; border-radius: 50%; font-size: 0; vertical-align: middle; background: radial-gradient(circle at 36% 30%, #f6f1e3, #cdd0d6 56%, #6f7280 100%); box-shadow: inset -4px -3px 8px rgba(0,0,0,0.45); }
+  /* moon shows its actual phase glyph again (R59) */
+  .portal-moon-glyph { font-size: 15px; line-height: 1; vertical-align: middle; }
+  .next-practice-card.next-moon { border-color: var(--gold); }
+  .next-practice-card.next-moon .next-practice-source { color: var(--gold); }
+  .moon-swap-row { margin-top: 9px; }
+  .moon-swap-btn { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-faint); border: 1px solid var(--border); border-radius: 999px; padding: 5px 11px; background: none; transition: color 0.15s, border-color 0.15s; }
+  .moon-swap-btn:active { color: var(--gold); border-color: var(--gold); }
   .portal-moon { gap: 9px; }
 </style>
 </head>
@@ -2067,13 +2073,64 @@ const Portal = (function() {
     } catch (e) { return null; }
   }
 
+  function moonManifestFor(source) {
+    if (source === 'beast') return BEAST_PRACTICES;
+    if (source === 'breath') return BREATH_PRACTICES;
+    if (source === 'magnetic') return MAGNETIC_PRACTICES;
+    if (source === 'grimoire') return GRIMOIRE_PRACTICES;
+    return [];
+  }
+  function buildMoonPracticeCard() {
+    try {
+      const moon = moonPhase(new Date());
+      const mp = MOON_PRACTICE[moon.key];
+      if (!mp || !mp.pool || !mp.pool.length) return null;
+      // resolve the pool to concrete practices (skip any that don't resolve)
+      const resolved = mp.pool.map(ref => {
+        const found = moonManifestFor(ref.source).find(x => x.id === ref.id);
+        return found ? { source: ref.source, p: found } : null;
+      }).filter(Boolean);
+      if (!resolved.length) return null;
+      let idx = loadMoonPick(moon.key);
+      if (idx < 0 || idx >= resolved.length) idx = 0;
+      const cur = resolved[idx];
+      const p = cur.p;
+      const card = document.createElement('div');
+      card.className = 'next-practice-card next-moon';
+      card.innerHTML =
+        '<div class="next-practice-name">' + moon.glyph + ' ' + escapeHtml(p.name) + '</div>' +
+        '<div class="next-practice-meta">' +
+          '<span class="next-practice-source">moon \u00b7 ' + escapeHtml(moon.name) + '</span>' +
+          '<span class="next-practice-duration">' + escapeHtml(p.durationLabel || '') + '</span>' +
+        '</div>' +
+        '<div class="next-practice-stack">' + stackChips(p.stack || []) + '</div>' +
+        '<div class="next-practice-target-hint">' + escapeHtml(mp.why) + '</div>' +
+        (resolved.length > 1
+          ? '<div class="moon-swap-row"><button class="moon-swap-btn" type="button">\u21bb another \u00b7 ' + (idx + 1) + '/' + resolved.length + '</button></div>'
+          : '');
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.moon-swap-btn')) return;
+        executeBegin(cur.source, p.id, p.name);
+      });
+      const swap = card.querySelector('.moon-swap-btn');
+      if (swap) swap.addEventListener('click', (e) => {
+        e.stopPropagation();
+        saveMoonPick(moon.key, (idx + 1) % resolved.length);
+        render();
+      });
+      return card;
+    } catch (e) { return null; }
+  }
+
   function renderNextPractice(view) {
     const suggestions = buildNextPractices();
     const hpCard = buildHealingPathCard();
-    if (!suggestions.length && !hpCard) return;
+    const moonCard = buildMoonPracticeCard();
+    if (!suggestions.length && !hpCard && !moonCard) return;
     const wrap = el('div', 'next-practice');
     wrap.appendChild(el('div', 'next-practice-eyebrow', 'feed the dim lines'));
     if (hpCard) wrap.appendChild(hpCard);
+    if (moonCard) wrap.appendChild(moonCard);
     suggestions.forEach(s => {
       const card = document.createElement('button');
       card.className = 'next-practice-card next-' + s.source;
@@ -2951,6 +3008,54 @@ const Portal = (function() {
     last_quarter:     { text: 'release. cut the cords, comb the field, clear what no longer serves.', label: 'clear the field', route: 'grimoire' },
     waning_crescent:  { text: 'surrender. deep rest and dreamwork — wind down, let the Pisces moon work underground.', label: 'wind down', route: 'inner' }
   };
+
+  // Phase-attuned practice for the dim lines \u2014 mirrors MOON_GUIDE, points at a concrete drill.
+  // Each phase has a pool of suitable practices \u2014 the card shows one and can be swapped (\u21bb another).
+  const MOON_PRACTICE = {
+    new: { why: 'new moon \u2014 plant the working in the dark', pool: [
+      { source: 'beast', id: 'sex_magic_launch' }, { source: 'beast', id: 'inner_beloved' },
+      { source: 'grimoire', id: 'middle_pillar' }, { source: 'breath', id: 'felt_sense' }
+    ] },
+    waxing_crescent: { why: 'waxing \u2014 build and pack the charge', pool: [
+      { source: 'beast', id: 'feed_the_beast' }, { source: 'beast', id: 'summoning' },
+      { source: 'breath', id: 'wim_hof' }, { source: 'beast', id: 'dantian_sealing' }
+    ] },
+    first_quarter: { why: 'first quarter \u2014 push through the friction', pool: [
+      { source: 'breath', id: 'wim_hof' }, { source: 'beast', id: 'charged_lift' },
+      { source: 'beast', id: 'bioenergetic_shaking' }, { source: 'grimoire', id: 'ba_duan_jin' }
+    ] },
+    waxing_gibbous: { why: 'waxing gibbous \u2014 refine and polish the field', pool: [
+      { source: 'magnetic', id: 'mirror_trataka' }, { source: 'magnetic', id: 'slowness_drill' },
+      { source: 'beast', id: 'living_magnet' }, { source: 'grimoire', id: 'aura_comb' }
+    ] },
+    full: { why: 'full moon \u2014 your peak window, charge in the light', pool: [
+      { source: 'beast', id: 'aphrodite' }, { source: 'beast', id: 'sex_magic_launch' },
+      { source: 'breath', id: 'sexual_drawing' }, { source: 'beast', id: 'big_draw' },
+      { source: 'grimoire', id: 'ra_solar_sphere' }
+    ] },
+    waning_gibbous: { why: 'waning gibbous \u2014 give it away, let the voice out', pool: [
+      { source: 'breath', id: 'toning_bija' }, { source: 'beast', id: 'worship' },
+      { source: 'beast', id: 'charged_reading' }, { source: 'grimoire', id: 'reiki_distance' }
+    ] },
+    last_quarter: { why: 'last quarter \u2014 release what no longer serves', pool: [
+      { source: 'grimoire', id: 'cord_cutting' }, { source: 'grimoire', id: 'aura_comb' },
+      { source: 'beast', id: 'shadow_journal' }, { source: 'grimoire', id: 'salt_bath' }
+    ] },
+    waning_crescent: { why: 'waning crescent \u2014 wind down, let it work underground', pool: [
+      { source: 'breath', id: 'coherent_breath' }, { source: 'breath', id: 'square_breath' },
+      { source: 'grimoire', id: 'salt_bath' }, { source: 'beast', id: 'off_switch' }
+    ] }
+  };
+  const MOON_PICK_KEY = 'portal_moon_pick_v1';
+  function loadMoonPick(phaseKey) {
+    try {
+      const raw = JSON.parse(localStorage.getItem(MOON_PICK_KEY) || '{}');
+      return (raw && raw.phase === phaseKey && typeof raw.idx === 'number') ? raw.idx : 0;
+    } catch (e) { return 0; }
+  }
+  function saveMoonPick(phaseKey, idx) {
+    try { localStorage.setItem(MOON_PICK_KEY, JSON.stringify({ phase: phaseKey, idx: idx })); } catch (e) {}
+  }
 
   const SCHEDULE_KEY = 'portal_flow_schedule_v1';
   const DEFAULT_MORNING = { name: 'Solar Gate', source: 'inner', durationLabel: '~30 min', meta: '6 steps', id: 'solar_gate' };
