@@ -105,6 +105,10 @@ main { padding: 22px; }
 .cat-group.open .cat-chevron { transform: rotate(90deg); color: var(--crimson); }
 .cat-body { display: none; flex-direction: column; gap: 10px; padding: 10px 0 4px; }
 .cat-group.open .cat-body { display: flex; }
+.layer-divider { margin: 22px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border-soft); }
+.layer-divider:first-of-type { margin-top: 4px; }
+.layer-name { display: block; font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 22px; color: var(--ink); letter-spacing: 0.01em; }
+.layer-sub { display: block; font-size: 11px; color: var(--ink-faint); font-style: italic; letter-spacing: 0.02em; margin-top: 3px; }
 .practice-card {
   background: var(--bg-card); border: 1px solid var(--border);
   border-radius: var(--r-md); overflow: hidden;
@@ -1221,6 +1225,118 @@ const PRACTICES = [
       'Let the body learn the territory the goal had hidden — waves that can last far longer than a peak.'
     ],
     watch: 'Treating slowness as a technique to “get” a bigger orgasm. That re-imports the goal. The practice is presence and registration, not a better finish.'
+  },
+  {
+    id: 'ankh_circuit', name: 'The Ankh Circuit',
+    stack: ['energy','primal','breath'],
+    durationSec: 600, durationLabel: '10 min', frequency: 'as charge builds',
+    what: 'The Egyptian heart-loop \u2014 sexual charge recycled rather than released. Instead of sending the peak up and out through the crown, you push it out the back of the heart, arc it up and over the crown, and bring it back in through the front of the heart, tracing the loop of the Ankh. Each cycle feeds the Ka (the energetic double) instead of depleting the body. Karezza and the Valley Orgasm in an Egyptian frame.',
+    how: [
+      'Build a steady, sustainable charge \u2014 sexual or any concentrated vital heat. Not at the edge.',
+      'Tongue at the palate, breath slow. Find the heart center, mid-sternum.',
+      'At the peak of a wave, push the charge out the BACK of the heart at a right angle to the spine.',
+      'Arc it up and over the crown \u2014 the top curve of the Ankh \u2014 and let it re-enter through the FRONT of the heart.',
+      'Loop it. Inhale gathers; exhale traces the circuit. Each pass deposits charge into the lower belly and Ka.',
+      'Close by sealing low, palms on the lower dantian.'
+    ],
+    watch: 'Shooting it straight out the crown and losing it. The Ankh is a LOOP \u2014 what leaves the back of the heart must return to the front. If it dissipates upward, slow down and make the circle smaller and more deliberate.'
+  },
+  {
+    id: 'ka_cultivation', name: 'Ka-Body Cultivation',
+    stack: ['energy','primal'],
+    durationSec: 900, durationLabel: '15 min', frequency: '2\u20133\u00d7 per week',
+    what: 'Building the Ka \u2014 the luminous energetic double the Egyptians held as the body that persists beyond death \u2014 while alive. Sexual charge is the fuel: drawn up, refined, and deposited not into the physical tissues but into the subtle double, until it feels thick, coherent, present. The same jing\u2192qi\u2192shen refinement, aimed at the felt energy-body.',
+    how: [
+      'Settle. Sense the physical body, then sense the energetic body just inside and around it \u2014 its weight, its glow, its edges.',
+      'Generate gentle arousal or vital charge. Draw it up the spine on the inhale.',
+      'On the exhale, do not store it in muscle or genitals \u2014 deposit it into the Ka, the luminous double, as if feeding light into a second body.',
+      'Repeat. Feel the double thicken \u2014 warmer, denser, more there.',
+      'Seal: imagine the Ka wrapped in a shell of gold, integrated with the physical. Sit still three minutes.'
+    ],
+    watch: 'Staying purely mental \u2014 visualizing a double you don\u2019t feel. Drop under the image into the actual felt sense of aliveness; that felt-sense IS the Ka. No feeling, no cultivation.'
+  },
+  {
+    id: 'sekhem_serpents', name: 'Sekhem & the Two Serpents',
+    stack: ['energy','breath'],
+    durationSec: 600, durationLabel: '10 min', frequency: 'weekly',
+    what: 'The Egyptian kundalini map, which predates and matches the Hindu one. Sekhem (the life-fire \u2014 jing / shakti) rises up the djed (the spine, the sushumna) carried by two serpents: the black Lunar serpent on the left, the gold Solar serpent on the right, crossing at each seal. The Caduceus, drawn in the body.',
+    how: [
+      'Sit tall, spine as the djed \u2014 the sacred column. Breath slow through the nose.',
+      'Feel the base of the spine. On the inhale, send a BLACK lunar current up the left and a GOLD solar current up the right.',
+      'Let them cross at each seal \u2014 base, sacral, solar plexus, heart, throat, brow \u2014 weaving as they climb.',
+      'At the crown, let the two currents meet and release within the skull, then settle the brightness back down.',
+      'A few rounds. Close by drawing the brightness down into the lower belly and sealing.'
+    ],
+    watch: 'Forcing the rise \u2014 heat trapped in the head brings the wired, ringing, sleepless state. Always bring it back down and seal low at the end. Lunar before solar if you run hot.'
+  },
+  {
+    id: 'heart_womb_marriage', name: 'Heart-Womb Sacred Marriage',
+    stack: ['energy','healing','field'],
+    durationSec: 600, durationLabel: '10 min', frequency: 'daily or as needed',
+    what: 'The inner hieros gamos \u2014 the two-vortex practice from womb cosmology. Not one ascending spine but two centers in dialogue: the womb (lower belly \u2014 dark-magnetic, instinctive, oracular) and the heart (luminous, relational). Felt simultaneously and brought into coherence, they birth a third field. The womb here is an energetic center, available to any body.',
+    how: [
+      'One hand on the lower belly (the womb center), one on the heart.',
+      'Breathe into the lower hand first \u2014 feel the dark, magnetic, dense intelligence of the womb-bowl.',
+      'Then the heart \u2014 feel its open, luminous, relational quality.',
+      'Now hold BOTH at once, not in sequence. Let them sense each other, like two people meeting.',
+      'Breathe between them until a third thing settles \u2014 a column or field that includes both. Rest in it.'
+    ],
+    watch: 'Working them one at a time and calling it done. The marriage is the SIMULTANEITY \u2014 both centers lit and in conversation. If you lose one, soften and re-feel both together.'
+  },
+  {
+    id: 'priestess_field', name: 'Priestess Field-Holding',
+    stack: ['field','healing'],
+    durationSec: 300, durationLabel: '5 min', frequency: 'rehearsal + live',
+    what: 'The conferring role from the Magdalene rite \u2014 the inversion of the usual model. The priestess does not direct energy AT the other; she holds a field of such completeness that the other\u2019s consciousness reorganizes within it. A solo rehearsal of the field you bring to another, and a role either partner can hold for a session.',
+    how: [
+      'Sit and fill yourself \u2014 grounded, sovereign, full to the edges. Not reaching, not performing.',
+      'Let the field around you become coherent and complete, like a still room someone could walk into.',
+      'Rehearse holding presence for an imagined other: not doing anything to them, just being a field they could reorganize inside.',
+      'Live: with a partner, take the holding role for a set time \u2014 full, receptive, conferring. Then it can shift.'
+    ],
+    watch: 'Tipping into doing \u2014 sending, fixing, managing the other. The power is in the holding, not the reaching. The moment you push, the field collapses into effort.'
+  },
+  {
+    id: 'magdalene_anointing', name: 'The Anointing Rite',
+    stack: ['body','healing','primal'],
+    durationSec: 0, durationLabel: 'ritual', frequency: 'as ceremony',
+    what: 'Magdalene\u2019s alabaster jar as a full technology \u2014 scent, touch, and consecration at once. Aromatic oil applied with conscious intent works on three registers: chemically (scent is the only sense with a direct line to the limbic brain), energetically (intentional touch transmits field), and ceremonially (being seen and named changes state). Solo as self-anointing, or given to a partner.',
+    how: [
+      'Set the space: warm, low light, a sacred oil (spikenard, rose, frankincense, sandalwood).',
+      'Three slow breaths to drop in. Name the intention silently \u2014 blessing, consecration, threshold.',
+      'Anoint with oil and slow intentional touch: crown, brow, throat, heart, belly \u2014 the seals.',
+      'At each point, pause and address the body as sacred \u2014 your own or your partner\u2019s \u2014 not a body to be worked on.',
+      'Close in stillness, hand on heart and belly. Let the scent carry the state.'
+    ],
+    watch: 'Rushing it into routine. The rite works through reverence and slowness \u2014 if it becomes mechanical application the chemistry still fires but the consecration is lost. Move as if anointing something holy, because you are.'
+  },
+  {
+    id: 'hieros_gamos', name: 'Hieros Gamos \u00b7 Sacred Union',
+    stack: ['primal','energy','healing'],
+    durationSec: 0, durationLabel: 'partnered ritual', frequency: 'when both are clothed',
+    what: 'The bridal chamber \u2014 the Gnostic fifth sacrament. Two cultivated fields meeting to become a third: a vessel of consciousness neither could access alone. Sacred union is not the CAUSE of transformation but its culmination \u2014 reserved for those already clothed (shadow-integrated, nervous-system prepared). The Taoist rule: you cannot merge fields that haven\u2019t each been cultivated solo.',
+    how: [
+      'Both partners arrive prepared \u2014 grounded, regulated, having done their own practice. Not using the other to fix themselves.',
+      'Open with eye-gazing and synchronized breath until the two systems entrain.',
+      'Let union be slow and non-goal \u2014 the Ankh circuit and orbit run between you, charge circulating rather than discharging.',
+      'Hold the frame: two becoming one field, then resting AS that field. The third thing is the practice.',
+      'Close forehead-to-forehead or chest-to-chest, breathing together, sealing what was made.'
+    ],
+    watch: 'Reaching for union before the foundations are laid \u2014 using the merge to bypass your own unintegrated material. If either field is unstable, return to solo cultivation first. The chamber amplifies what is already there, shadow included.'
+  },
+  {
+    id: 'ka_to_ka', name: 'Ka-to-Ka Distance Union',
+    stack: ['energy','field'],
+    durationSec: 600, durationLabel: '10 min', frequency: 'across distance',
+    what: 'Long-distance energetic union through the Ka. Rather than visualizing a partner\u2019s physical form, you contact their luminous double \u2014 the Ka exists in a different relationship to time and space than the body, which (within this cosmology) is why distance work can land. Ka-to-Ka contact through a register that is not proximity.',
+    how: [
+      'Settle and cultivate your own Ka first \u2014 feel your luminous double, thick and present.',
+      'Bring to mind not the partner\u2019s face or body but their ALIVENESS \u2014 the felt quality of their double.',
+      'Extend your Ka to meet theirs, as two fields touching across the register that is not distance.',
+      'Let charge circulate between the doubles \u2014 the Ankh loop shared. Send and receive.',
+      'Close by drawing your own field back, sealing low, and releasing them with a blessing.'
+    ],
+    watch: 'Slipping into fantasy or longing \u2014 that collapses the practice into mental story and pulls on your own reserves. Stay in felt-sense, Ka to Ka, giving from fullness, not reaching from lack.'
   }
 ];
 
@@ -1239,19 +1355,28 @@ const STACK_COLORS = {
 // ============================================================
 // CATEGORIES — collapsible browse paths
 // ============================================================
+const LAYERS = [
+  { key: 'energy', label: 'Energy', sub: 'the charge \u2014 cultivation, circulation, the Ankh & the Ka \u00b7 rhymes with the Breath Temple' },
+  { key: 'body',   label: 'Body',   sub: 'the vessel \u2014 somatic, grounded, de-armored \u00b7 rhymes with the Body Temple' },
+  { key: 'heart',  label: 'Heart',  sub: 'the field \u2014 polarity, presence, the heart-womb & the priestess' },
+  { key: 'spirit', label: 'Spirit', sub: 'sacred union \u2014 devotion, deity, the Magdalene codex \u00b7 rhymes with Inner & Healing' }
+];
 const CATEGORIES = [
-  { key: 'foundation',   label: 'Foundation & grounding',                 ids: ['earth_rooting','dantian_sealing','bioenergetic_shaking','pelvic_dearmoring','toning_bija'] },
-  { key: 'charge',       label: 'Charge cultivation',                     ids: ['summoning','cock_breath','lust_meditation','feed_the_beast','big_draw','orbit_arousal'] },
-  { key: 'circulation',  label: 'Circulation & alchemy',                  ids: ['orbit_walking','cock_heart_crown','chakra_ladder','kundalini_rising','jing_shen_furnace','valley_orgasm','energy_orgasm','tantric_solo'] },
-  { key: 'polarity',     label: 'Polarity & the field',                   ids: ['polarity_flow','the_vacuum','the_emission','volume_dial','field_cultivation','off_switch','living_magnet'] },
-  { key: 'transmission', label: 'Transmission channels',                  ids: ['mirror_trataka','voice_prosody','laogong_touch_drill','magnetic_breath','slowness_drill','posture_reset','receptive_field_reading','wordless_body_sit','mirror'] },
-  { key: 'connection',   label: 'Connection & relational',               ids: ['eye_lock','cords_connection','remote_transmission','ethics_micro_check','hank_moody_stay','energetic_intercourse'] },
-  { key: 'lover',        label: 'The complete lover \u2014 relational & somatic', ids: ['masculine_presence','stating_the_want','core_erotic_theme','sensate_focus','tantric_massage','slow_sex'] },
-  { key: 'live',         label: 'Live field work',                        ids: ['public_field','bonfire_walk','charged_lift','cold_fire','field_test_log'] },
-  { key: 'magic',        label: 'Sexual magic & manifestation',           ids: ['sigil_edge','sex_magic_launch','sexual_visualization','charged_reading'] },
-  { key: 'deity',        label: 'Deity & devotional working',             ids: ['worship','magnetic_worship','inner_beloved','aphrodite','pan_invocation','ra_eros'] },
-  { key: 'shadow',       label: 'Shadow & integration',                   ids: ['grief_practice','sacred_anger','shadow_journal'] },
-  { key: 'reflection',   label: 'Reflection & daily integration',         ids: ['fuel_cycle'] }
+  { layer:'body',   key:'grounding',   label:'Grounding & de-armoring',            ids:['earth_rooting','bioenergetic_shaking','pelvic_dearmoring'] },
+  { layer:'body',   key:'somatic',     label:'Somatic & sensate',                  ids:['sensate_focus','cock_breath','slow_sex'] },
+  { layer:'body',   key:'bodywork',    label:'Sacred bodywork & anointing',        ids:['tantric_massage','magdalene_anointing'] },
+  { layer:'energy', key:'cultivation', label:'Charge cultivation',                 ids:['summoning','lust_meditation','feed_the_beast','big_draw','orbit_arousal'] },
+  { layer:'energy', key:'circulation', label:'Circulation & alchemy',              ids:['orbit_walking','cock_heart_crown','chakra_ladder','kundalini_rising','jing_shen_furnace','valley_orgasm','energy_orgasm','tantric_solo','dantian_sealing'] },
+  { layer:'energy', key:'egyptian',    label:'The Ankh & the Ka body',             ids:['ankh_circuit','ka_cultivation','sekhem_serpents'] },
+  { layer:'heart',  key:'polarity',    label:'Polarity & the magnetic field',      ids:['polarity_flow','the_vacuum','the_emission','volume_dial','field_cultivation','off_switch','living_magnet'] },
+  { layer:'heart',  key:'transmission',label:'Transmission channels',              ids:['mirror_trataka','voice_prosody','laogong_touch_drill','magnetic_breath','slowness_drill','posture_reset','receptive_field_reading','wordless_body_sit','mirror','toning_bija'] },
+  { layer:'heart',  key:'relational',  label:'Presence & relational',              ids:['masculine_presence','stating_the_want','core_erotic_theme','eye_lock','cords_connection','remote_transmission','ethics_micro_check','hank_moody_stay','energetic_intercourse'] },
+  { layer:'heart',  key:'heartwomb',   label:'The heart-womb & the priestess',     ids:['heart_womb_marriage','priestess_field'] },
+  { layer:'heart',  key:'live',        label:'Live field work',                    ids:['public_field','bonfire_walk','charged_lift','cold_fire','field_test_log'] },
+  { layer:'spirit', key:'union',       label:'Sacred union & the bridal chamber',  ids:['hieros_gamos','ka_to_ka','inner_beloved'] },
+  { layer:'spirit', key:'magic',       label:'Sexual magic & manifestation',       ids:['sigil_edge','sex_magic_launch','sexual_visualization','charged_reading'] },
+  { layer:'spirit', key:'devotion',    label:'Deity & devotional working',         ids:['worship','magnetic_worship','aphrodite','pan_invocation','ra_eros'] },
+  { layer:'spirit', key:'shadow',      label:'Shadow & integration',               ids:['grief_practice','sacred_anger','shadow_journal','fuel_cycle'] }
 ];
 let expandedCats = {};
 function expandCatFor(practiceId) {
@@ -1517,37 +1642,43 @@ function render() {
 
 function renderLibrary(mount) {
   const decl = el('div', 'declaration');
-  decl.innerHTML = '<strong>the temple of the complete lover.</strong> the beast\u2019s fire and the lover\u2019s art in one body \u2014 primal charge, magnetic field, sacred bodywork, and relational mastery threaded together. Joey\u2019s instrument, Sophia\u2019s devotion. <em>heat is fuel; tenderness is the craft; this is where they meet.</em>';
+  decl.innerHTML = '<strong>the temple of the complete lover.</strong> one current, four depths \u2014 energy, body, heart, spirit. Joey\u2019s fire and Sophia\u2019s devotion in the same body: the primal engine and the Magdalene codex revealed as one work. <em>heat is fuel; tenderness is the craft; union is the temple.</em>';
   mount.appendChild(decl);
 
-  mount.appendChild(el('div', 'section-eyebrow', 'the 66 practices \u00b7 choose a path'));
+  mount.appendChild(el('div', 'section-eyebrow', 'the 74 practices \u00b7 four layers'));
 
   const byId = {};
   PRACTICES.forEach(p => { byId[p.id] = p; });
 
-  CATEGORIES.forEach(cat => {
-    const practices = cat.ids.map(id => byId[id]).filter(Boolean);
-    if (!practices.length) return;
-    const isOpen = !!expandedCats[cat.key];
-    const group = el('div', 'cat-group' + (isOpen ? ' open' : ''));
+  LAYERS.forEach(layer => {
+    const layerCats = CATEGORIES.filter(c => c.layer === layer.key);
+    if (!layerCats.length) return;
+    const divider = el('div', 'layer-divider');
+    divider.innerHTML = '<span class="layer-name">' + escapeHtml(layer.label) + '</span><span class="layer-sub">' + escapeHtml(layer.sub) + '</span>';
+    mount.appendChild(divider);
 
-    const header = el('button', 'cat-header');
-    header.innerHTML =
-      '<span class="cat-label">' + escapeHtml(cat.label) + '</span>' +
-      '<span class="cat-count">' + practices.length + '</span>' +
-      '<span class="cat-chevron">\u203a</span>';
-    header.addEventListener('click', () => {
-      expandedCats[cat.key] = !expandedCats[cat.key];
-      render();
+    layerCats.forEach(cat => {
+      const practices = cat.ids.map(id => byId[id]).filter(Boolean);
+      if (!practices.length) return;
+      const isOpen = !!expandedCats[cat.key];
+      const group = el('div', 'cat-group' + (isOpen ? ' open' : ''));
+      const header = el('button', 'cat-header');
+      header.innerHTML =
+        '<span class="cat-label">' + escapeHtml(cat.label) + '</span>' +
+        '<span class="cat-count">' + practices.length + '</span>' +
+        '<span class="cat-chevron">\u203a</span>';
+      header.addEventListener('click', () => {
+        expandedCats[cat.key] = !expandedCats[cat.key];
+        render();
+      });
+      group.appendChild(header);
+      const body = el('div', 'cat-body');
+      if (isOpen) {
+        practices.forEach((p, idx) => body.appendChild(buildPracticeCard(p, idx + 1)));
+      }
+      group.appendChild(body);
+      mount.appendChild(group);
     });
-    group.appendChild(header);
-
-    const body = el('div', 'cat-body');
-    if (isOpen) {
-      practices.forEach((p, idx) => body.appendChild(buildPracticeCard(p, idx + 1)));
-    }
-    group.appendChild(body);
-    mount.appendChild(group);
   });
 }
 

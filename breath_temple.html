@@ -586,6 +586,20 @@ const PRACTICES = [
       'Rest a long time afterward. Ground, hydrate, integrate.'
     ],
     watch: 'Using this for daily regulation. It’s a deep dive, not a tool for nervous-system tone. Best done when something genuinely wants to come up — and ideally with support the first times.'
+  },
+  {
+    id: 'ankh_breath', name: 'The Ankh Breath',
+    stack: ['breath','energy','sexual'],
+    durationSec: 600, durationLabel: '10 min', frequency: 'as charge builds',
+    what: 'The pure-breath form of the Egyptian heart-loop. Where the orbit runs up the spine and down the front, the Ankh sends the charge out the back of the heart, up and over the crown, and back in through the front of the heart \u2014 a loop that recycles the current rather than releasing it up and out. The breath carries the circuit; each pass feeds the energetic body (the Ka).',
+    how: [
+      'Sit tall, tongue at the palate, breath slow and nasal. Settle attention at the heart, mid-sternum.',
+      'Inhale: gather warmth and charge into the heart.',
+      'Exhale: push it out the BACK of the heart, arc it up and over the crown, and return it through the FRONT of the heart \u2014 the loop of the Ankh.',
+      'Keep looping, one circuit per breath. Let each pass deposit a little charge into the lower belly.',
+      'Close: rub palms warm, hands on the lower dantian, and seal.'
+    ],
+    watch: 'Letting the charge shoot straight up the crown and escape. The Ankh is a closed loop \u2014 back of the heart, over the top, in the front. If you lose it upward, slow the breath and shrink the circle.'
   }
 ];
 
@@ -615,7 +629,7 @@ const CATEGORIES = [
   { key: 'pranayama',  label: 'Pranayama \u00b7 Tier 3',              ids: ['nadi_shodhana','ujjayi','kapalabhati','bhastrika'] },
   { key: 'sources',    label: 'Sources & storage',                   ids: ['earth_rooting','square_breath','sun_moon_breath','nature_charging','dantian_sealing'] },
   { key: 'soundpol',   label: 'Sound & polarity',                    ids: ['toning_bija','polarity_flow'] },
-  { key: 'sexual',     label: 'Sexual & shamanic breath \u00b7 Tier 4', ids: ['pelvic_breath','sexual_drawing','breath_edging','orbit_arousal'] },
+  { key: 'sexual',     label: 'Sexual & shamanic breath \u00b7 Tier 4', ids: ['pelvic_breath','sexual_drawing','breath_edging','orbit_arousal','ankh_breath'] },
   { key: 'deep',       label: 'Hands & therapeutic \u00b7 Tier 5',     ids: ['hands_online','connected_breathing'] }
 ];
 let expandedCats = {};
@@ -886,7 +900,7 @@ function renderLibrary(mount) {
     '<div class="ab-text">Twenty minutes a day of slow nasal breathing in microcosmic orbit posture. <em>One practice you\u2019ll actually do \u2014 it trains nasal default, capacity, pelvic awareness, the orbit, and felt-sense all at once.</em></div>';
   mount.appendChild(banner);
 
-  mount.appendChild(el('div', 'section-eyebrow', 'the 23 practices \u00b7 choose a path'));
+  mount.appendChild(el('div', 'section-eyebrow', 'the 24 practices \u00b7 choose a path'));
 
   const byId = {};
   PRACTICES.forEach(p => { byId[p.id] = p; });
