@@ -1,0 +1,19 @@
+{
+  "name": "Body Temple",
+  "short_name": "Body",
+  "description": "The vessel, what feeds it, and the voice — training, fuel and vocal practice.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0908",
+  "theme_color": "#0a0908",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -15,6 +15,7 @@
   --bg: #0a0908;
   --bg-elev: #14110f;
   --bg-card: #1a1614;
+  --voice: #6fa8d8;
   --border: #2a2420;
   --border-soft: #1f1a17;
   --ink: #e8e1d4;
@@ -896,7 +897,7 @@ main { padding: 0 22px; }
 <body>
 
 <header class="app-header">
-  <button class="app-back" id="app-back" onclick="if(window.parent!==window){window.parent.postMessage('close-temple','*');}else{var b=window.location.href.split('/').slice(0,-1).join('/');window.location.assign(b+'/index.html');}">← portal</button>
+  <button class="app-back" id="app-back" onclick="appBack()">← portal</button>
   <div class="app-titleblock">
     <div class="app-title">body temple</div>
     <div class="app-date" id="header-date"></div>
@@ -916,6 +917,47 @@ main { padding: 0 22px; }
 <div id="toast"></div>
 <div id="modal-overlay" class="modal-overlay"><div class="modal" id="modal"></div></div>
 
+<div id="surface-overlay" hidden>
+  <div id="surface-topbar">
+    <button id="surface-back" onclick="closeSurface()">← body temple</button>
+    <div id="surface-title">surface</div>
+  </div>
+  <iframe id="surface-frame" src="" title="shared surface"></iframe>
+</div>
+
+<style>
+#surface-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 1200; display: flex; flex-direction: column; }
+#surface-overlay[hidden] { display: none !important; }
+#surface-topbar { display: flex; align-items: center; gap: 14px; padding: max(env(safe-area-inset-top), 12px) 16px 10px; background: var(--bg); border-bottom: 1px solid var(--border-soft); flex-shrink: 0; }
+#surface-back { font-size: 12px; letter-spacing: .1em; text-transform: lowercase; color: var(--ink-dim); padding: 8px 14px; border: 1px solid var(--border); border-radius: 999px; background: none; cursor: pointer; font-family: inherit; transition: all .15s; }
+#surface-back:active { color: var(--ink); border-color: var(--ink-dim); background: var(--bg-elev); }
+#surface-title { font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-dim); flex: 1; text-align: center; margin-right: 96px; }
+#surface-frame { flex: 1; width: 100%; border: 0; background: var(--bg); display: block; }
+.door-voice::before { background: var(--voice); }
+.door-voice:active { border-color: var(--voice); }
+
+/* backup & restore */
+.hub-data { display:block; width:100%; margin:22px 0 4px; padding:12px; background:none; border:0; font-family:inherit;
+  font-size:12px; letter-spacing:.08em; color:var(--ink-faint); text-align:center; cursor:pointer; }
+.hub-data:active { color:var(--ink-dim); }
+.hub-data-note { color:var(--ink-faint); }
+.hub-data-note.warn { color:var(--warning); }
+.data-stats { background:var(--bg-elev); border:1px solid var(--border-soft); border-radius:var(--r-lg);
+  padding:14px 16px; margin-bottom:16px; font-size:13px; line-height:1.7; color:var(--ink-dim); }
+.data-num { color:var(--ink); font-variant-numeric:tabular-nums; font-size:15px; }
+.data-last { margin-top:8px; font-size:12px; letter-spacing:.06em; color:var(--emerald); }
+.data-last.warn { color:var(--warning); }
+.data-actions { display:flex; gap:10px; margin-bottom:10px; }
+.data-actions button { flex:1; }
+.data-divider { height:1px; background:var(--border-soft); margin:18px 0; }
+.data-preview { background:var(--bg-elev); border:1px solid var(--border); border-radius:var(--r-lg);
+  padding:14px 16px; font-size:13px; line-height:1.7; color:var(--ink-dim); }
+.data-preview-title { color:var(--ink); font-size:14px; margin-bottom:6px; }
+.data-warn { color:var(--warning); font-size:12px; line-height:1.5; margin:10px 0 12px; }
+.data-paste { width:100%; min-height:120px; background:var(--bg); color:var(--ink); border:1px solid var(--border);
+  border-radius:var(--r-sm); padding:10px; font-family:ui-monospace,Menlo,monospace; font-size:11px; margin-bottom:10px; }
+</style>
+
 <nav class="tab-bar">
   <button class="tab-btn active" data-view="home">today</button>
   <button class="tab-btn" data-view="library">library</button>
@@ -929,7 +971,7 @@ main { padding: 0 22px; }
 // ============================================================
 
 const STORAGE_KEY = 'body_temple_v1';
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 const TODAY = () => new Date().toISOString().slice(0, 10);
 const DAYS = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
 const DAY_LABELS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -1689,6 +1731,23 @@ const DEFAULT_LIBRARY = [
 // ============================================================
 // DEFAULT DATA — plans linked to library
 // ============================================================
+const DEFAULT_FUEL = {
+  targets: { calories: 2600, protein: 180, carbs: 260, fat: 80 },
+  foods: [
+    { id: 'f_egg',      name: 'Egg',                     serving: '1 large',        kcal: 72,  p: 6.3, c: 0.4, f: 4.8 },
+    { id: 'f_skyr',     name: 'Skyr',                    serving: '100 g',          kcal: 63,  p: 11,  c: 4,   f: 0.2 },
+    { id: 'f_chicken',  name: 'Chicken breast (cooked)', serving: '100 g',          kcal: 165, p: 31,  c: 0,   f: 3.6 },
+    { id: 'f_whey',     name: 'Whey protein',            serving: '1 scoop (30 g)', kcal: 120, p: 24,  c: 3,   f: 1.5 },
+    { id: 'f_oats',     name: 'Oats (dry)',              serving: '40 g',           kcal: 152, p: 5.2, c: 27,  f: 2.8 },
+    { id: 'f_rice',     name: 'Rice (cooked)',           serving: '100 g',          kcal: 130, p: 2.7, c: 28,  f: 0.3 },
+    { id: 'f_rugbrod',  name: 'Rugbrød',                 serving: '1 slice',        kcal: 65,  p: 2.3, c: 11,  f: 0.8 },
+    { id: 'f_banana',   name: 'Banana',                  serving: '1 medium',       kcal: 105, p: 1.3, c: 27,  f: 0.4 },
+    { id: 'f_oliveoil', name: 'Olive oil',               serving: '1 tbsp',         kcal: 119, p: 0,   c: 0,   f: 14 },
+    { id: 'f_almonds',  name: 'Almonds',                 serving: '28 g',           kcal: 164, p: 6,   c: 6,   f: 14 }
+  ],
+  log: {}
+};
+
 const DEFAULT_DATA = {
   schemaVersion: SCHEMA_VERSION,
   library: DEFAULT_LIBRARY,
@@ -1827,7 +1886,8 @@ const DEFAULT_DATA = {
   ],
   schedule: { monday: 'pull', tuesday: 'walk', wednesday: 'push', thursday: 'walk', friday: 'legs', saturday: 'upper_hyp', sunday: 'zen' },
   splitMode: '4day',
-  sessions: []
+  sessions: [],
+  fuel: JSON.parse(JSON.stringify(DEFAULT_FUEL))
 };
 
 // ============================================================
@@ -1835,6 +1895,8 @@ const DEFAULT_DATA = {
 // ============================================================
 let state = loadState();
 let currentView = 'home';
+let mode = 'hub';        // 'hub' | 'training' | 'fuel'
+let fuelView = 'today';   // 'today' | 'foods' | 'history'
 let activeSession = null;
 let timerInterval = null;
 let timerEnd = 0;
@@ -1874,6 +1936,12 @@ function migrateState(s) {
   DEFAULT_LIBRARY.forEach(e => {
     if (!existingIds.has(e.id)) s.library.push(JSON.parse(JSON.stringify(e)));
   });
+  // v2 -> v3: fuel tracker
+  if (!s.fuel) s.fuel = JSON.parse(JSON.stringify(DEFAULT_FUEL));
+  if (!s.fuel.targets) s.fuel.targets = JSON.parse(JSON.stringify(DEFAULT_FUEL.targets));
+  if (!Array.isArray(s.fuel.foods)) s.fuel.foods = JSON.parse(JSON.stringify(DEFAULT_FUEL.foods));
+  if (!s.fuel.log || typeof s.fuel.log !== 'object') s.fuel.log = {};
+  s.schemaVersion = SCHEMA_VERSION;
   return s;
 }
 
@@ -1900,6 +1968,251 @@ function resetToDefaults() {
   saveState();
   render();
   toast('reset');
+}
+
+// ============================================================
+// BACKUP & RESTORE  (added 2026-10-29)
+// Everything logged here lives only in this device's localStorage —
+// no server, no account, no sync. This is the only way the data gets out,
+// so treat it as load-bearing, not a nice-to-have.
+// Backs up EVERY store on the origin (portal, inner temple, vocal, this app),
+// because they are all one tap from the same cleared-cache accident.
+// ============================================================
+const BACKUP_FORMAT  = 'halohorns-backup';
+const BACKUP_META_KEY = 'backup_meta_v1';
+const PRE_RESTORE_KEY = 'backup_before_restore_v1';
+
+function readAllStores() {
+  const keys = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (!k || k === PRE_RESTORE_KEY) continue;
+    try { keys[k] = localStorage.getItem(k); } catch (e) {}
+  }
+  return keys;
+}
+
+function backupSummary(keys) {
+  const out = { keys: Object.keys(keys).sort(), sessions: 0, firstSession: null, lastSession: null, fuelDays: 0 };
+  try {
+    const b = JSON.parse(keys[STORAGE_KEY] || '{}');
+    const ss = b.sessions || [];
+    out.sessions = ss.length;
+    const dates = ss.map(x => x.date || (x.at ? String(x.at).slice(0, 10) : null)).filter(Boolean).sort();
+    if (dates.length) { out.firstSession = dates[0]; out.lastSession = dates[dates.length - 1]; }
+    out.fuelDays = Object.keys((b.fuel && b.fuel.log) || {}).length;
+  } catch (e) {}
+  return out;
+}
+
+function collectBackup() {
+  const keys = readAllStores();
+  return {
+    format: BACKUP_FORMAT, version: 1,
+    exportedAt: new Date().toISOString(),
+    origin: (window.location && window.location.origin) || '',
+    app: 'body temple',
+    summary: backupSummary(keys),
+    keys: keys
+  };
+}
+
+function markBackedUp() {
+  try { localStorage.setItem(BACKUP_META_KEY, JSON.stringify({ at: new Date().toISOString() })); } catch (e) {}
+}
+
+function lastBackupLabel() {
+  try {
+    const m = JSON.parse(localStorage.getItem(BACKUP_META_KEY) || 'null');
+    if (!m || !m.at) return null;
+    const days = Math.floor((Date.now() - new Date(m.at).getTime()) / 86400000);
+    if (days <= 0) return 'backed up today';
+    if (days === 1) return 'backed up yesterday';
+    return 'backed up ' + days + ' days ago';
+  } catch (e) { return null; }
+}
+
+function backupFilename() { return 'halohorns-backup-' + fuelToday() + '.json'; }
+
+async function saveBackupFile() {
+  const text = JSON.stringify(collectBackup(), null, 2);
+  const name = backupFilename();
+  // 1 — native share sheet. Best on Android: lands in Drive, Gmail, Keep.
+  try {
+    const file = new File([text], name, { type: 'application/json' });
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: 'Body Temple backup' });
+      markBackedUp(); refreshDataModal(); toast('backup shared');
+      return;
+    }
+  } catch (e) {
+    if (e && e.name === 'AbortError') return;   // user cancelled — not a failure
+  }
+  // 2 — plain download
+  try {
+    const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+    const a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => { try { URL.revokeObjectURL(url); } catch (e) {} }, 4000);
+    markBackedUp(); refreshDataModal(); toast('backup saved');
+    return;
+  } catch (e) {}
+  toast('could not save a file — use "copy as text"');
+}
+
+async function copyBackupText() {
+  const text = JSON.stringify(collectBackup(), null, 2);
+  try {
+    await navigator.clipboard.writeText(text);
+    markBackedUp(); refreshDataModal(); toast('copied — paste it somewhere safe');
+    return;
+  } catch (e) {}
+  const zone = document.getElementById('bk-zone');
+  if (!zone) return;
+  zone.innerHTML = '<div class="data-divider"></div>'
+    + '<div class="subtle" style="margin-bottom:8px;">clipboard blocked — select all of this and copy it by hand.</div>'
+    + '<textarea class="data-paste" id="bk-out" readonly></textarea>';
+  const ta = document.getElementById('bk-out');
+  ta.value = text; ta.focus(); ta.select();
+  markBackedUp();
+}
+
+function parseBackup(text) {
+  const raw = JSON.parse(text);
+  if (raw && raw.format === BACKUP_FORMAT && raw.keys) {
+    if (!raw.summary) raw.summary = backupSummary(raw.keys);
+    return raw;
+  }
+  // lenient — accept a bare body_temple_v1 state object too
+  if (raw && (raw.plans || raw.sessions || raw.library)) {
+    const keys = {}; keys[STORAGE_KEY] = JSON.stringify(raw);
+    return { format: BACKUP_FORMAT, version: 1, exportedAt: null, keys: keys, summary: backupSummary(keys) };
+  }
+  throw new Error('not a backup file');
+}
+
+function applyRestore(backup) {
+  // stash what is here now, so a wrong restore is recoverable
+  try {
+    localStorage.setItem(PRE_RESTORE_KEY, JSON.stringify({ at: new Date().toISOString(), keys: readAllStores() }));
+  } catch (e) {}
+  let n = 0, failed = 0;
+  Object.keys(backup.keys).forEach(k => {
+    try { localStorage.setItem(k, backup.keys[k]); n++; } catch (e) { failed++; }
+  });
+  state = loadState();
+  closeModal();
+  mode = 'hub'; currentView = 'home';
+  renderTabBar(); render();
+  toast(failed ? ('restored ' + n + ', ' + failed + ' failed — storage full?')
+               : ('restored ' + n + ' store' + (n === 1 ? '' : 's')));
+}
+
+function undoRestore() {
+  let stash = null;
+  try { stash = JSON.parse(localStorage.getItem(PRE_RESTORE_KEY) || 'null'); } catch (e) {}
+  if (!stash || !stash.keys) { toast('nothing to undo'); return; }
+  Object.keys(stash.keys).forEach(k => {
+    try { localStorage.setItem(k, stash.keys[k]); } catch (e) {}
+  });
+  try { localStorage.removeItem(PRE_RESTORE_KEY); } catch (e) {}
+  state = loadState();
+  closeModal();
+  mode = 'hub'; currentView = 'home';
+  renderTabBar(); render();
+  toast('restore undone');
+}
+
+function showRestorePreview(backup) {
+  const s = backup.summary || backupSummary(backup.keys);
+  const zone = document.getElementById('bk-zone');
+  if (!zone) return;
+  zone.innerHTML = '<div class="data-divider"></div>'
+    + '<div class="data-preview">'
+    +   '<div class="data-preview-title">this backup holds</div>'
+    +   '<div><span class="data-num">' + s.sessions + '</span> sessions'
+    +     (s.firstSession ? ' · ' + escapeHtml(s.firstSession) + ' → ' + escapeHtml(s.lastSession) : '') + '</div>'
+    +   '<div><span class="data-num">' + s.fuelDays + '</span> days of fuel</div>'
+    +   '<div class="subtle" style="margin-top:6px;">' + escapeHtml((s.keys || []).join(', ')) + '</div>'
+    +   (backup.exportedAt ? '<div class="subtle">taken ' + escapeHtml(String(backup.exportedAt).slice(0, 10)) + '</div>' : '')
+    +   '<div class="data-warn">this replaces what is on the device now. a copy of the current data is kept, so you can undo it.</div>'
+    +   '<button class="btn-primary" id="bk-confirm" style="width:100%;">replace with this backup</button>'
+    + '</div>';
+  document.getElementById('bk-confirm').onclick = () => applyRestore(backup);
+}
+
+function refreshDataModal() {
+  if (document.getElementById('bk-save')) openDataModal();
+}
+
+function openDataModal() {
+  const snap = collectBackup();
+  const s = snap.summary;
+  const last = lastBackupLabel();
+  const canUndo = !!localStorage.getItem(PRE_RESTORE_KEY);
+  const modal = document.getElementById('modal');
+  modal.innerHTML =
+      '<div class="modal-header">'
+    +   '<div class="modal-title">backup &amp; restore</div>'
+    +   '<button class="modal-close" id="modal-close-btn">×</button>'
+    + '</div>'
+    + '<div class="subtle" style="margin-bottom:14px; line-height:1.5;">'
+    +   'everything logged here lives only on this device — nothing syncs. a backup is the only copy that survives a cleared cache or a new phone.'
+    + '</div>'
+    + '<div class="data-stats">'
+    +   '<div><span class="data-num">' + s.sessions + '</span> sessions'
+    +     (s.firstSession ? ' · ' + escapeHtml(s.firstSession) + ' → ' + escapeHtml(s.lastSession) : '') + '</div>'
+    +   '<div><span class="data-num">' + s.fuelDays + '</span> days of fuel logged</div>'
+    +   '<div class="subtle" style="margin-top:6px;">' + s.keys.length + ' store' + (s.keys.length === 1 ? '' : 's')
+    +     ' on this device: ' + escapeHtml(s.keys.join(', ')) + '</div>'
+    +   (last ? '<div class="data-last">' + escapeHtml(last) + '</div>'
+           : '<div class="data-last warn">never backed up</div>')
+    + '</div>'
+    + '<div class="data-actions">'
+    +   '<button class="btn-primary" id="bk-save">save backup file</button>'
+    +   '<button class="btn-secondary" id="bk-copy">copy as text</button>'
+    + '</div>'
+    + '<div class="data-divider"></div>'
+    + '<div class="data-actions">'
+    +   '<button class="btn-secondary" id="bk-file">restore from file</button>'
+    +   '<button class="btn-secondary" id="bk-paste">paste a backup</button>'
+    + '</div>'
+    + (canUndo ? '<div class="data-actions"><button class="btn-danger" id="bk-undo">undo last restore</button></div>' : '')
+    + '<input type="file" id="bk-input" accept="application/json,.json" hidden>'
+    + '<div id="bk-zone"></div>';
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('modal-close-btn').onclick = closeModal;
+  document.getElementById('bk-save').onclick = saveBackupFile;
+  document.getElementById('bk-copy').onclick = copyBackupText;
+  if (canUndo) document.getElementById('bk-undo').onclick = undoRestore;
+
+  const input = document.getElementById('bk-input');
+  document.getElementById('bk-file').onclick = () => input.click();
+  input.onchange = () => {
+    const f = input.files && input.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try { showRestorePreview(parseBackup(String(r.result))); }
+      catch (e) { toast('that file is not a backup'); }
+    };
+    r.onerror = () => toast('could not read that file');
+    r.readAsText(f);
+  };
+
+  document.getElementById('bk-paste').onclick = () => {
+    const zone = document.getElementById('bk-zone');
+    zone.innerHTML = '<div class="data-divider"></div>'
+      + '<textarea class="data-paste" id="bk-in" placeholder="paste the backup text here"></textarea>'
+      + '<button class="btn-secondary" id="bk-read" style="width:100%;">read it</button>';
+    document.getElementById('bk-read').onclick = () => {
+      const v = document.getElementById('bk-in').value.trim();
+      if (!v) { toast('nothing pasted'); return; }
+      try { showRestorePreview(parseBackup(v)); }
+      catch (e) { toast('that text is not a backup'); }
+    };
+  };
 }
 
 // ============================================================
@@ -1950,14 +2263,87 @@ function setHeaderDate() {
   document.getElementById('header-date').textContent = d.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' }).toLowerCase();
 }
 
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => setView(btn.dataset.view));
-});
+// ── mode-aware navigation (hub / training / fuel) ──
+const TRAIN_TABS = [
+  { v: 'home', label: 'today' }, { v: 'library', label: 'library' },
+  { v: 'plans', label: 'plans' }, { v: 'history', label: 'history' }
+];
+const FUEL_TABS = [
+  { v: 'today', label: 'today' }, { v: 'foods', label: 'my foods' }, { v: 'history', label: 'history' }
+];
+
+function renderTabBar() {
+  const bar = document.querySelector('.tab-bar');
+  if (mode === 'hub') { bar.style.display = 'none'; return; }
+  bar.style.display = '';
+  bar.classList.toggle('fuel-bar', mode === 'fuel');
+  const tabs = mode === 'fuel' ? FUEL_TABS : TRAIN_TABS;
+  const active = mode === 'fuel' ? fuelView : currentView;
+  bar.innerHTML = tabs.map(t => '<button class="tab-btn' + (t.v === active ? ' active' : '') + '" data-view="' + t.v + '">' + t.label + '</button>').join('');
+  bar.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
+}
 
 function setView(name) {
-  currentView = name;
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.view === name));
+  if (mode === 'fuel') fuelView = name; else currentView = name;
+  renderTabBar();
   render();
+}
+
+function enterWorld(m) {
+  mode = m;
+  if (m === 'training') currentView = 'home';
+  if (m === 'fuel') fuelView = 'today';
+  renderTabBar();
+  render();
+}
+
+function goHub() {
+  mode = 'hub';
+  renderTabBar();
+  render();
+}
+
+// Body Temple runs as its own installed app AND still embeds in the portal.
+// EMBEDDED tells the two apart: standalone, the hub is the root and has no "back".
+const EMBEDDED = (window.parent !== window);
+
+function appBack() {
+  if (mode !== 'hub') { goHub(); return; }
+  if (EMBEDDED) { window.parent.postMessage('close-temple', '*'); }
+}
+
+// ── shared surfaces (vocal, and whatever else stays cross-project) ──
+// Same origin as the portal, so these keep one file and one store no matter
+// which app opens them.
+function openSurface(url, title) {
+  document.getElementById('surface-title').textContent = title;
+  document.getElementById('surface-frame').src = url;
+  document.getElementById('surface-overlay').hidden = false;
+  document.body.style.overflow = 'hidden';
+}
+function closeSurface() {
+  document.getElementById('surface-overlay').hidden = true;
+  document.getElementById('surface-frame').src = 'about:blank';
+  document.body.style.overflow = '';
+  render();
+}
+window.addEventListener('message', function(e) {
+  if (e.data === 'close-temple' || (e.data && e.data.action === 'close-temple')) {
+    if (!document.getElementById('surface-overlay').hidden) closeSurface();
+  }
+});
+
+function syncChrome() {
+  const back = document.getElementById('app-back');
+  const title = document.querySelector('.app-title');
+  if (!back || !title) return;
+  if (mode === 'hub') {
+    back.textContent = '← portal';
+    back.style.visibility = EMBEDDED ? 'visible' : 'hidden';
+    title.textContent = 'body temple';
+  }
+  else if (mode === 'fuel') { back.textContent = '← doors'; back.style.visibility = 'visible'; title.textContent = 'fuel'; }
+  else { back.textContent = '← doors'; back.style.visibility = 'visible'; title.textContent = 'training'; }
 }
 
 // ============================================================
@@ -1969,7 +2355,10 @@ function render() {
   const view = document.createElement('div');
   view.className = 'view active';
 
-  if (activeSession && !activeSession.__paused) view.appendChild(renderSession());
+  syncChrome();
+  if (activeSession && !activeSession.__paused && mode === 'training') view.appendChild(renderSession());
+  else if (mode === 'hub') view.appendChild(renderHub());
+  else if (mode === 'fuel') view.appendChild(renderFuelView());
   else if (currentView === 'home') view.appendChild(renderHome());
   else if (currentView === 'library') view.appendChild(renderLibraryView());
   else if (currentView === 'libdetail') view.appendChild(renderExerciseDetail());
@@ -3663,13 +4052,421 @@ function renderHistory() {
   return wrap;
 }
 
+
+// ============================================================
+// HUB (two doors) + FUEL TRACKER
+// ============================================================
+function renderHub() {
+  const wrap = el('div', 'hub');
+  wrap.appendChild(el('div', 'hub-eyebrow', 'body temple'));
+  wrap.appendChild(el('div', 'hub-sub', 'three doors — the vessel, what feeds it, and the voice'));
+
+  const doors = el('div', 'hub-doors');
+
+  const train = el('div', 'hub-door door-training');
+  train.innerHTML = '<div class="door-glyph">\u{1F7E2}</div>'
+    + '<div class="door-name">training</div>'
+    + '<div class="door-desc">the vessel — plans, library, sessions, history</div>';
+  train.onclick = () => enterWorld('training');
+
+  const fuel = el('div', 'hub-door door-fuel');
+  const day = fuelToday();
+  const tot = dayTotals(state.fuel.log[day] || []);
+  const tgt = state.fuel.targets;
+  fuel.innerHTML = '<div class="door-glyph">\u{1F35A}</div>'
+    + '<div class="door-name">fuel</div>'
+    + '<div class="door-desc">what feeds it — calories &amp; macros, logged</div>'
+    + '<div class="door-stat">' + r0(tot.kcal) + ' / ' + r0(tgt.calories) + ' kcal today</div>';
+  fuel.onclick = () => enterWorld('fuel');
+
+  const voice = el('div', 'hub-door door-voice');
+  voice.innerHTML = '<div class="door-glyph">\u{1F5E3}</div>'
+    + '<div class="door-name">voice</div>'
+    + '<div class="door-desc">the instrument you already are — warm-ups, drone, resonance</div>';
+  voice.onclick = () => openSurface('../vocal.html', 'vocal temple');
+
+  doors.appendChild(train);
+  doors.appendChild(fuel);
+  doors.appendChild(voice);
+  wrap.appendChild(doors);
+
+  const lb = lastBackupLabel();
+  const dataBtn = el('button', 'hub-data');
+  dataBtn.innerHTML = 'backup &amp; restore'
+    + (lb ? ' <span class="hub-data-note">· ' + escapeHtml(lb) + '</span>'
+          : ' <span class="hub-data-note warn">· never backed up</span>');
+  dataBtn.onclick = openDataModal;
+  wrap.appendChild(dataBtn);
+
+  return wrap;
+}
+
+// ── fuel helpers ──
+function fuelToday(d) {
+  d = d || new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function fuelLogFor(key) {
+  if (!state.fuel.log[key]) state.fuel.log[key] = [];
+  return state.fuel.log[key];
+}
+function dayTotals(items) {
+  return (items || []).reduce((a, i) => ({
+    kcal: a.kcal + (i.kcal || 0), p: a.p + (i.p || 0), c: a.c + (i.c || 0), f: a.f + (i.f || 0)
+  }), { kcal: 0, p: 0, c: 0, f: 0 });
+}
+function r0(n) { return Math.round(n || 0); }
+function r1(n) { return Math.round((n || 0) * 10) / 10; }
+
+function renderFuelView() {
+  if (fuelView === 'foods') return renderFuelFoods();
+  if (fuelView === 'history') return renderFuelHistory();
+  return renderFuelToday();
+}
+
+function macroRow(label, val, target, cls) {
+  const pct = target > 0 ? Math.min(100, Math.round(val / target * 100)) : 0;
+  const row = el('div', 'macro-row');
+  row.innerHTML = '<div class="macro-head"><span class="macro-label ' + cls + '">' + label + '</span>'
+    + '<span class="macro-val">' + r0(val) + ' / ' + r0(target) + ' g</span></div>'
+    + '<div class="macro-track"><div class="macro-fill ' + cls + '" style="width:' + pct + '%"></div></div>';
+  return row;
+}
+
+function renderFuelToday() {
+  const wrap = el('div');
+  const day = fuelToday();
+  const items = state.fuel.log[day] || [];
+  const tot = dayTotals(items);
+  const tgt = state.fuel.targets;
+
+  wrap.appendChild(el('div', 'today-eyebrow', 'fuel · today'));
+
+  const card = el('div', 'fuel-summary');
+  const remaining = r0(tgt.calories) - r0(tot.kcal);
+  const kpct = tgt.calories > 0 ? Math.min(100, Math.round(tot.kcal / tgt.calories * 100)) : 0;
+  card.innerHTML = '<div class="fuel-kcal-big">' + r0(tot.kcal) + '<span class="fuel-kcal-unit"> / ' + r0(tgt.calories) + ' kcal</span></div>'
+    + '<div class="fuel-kcal-sub">' + (remaining >= 0 ? remaining + ' left' : (-remaining) + ' over') + '</div>'
+    + '<div class="macro-track kcal-track"><div class="macro-fill fuel" style="width:' + kpct + '%"></div></div>';
+  card.appendChild(macroRow('protein', tot.p, tgt.protein, 'protein'));
+  card.appendChild(macroRow('carbs', tot.c, tgt.carbs, 'carbs'));
+  card.appendChild(macroRow('fat', tot.f, tgt.fat, 'fat'));
+  wrap.appendChild(card);
+
+  const logBtn = el('button', 'btn-primary', '+ log food');
+  logBtn.style.width = '100%';
+  logBtn.onclick = openLogFoodModal;
+  wrap.appendChild(logBtn);
+
+  wrap.appendChild(el('div', 'section-eyebrow', 'logged today'));
+  if (!items.length) {
+    wrap.appendChild(el('div', 'subtle', 'nothing logged yet. tap + log food.'));
+  } else {
+    items.forEach(it => {
+      const r = el('div', 'food-row');
+      r.innerHTML = '<div class="food-row-main"><div class="food-row-name">' + escapeHtml(it.name) + '</div>'
+        + '<div class="food-row-meta">' + r1(it.servings) + '× · ' + r0(it.p) + 'p ' + r0(it.c) + 'c ' + r0(it.f) + 'f</div></div>'
+        + '<div class="food-row-kcal">' + r0(it.kcal) + '</div>';
+      const x = el('button', 'food-row-x', '×');
+      x.onclick = () => {
+        const log = fuelLogFor(day);
+        const idx = log.findIndex(l => l.id === it.id);
+        if (idx > -1) log.splice(idx, 1);
+        saveState(); render(); toast('removed');
+      };
+      r.appendChild(x);
+      wrap.appendChild(r);
+    });
+  }
+  return wrap;
+}
+
+function renderFuelFoods() {
+  const wrap = el('div');
+  const tgt = state.fuel.targets;
+
+  wrap.appendChild(el('div', 'today-eyebrow', 'fuel · daily targets'));
+  const tcard = el('div', 'fuel-summary');
+  tcard.innerHTML = '<div class="target-grid">'
+    + '<div><div class="target-num">' + r0(tgt.calories) + '</div><div class="target-lbl">kcal</div></div>'
+    + '<div><div class="target-num protein">' + r0(tgt.protein) + '</div><div class="target-lbl">protein</div></div>'
+    + '<div><div class="target-num carbs">' + r0(tgt.carbs) + '</div><div class="target-lbl">carbs</div></div>'
+    + '<div><div class="target-num fat">' + r0(tgt.fat) + '</div><div class="target-lbl">fat</div></div>'
+    + '</div>';
+  const edit = el('button', 'btn-secondary', 'edit targets');
+  edit.style.width = '100%';
+  edit.style.marginTop = '12px';
+  edit.onclick = openTargetsModal;
+  tcard.appendChild(edit);
+  wrap.appendChild(tcard);
+
+  const head = el('div', 'foods-head');
+  head.appendChild(el('div', 'section-eyebrow', 'my foods'));
+  const add = el('button', 'btn-secondary', '+ add food');
+  add.onclick = () => openFoodModal(null);
+  head.appendChild(add);
+  wrap.appendChild(head);
+
+  const foods = state.fuel.foods.slice().sort((a, b) => a.name.localeCompare(b.name));
+  foods.forEach(fd => {
+    const r = el('div', 'food-row pick');
+    r.innerHTML = '<div class="food-row-main"><div class="food-row-name">' + escapeHtml(fd.name) + '</div>'
+      + '<div class="food-row-meta">' + escapeHtml(fd.serving) + ' · ' + r0(fd.kcal) + ' kcal · ' + r0(fd.p) + 'p ' + r0(fd.c) + 'c ' + r0(fd.f) + 'f</div></div>';
+    r.onclick = () => openFoodModal(fd);
+    wrap.appendChild(r);
+  });
+  return wrap;
+}
+
+function renderFuelHistory() {
+  const wrap = el('div');
+  wrap.appendChild(el('div', 'today-eyebrow', 'fuel · history'));
+  const keys = Object.keys(state.fuel.log).filter(k => (state.fuel.log[k] || []).length).sort().reverse();
+  const today = fuelToday();
+  if (!keys.length) { wrap.appendChild(el('div', 'subtle', 'no days logged yet.')); return wrap; }
+  const tgt = state.fuel.targets;
+  keys.slice(0, 60).forEach(k => {
+    const tot = dayTotals(state.fuel.log[k]);
+    const card = el('div', 'today-card');
+    card.style.marginBottom = '10px';
+    const label = k === today ? 'today' : formatDate(k);
+    const kpct = tgt.calories > 0 ? Math.min(100, Math.round(tot.kcal / tgt.calories * 100)) : 0;
+    card.innerHTML = '<div class="hist-row"><span class="hist-date">' + label + '</span>'
+      + '<span class="hist-kcal">' + r0(tot.kcal) + ' <span class="subtle-inline">/ ' + r0(tgt.calories) + ' kcal</span></span></div>'
+      + '<div class="macro-track" style="margin:8px 0 6px"><div class="macro-fill fuel" style="width:' + kpct + '%"></div></div>'
+      + '<div class="hist-macros">' + r0(tot.p) + 'p · ' + r0(tot.c) + 'c · ' + r0(tot.f) + 'f</div>';
+    wrap.appendChild(card);
+  });
+  return wrap;
+}
+
+// ── fuel modals ──
+function openLogFoodModal() {
+  const modal = document.getElementById('modal');
+  modal.innerHTML = '<div class="modal-header"><div class="modal-title">log food</div>'
+    + '<button class="modal-close" id="modal-close-btn">×</button></div>'
+    + '<div class="library-search-wrap"><input id="fuel-search" placeholder="search my foods…" autocomplete="off"></div>'
+    + '<div id="fuel-picker" class="fuel-picker"></div>'
+    + '<div class="editor-actions"><button class="btn-secondary" id="fuel-custom">+ quick custom entry</button></div>';
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('modal-close-btn').onclick = closeModal;
+  const fill = (q) => {
+    const picker = document.getElementById('fuel-picker');
+    picker.innerHTML = '';
+    const nq = (q || '').toLowerCase().trim();
+    const foods = state.fuel.foods.filter(fd => !nq || fd.name.toLowerCase().includes(nq)).sort((a, b) => a.name.localeCompare(b.name));
+    if (!foods.length) { picker.appendChild(el('div', 'subtle', 'no match. use quick custom entry below.')); return; }
+    foods.forEach(fd => {
+      const r = el('div', 'food-row pick');
+      r.innerHTML = '<div class="food-row-main"><div class="food-row-name">' + escapeHtml(fd.name) + '</div>'
+        + '<div class="food-row-meta">' + escapeHtml(fd.serving) + ' · ' + r0(fd.kcal) + ' kcal · ' + r0(fd.p) + 'p ' + r0(fd.c) + 'c ' + r0(fd.f) + 'f</div></div>';
+      r.onclick = () => openServingModal(fd);
+      picker.appendChild(r);
+    });
+  };
+  fill('');
+  document.getElementById('fuel-search').addEventListener('input', e => fill(e.target.value));
+  document.getElementById('fuel-custom').onclick = () => openCustomLogModal();
+}
+
+function openServingModal(food) {
+  const modal = document.getElementById('modal');
+  modal.innerHTML = '<div class="modal-header"><div class="modal-title">' + escapeHtml(food.name) + '</div>'
+    + '<button class="modal-close" id="modal-close-btn">×</button></div>'
+    + '<div class="subtle" style="margin-bottom:12px">' + escapeHtml(food.serving) + ' · ' + r0(food.kcal) + ' kcal · ' + r0(food.p) + 'p ' + r0(food.c) + 'c ' + r0(food.f) + 'f per serving</div>'
+    + '<div class="serving-stepper"><button class="step-btn" id="serv-minus">−</button>'
+    + '<input id="serv-val" type="number" inputmode="decimal" step="0.5" min="0" value="1">'
+    + '<button class="step-btn" id="serv-plus">+</button><span class="serving-x">servings</span></div>'
+    + '<div class="serving-preview" id="serv-preview"></div>'
+    + '<div class="editor-actions"><button class="btn-primary" id="serv-add">add to today</button></div>';
+  document.getElementById('modal-overlay').classList.add('open');
+  const input = document.getElementById('serv-val');
+  const preview = document.getElementById('serv-preview');
+  const upd = () => {
+    const sv = Math.max(0, parseFloat(input.value) || 0);
+    preview.innerHTML = '<strong>' + r0(food.kcal * sv) + '</strong> kcal · ' + r1(food.p * sv) + 'p ' + r1(food.c * sv) + 'c ' + r1(food.f * sv) + 'f';
+  };
+  upd();
+  document.getElementById('modal-close-btn').onclick = closeModal;
+  document.getElementById('serv-minus').onclick = () => { input.value = Math.max(0, (parseFloat(input.value) || 0) - 0.5); upd(); };
+  document.getElementById('serv-plus').onclick = () => { input.value = (parseFloat(input.value) || 0) + 0.5; upd(); };
+  input.addEventListener('input', upd);
+  document.getElementById('serv-add').onclick = () => {
+    const sv = Math.max(0, parseFloat(input.value) || 0);
+    if (sv <= 0) { toast('servings?'); return; }
+    fuelLogFor(fuelToday()).push({ id: uid('log'), foodId: food.id, name: food.name, servings: sv,
+      kcal: food.kcal * sv, p: food.p * sv, c: food.c * sv, f: food.f * sv, ts: Date.now() });
+    saveState(); closeModal(); render(); toast('logged');
+  };
+}
+
+function openCustomLogModal() {
+  const modal = document.getElementById('modal');
+  modal.innerHTML = '<div class="modal-header"><div class="modal-title">quick entry</div>'
+    + '<button class="modal-close" id="modal-close-btn">×</button></div>'
+    + '<div class="editor-field"><div class="editor-label">name</div><input id="q-name" placeholder="e.g. lunch out"></div>'
+    + '<div class="macro-inputs">'
+    + '<div class="editor-field"><div class="editor-label">kcal</div><input id="q-kcal" type="number" inputmode="numeric" placeholder="0"></div>'
+    + '<div class="editor-field"><div class="editor-label">protein</div><input id="q-p" type="number" inputmode="decimal" placeholder="0"></div>'
+    + '<div class="editor-field"><div class="editor-label">carbs</div><input id="q-c" type="number" inputmode="decimal" placeholder="0"></div>'
+    + '<div class="editor-field"><div class="editor-label">fat</div><input id="q-f" type="number" inputmode="decimal" placeholder="0"></div></div>'
+    + '<label class="save-toggle"><input type="checkbox" id="q-save"> also save to my foods</label>'
+    + '<div class="editor-actions"><button class="btn-primary" id="q-add">add to today</button></div>';
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('modal-close-btn').onclick = closeModal;
+  document.getElementById('q-add').onclick = () => {
+    const name = document.getElementById('q-name').value.trim();
+    if (!name) { toast('name needed'); return; }
+    const kcal = parseFloat(document.getElementById('q-kcal').value) || 0;
+    const pp = parseFloat(document.getElementById('q-p').value) || 0;
+    const cc = parseFloat(document.getElementById('q-c').value) || 0;
+    const ff = parseFloat(document.getElementById('q-f').value) || 0;
+    fuelLogFor(fuelToday()).push({ id: uid('log'), foodId: null, name, servings: 1, kcal, p: pp, c: cc, f: ff, ts: Date.now() });
+    if (document.getElementById('q-save').checked) {
+      state.fuel.foods.push({ id: uid('f'), name, serving: '1 serving', kcal, p: pp, c: cc, f: ff });
+    }
+    saveState(); closeModal(); render(); toast('logged');
+  };
+}
+
+function openFoodModal(food) {
+  const modal = document.getElementById('modal');
+  const f = food || { name: '', serving: '', kcal: '', p: '', c: '', f: '' };
+  modal.innerHTML = '<div class="modal-header"><div class="modal-title">' + (food ? 'edit food' : 'add food') + '</div>'
+    + '<button class="modal-close" id="modal-close-btn">×</button></div>'
+    + '<div class="editor-field"><div class="editor-label">name</div><input id="fd-name" value="' + escapeHtml(f.name) + '" placeholder="e.g. Cottage cheese"></div>'
+    + '<div class="editor-field"><div class="editor-label">serving</div><input id="fd-serving" value="' + escapeHtml(f.serving) + '" placeholder="e.g. 100 g · 1 slice · 1 scoop"></div>'
+    + '<div class="macro-inputs">'
+    + '<div class="editor-field"><div class="editor-label">kcal</div><input id="fd-kcal" type="number" inputmode="numeric" value="' + f.kcal + '"></div>'
+    + '<div class="editor-field"><div class="editor-label">protein</div><input id="fd-p" type="number" inputmode="decimal" value="' + f.p + '"></div>'
+    + '<div class="editor-field"><div class="editor-label">carbs</div><input id="fd-c" type="number" inputmode="decimal" value="' + f.c + '"></div>'
+    + '<div class="editor-field"><div class="editor-label">fat</div><input id="fd-f" type="number" inputmode="decimal" value="' + f.f + '"></div></div>'
+    + '<div class="editor-actions"><button class="btn-primary" id="fd-save">' + (food ? 'keep' : 'add to my foods') + '</button>'
+    + (food ? '<button class="btn-danger" id="fd-del">delete</button>' : '') + '</div>';
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('modal-close-btn').onclick = closeModal;
+  document.getElementById('fd-save').onclick = () => {
+    const name = document.getElementById('fd-name').value.trim();
+    if (!name) { toast('name needed'); return; }
+    const vals = {
+      name: name,
+      serving: document.getElementById('fd-serving').value.trim() || '1 serving',
+      kcal: parseFloat(document.getElementById('fd-kcal').value) || 0,
+      p: parseFloat(document.getElementById('fd-p').value) || 0,
+      c: parseFloat(document.getElementById('fd-c').value) || 0,
+      f: parseFloat(document.getElementById('fd-f').value) || 0
+    };
+    if (food) { Object.assign(food, vals); }
+    else { state.fuel.foods.push(Object.assign({ id: uid('f') }, vals)); }
+    saveState(); closeModal(); render(); toast(food ? 'kept' : 'added');
+  };
+  if (food) {
+    document.getElementById('fd-del').onclick = () => {
+      if (!confirm('Delete ' + food.name + ' from my foods?')) return;
+      const idx = state.fuel.foods.findIndex(x => x.id === food.id);
+      if (idx > -1) state.fuel.foods.splice(idx, 1);
+      saveState(); closeModal(); render(); toast('deleted');
+    };
+  }
+}
+
+function openTargetsModal() {
+  const modal = document.getElementById('modal');
+  const t = state.fuel.targets;
+  modal.innerHTML = '<div class="modal-header"><div class="modal-title">daily targets</div>'
+    + '<button class="modal-close" id="modal-close-btn">×</button></div>'
+    + '<div class="macro-inputs">'
+    + '<div class="editor-field"><div class="editor-label">kcal</div><input id="t-kcal" type="number" inputmode="numeric" value="' + r0(t.calories) + '"></div>'
+    + '<div class="editor-field"><div class="editor-label">protein</div><input id="t-p" type="number" inputmode="numeric" value="' + r0(t.protein) + '"></div>'
+    + '<div class="editor-field"><div class="editor-label">carbs</div><input id="t-c" type="number" inputmode="numeric" value="' + r0(t.carbs) + '"></div>'
+    + '<div class="editor-field"><div class="editor-label">fat</div><input id="t-f" type="number" inputmode="numeric" value="' + r0(t.fat) + '"></div></div>'
+    + '<div class="editor-actions"><button class="btn-primary" id="t-save">keep</button></div>';
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('modal-close-btn').onclick = closeModal;
+  document.getElementById('t-save').onclick = () => {
+    state.fuel.targets = {
+      calories: parseFloat(document.getElementById('t-kcal').value) || 0,
+      protein: parseFloat(document.getElementById('t-p').value) || 0,
+      carbs: parseFloat(document.getElementById('t-c').value) || 0,
+      fat: parseFloat(document.getElementById('t-f').value) || 0
+    };
+    saveState(); closeModal(); render(); toast('targets kept');
+  };
+}
+
+
 // ── boot ──
+renderTabBar();
 render();
 </script>
 
 <style>
 /* ── Codex × Pleroma skin (R56) ── */
 body{font-family:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;}.today-name,.detail-name,.ex-name,.lib-card-name,.day-card-name{font-family:'Cormorant Garamond',serif;font-weight:500;}.today-eyebrow,.section-eyebrow{letter-spacing:0.24em;}
+
+/* ── FUEL TRACKER (R-fuel) ── */
+:root{--fuel:#d0a05e;--protein:#c98b7d;--carbs:#c7a15e;--fat:#a98fc4;}
+.hub{padding:8px 0 24px;}
+.hub-eyebrow{font-family:'Cormorant Garamond',serif;font-size:26px;text-align:center;margin-top:12px;}
+.hub-sub{text-align:center;color:var(--ink-dim);font-size:13px;margin:4px 0 26px;}
+.hub-doors{display:flex;flex-direction:column;gap:16px;}
+.hub-door{border:1px solid var(--border);border-radius:var(--r-lg);padding:26px 22px;background:var(--bg-card);position:relative;overflow:hidden;cursor:pointer;transition:border-color .15s,transform .05s;}
+.hub-door:active{transform:scale(.99);}
+.hub-door::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;}
+.door-training::before{background:var(--emerald);}
+.door-fuel::before{background:var(--fuel);}
+.door-training:active{border-color:var(--emerald);}
+.door-fuel:active{border-color:var(--fuel);}
+.door-glyph{font-size:30px;margin-bottom:8px;}
+.door-name{font-family:'Cormorant Garamond',serif;font-size:24px;margin-bottom:4px;}
+.door-desc{color:var(--ink-dim);font-size:13px;line-height:1.45;}
+.door-stat{margin-top:12px;font-size:12px;color:var(--fuel);font-variant-numeric:tabular-nums;letter-spacing:.04em;}
+.fuel-summary{border:1px solid var(--border);border-radius:var(--r-md);padding:20px 18px;background:var(--bg-card);margin-bottom:16px;}
+.fuel-kcal-big{font-family:'Cormorant Garamond',serif;font-size:40px;line-height:1;font-variant-numeric:tabular-nums;}
+.fuel-kcal-unit{font-size:18px;color:var(--ink-dim);}
+.fuel-kcal-sub{color:var(--ink-dim);font-size:13px;margin:4px 0 14px;}
+.macro-row{margin-top:12px;}
+.macro-head{display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;}
+.macro-label{text-transform:uppercase;letter-spacing:.14em;}
+.macro-label.protein{color:var(--protein);}.macro-label.carbs{color:var(--carbs);}.macro-label.fat{color:var(--fat);}
+.macro-val{color:var(--ink-dim);font-variant-numeric:tabular-nums;}
+.macro-track{height:7px;border-radius:6px;background:var(--bg-elev);overflow:hidden;}
+.kcal-track{height:9px;margin-bottom:4px;}
+.macro-fill{height:100%;border-radius:6px;transition:width .3s;}
+.macro-fill.fuel{background:var(--fuel);}
+.macro-fill.protein{background:var(--protein);}.macro-fill.carbs{background:var(--carbs);}.macro-fill.fat{background:var(--fat);}
+.food-row{display:flex;align-items:center;gap:10px;border:1px solid var(--border-soft);border-radius:var(--r-sm);padding:12px 14px;margin-bottom:8px;background:var(--bg-card);}
+.food-row.pick{cursor:pointer;}
+.food-row.pick:active{border-color:var(--fuel);}
+.food-row-main{flex:1;min-width:0;}
+.food-row-name{font-size:15px;margin-bottom:2px;}
+.food-row-meta{font-size:12px;color:var(--ink-dim);font-variant-numeric:tabular-nums;}
+.food-row-kcal{font-variant-numeric:tabular-nums;color:var(--fuel);font-size:15px;}
+.food-row-x{color:var(--ink-faint);font-size:20px;padding:0 4px;line-height:1;}
+.food-row-x:active{color:var(--crimson);}
+.foods-head{display:flex;justify-content:space-between;align-items:center;margin:18px 0 10px;}
+.foods-head .btn-secondary{padding:8px 14px;font-size:13px;width:auto;}
+.target-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center;}
+.target-num{font-family:'Cormorant Garamond',serif;font-size:26px;font-variant-numeric:tabular-nums;}
+.target-num.protein{color:var(--protein);}.target-num.carbs{color:var(--carbs);}.target-num.fat{color:var(--fat);}
+.target-lbl{font-size:11px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.1em;margin-top:2px;}
+.hist-row{display:flex;justify-content:space-between;align-items:baseline;}
+.hist-date{font-family:'Cormorant Garamond',serif;font-size:18px;}
+.hist-kcal{font-variant-numeric:tabular-nums;color:var(--fuel);font-size:16px;}
+.subtle-inline{color:var(--ink-dim);font-size:12px;}
+.hist-macros{font-size:12px;color:var(--ink-dim);font-variant-numeric:tabular-nums;}
+.fuel-picker{max-height:44vh;overflow-y:auto;margin-bottom:12px;}
+.serving-stepper{display:flex;align-items:center;gap:10px;margin:8px 0 14px;}
+.step-btn{width:44px;height:44px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:22px;color:var(--ink);background:var(--bg-elev);}
+.step-btn:active{border-color:var(--fuel);}
+.serving-stepper input{width:80px;text-align:center;font-size:18px;font-variant-numeric:tabular-nums;}
+.serving-x{color:var(--ink-dim);font-size:13px;}
+.serving-preview{font-size:15px;color:var(--ink);margin-bottom:8px;font-variant-numeric:tabular-nums;}
+.serving-preview strong{color:var(--fuel);font-size:20px;}
+.macro-inputs{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.save-toggle{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-dim);margin:12px 0;}
+.save-toggle input{width:auto;}
+.tab-bar.fuel-bar .tab-btn.active{color:var(--fuel);}
 </style>
 </body>
 </html>

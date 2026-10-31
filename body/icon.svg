@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="#0a0908"/>
+  <!-- Outer ring — same halo family as the portal, emerald instead of gold -->
+  <circle cx="256" cy="256" r="180" fill="none" stroke="#3d7d63" stroke-width="3" opacity="0.35"/>
+  <circle cx="256" cy="256" r="160" fill="none" stroke="#3d7d63" stroke-width="2" opacity="0.55"/>
+  <!-- The V — taper: shoulders down to the waist -->
+  <g fill="none" stroke="#3d7d63" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 168,176 L 256,336 L 344,176"/>
+  </g>
+  <!-- Spine / centre line -->
+  <line x1="256" y1="336" x2="256" y2="380" stroke="#3d7d63" stroke-width="10" stroke-linecap="round" opacity="0.7"/>
+  <!-- Breath point at the throat — the voice lives here too -->
+  <circle cx="256" cy="150" r="16" fill="#6fa8d8"/>
+</svg>
