@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d0b1f">
+<title>Astrolabe</title>
+<style>
+:root{
+  --bg:#0d0b1f; --bg2:#151130; --card:#1b1740; --line:#2c2657;
+  --gold:#e8c37e; --gold2:#f4dca6; --violet:#b79cff; --ink:#ece9ff; --dim:#9a93c4;
+  --fire:#ff8a6b; --earth:#8fce9b; --air:#8fc7ff; --water:#b79cff;
+  --hard:#ff7d8a; --soft:#8fce9b; --blend:#e8c37e;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#1a1540,#0d0b1f 60%);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;min-height:100%}
+body{padding-bottom:80px}
+header{position:sticky;top:0;z-index:20;background:linear-gradient(#0d0b1fee,#0d0b1fcc);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line);padding:14px 16px 10px}
+.brand{display:flex;align-items:center;gap:9px;font-weight:600;letter-spacing:.5px}
+.brand .m{color:var(--gold);font-size:20px}
+.brand small{color:var(--dim);font-weight:400;letter-spacing:.3px}
+.who{margin-top:10px;display:flex;gap:8px;align-items:center}
+select,input,button{font:inherit;color:var(--ink)}
+.who select{flex:1;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.mini{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;color:var(--gold)}
+main{max-width:560px;margin:0 auto;padding:16px}
+.tabbar{position:fixed;bottom:0;left:0;right:0;display:flex;background:#100d28f2;border-top:1px solid var(--line);
+  backdrop-filter:blur(8px);z-index:20}
+.tabbar button{flex:1;background:none;border:none;padding:12px 0 16px;color:var(--dim);font-size:12px;display:flex;
+  flex-direction:column;align-items:center;gap:3px}
+.tabbar button .ic{font-size:19px}
+.tabbar button.on{color:var(--gold)}
+.hidden{display:none!important}
+h2{font-size:15px;letter-spacing:.5px;color:var(--violet);text-transform:uppercase;margin:22px 2px 10px;font-weight:600}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 15px;margin-bottom:11px}
+.muted{color:var(--dim)}
+.term{color:var(--gold2);border-bottom:1px dotted #e8c37e66;cursor:pointer}
+/* roster */
+.person{display:flex;align-items:center;gap:13px;cursor:pointer}
+.person .orb{width:42px;height:42px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:19px;
+  background:radial-gradient(circle at 35% 30%,#3a2f6e,#1b1740);border:1px solid var(--line);color:var(--gold)}
+.person .nm{font-weight:600}
+.person .sub{font-size:12.5px;color:var(--dim)}
+.addbtn{width:100%;border:1px dashed var(--line);background:#ffffff08;color:var(--gold);border-radius:16px;
+  padding:14px;font-weight:600;margin-top:4px}
+/* form */
+.field{margin-bottom:12px}
+.field label{display:block;font-size:12px;color:var(--dim);margin-bottom:5px;letter-spacing:.3px}
+.field input,.field select{width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:11px;padding:11px 12px}
+.row{display:flex;gap:9px}.row>*{flex:1}
+.chk{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--dim)}
+.chk input{width:auto}
+.primary{width:100%;background:linear-gradient(120deg,#e8c37e,#caa25a);color:#241a05;border:none;border-radius:13px;
+  padding:14px;font-weight:700;letter-spacing:.3px;margin-top:6px}
+.ghost{width:100%;background:none;border:1px solid var(--line);border-radius:13px;padding:12px;color:var(--dim);margin-top:8px}
+.del{background:none;border:none;color:#ff7d8a;font-size:13px;padding:6px}
+/* placements */
+.plc{display:flex;gap:12px;align-items:baseline;padding:11px 0;border-bottom:1px solid var(--line)}
+.plc:last-child{border-bottom:none}
+.plc .g{font-size:20px;color:var(--gold);width:26px;flex:none;text-align:center}
+.plc .h{font-weight:600}
+.plc .h .rx{color:var(--hard);font-size:12px;margin-left:4px}
+.plc .d{font-size:12.5px;color:var(--dim);margin-top:2px;line-height:1.5}
+.pos{color:var(--violet);font-size:12.5px;white-space:nowrap}
+.asp{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+.asp:last-child{border-bottom:none}
+.asp .ag{font-size:17px;width:22px;text-align:center;flex:none}
+.asp .an{color:var(--dim);font-size:12px;margin-left:auto}
+/* wiki */
+.search{width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:6px}
+.wk{padding:12px 2px;border-bottom:1px solid var(--line);cursor:pointer;display:flex;gap:11px;align-items:center}
+.wk .wg{font-size:19px;color:var(--gold);width:26px;text-align:center;flex:none}
+.wk .wt{font-weight:600}.wk .ws{font-size:12px;color:var(--dim)}
+.chipbar{display:flex;gap:7px;flex-wrap:wrap;margin:2px 0 12px}
+.chip{font-size:12px;padding:6px 11px;border-radius:20px;border:1px solid var(--line);background:var(--card);color:var(--dim)}
+.chip.on{color:var(--gold);border-color:#e8c37e77}
+/* drawer */
+.scrim{position:fixed;inset:0;background:#05040eaa;z-index:40;display:none}
+.scrim.on{display:block}
+.drawer{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--bg2);border-top:1px solid var(--line);
+  border-radius:22px 22px 0 0;padding:20px 20px 30px;max-height:80vh;overflow:auto;transform:translateY(100%);
+  transition:transform .28s cubic-bezier(.2,.8,.2,1);max-width:560px;margin:0 auto}
+.drawer.on{transform:translateY(0)}
+.drawer .dg{font-size:32px;color:var(--gold);text-align:center}
+.drawer h3{text-align:center;margin:6px 0 3px;font-size:20px}
+.drawer .dsub{text-align:center;color:var(--violet);font-size:12.5px;margin-bottom:16px;letter-spacing:.4px;text-transform:uppercase}
+.drawer p{line-height:1.65;color:#d9d5f5;font-size:14.5px}
+.grip{width:40px;height:4px;background:var(--line);border-radius:3px;margin:-6px auto 14px}
+.wheelwrap{display:grid;place-items:center;margin:6px 0 4px}
+svg text{font-family:"Segoe UI Symbol","Apple Symbols",sans-serif}
+.legend{display:flex;justify-content:center;gap:14px;font-size:11px;color:var(--dim);margin-top:2px}
+.legend i{font-style:normal}
+.hsel{display:flex;gap:7px;margin:0 0 4px}
+.hsel button{flex:1;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px;color:var(--dim);font-size:12.5px}
+.hsel button.on{color:var(--gold);border-color:#e8c37e77}
+.empty{text-align:center;color:var(--dim);padding:40px 20px;line-height:1.6}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><span class="m">☉</span> ASTROLABE <small>· natal charts</small></div>
+  <div class="who">
+    <select id="whoSel"></select>
+    <button class="mini" id="toRoster">People</button>
+  </div>
+</header>
+
+<main>
+  <!-- CHART TAB -->
+  <section id="tab-chart">
+    <div id="chartBody"></div>
+  </section>
+
+  <!-- ROSTER TAB -->
+  <section id="tab-roster" class="hidden">
+    <h2>People</h2>
+    <div id="rosterList"></div>
+    <button class="addbtn" id="addBtn">＋ Add a person</button>
+  </section>
+
+  <!-- FORM TAB -->
+  <section id="tab-form" class="hidden">
+    <h2 id="formTitle">Add a person</h2>
+    <div class="card">
+      <div class="field"><label>Name</label><input id="fName" placeholder="Who is this chart for?"></div>
+      <div class="row">
+        <div class="field"><label>Birth date</label><input id="fDate" type="date"></div>
+        <div class="field"><label>Birth time</label><input id="fTime" type="time"></div>
+      </div>
+      <label class="chk" style="margin:-4px 0 12px"><input type="checkbox" id="fUnknown"> Birth time unknown</label>
+      <div class="field"><label>Birth place (search)</label>
+        <input id="fCity" list="cityList" placeholder="Start typing a city…">
+        <datalist id="cityList"></datalist>
+      </div>
+      <div class="row">
+        <div class="field"><label>Latitude</label><input id="fLat" type="number" step="0.0001" placeholder="55.6761"></div>
+        <div class="field"><label>Longitude</label><input id="fLon" type="number" step="0.0001" placeholder="12.5683"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>UTC offset (hrs)</label><input id="fTz" type="number" step="0.5" placeholder="1"></div>
+        <div class="field" style="display:flex;align-items:flex-end;padding-bottom:11px">
+          <label class="chk"><input type="checkbox" id="fDst"> +1h daylight saving</label>
+        </div>
+      </div>
+      <button class="primary" id="saveBtn">Save & cast chart</button>
+      <button class="ghost" id="cancelBtn">Cancel</button>
+      <div style="text-align:center;margin-top:6px"><button class="del hidden" id="delBtn">Delete this person</button></div>
+    </div>
+    <p class="muted" style="font-size:12px;line-height:1.6;padding:0 4px">Longitude is auto-filled from the city, but you can
+      override it. For births under old daylight-saving rules, tick the box or adjust the UTC offset by hand — the exact offset
+      at the moment of birth is the one thing worth getting right.</p>
+  </section>
+
+  <!-- WIKI TAB -->
+  <section id="tab-wiki" class="hidden">
+    <h2>The Wiki</h2>
+    <input class="search" id="wkSearch" placeholder="Search — sextile, Chiron, 8th house…">
+    <div class="chipbar" id="wkChips"></div>
+    <div id="wkList"></div>
+  </section>
+</main>
+
+<nav class="tabbar">
+  <button data-tab="chart" class="on"><span class="ic">◉</span>Chart</button>
+  <button data-tab="roster"><span class="ic">☺</span>People</button>
+  <button data-tab="wiki"><span class="ic">✶</span>Wiki</button>
+</nav>
+
+<div class="scrim" id="scrim"></div>
+<div class="drawer" id="drawer"><div class="grip"></div><div id="drawerBody"></div></div>
+
+<script>
+/* ============================ ENGINE (validated vs Swiss Ephemeris) ============================ */
+const D2R=Math.PI/180,R2D=180/Math.PI;
+const sind=x=>Math.sin(x*D2R),cosd=x=>Math.cos(x*D2R),tand=x=>Math.tan(x*D2R);
+const atan2d=(y,x)=>Math.atan2(y,x)*R2D,rev=x=>((x%360)+360)%360;
+function toJD(y,m,d,uth){if(m<=2){y-=1;m+=12;}const A=Math.floor(y/100),B=2-A+Math.floor(A/4);
+  return Math.floor(365.25*(y+4716))+Math.floor(30.6001*(m+1))+d+B-1524.5+uth/24;}
+function sunPos(d){const w=282.9404+4.70935e-5*d,e=0.016709-1.151e-9*d,M=rev(356.0470+0.9856002585*d);
+  const E=M+e*R2D*sind(M)*(1+e*cosd(M));const xv=cosd(E)-e,yv=Math.sqrt(1-e*e)*sind(E);
+  const v=atan2d(yv,xv),r=Math.sqrt(xv*xv+yv*yv),lon=rev(v+w);
+  return {lon,xs:r*cosd(lon),ys:r*sind(lon),Ls:rev(w+M),Ms:M};}
+function kepler(M,e){let E=M+e*R2D*sind(M)*(1+e*cosd(M));for(let k=0;k<6;k++)E=E-(E-e*R2D*sind(E)-M)/(1-e*cosd(E));return E;}
+function orbit(N,i,w,a,e,M){const E=kepler(M,e);const xv=a*(cosd(E)-e),yv=a*Math.sqrt(1-e*e)*sind(E);
+  const v=atan2d(yv,xv),r=Math.sqrt(xv*xv+yv*yv);
+  const xh=r*(cosd(N)*cosd(v+w)-sind(N)*sind(v+w)*cosd(i)),yh=r*(sind(N)*cosd(v+w)+cosd(N)*sind(v+w)*cosd(i)),zh=r*(sind(v+w)*sind(i));
+  return {lon:atan2d(yh,xh),lat:atan2d(zh,Math.sqrt(xh*xh+yh*yh)),r};}
+function geo(o,sun){const xh=o.r*cosd(o.lon)*cosd(o.lat),yh=o.r*sind(o.lon)*cosd(o.lat),zh=o.r*sind(o.lat);
+  return rev(atan2d(yh+sun.ys,xh+sun.xs));}
+function computeChart(jd,lat,lon){
+  const d=jd-2451543.5,sun=sunPos(d),out={};out.Sun=sun.lon;
+  {const N=rev(125.1228-0.0529538083*d),i=5.1454,w=rev(318.0634+0.1643573223*d),a=60.2666,e=0.0549,M=rev(115.3654+13.0649929509*d);
+   let o=orbit(N,i,w,a,e,M);const Ms=sun.Ms,Mm=M,Ls=sun.Ls,Lm=rev(N+w+M),Dd=rev(Lm-Ls),Ff=rev(Lm-N);let l=o.lon;
+   l+=-1.274*sind(Mm-2*Dd)+0.658*sind(2*Dd)-0.186*sind(Ms)-0.059*sind(2*Mm-2*Dd)-0.057*sind(Mm-2*Dd+Ms)
+     +0.053*sind(Mm+2*Dd)+0.046*sind(2*Dd-Ms)+0.041*sind(Mm-Ms)-0.035*sind(Dd)-0.031*sind(Mm+Ms)
+     -0.015*sind(2*Ff-2*Dd)+0.011*sind(Mm-4*Dd);out.Moon=rev(l);}
+  const Mj=rev(19.8950+0.0830853001*d),Msa=rev(316.9670+0.0334442282*d),Mu=rev(142.5905+0.011725806*d);
+  const P={Mercury:[48.3313+3.24587e-5*d,7.0047+5e-8*d,29.1241+1.01444e-5*d,0.387098,0.205635+5.59e-10*d,rev(168.6562+4.0923344368*d)],
+    Venus:[76.6799+2.4659e-5*d,3.3946+2.75e-8*d,54.891+1.38374e-5*d,0.72333,0.006773-1.302e-9*d,rev(48.0052+1.6021302244*d)],
+    Mars:[49.5574+2.11081e-5*d,1.8497-1.78e-8*d,286.5016+2.92961e-5*d,1.523688,0.093405+2.516e-9*d,rev(18.6021+0.5240207766*d)],
+    Jupiter:[100.4542+2.76854e-5*d,1.303-1.557e-7*d,273.8777+1.64505e-5*d,5.20256,0.048498+4.469e-9*d,Mj],
+    Saturn:[113.6634+2.3898e-5*d,2.4886-1.081e-7*d,339.3939+2.97661e-5*d,9.55475,0.055546-9.499e-9*d,Msa],
+    Uranus:[74.0005+1.3978e-5*d,0.7733+1.9e-8*d,96.6612+3.0565e-5*d,19.18171-1.55e-8*d,0.047318+7.45e-9*d,Mu],
+    Neptune:[131.7806+3.0173e-5*d,1.77-2.55e-7*d,272.8461-6.027e-6*d,30.05826+3.313e-8*d,0.008606+2.15e-9*d,rev(260.2471+0.005995147*d)]};
+  for(const nm in P){let o=orbit(...P[nm]),c=0;
+    if(nm==='Jupiter')c=-0.332*sind(2*Mj-5*Msa-67.6)-0.056*sind(2*Mj-2*Msa+21)+0.042*sind(3*Mj-5*Msa+21)-0.036*sind(Mj-2*Msa)+0.022*cosd(Mj-Msa)+0.023*sind(2*Mj-3*Msa+52)-0.016*sind(Mj-5*Msa-69);
+    if(nm==='Saturn')c=0.812*sind(2*Mj-5*Msa-67.6)-0.229*cosd(2*Mj-4*Msa-2)+0.119*sind(Mj-2*Msa-3)+0.046*sind(2*Mj-6*Msa-69)+0.014*sind(Mj-3*Msa+32);
+    if(nm==='Uranus')c=0.04*sind(Msa-2*Mu+6)+0.035*sind(Msa-3*Mu+33)-0.015*sind(Mj-Mu+20);
+    o.lon=rev(o.lon+c);out[nm]=geo(o,sun);}
+  {const Pp=rev(238.95+0.003968789*d);
+   let l=238.9508+0.00400703*d-19.799*sind(Pp)+19.848*cosd(Pp)+0.897*sind(2*Pp)-4.956*cosd(2*Pp)+0.61*sind(3*Pp)+1.211*cosd(3*Pp)+0.392*sind(4*Pp)-0.19*cosd(4*Pp)+0.114*sind(5*Pp)-0.034*cosd(5*Pp)+0.062*sind(6*Pp)-0.02*cosd(6*Pp);
+   let b=-3.9082-5.453*sind(Pp)-14.975*cosd(Pp)+3.527*sind(2*Pp)+1.673*cosd(2*Pp)-1.051*sind(3*Pp)+0.328*cosd(3*Pp)+0.179*sind(4*Pp)-0.292*cosd(4*Pp)+0.019*sind(5*Pp)+0.1*cosd(5*Pp)-0.031*sind(6*Pp)-0.026*cosd(6*Pp);
+   let r=40.72+6.68*sind(Pp)+6.9*cosd(Pp)-1.18*sind(2*Pp)-0.03*cosd(2*Pp)+0.15*sind(3*Pp)-0.14*cosd(3*Pp);
+   out.Pluto=geo({lon:rev(l),lat:b,r},sun);}
+  out.Node=rev(125.1228-0.0529538083*d);
+  const ecl=23.4393-3.563e-7*d,UT=((((jd+0.5)%1)+1)%1)*24,GMST0=rev(sun.Ls+180),RAMC=rev(GMST0+UT*15+lon);
+  let mc=rev(atan2d(sind(RAMC),cosd(RAMC)*cosd(ecl)));if(Math.abs(rev(mc-RAMC))>90&&Math.abs(rev(mc-RAMC))<270)mc=rev(mc+180);
+  out.MC=mc;out.ASC=rev(atan2d(cosd(RAMC),-(sind(RAMC)*cosd(ecl)+tand(lat)*sind(ecl))));
+  return out;
+}
+
+/* ============================ DATA ============================ */
+const SIGNS=[
+ {n:"Aries",g:"♈",el:"Fire",mo:"Cardinal",ru:"Mars",tone:"raw initiating drive and the courage to begin",
+  t:"The first sign — pure initiating fire. Aries is the spark, the warrior, the one who acts before overthinking. Bold, direct, impatient, brave. Where Aries falls in a chart is where a person needs to lead, fight for something, and start fresh."},
+ {n:"Taurus",g:"♉",el:"Earth",mo:"Fixed",ru:"Venus",tone:"steady sensuality, patience and the body's pleasures",
+  t:"Fixed earth — the body, the senses, the earned and the enduring. Taurus wants security, comfort, and slow reliable pleasure. Stubborn in the best and worst sense. It grounds whatever it touches in the physical and the lasting."},
+ {n:"Gemini",g:"♊",el:"Air",mo:"Mutable",ru:"Mercury",tone:"curiosity, language and quicksilver mental exchange",
+  t:"Mutable air — the mind in motion. Gemini collects, connects, and converses. Curious, witty, restless, plural. It brings language, variety, and a need for mental stimulation to whatever part of the chart it rules."},
+ {n:"Cancer",g:"♋",el:"Water",mo:"Cardinal",ru:"Moon",tone:"feeling, protection and the tides of care and belonging",
+  t:"Cardinal water — the tide of feeling. Cancer protects, nurtures, remembers, and belongs. Deeply emotional, defensive of what it loves, home-seeking. It brings sensitivity and the instinct to care to wherever it lands."},
+ {n:"Leo",g:"♌",el:"Fire",mo:"Fixed",ru:"Sun",tone:"warmth, creative pride and the radiant heart",
+  t:"Fixed fire — the radiant heart. Leo creates, performs, loves, and shines. It wants to be seen, to express, to be proud of something made. Generous and dramatic. It gilds its house with warmth and the need to matter."},
+ {n:"Virgo",g:"♍",el:"Earth",mo:"Mutable",ru:"Mercury",tone:"discernment, craft and devotion through useful work",
+  t:"Mutable earth — the craftsman. Virgo refines, analyses, serves, and perfects. Precise, humble, devoted to getting it right and being useful. It brings discernment and a caring attention to detail wherever it falls."},
+ {n:"Libra",g:"♎",el:"Air",mo:"Cardinal",ru:"Venus",tone:"harmony, relationship and the search for balance and beauty",
+  t:"Cardinal air — the scales. Libra relates, harmonises, weighs, and beautifies. It seeks the other, fairness, and grace, sometimes at the cost of its own position. It brings diplomacy and an eye for beauty to its house."},
+ {n:"Scorpio",g:"♏",el:"Water",mo:"Fixed",ru:"Pluto / Mars",tone:"depth, intensity and transformation through what is hidden",
+  t:"Fixed water — the depths. Scorpio penetrates, transforms, and refuses the surface. Intense, private, magnetic, all-or-nothing. It brings power, emotional depth, and the drive to face what others avoid to whatever it rules."},
+ {n:"Sagittarius",g:"♐",el:"Fire",mo:"Mutable",ru:"Jupiter",tone:"the quest for meaning, freedom and far horizons",
+  t:"Mutable fire — the archer's arrow. Sagittarius seeks meaning, truth, freedom, and the far horizon. Optimistic, restless, philosophical, blunt. It brings expansion and the hunger for something bigger to its house."},
+ {n:"Capricorn",g:"♑",el:"Earth",mo:"Cardinal",ru:"Saturn",tone:"structure, mastery and the long climb toward something real",
+  t:"Cardinal earth — the mountain. Capricorn builds, endures, and climbs. Disciplined, ambitious, responsible, composed. It reads as maturity and structure. It brings the long game and the drive to make something real and lasting."},
+ {n:"Aquarius",g:"♒",el:"Air",mo:"Fixed",ru:"Uranus / Saturn",tone:"vision, individuality and the future and the collective",
+  t:"Fixed air — the visionary. Aquarius innovates, detaches, and belongs to the future and the collective. Independent, humane, unconventional, cool. It brings originality and a wider-than-personal perspective to its house."},
+ {n:"Pisces",g:"♓",el:"Water",mo:"Mutable",ru:"Neptune / Jupiter",tone:"oceanic feeling, imagination and the dissolution of boundaries",
+  t:"Mutable water — the ocean. Pisces feels everything, dreams, dissolves, and merges. Compassionate, permeable, mystical, boundless. The most receptive placement there is. It brings imagination and spiritual openness to its house."}];
+
+const BODIES={
+ Sun:{g:"☉",th:"your core self, vitality, and what you are here to become",
+  t:"The Sun is the centre — your essential identity, life-force, and the self you are growing into. Its sign is the classic \"what sign are you.\" Where the Sun sits is where you shine, where you spend energy, and where you become most fully yourself."},
+ Moon:{g:"☽",th:"your emotional nature, instincts, and what makes you feel safe",
+  t:"The Moon is the inner tide — your feelings, instincts, needs, and what soothes you. It rules the private self behind the mask. Its sign shows how you feel and what you need to feel held; its house shows where your emotional life lives."},
+ Mercury:{g:"☿",th:"how you think, learn, speak, and connect",
+  t:"Mercury is the mind and the messenger — how you think, learn, talk, and process information. Its sign colours your mental style and voice; its house shows the arena your attention and communication naturally flow toward."},
+ Venus:{g:"♀",th:"how you love, what you value, and what you find beautiful",
+  t:"Venus is love and value — how you relate, what you find beautiful, what you want, and how you attract. Its sign shows your style of loving and pleasure; its house shows where you seek harmony, beauty, and connection."},
+ Mars:{g:"♂",th:"your drive, desire, and how you assert and pursue",
+  t:"Mars is drive and desire — how you act, assert, fight, and pursue what you want. Its sign shows the style of your will and anger; its house shows where you put your energy and where you go after things."},
+ Jupiter:{g:"♃",th:"where you grow, expand, and find meaning and luck",
+  t:"Jupiter is expansion — growth, meaning, faith, abundance, and luck. It shows where life opens up and where you can afford to be generous and reach further. Its house is where you tend to grow and where opportunity finds you."},
+ Saturn:{g:"♄",th:"where you meet limits, build mastery, and mature",
+  t:"Saturn is structure and limit — discipline, responsibility, fear, and eventual mastery. It shows where life asks you to work, to grow up, and to build something durable. Its house is where you feel the weight and earn the authority."},
+ Uranus:{g:"♅",th:"where you break free, innovate, and individuate",
+  t:"Uranus is the awakener — sudden change, rebellion, genius, and the urge to be free and original. A slow generational planet, but its house shows where you break patterns, surprise yourself, and refuse to conform."},
+ Neptune:{g:"♆",th:"where you dissolve, dream, and touch the transcendent",
+  t:"Neptune is the dissolver — dreams, imagination, spirituality, compassion, and illusion. It softens boundaries. Its house shows where you seek transcendence and where things can get foggy, idealised, or mystically open."},
+ Pluto:{g:"♇",th:"where you transform through depth, power, and death-rebirth",
+  t:"Pluto is transformation — power, death and rebirth, the buried and the intense. A deep generational force. Its house shows where you are pushed to confront, destroy, and regenerate, emerging changed."},
+ Node:{g:"☊",th:"your soul's growth direction in this life",
+  t:"The North Node is not a body but a point — the direction of soul growth in this life. It marks unfamiliar territory you're here to move toward. The opposite point, the South Node, is the comfortable past you're leaving behind."},
+ Chiron:{g:"⚷",th:"the wounded healer — where you were hurt and where you heal others",
+  t:"Chiron is the wounded healer — the deep, old wound that never fully closes, and precisely because of it, the place you become able to heal the same wound in others. For anyone doing healing work, Chiron's sign and house are not a footnote. (Chiron's exact position is plotted in a later version of this app.)"},
+ ASC:{g:"Asc",th:"the mask you wear, your body, and how you meet the world",
+  t:"The Ascendant (Rising sign) is the eastern horizon at your birth — the mask, the first impression, your body and style, how you meet the world and how it first meets you. It sets the whole layout of your houses."},
+ MC:{g:"MC",th:"your public role, vocation, and highest visible aim",
+  t:"The Midheaven (Medium Coeli) is the highest point of the chart — your public role, career direction, reputation, and the aim you're visibly climbing toward. It's the most outward, worldly point in the chart."}};
+
+const HOUSES=[
+ {a:"self, body, and first impressions",t:"The 1st house is you — your body, appearance, temperament, and how you show up. The mask and the vehicle. Planets here are worn openly and shape your whole approach to life."},
+ {a:"money, values, resources, and self-worth",t:"The 2nd house is what you own and what you value — money, possessions, resources, and the deeper question of self-worth. What you build and hold, materially and internally."},
+ {a:"mind, communication, and the local world",t:"The 3rd house is the everyday mind — communication, learning, siblings, short trips, and the immediate environment. How you think and exchange in daily life."},
+ {a:"home, roots, family, and the private core",t:"The 4th house is the foundation — home, family, ancestry, roots, and the deep private self. Where you come from and where you retreat to. The base of the chart."},
+ {a:"creativity, play, romance, and children",t:"The 5th house is joy and creation — play, romance, self-expression, performance, children, and everything you make for the love of making it. The radiant, generative self."},
+ {a:"work, health, routine, and service",t:"The 6th house is daily work and the body's upkeep — routines, health, service, craft, and the small disciplines that keep life running. Devotion through useful effort."},
+ {a:"partnership, marriage, and the other",t:"The 7th house is the other — committed partnership, marriage, close alliances, and open enemies. The mirror. How you meet, and merge with, one-to-one relationship."},
+ {a:"intimacy, shared resources, and death-rebirth",t:"The 8th house is the depths shared with another — sex, intimacy, joint resources, inheritance, power, and transformation through crisis. Where you merge, lose control, and are reborn."},
+ {a:"meaning, travel, and the far horizon",t:"The 9th house is the search for meaning — philosophy, higher study, long journeys, foreign lands, and belief. Where the mind and life reach beyond the familiar toward truth."},
+ {a:"career, public role, and reputation",t:"The 10th house is the summit — career, vocation, public standing, and legacy. What you're known for and climbing toward. The most visible, worldly house."},
+ {a:"friends, community, hopes, and the future",t:"The 11th house is the wider circle — friends, community, networks, causes, and hopes for the future. Where you belong to something larger than yourself."},
+ {a:"the unconscious, solitude, and the dissolved",t:"The 12th house is the hidden — the unconscious, solitude, dreams, spirituality, retreat, and what's surrendered or undone. The most inward, mystical, and self-undoing house."}];
+
+const ASPECTS=[
+ {n:"Conjunction",g:"☌",ang:0,orb:8,kind:"blend",t:"Two planets in the same place, fused into a single blended force. The most powerful aspect — the energies act as one, intensifying and colouring each other. Whether it feels easy or heavy depends on which planets are involved."},
+ {n:"Sextile",g:"⚹",ang:60,orb:5,kind:"soft",t:"A 60° angle — ease and opportunity. The two energies cooperate naturally, but gently: a sextile offers a door rather than pushing you through it. It rewards a small deliberate nudge to activate its gift."},
+ {n:"Square",g:"□",ang:90,orb:7,kind:"hard",t:"A 90° angle — friction, tension, and challenge. The two energies pull against each other and demand resolution. Uncomfortable, but squares are the engine of growth: the grit that forces you to build real strength."},
+ {n:"Trine",g:"△",ang:120,orb:7,kind:"soft",t:"A 120° angle — natural flow and talent. The two energies support each other effortlessly, a gift you were born with. So easy it can be taken for granted or left lazy — a trine gives, but asks little."},
+ {n:"Opposition",g:"☍",ang:180,orb:8,kind:"hard",t:"A 180° angle — polarity and tension across a divide. The two energies face off, often projected onto other people until you learn to hold both. The work is balance: integrating two things that feel like either/or."},
+ {n:"Quincunx",g:"⚻",ang:150,orb:3,kind:"minor",t:"A 150° angle (also called the inconjunct) — an awkward, off-kilter link. The two energies have nothing obvious in common and don't naturally relate, so they require constant small adjustments. Subtle but chronically itchy."}];
+
+const CONCEPTS={
+ Fire:{g:"△",sub:"Element",t:"Fire signs — Aries, Leo, Sagittarius. The element of spirit, will, enthusiasm, and action. Fire is warm, expressive, impulsive, and inspired. It moves first and asks later, and lives for meaning and passion."},
+ Earth:{g:"▽",sub:"Element",t:"Earth signs — Taurus, Virgo, Capricorn. The element of the body, the practical, the material. Earth is grounded, patient, reliable, and results-oriented. It builds slowly and trusts what it can touch."},
+ Air:{g:"△",sub:"Element",t:"Air signs — Gemini, Libra, Aquarius. The element of mind, language, and relationship. Air is social, curious, rational, and idea-driven. It connects, communicates, and lives in the space between people."},
+ Water:{g:"▽",sub:"Element",t:"Water signs — Cancer, Scorpio, Pisces. The element of emotion, intuition, and soul. Water is deep, sensitive, receptive, and merging. It feels its way through life and dissolves the boundaries between things."},
+ Cardinal:{g:"◐",sub:"Modality",t:"Cardinal signs — Aries, Cancer, Libra, Capricorn. The initiators. They begin each season and start things in motion. Ambitious, active, leading. Cardinal energy launches."},
+ Fixed:{g:"◼",sub:"Modality",t:"Fixed signs — Taurus, Leo, Scorpio, Aquarius. The sustainers. They hold the middle of each season steady. Stable, determined, stubborn, enduring. Fixed energy persists."},
+ Mutable:{g:"◇",sub:"Modality",t:"Mutable signs — Gemini, Virgo, Sagittarius, Pisces. The adapters. They end each season and prepare change. Flexible, versatile, restless. Mutable energy adjusts and transitions."},
+ Retrograde:{g:"℞",sub:"Motion",t:"When a planet appears to move backward through the zodiac from Earth's viewpoint. Marked ℞. A retrograde planet turns its energy inward — more reflective, internalised, and personal. It's an illusion of perspective, not a real reversal, but astrologically it's read as a different, more introspective expression of that planet."},
+ Tropical:{g:"♈",sub:"The zodiac used here",t:"This app uses the tropical zodiac — signs measured from the spring equinox (0° Aries), the standard in Western astrology. It ties the signs to the seasons rather than the current visible constellations. Whole-Sign and Equal houses are offered; both start the houses from your Ascendant."}};
+
+/* ============================ CITIES ============================ */
+const CITIES=[
+ ["Copenhagen, Denmark",55.6761,12.5683,1],["Aarhus, Denmark",56.1629,10.2039,1],["Odense, Denmark",55.4038,10.4024,1],
+ ["Aalborg, Denmark",57.0488,9.9217,1],["Khon Kaen, Thailand",16.4419,102.8360,7],["Bangkok, Thailand",13.7563,100.5018,7],
+ ["London, UK",51.5074,-0.1278,0],["Paris, France",48.8566,2.3522,1],["Berlin, Germany",52.52,13.405,1],
+ ["Amsterdam, Netherlands",52.3676,4.9041,1],["Madrid, Spain",40.4168,-3.7038,1],["Rome, Italy",41.9028,12.4964,1],
+ ["Stockholm, Sweden",59.3293,18.0686,1],["Oslo, Norway",59.9139,10.7522,1],["Helsinki, Finland",60.1699,24.9384,2],
+ ["Reykjavik, Iceland",64.1466,-21.9426,0],["Lisbon, Portugal",38.7223,-9.1393,0],["Dublin, Ireland",53.3498,-6.2603,0],
+ ["Vienna, Austria",48.2082,16.3738,1],["Zurich, Switzerland",47.3769,8.5417,1],["Brussels, Belgium",50.8503,4.3517,1],
+ ["Warsaw, Poland",52.2297,21.0122,1],["Athens, Greece",37.9838,23.7275,2],["Istanbul, Turkey",41.0082,28.9784,3],
+ ["Moscow, Russia",55.7558,37.6173,3],["New York, USA",40.7128,-74.006,-5],["Los Angeles, USA",34.0522,-118.2437,-8],
+ ["Chicago, USA",41.8781,-87.6298,-6],["San Francisco, USA",37.7749,-122.4194,-8],["Toronto, Canada",43.6532,-79.3832,-5],
+ ["Mexico City, Mexico",19.4326,-99.1332,-6],["São Paulo, Brazil",-23.5505,-46.6333,-3],["Buenos Aires, Argentina",-34.6037,-58.3816,-3],
+ ["Bogotá, Colombia",4.711,-74.0721,-5],["Lima, Peru",-12.0464,-77.0428,-5],["Santiago, Chile",-33.4489,-70.6693,-3],
+ ["Tokyo, Japan",35.6762,139.6503,9],["Seoul, South Korea",37.5665,126.978,9],["Beijing, China",39.9042,116.4074,8],
+ ["Shanghai, China",31.2304,121.4737,8],["Hong Kong",22.3193,114.1694,8],["Singapore",1.3521,103.8198,8],
+ ["Bangkok, Thailand ",13.7563,100.5018,7],["Jakarta, Indonesia",-6.2088,106.8456,7],["Denpasar, Bali",-8.6705,115.2126,8],
+ ["Manila, Philippines",14.5995,120.9842,8],["Kuala Lumpur, Malaysia",3.139,101.6869,8],["Mumbai, India",19.076,72.8777,5.5],
+ ["Delhi, India",28.7041,77.1025,5.5],["Dubai, UAE",25.2048,55.2708,4],["Tehran, Iran",35.6892,51.389,3.5],
+ ["Cairo, Egypt",30.0444,31.2357,2],["Nairobi, Kenya",-1.2921,36.8219,3],["Lagos, Nigeria",6.5244,3.3792,1],
+ ["Johannesburg, South Africa",-26.2041,28.0473,2],["Sydney, Australia",-33.8688,151.2093,10],["Melbourne, Australia",-37.8136,144.9631,10],
+ ["Auckland, New Zealand",-36.8485,174.7633,12],["Honolulu, USA",21.3069,-157.8583,-10]];
+
+/* ============================ STATE ============================ */
+const SIGN_NAMES=SIGNS.map(s=>s.n);
+const PLANET_ORDER=["Sun","Moon","Mercury","Venus","Mars","Jupiter","Saturn","Uranus","Neptune","Pluto","Node"];
+const ORD=["first","second","third","fourth","fifth","sixth","seventh","eighth","ninth","tenth","eleventh","twelfth"];
+let people=load(), currentId=null, houseSystem="whole";
+
+function load(){try{return JSON.parse(localStorage.getItem("astro_people_v1"))||[]}catch(e){return[]}}
+function save(){localStorage.setItem("astro_people_v1",JSON.stringify(people))}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+
+function seedIfEmpty(){
+  if(people.length===0){
+    people.push({id:uid(),name:"Lek",date:"1980-07-02",time:"19:09",timeKnown:true,
+      place:"Khon Kaen, Thailand",lat:16.4419,lon:102.8360,tz:7,dst:false});
+    save();
+  }
+}
+
+/* ============================ CHART BUILD ============================ */
+function chartFor(p){
+  const [y,m,d]=p.date.split("-").map(Number);
+  let hh=12,mm=0;
+  if(p.timeKnown&&p.time){[hh,mm]=p.time.split(":").map(Number);}
+  const localH=hh+mm/60, off=(+p.tz||0)+(p.dst?1:0), ut=localH-off;
+  const jd=toJD(y,m,d,ut);
+  const c=computeChart(jd,+p.lat,+p.lon);
+  const c2=computeChart(jd+1,+p.lat,+p.lon);
+  const retro={};
+  PLANET_ORDER.forEach(k=>{if(k!=="Node"){let dl=rev(c2[k]-c[k]);if(dl>180)dl-=360;retro[k]=dl<0;}});
+  return {c,retro,jd};
+}
+function signIdx(lon){return Math.floor(rev(lon)/30)}
+function houseOf(lon,asc){
+  if(houseSystem==="whole"){const start=Math.floor(rev(asc)/30)*30;return 1+(Math.floor(rev(lon-start)/30)%12);}
+  return 1+Math.floor(rev(lon-asc)/30);
+}
+function fmtPos(lon){const s=SIGNS[signIdx(lon)];const deg=rev(lon)%30;const dd=Math.floor(deg);const mmn=Math.floor((deg-dd)*60);
+  return {deg:dd,min:mmn,sign:s.n,glyph:s.g};}
+
+/* ============================ RENDER: CHART ============================ */
+function renderChart(){
+  const box=document.getElementById("chartBody");
+  const p=people.find(x=>x.id===currentId);
+  if(!p){box.innerHTML='<div class="empty">No chart selected.<br>Add someone in <b>People</b> to begin.</div>';return;}
+  const {c,retro}=chartFor(p);
+  const asc=c.ASC;
+  let html="";
+  // header card
+  const rs=SIGNS[signIdx(asc)], ss=SIGNS[signIdx(c.Sun)], ms=SIGNS[signIdx(c.Moon)];
+  html+=`<div class="card"><div style="font-size:18px;font-weight:700">${esc(p.name)}</div>
+    <div class="muted" style="font-size:12.5px;margin-top:3px">${p.date}${p.timeKnown?" · "+p.time:" · time unknown"} · ${esc(p.place||"")}</div>
+    <div style="margin-top:9px;font-size:13.5px">${term("planet:Sun","☉ Sun")} in ${term("sign:"+ss.n,ss.n)}
+      · ${term("planet:Moon","☽ Moon")} in ${term("sign:"+ms.n,ms.n)}
+      ${p.timeKnown?"· "+term("planet:ASC","Asc")+" "+term("sign:"+rs.n,rs.n):""}</div></div>`;
+  // wheel
+  html+=`<div class="hsel">
+    <button data-hs="whole" class="${houseSystem==='whole'?'on':''}">Whole Sign</button>
+    <button data-hs="equal" class="${houseSystem==='equal'?'on':''}">Equal House</button></div>`;
+  html+=`<div class="card" style="padding:8px"><div class="wheelwrap">${p.timeKnown?wheelSVG(c,retro):'<div class="empty" style="padding:20px">Birth time unknown — the wheel, houses, Ascendant and Midheaven need an exact time. Sign placements below are still valid (except the Moon, if near a sign edge).</div>'}</div>
+    ${p.timeKnown?'<div class="legend"><i style="color:var(--soft)">━ flowing</i><i style="color:var(--hard)">━ tense</i><i style="color:var(--blend)">━ conjunct</i></div>':''}</div>`;
+  // placements
+  html+=`<h2>Placements</h2><div class="card">`;
+  const list=["Sun","Moon","Mercury","Venus","Mars","Jupiter","Saturn","Uranus","Neptune","Pluto","Node"];
+  if(p.timeKnown)list.push("ASC","MC");
+  list.forEach(k=>{
+    const b=BODIES[k], pos=fmtPos(c[k]);
+    const hh=(p.timeKnown&&k!=="ASC"&&k!=="MC")?houseOf(c[k],asc):null;
+    const rx=retro[k]?'<span class="rx">℞</span>':'';
+    html+=`<div class="plc"><div class="g">${b.g}</div><div style="flex:1">
+      <div class="h">${term("planet:"+k,label(k))} in ${term("sign:"+pos.sign,pos.sign)}${rx}
+        ${hh?' · '+term("house:"+hh,ORD[hh-1]+" house"):''}</div>
+      <div class="d">${placementText(k,pos.sign,hh)}</div></div>
+      <div class="pos">${pos.deg}° ${String(pos.min).padStart(2,"0")}′</div></div>`;
+  });
+  html+=`</div>`;
+  // aspects
+  const asp=aspectList(c);
+  html+=`<h2>Aspects</h2><div class="card">`;
+  if(asp.length===0)html+='<div class="muted">No major aspects within orb.</div>';
+  asp.forEach(a=>{
+    html+=`<div class="asp"><span class="ag" style="color:${a.color}">${a.g}</span>
+      <span>${term("planet:"+a.p1,label(a.p1))} ${term("aspect:"+a.name,a.name.toLowerCase())} ${term("planet:"+a.p2,label(a.p2))}</span>
+      <span class="an">orb ${a.orb.toFixed(1)}°</span></div>`;
+  });
+  html+=`</div><div style="height:10px"></div>`;
+  box.innerHTML=html;
+  box.querySelectorAll("[data-hs]").forEach(b=>b.onclick=()=>{houseSystem=b.dataset.hs;renderChart();});
+  bindTerms(box);
+}
+function label(k){return k==="Node"?"North Node":k==="ASC"?"Ascendant":k==="MC"?"Midheaven":k;}
+function placementText(k,sign,house){
+  const b=BODIES[k], s=SIGNS.find(x=>x.n===sign);
+  if(k==="ASC")return `You meet the world through ${s.tone}. ${b.th[0].toUpperCase()+b.th.slice(1)}.`;
+  if(k==="MC")return `Your public path carries ${s.tone}.`;
+  let t=`${b.th[0].toUpperCase()+b.th.slice(1)}, expressed through ${sign}'s ${s.tone}.`;
+  if(house)t+=` It lives in the arena of ${HOUSES[house-1].a} (the ${ORD[house-1]} house).`;
+  return t;
+}
+function aspectList(c){
+  const bodies=["Sun","Moon","Mercury","Venus","Mars","Jupiter","Saturn","Uranus","Neptune","Pluto"];
+  const res=[];
+  for(let i=0;i<bodies.length;i++)for(let j=i+1;j<bodies.length;j++){
+    let diff=rev(c[bodies[i]]-c[bodies[j]]);if(diff>180)diff=360-diff;
+    for(const a of ASPECTS){if(Math.abs(diff-a.ang)<=a.orb){
+      const color=a.kind==="hard"?"var(--hard)":a.kind==="soft"?"var(--soft)":a.kind==="blend"?"var(--blend)":"var(--dim)";
+      res.push({p1:bodies[i],p2:bodies[j],name:a.n,g:a.g,orb:Math.abs(diff-a.ang),kind:a.kind,color});break;}}
+  }
+  res.sort((x,y)=>x.orb-y.orb);
+  return res;
+}
+
+/* ============================ RENDER: WHEEL SVG ============================ */
+function wheelSVG(c,retro){
+  const cx=200,cy=200, rOut=192,rSign=162,rHouse=120,rPlanet=142,rAspect=112;
+  const asc=c.ASC;
+  const ang=lon=>180+(lon-asc); // ASC at left, CCW
+  const pt=(lon,r)=>[cx+r*cosd(ang(lon)), cy-r*sind(ang(lon))];
+  let s=`<svg viewBox="0 0 400 400" width="330" height="330">`;
+  s+=`<circle cx="200" cy="200" r="${rOut}" fill="none" stroke="var(--line)"/>`;
+  s+=`<circle cx="200" cy="200" r="${rSign}" fill="none" stroke="var(--line)"/>`;
+  s+=`<circle cx="200" cy="200" r="${rHouse}" fill="none" stroke="var(--line)"/>`;
+  const elc={Fire:"var(--fire)",Earth:"var(--earth)",Air:"var(--air)",Water:"var(--water)"};
+  // sign sectors + glyphs
+  for(let i=0;i<12;i++){
+    const start=i*30;
+    const [x1,y1]=pt(start,rSign),[x2,y2]=pt(start,rOut);
+    s+=`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="var(--line)"/>`;
+    const [gx,gy]=pt(start+15,(rSign+rOut)/2);
+    s+=`<text x="${gx.toFixed(1)}" y="${(gy+6).toFixed(1)}" fill="${elc[SIGNS[i].el]}" font-size="17" text-anchor="middle">${SIGNS[i].g}</text>`;
+  }
+  // houses
+  let cusps=[];
+  if(houseSystem==="whole"){const start=Math.floor(rev(asc)/30)*30;for(let i=0;i<12;i++)cusps.push(start+i*30);}
+  else{for(let i=0;i<12;i++)cusps.push(rev(asc)+i*30);}
+  cusps.forEach((cu,i)=>{
+    const [x1,y1]=pt(cu,0),[x2,y2]=pt(cu,rHouse);
+    const isAng=(i%3===0);
+    s+=`<line x1="${cx}" y1="${cy}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${isAng?'#e8c37e66':'var(--line)'}" stroke-width="${isAng?1.3:0.7}"/>`;
+    const [nx,ny]=pt(cu+15,rHouse-12);
+    s+=`<text x="${nx.toFixed(1)}" y="${(ny+4).toFixed(1)}" fill="var(--dim)" font-size="9" text-anchor="middle">${i+1}</text>`;
+  });
+  // ASC / MC markers
+  const [ax,ay]=pt(asc,rOut+0);
+  s+=`<text x="${(cx-rOut-2)}" y="204" fill="var(--gold)" font-size="10" text-anchor="end">Asc</text>`;
+  // aspect lines
+  const asp=aspectList(c);
+  asp.forEach(a=>{
+    const [x1,y1]=pt(c[a.p1],rAspect),[x2,y2]=pt(c[a.p2],rAspect);
+    s+=`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${a.color}" stroke-width="0.9" opacity="0.55"/>`;
+  });
+  // planets (collision nudge)
+  const items=PLANET_ORDER.map(k=>({k,lon:c[k]})).sort((a,b)=>a.lon-b.lon);
+  let lastLon=-99,tier=0;
+  items.forEach(it=>{
+    if(Math.abs(rev(it.lon)-lastLon)<9)tier=(tier+1)%3;else tier=0;
+    lastLon=rev(it.lon);
+    const r=rPlanet-tier*15;
+    const [x,y]=pt(it.lon,r);
+    const [tx,ty]=pt(it.lon,rSign);const [tx2,ty2]=pt(it.lon,rSign-6);
+    s+=`<line x1="${tx.toFixed(1)}" y1="${ty.toFixed(1)}" x2="${tx2.toFixed(1)}" y2="${ty2.toFixed(1)}" stroke="var(--gold)" stroke-width="0.8"/>`;
+    s+=`<text x="${x.toFixed(1)}" y="${(y+6).toFixed(1)}" fill="var(--gold2)" font-size="16" text-anchor="middle">${BODIES[it.k].g}</text>`;
+    if(retro[it.k]){const [rx,ry]=pt(it.lon,r-13);s+=`<text x="${rx.toFixed(1)}" y="${(ry+4).toFixed(1)}" fill="var(--hard)" font-size="8" text-anchor="middle">℞</text>`;}
+  });
+  s+=`</svg>`;
+  return s;
+}
+
+/* ============================ RENDER: ROSTER ============================ */
+function renderRoster(){
+  const box=document.getElementById("rosterList");
+  if(people.length===0){box.innerHTML='<div class="empty">No one here yet.</div>';return;}
+  box.innerHTML=people.map(p=>{
+    let sun="";try{const {c}=chartFor(p);sun=SIGNS[signIdx(c.Sun)].g+" "+SIGNS[signIdx(c.Sun)].n;}catch(e){}
+    return `<div class="card"><div class="person" data-id="${p.id}">
+      <div class="orb">${BODIES.Sun.g}</div>
+      <div style="flex:1"><div class="nm">${esc(p.name)}</div>
+      <div class="sub">${p.date} · ${sun} · ${esc(p.place||"")}</div></div>
+      <div style="color:var(--dim)">›</div></div></div>`;
+  }).join("");
+  box.querySelectorAll(".person").forEach(el=>el.onclick=()=>{currentId=el.dataset.id;showTab("chart");renderChart();fillWho();});
+}
+
+/* ============================ FORM ============================ */
+let editId=null;
+function openForm(id){
+  editId=id||null;
+  const p=id?people.find(x=>x.id===id):null;
+  document.getElementById("formTitle").textContent=p?"Edit person":"Add a person";
+  document.getElementById("fName").value=p?p.name:"";
+  document.getElementById("fDate").value=p?p.date:"";
+  document.getElementById("fTime").value=p&&p.time?p.time:"";
+  document.getElementById("fUnknown").checked=p?!p.timeKnown:false;
+  document.getElementById("fCity").value=p?p.place||"":"";
+  document.getElementById("fLat").value=p?p.lat:"";
+  document.getElementById("fLon").value=p?p.lon:"";
+  document.getElementById("fTz").value=p?p.tz:"";
+  document.getElementById("fDst").checked=p?!!p.dst:false;
+  document.getElementById("delBtn").classList.toggle("hidden",!p);
+  showTab("form");
+}
+function saveForm(){
+  const name=document.getElementById("fName").value.trim();
+  const date=document.getElementById("fDate").value;
+  if(!name||!date){alert("Name and birth date are needed.");return;}
+  const rec={
+    id:editId||uid(),name,date,
+    time:document.getElementById("fTime").value,
+    timeKnown:!document.getElementById("fUnknown").checked,
+    place:document.getElementById("fCity").value.trim(),
+    lat:parseFloat(document.getElementById("fLat").value)||0,
+    lon:parseFloat(document.getElementById("fLon").value)||0,
+    tz:parseFloat(document.getElementById("fTz").value)||0,
+    dst:document.getElementById("fDst").checked
+  };
+  if(editId){const i=people.findIndex(x=>x.id===editId);people[i]=rec;}
+  else people.push(rec);
+  save();currentId=rec.id;fillWho();showTab("chart");renderChart();
+}
+
+/* ============================ WIKI ============================ */
+let wkFilter="all";
+function wikiEntries(){
+  const e=[];
+  SIGNS.forEach(s=>e.push({key:"sign:"+s.n,g:s.g,title:s.n,sub:s.el+" · "+s.mo+" · ruled by "+s.ru,cat:"signs",text:s.t}));
+  Object.entries(BODIES).forEach(([k,b])=>e.push({key:"planet:"+k,g:b.g,title:label(k),sub:cap(b.th),cat:"planets",text:b.t}));
+  HOUSES.forEach((h,i)=>e.push({key:"house:"+(i+1),g:(i+1)+"",title:ORD[i][0].toUpperCase()+ORD[i].slice(1)+" House",sub:h.a,cat:"houses",text:h.t}));
+  ASPECTS.forEach(a=>e.push({key:"aspect:"+a.n,g:a.g,title:a.n,sub:a.ang+"° · orb "+a.orb+"°",cat:"aspects",text:a.t}));
+  Object.entries(CONCEPTS).forEach(([k,c])=>e.push({key:"concept:"+k,g:c.g,title:k,sub:c.sub,cat:"basics",text:c.t}));
+  return e;
+}
+function renderWiki(){
+  const chips=["all","signs","planets","houses","aspects","basics"];
+  document.getElementById("wkChips").innerHTML=chips.map(c=>`<span class="chip ${wkFilter===c?'on':''}" data-c="${c}">${c}</span>`).join("");
+  const q=document.getElementById("wkSearch").value.toLowerCase();
+  const list=wikiEntries().filter(e=>(wkFilter==="all"||e.cat===wkFilter)&&
+    (!q||e.title.toLowerCase().includes(q)||e.sub.toLowerCase().includes(q)||e.text.toLowerCase().includes(q)));
+  document.getElementById("wkList").innerHTML=list.map(e=>
+    `<div class="wk" data-key="${e.key}"><div class="wg">${e.g}</div><div><div class="wt">${e.title}</div><div class="ws">${e.sub}</div></div></div>`).join("")
+    ||'<div class="empty">Nothing matches.</div>';
+  document.getElementById("wkChips").querySelectorAll(".chip").forEach(c=>c.onclick=()=>{wkFilter=c.dataset.c;renderWiki();});
+  document.getElementById("wkList").querySelectorAll(".wk").forEach(w=>w.onclick=()=>openDrawer(w.dataset.key));
+}
+
+/* ============================ DRAWER ============================ */
+function entryByKey(key){return wikiEntries().find(e=>e.key===key);}
+function openDrawer(key){
+  const e=entryByKey(key);if(!e)return;
+  document.getElementById("drawerBody").innerHTML=
+    `<div class="grip"></div><div class="dg">${e.g}</div><h3>${e.title}</h3><div class="dsub">${e.sub}</div><p>${e.text}</p>`;
+  document.getElementById("scrim").classList.add("on");
+  document.getElementById("drawer").classList.add("on");
+}
+function closeDrawer(){document.getElementById("scrim").classList.remove("on");document.getElementById("drawer").classList.remove("on");}
+
+/* ============================ HELPERS / TERMS ============================ */
+function term(key,text){return `<span class="term" data-key="${key}">${text}</span>`;}
+function bindTerms(root){root.querySelectorAll(".term").forEach(t=>t.onclick=()=>openDrawer(t.dataset.key));}
+function esc(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function cap(s){return s[0].toUpperCase()+s.slice(1);}
+
+/* ============================ NAV ============================ */
+function showTab(t){
+  ["chart","roster","form","wiki"].forEach(x=>document.getElementById("tab-"+x).classList.toggle("hidden",x!==t));
+  document.querySelectorAll(".tabbar button").forEach(b=>b.classList.toggle("on",b.dataset.tab===t));
+  if(t==="roster")renderRoster();
+  if(t==="wiki")renderWiki();
+  if(t==="chart")renderChart();
+}
+function fillWho(){
+  const sel=document.getElementById("whoSel");
+  sel.innerHTML=people.map(p=>`<option value="${p.id}" ${p.id===currentId?"selected":""}>${esc(p.name)}</option>`).join("");
+}
+
+/* ============================ CITY AUTOFILL ============================ */
+function fillCities(){
+  document.getElementById("cityList").innerHTML=CITIES.map(c=>`<option value="${c[0]}">`).join("");
+}
+document.getElementById("fCity").addEventListener("input",e=>{
+  const hit=CITIES.find(c=>c[0]===e.target.value);
+  if(hit){document.getElementById("fLat").value=hit[1];document.getElementById("fLon").value=hit[2];document.getElementById("fTz").value=hit[3];}
+});
+
+/* ============================ WIRING ============================ */
+document.querySelectorAll(".tabbar button").forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+document.getElementById("toRoster").onclick=()=>showTab("roster");
+document.getElementById("addBtn").onclick=()=>openForm(null);
+document.getElementById("saveBtn").onclick=saveForm;
+document.getElementById("cancelBtn").onclick=()=>showTab(people.length?"chart":"roster");
+document.getElementById("delBtn").onclick=()=>{
+  if(editId&&confirm("Delete this person?")){people=people.filter(x=>x.id!==editId);save();
+    if(currentId===editId)currentId=people[0]?people[0].id:null;fillWho();showTab("roster");}
+};
+document.getElementById("whoSel").onchange=e=>{currentId=e.target.value;renderChart();};
+document.getElementById("wkSearch").addEventListener("input",renderWiki);
+document.getElementById("scrim").onclick=closeDrawer;
+
+/* ============================ INIT ============================ */
+seedIfEmpty();
+currentId=people[0]?people[0].id:null;
+fillCities();fillWho();showTab("chart");
+</script>
+</body>
+</html>
