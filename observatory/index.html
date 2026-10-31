@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d0b1f">
+<title>The Observatory</title>
+<style>
+:root{
+  --bg:#0d0b1f; --bg2:#151130; --card:#1b1740; --line:#2c2657;
+  --gold:#e8c37e; --gold2:#f4dca6; --violet:#b79cff; --violet2:#cbb8ff;
+  --ink:#ece9ff; --dim:#9a93c4;
+  --r:18px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;background:radial-gradient(1200px 640px at 50% -12%,#1a1540,#0d0b1f 62%);
+  color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+body{padding:0 0 40px}
+main{max-width:560px;margin:0 auto;padding:0 18px}
+
+/* hero */
+.hero{text-align:center;padding:44px 12px 8px}
+.mark{font-size:26px;color:var(--gold);letter-spacing:.3em}
+.title{font-size:26px;font-weight:700;letter-spacing:.14em;margin:10px 0 2px}
+.sub{font-size:12px;letter-spacing:.34em;text-transform:uppercase;color:var(--dim)}
+.meta{margin-top:16px;font-size:13px;color:var(--dim)}
+.moon{display:inline-flex;align-items:center;gap:7px;margin-top:9px;font-size:13px;color:var(--dim);
+  border:1px solid var(--line);background:var(--card);border-radius:20px;padding:6px 14px}
+.moon.lit{color:var(--gold2);border-color:#e8c37e66}
+.moon .g{font-size:15px}
+
+.lead{text-align:center;color:var(--dim);font-size:13.5px;line-height:1.6;margin:26px 6px 22px;font-style:italic}
+
+/* jump-in cards */
+.cards{display:flex;flex-direction:column;gap:14px}
+.jump{display:flex;align-items:center;gap:16px;text-align:left;width:100%;cursor:pointer;
+  background:linear-gradient(180deg,var(--card),#181334);border:1px solid var(--line);
+  border-radius:var(--r);padding:20px 18px;color:var(--ink);transition:border-color .15s,transform .08s}
+.jump:active{transform:scale(.99)}
+.jump .orb{width:54px;height:54px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:26px;
+  background:radial-gradient(circle at 34% 30%,#3a2f6e,#1b1740);border:1px solid var(--line)}
+.jump .nm{font-size:18px;font-weight:700;letter-spacing:.01em}
+.jump .ds{font-size:12.5px;color:var(--dim);margin-top:3px;letter-spacing:.02em}
+.jump .arw{margin-left:auto;color:var(--dim);font-size:20px}
+.jump.gold{border-color:#e8c37e44}
+.jump.gold .orb{color:var(--gold);box-shadow:0 0 24px #e8c37e18}
+.jump.gold:active{border-color:var(--gold)}
+.jump.violet{border-color:#b79cff44}
+.jump.violet .orb{color:var(--violet2);box-shadow:0 0 24px #b79cff18}
+.jump.violet:active{border-color:var(--violet)}
+
+.foot{text-align:center;color:var(--dim);font-size:11.5px;letter-spacing:.04em;margin-top:34px;line-height:1.7;opacity:.75}
+
+/* iframe overlay */
+#frame-overlay{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;flex-direction:column}
+#frame-overlay[hidden]{display:none!important}
+#frame-top{display:flex;align-items:center;gap:12px;padding:calc(env(safe-area-inset-top) + 8px) 14px 8px;
+  border-bottom:1px solid var(--line);background:#0d0b1fcc;backdrop-filter:blur(8px)}
+#frame-back{background:var(--card);border:1px solid var(--line);color:var(--gold);border-radius:20px;
+  padding:8px 15px;font:inherit;font-size:13px;cursor:pointer}
+#frame-title{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--dim)}
+#frame{flex:1;width:100%;border:0}
+</style>
+</head>
+<body>
+<main>
+  <div class="hero">
+    <div class="mark">✶ ☾ ✶</div>
+    <div class="title">THE OBSERVATORY</div>
+    <div class="sub">sky &amp; symbol</div>
+    <div class="meta" id="date"></div>
+    <div class="moon" id="moon"><span class="g" id="moon-g">🌑</span><span id="moon-n">—</span></div>
+  </div>
+
+  <div class="lead">Two ways of reading the same night. The chart maps where the sky was; the cards ask what it means now.</div>
+
+  <div class="cards">
+    <button class="jump gold" data-app="astrology.html" data-title="Astrolabe">
+      <div class="orb">🌌</div>
+      <div><div class="nm">Astrolabe</div><div class="ds">natal charts · transits · the wiki</div></div>
+      <div class="arw">›</div>
+    </button>
+    <button class="jump violet" data-app="tarot.html" data-title="Tarot">
+      <div class="orb">🔮</div>
+      <div><div class="nm">Tarot</div><div class="ds">draw · deck · Card XIV</div></div>
+      <div class="arw">›</div>
+    </button>
+  </div>
+
+  <div class="foot">read the sky, then read yourself 🌌</div>
+</main>
+
+<div id="frame-overlay" hidden>
+  <div id="frame-top">
+    <button id="frame-back">← observatory</button>
+    <div id="frame-title">temple</div>
+  </div>
+  <iframe id="frame" src="" title="surface"></iframe>
+</div>
+
+<script>
+/* ---- date + moon phase ---- */
+(function(){
+  const now = new Date();
+  document.getElementById('date').textContent =
+    now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+
+  const SYNODIC = 29.530588853;
+  const refNew = Date.UTC(2000,0,6,18,14)/86400000;   // known new moon (days)
+  let age = ((now.getTime()/86400000 - refNew) % SYNODIC);
+  if (age < 0) age += SYNODIC;
+  const frac = age / SYNODIC;
+  const idx = Math.round(frac*8) % 8;
+  const G = ['🌑','🌒','🌓','🌔','🌕','🌖','🌗','🌘'];
+  const N = ['new moon','waxing crescent','first quarter','waxing gibbous','full moon','waning gibbous','last quarter','waning crescent'];
+  document.getElementById('moon-g').textContent = G[idx];
+  document.getElementById('moon-n').textContent = N[idx];
+  if (idx===0 || idx===4) document.getElementById('moon').classList.add('lit');
+})();
+
+/* ---- surface navigation (iframe — survives file:// on Android) ---- */
+const overlay = document.getElementById('frame-overlay');
+const frame   = document.getElementById('frame');
+
+function openSurface(file, title){
+  document.getElementById('frame-title').textContent = title;
+  frame.src = file;
+  overlay.hidden = false;
+}
+function closeSurface(){
+  overlay.hidden = true;
+  frame.src = '';   // unload so it reboots fresh next open
+}
+
+document.querySelectorAll('.jump').forEach(b=>{
+  b.addEventListener('click', ()=> openSurface(b.dataset.app, b.dataset.title));
+});
+document.getElementById('frame-back').addEventListener('click', closeSurface);
+
+/* a sub-surface (like Tarot) may post 'close-temple' from its own back button */
+window.addEventListener('message', e=>{
+  if (e.data === 'close-temple' || (e.data && e.data.action === 'close-temple')) closeSurface();
+});
+</script>
+</body>
+</html>
