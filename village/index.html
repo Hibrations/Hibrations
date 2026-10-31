@@ -80,6 +80,7 @@ button.quiet { border-color: var(--border); color: var(--ink-dim); }
   <div class="row"><span>Network</span><span id="net">…</span></div>
   <div class="row"><span>Bridge</span><span id="bridge">…</span></div>
   <div class="row"><span>Last sync</span><span id="last">never</span></div>
+  <p class="muted" id="reachHint" hidden>If it keeps failing at home: check that Tailscale is on, the PC's bridge window is open, and that Chrome is allowed to reach devices on your local network (Chrome → ⋮ → Settings → Site settings → hibrations.github.io → Local network access → Allow).</p>
   <button id="syncNow" hidden>Sync now</button>
 </section>
 
@@ -211,6 +212,7 @@ function render() {
   $('pairBox').hidden = paired;
   $('letterBox').hidden = !paired;
   $('syncNow').hidden = !paired;
+  $('reachHint').hidden = !(paired && bridgeState.cls === 'bad');
   $('unpair').hidden = !paired;
 
   const waiting = outbox.map((m) =>
