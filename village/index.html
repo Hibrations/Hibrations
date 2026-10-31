@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0908">
+<title>Lysningen</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link href="../fonts/fonts.css" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0908;
+  --bg-elev: #14110f;
+  --bg-card: #1a1614;
+  --border: #2a2420;
+  --ink: #e8e1d4;
+  --ink-dim: #9a8f80;
+  --ink-faint: #5e554a;
+  --emerald: #3d7d63;
+  --gold: #c89060;
+  --gold-dim: #8a6543;
+  --crimson: #9a4435;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); }
+body {
+  font: 300 15px/1.55 'Inter', system-ui, sans-serif;
+  padding: max(28px, env(safe-area-inset-top)) 18px max(28px, env(safe-area-inset-bottom));
+  max-width: 520px; margin: 0 auto;
+}
+h1, h2 { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 500; margin: 0; }
+h1 { font-size: 40px; letter-spacing: .02em; }
+h2 { font-size: 22px; color: var(--gold); margin-bottom: 10px; }
+header { text-align: center; margin-bottom: 28px; }
+header img { width: 96px; height: 96px; display: block; margin: 0 auto 12px; }
+header p { color: var(--ink-dim); margin: 4px 0 0; font-style: italic; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 18px; }
+section { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 16px; }
+.row { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; }
+.row span:first-child { color: var(--ink-dim); }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; background: var(--ink-faint); vertical-align: 1px; }
+.dot.ok { background: var(--emerald); }
+.dot.warn { background: var(--gold); }
+.dot.bad { background: var(--crimson); }
+textarea, input {
+  width: 100%; background: var(--bg-elev); color: var(--ink); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px; font: inherit; resize: vertical;
+}
+textarea:focus, input:focus { outline: none; border-color: var(--gold-dim); }
+button {
+  font: 500 14px 'Inter', system-ui, sans-serif; letter-spacing: .03em;
+  background: transparent; color: var(--gold); border: 1px solid var(--gold-dim);
+  border-radius: 999px; padding: 10px 18px; margin-top: 10px; cursor: pointer;
+}
+button:active { background: var(--bg-elev); }
+button.quiet { border-color: var(--border); color: var(--ink-dim); }
+.muted { color: var(--ink-dim); font-size: 13px; }
+.letter { border-left: 2px solid var(--border); padding: 6px 0 6px 12px; margin: 10px 0; }
+.letter.waiting { border-color: var(--gold-dim); }
+.letter.reply { border-color: var(--emerald); }
+.letter .meta { color: var(--ink-faint); font-size: 12px; }
+#update {
+  display: none; position: fixed; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); transform: translateX(-50%);
+  background: var(--bg-elev); border: 1px solid var(--gold-dim); color: var(--gold);
+  border-radius: 999px; padding: 10px 18px; font-size: 14px; cursor: pointer; white-space: nowrap;
+}
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+
+<header>
+  <img src="icon.svg" alt="">
+  <h1>Lysningen</h1>
+  <p>the clearing is being cleared</p>
+</header>
+
+<section>
+  <h2>The way to the PC</h2>
+  <div class="row"><span>Network</span><span id="net">…</span></div>
+  <div class="row"><span>Bridge</span><span id="bridge">…</span></div>
+  <div class="row"><span>Last sync</span><span id="last">never</span></div>
+  <button id="syncNow" hidden>Sync now</button>
+</section>
+
+<section id="pairBox" hidden>
+  <h2>Pair with the PC</h2>
+  <p class="muted">On the PC, start <code>village.bat</code>. It opens a page with a QR code — scan it with the phone's camera. Or paste the pairing link here:</p>
+  <input id="pairLink" placeholder="https://hibrations.github.io/Hibrations/village/#pair=…" autocomplete="off">
+  <button id="pairBtn">Pair</button>
+  <p class="muted" id="pairMsg"></p>
+</section>
+
+<section id="letterBox" hidden>
+  <h2>Send a letter</h2>
+  <textarea id="text" rows="3" placeholder="A test message for the village…"></textarea>
+  <button id="send">Send</button>
+  <div id="letters"></div>
+</section>
+
+<p class="muted" style="text-align:center"><a href="#" id="unpair" hidden style="color:var(--ink-faint)">unpair this phone</a></p>
+
+<div id="update">New version — tap to reload</div>
+
+<script>
+// ── Stores (same origin as the temples; the Body Temple backup already includes these) ──
+const K = { village: 'village_v1', outbox: 'village_outbox_v1', cursor: 'village_cursor_v1' };
+
+function load(key, fallback) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch { return fallback; }
+}
+function save(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+}
+
+const village = Object.assign({ v: 1, bridge: null, events: [], lastSync: null }, load(K.village, {}));
+let outbox = load(K.outbox, []);
+let cursor = load(K.cursor, { seq: 0 });
+const saveVillage = () => save(K.village, village);
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const time = (iso) => new Date(iso).toLocaleString('en-GB', { weekday: 'short', hour: '2-digit', minute: '2-digit' });
+
+// ── Pairing: the PC's QR holds  …/village/#pair=<base64url of {"u": bridge url, "t": token}> ──
+function readPairing(link) {
+  const m = /#pair=([A-Za-z0-9_-]+)/.exec(link);
+  if (!m) return null;
+  try {
+    const b64 = m[1].replace(/-/g, '+').replace(/_/g, '/');
+    const p = JSON.parse(atob(b64));
+    if (typeof p.u !== 'string' || !/^https:\/\/[^/]+$/.test(p.u) || typeof p.t !== 'string' || p.t.length < 32) return null;
+    return { url: p.u, token: p.t, pairedAt: new Date().toISOString() };
+  } catch { return null; }
+}
+
+function pair(link) {
+  const b = readPairing(link);
+  if (!b) { $('pairMsg').textContent = 'That link doesn’t look like a pairing link.'; return false; }
+  village.bridge = b;
+  saveVillage();
+  render();
+  sync();
+  return true;
+}
+
+if (location.hash.startsWith('#pair=')) {
+  pair(location.href);
+  history.replaceState(null, '', location.pathname); // don't leave the token in the address bar
+}
+
+// ── Sync (phone ↔ PC). Home only, as close as a web app can get: never on mobile data. ──
+function onMobileData() {
+  const c = navigator.connection;
+  return !!(c && c.type === 'cellular');
+}
+
+let syncing = false;
+let bridgeState = { cls: '', text: 'not paired' };
+
+async function sync() {
+  if (!village.bridge || syncing) return;
+  if (!navigator.onLine) { bridgeState = { cls: 'warn', text: 'offline — letters wait' }; render(); return; }
+  if (onMobileData()) { bridgeState = { cls: 'warn', text: 'on mobile data — waits for Wi-Fi' }; render(); return; }
+  syncing = true;
+  bridgeState = { cls: 'warn', text: 'reaching the PC…' }; render();
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 10000);
+  try {
+    const res = await fetch(village.bridge.url + '/sync', {
+      method: 'POST',
+      signal: ctrl.signal,
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + village.bridge.token },
+      body: JSON.stringify({ outbox, after: cursor.seq, digest: null }),
+    });
+    if (res.status === 401) { bridgeState = { cls: 'bad', text: 'the PC doesn’t know this phone — pair again' }; return; }
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const acked = new Set(data.acked || []);
+    outbox = outbox.filter((m) => !acked.has(m.id));
+    save(K.outbox, outbox);
+    const known = new Set(village.events.map((e) => e.id));
+    for (const e of data.events || []) if (!known.has(e.id)) village.events.push(e);
+    cursor = { seq: Math.max(cursor.seq, data.cursor || 0) };
+    save(K.cursor, cursor);
+    village.lastSync = new Date().toISOString();
+    saveVillage();
+    bridgeState = { cls: 'ok', text: 'reached' };
+  } catch (err) {
+    bridgeState = { cls: 'bad', text: 'can’t reach the PC — letters wait' };
+  } finally {
+    clearTimeout(timer);
+    syncing = false;
+    render();
+  }
+}
+
+// ── Letters ──
+function sendLetter() {
+  const text = $('text').value.trim();
+  if (!text) return;
+  outbox.push({ id: crypto.randomUUID(), kind: 'message', to: 'village', text, at: new Date().toISOString() });
+  save(K.outbox, outbox);
+  $('text').value = '';
+  render();
+  sync();
+}
+
+function render() {
+  const online = navigator.onLine;
+  $('net').innerHTML = `<span class="dot ${online ? (onMobileData() ? 'warn' : 'ok') : 'bad'}"></span>` +
+    (online ? (onMobileData() ? 'mobile data' : 'online') : 'offline');
+  const paired = !!village.bridge;
+  $('bridge').innerHTML = paired ? `<span class="dot ${bridgeState.cls}"></span>${esc(bridgeState.text)}` : 'not paired';
+  $('last').textContent = village.lastSync ? time(village.lastSync) : 'never';
+  $('pairBox').hidden = paired;
+  $('letterBox').hidden = !paired;
+  $('syncNow').hidden = !paired;
+  $('unpair').hidden = !paired;
+
+  const waiting = outbox.map((m) =>
+    `<div class="letter waiting"><div class="meta">a letter waiting · ${time(m.at)}</div>${esc(m.text)}</div>`);
+  const arrived = village.events.slice(-20).reverse().map((e) =>
+    `<div class="letter reply"><div class="meta">${esc(e.from || 'the PC')} · ${time(e.at)}</div>${esc(e.text)}</div>`);
+  $('letters').innerHTML = waiting.join('') + arrived.join('');
+}
+
+$('send').onclick = sendLetter;
+$('syncNow').onclick = sync;
+$('pairBtn').onclick = () => pair($('pairLink').value.trim());
+$('unpair').onclick = (e) => {
+  e.preventDefault();
+  if (!confirm('Unpair this phone from the PC? Letters waiting stay queued.')) return;
+  village.bridge = null;
+  saveVillage();
+  bridgeState = { cls: '', text: 'not paired' };
+  render();
+};
+
+addEventListener('online', sync);
+addEventListener('offline', render);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) sync(); });
+setInterval(() => { if (!document.hidden) sync(); }, 30000);
+
+render();
+sync();
+
+// ── Offline: one service worker for the whole site, at the apps/ root ──
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('../sw.js').then((reg) => {
+    const offer = (w) => {
+      $('update').style.display = 'block';
+      $('update').onclick = () => w.postMessage('skipWaiting');
+    };
+    if (reg.waiting && navigator.serviceWorker.controller) offer(reg.waiting);
+    reg.addEventListener('updatefound', () => {
+      const w = reg.installing;
+      w.addEventListener('statechange', () => {
+        if (w.state === 'installed' && navigator.serviceWorker.controller) offer(w);
+      });
+    });
+  }).catch(() => {});
+  // Reload only when a new version takes over — not when the first install claims the page.
+  let reloaded = !navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (reloaded) { reloaded = false; return; }
+    reloaded = true;
+    location.reload();
+  });
+}
+</script>
+</body>
+</html>

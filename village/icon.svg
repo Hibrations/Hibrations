@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="#0a0908"/>
+  <!-- Outer ring — same halo family as the portal -->
+  <circle cx="256" cy="256" r="180" fill="none" stroke="#c89060" stroke-width="3" opacity="0.35"/>
+  <circle cx="256" cy="256" r="160" fill="none" stroke="#c89060" stroke-width="2" opacity="0.55"/>
+  <!-- The halo — the sacred, gold -->
+  <ellipse cx="256" cy="150" rx="74" ry="20" fill="none" stroke="#c89060" stroke-width="10"/>
+  <!-- The horns — the primal, crimson -->
+  <path d="M 240,332 C 184,314 140,256 148,178 C 170,240 202,276 248,298 Z" fill="#9a4435"/>
+  <path d="M 272,332 C 328,314 372,256 364,178 C 342,240 310,276 264,298 Z" fill="#9a4435"/>
+  <!-- The crown point between them — where the two meet -->
+  <circle cx="256" cy="318" r="15" fill="#c89060"/>
+  <line x1="256" y1="342" x2="256" y2="378" stroke="#c89060" stroke-width="6" stroke-linecap="round" opacity="0.6"/>
+</svg>
