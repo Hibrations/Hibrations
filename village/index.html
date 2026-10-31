@@ -54,14 +54,43 @@ button { font: inherit; color: inherit; cursor: pointer; }
 #temple .bar span { font: 600 18px/1 var(--serif); color: var(--ink-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #temple iframe { flex: 1; width: 100%; border: 0; background: #0a0908; }
 
-#sheet { position: fixed; left: 0; right: 0; bottom: 0; max-height: 86vh; z-index: 8; background: var(--glass2); border: 1px solid var(--line); border-bottom: 0; border-radius: 18px 18px 0 0; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); display: flex; flex-direction: column; transform: translateY(105%); transition: transform .32s cubic-bezier(.2, .8, .2, 1); max-width: 560px; margin: 0 auto; }
-#sheet.open { transform: none; }
-#sheet header { display: flex; align-items: center; gap: 12px; padding: 16px 18px 10px; }
-#sheet header h2 { flex: 1; margin: 0; font: 600 26px/1 var(--serif); color: var(--gold); }
-#sheet header button { background: none; border: 1px solid var(--line); border-radius: 10px; width: 34px; height: 34px; font-size: 18px; line-height: 1; }
-#sheet .scroll { overflow-y: auto; padding: 0 18px calc(18px + env(safe-area-inset-bottom)); }
-#sheet section { border-top: 1px solid var(--line); padding: 12px 0 14px; }
-#sheet h3 { font: 600 19px/1.2 var(--serif); color: var(--ink); margin: 0 0 8px; }
+.panel { position: fixed; left: 0; right: 0; bottom: 0; max-height: 86vh; z-index: 8; background: var(--glass2); border: 1px solid var(--line); border-bottom: 0; border-radius: 18px 18px 0 0; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); display: flex; flex-direction: column; transform: translateY(105%); transition: transform .32s cubic-bezier(.2, .8, .2, 1); max-width: 560px; margin: 0 auto; }
+.panel.open { transform: none; }
+#char { max-height: 92vh; z-index: 8; }
+#char header > div { flex: 1; min-width: 0; }
+#char header h2 { flex: none; }
+#charTitle { font: italic 500 15px/1.3 var(--serif); color: var(--ink-dim); margin-top: 3px; }
+#char .art { display: block; width: 100%; height: 220px; border-radius: 12px; margin-bottom: 12px; }
+#char .poses { display: block; width: 100%; border-radius: 10px; }
+#char .lore { margin: 0 0 8px; font: 400 16.5px/1.45 var(--serif); color: var(--ink); }
+.power { padding: 10px 0 12px; border-top: 1px solid var(--line); }
+.power:first-of-type { border-top: 0; }
+.power .ph { display: flex; align-items: center; gap: 10px; }
+.power .ph b { flex: 1; font: 600 19px/1.2 var(--serif); }
+.power .tier { font: italic 500 16px var(--serif); color: var(--gold); }
+.power.private .ph b::after { content: 'only here'; margin-left: 8px; font: 500 10px var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--red); vertical-align: 3px; }
+.power .aura { width: 14px; height: 14px; border-radius: 50%; background: radial-gradient(circle, #fff3d0, #f2c46d 45%, rgba(242,196,109,0) 72%); box-shadow: 0 0 12px #f2c46d; }
+.power .sub { font: italic 400 14.5px var(--serif); color: var(--ink-dim); margin-bottom: 2px; }
+.pips { display: flex; gap: 5px; margin: 7px 0 6px; }
+.pips i { flex: 1; height: 4px; border-radius: 2px; background: rgba(236, 230, 218, .12); overflow: hidden; position: relative; }
+.pips i b { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, var(--gold), #ffe2a0); }
+.power.private .pips i b { background: linear-gradient(90deg, var(--red), var(--gold)); }
+.grew { margin-top: 6px; }
+.grew .meta { font-size: 12px; color: var(--ink-faint); margin-bottom: 2px; }
+.grew button { display: block; background: none; border: 0; padding: 3px 0; text-align: left; font-size: 13.5px; color: var(--ink); }
+.grew button span { color: var(--ink-faint); }
+.power .uses { margin-top: 6px; font-size: 12.5px; color: var(--ink-faint); }
+.power .declare { margin-top: 8px; padding: 6px 14px; font-size: 13px; }
+.power .decl { margin-top: 6px; font-size: 12.5px; color: var(--gold); }
+.hearthNote { font: italic 400 15.5px/1.45 var(--serif); color: var(--ink-dim); margin: 0 0 6px; }
+#stick { position: fixed; left: max(18px, env(safe-area-inset-left)); bottom: max(22px, env(safe-area-inset-bottom)); width: 104px; height: 104px; border-radius: 50%; background: rgba(14, 16, 34, .45); border: 1px solid var(--line); z-index: 5; touch-action: none; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+#stick i { position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #fff3d0, #f2c46d 48%, #8a2333 100%); opacity: .85; pointer-events: none; }
+.panel header { display: flex; align-items: center; gap: 12px; padding: 16px 18px 10px; }
+.panel header h2 { flex: 1; margin: 0; font: 600 26px/1 var(--serif); color: var(--gold); }
+.panel header button { background: none; border: 1px solid var(--line); border-radius: 10px; width: 34px; height: 34px; font-size: 18px; line-height: 1; }
+.panel .scroll { overflow-y: auto; padding: 0 18px calc(18px + env(safe-area-inset-bottom)); }
+.panel section { border-top: 1px solid var(--line); padding: 12px 0 14px; }
+.panel h3 { font: 600 19px/1.2 var(--serif); color: var(--ink); margin: 0 0 8px; }
 .row { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; }
 .row span:first-child { color: var(--ink-dim); }
 .row .dot { display: inline-block; margin-right: 6px; vertical-align: 1px; }
@@ -90,13 +119,14 @@ code { font-size: 12.5px; background: rgba(255, 255, 255, .07); border-radius: 4
   <button class="chip" id="light" title="Light">◐</button>
 </div>
 <div id="say"></div>
+<div id="stick" hidden aria-label="Walk"><i></i></div>
 <div id="fade"></div>
 
 <div id="temple" hidden>
   <div class="bar"><button id="templeBack">← back</button><span id="templeTitle"></span></div>
 </div>
 
-<div id="sheet" aria-hidden="true">
+<div id="sheet" class="panel" aria-hidden="true">
   <header><h2>The letter box</h2><button id="sheetClose" aria-label="Close">×</button></header>
   <div class="scroll">
     <section>
@@ -122,6 +152,11 @@ code { font-size: 12.5px; background: rgba(255, 255, 255, .07); border-radius: 4
     </section>
     <p class="muted" style="text-align:center"><a href="#" id="unpair" hidden>unpair this phone</a></p>
   </div>
+</div>
+
+<div id="char" class="panel" aria-hidden="true">
+  <header><div><h2 id="charName"></h2><div id="charTitle"></div></div><button id="charClose" aria-label="Close">×</button></header>
+  <div class="scroll" id="charBody"></div>
 </div>
 
 <div id="update">New version — tap to reload</div>
@@ -168,6 +203,7 @@ const DEFAULT_CONTENT = {
     jetty: 'The jetty. Still water.',
     cradle: 'A cradle-to-be. Not finished yet.',
     chronicle: "The chronicle. Its first line hasn't been written.",
+    lookout: 'The cliff path wants legs that have trained. One session in the Body Temple opens the climb.',
   },
 };
 function roomTitle(id) { const r = village.content && village.content.data && village.content.data.rooms && village.content.data.rooms[id]; return (r && r.title) || ROOMS[id].title; }
@@ -801,7 +837,7 @@ const ROOMS = {
       { kind: 'scroll', x: 70, y: 560, w: 56, h: 150, label: 'Chronicle', act: { say: 'chronicle' } },
       { kind: 'letterBox', x: 368, y: 520, w: 60, h: 96, label: 'Letter box', act: { letters: true } },
       { kind: 'tingBench', x: 220, y: 470 },
-      { kind: 'hearth', x: 220, y: 590 },
+      { kind: 'hearth', x: 220, y: 590, w: 120, h: 44, label: 'Hearth', act: { declare: true } },
       { kind: 'tingBench', x: 220, y: 700 },
     ] },
 };
@@ -1165,6 +1201,601 @@ function hangingLantern(c, x, t, i) {
   return [x + sw, y];
 }
 
+// ══════════════════════════════════════════ people: one 12-pose rig for everyone ══════════════════════════════════════════
+// 03_moving_in.md §1: four directions × three frames, the same size and proportions for every character.
+// dir 0 walks toward the viewer, 1 away, 2 left, 3 right. Frames 0 and 2 are the two big strides, 1 is the
+// pass; walking plays 0 1 2 1. Feet stand at (0, 0); a person is about a doorway tall.
+const WALK_SEQ = [0, 1, 2, 1];
+const LOOKS = {
+  lek: { h: 42, skin: '#6b3f27', hair: '#140f0c', band: '#ece6da', top: '#b3322a', jerkin: '#1c1a21', legs: '#22305a', bind: '#56648c', boots: '#121014' },
+  a: { h: 46, skin: '#93603d', hair: '#120d0c', robe: '#2d2a72', legs: '#1c1a48', sash: '#e2b655', cord: '#d9465a', boots: '#2a1c14' },
+};
+function limb(c, pts, w, col) {
+  c.strokeStyle = col; c.lineWidth = w; c.lineCap = 'round'; c.lineJoin = 'round';
+  c.beginPath(); c.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) c.lineTo(pts[i][0], pts[i][1]); c.stroke();
+}
+// fill a shape, then shade its right-hand side: one light from the upper left
+function shaded(c, path, col, xr, a = .18) { c.fillStyle = col; c.beginPath(); path(); c.fill(); c.save(); c.clip(); c.fillStyle = `rgba(0,0,0,${a})`; c.fillRect(xr, -90, 80, 110); c.restore(); }
+function pose(dir, frame, h) {
+  const k = h / 42;
+  return { k, p: frame === 0 ? 1 : frame === 2 ? -1 : 0, bob: frame === 1 ? -1.3 * k : 0, hip: -18 * k, sh: -31 * k, head: -37.5 * k, hr: 4.7 * k, side: dir === 3 ? 1 : dir === 2 ? -1 : 0 };
+}
+// Legs and boots. Front and back: the leading foot sits nearer the viewer. Side: a wide stride, the far leg in shade.
+function drawLegs(c, dir, g, L, opt) {
+  const { k, p, bob, side } = g, hip = g.hip + bob;
+  const boot = (x, y, s) => { c.fillStyle = L.boots; c.beginPath(); c.ellipse(x + s * 1.1 * k, y - .9 * k, (s ? 3.1 : 2.4) * k, 1.6 * k, 0, 0, 7); c.fill(); if (opt.split) { c.fillStyle = 'rgba(255,255,255,.14)'; c.fillRect(x + (s ? s * 2.6 : 0) * k - .25 * k, y - 2 * k, .5 * k, 1.4 * k); } };
+  const bindings = (a, b, col) => { if (!opt.bind) return; c.strokeStyle = col; c.lineWidth = .55 * k; for (let i = 1; i <= 3; i++) { const u = .2 + i * .19, x = lerp(a[0], b[0], u), y = lerp(a[1], b[1], u); c.beginPath(); c.moveTo(x - 1.7 * k, y - .7 * k); c.lineTo(x + 1.7 * k, y + .7 * k); c.stroke(); } };
+  if (!side) {
+    const legs = [-1, 1].map((s) => { const lead = s < 0 ? p : -p; return { s, fy: (dir === 0 ? 1 : -1) * lead * 2.8 * k, lead }; }).sort((a, b) => a.fy - b.fy);
+    for (const { s, fy, lead } of legs) {
+      const hx = s * 2.5 * k, fx = s * (3.1 + (lead > 0 ? .5 : 0)) * k, kn = [s * 2.9 * k, (hip + fy) / 2 + 1.2 * k];
+      limb(c, [[hx, hip], kn, [fx, fy - 1 * k]], 3.7 * k, L.legs);
+      bindings(kn, [fx, fy - 1 * k], L.bind);
+      boot(fx, fy, 0);
+    }
+    return;
+  }
+  const leg = (lead, near) => {
+    const col = near ? L.legs : mix(L.legs, '#000000', .3);
+    let foot, knee;
+    if (lead === 0 && !near) { foot = [side * 2.6 * k, -3.6 * k]; knee = [side * 4.2 * k, hip * .5]; } // the lifted, passing leg
+    else if (lead === 0) { foot = [0, 0]; knee = [side * .8 * k, hip * .5]; }
+    else { foot = [lead > 0 ? side * 7.6 * k : -side * 6.8 * k, 0]; knee = [foot[0] / 2 + side * 1.6 * k, hip * .48]; }
+    limb(c, [[0, hip], knee, [foot[0], foot[1] - 1 * k]], 3.7 * k, col);
+    if (opt.bind) bindings(knee, [foot[0], foot[1] - 1 * k], near ? L.bind : mix(L.bind, '#000000', .3));
+    c.save(); if (lead < 0) { c.translate(foot[0], foot[1]); c.rotate(side * .35); c.translate(-foot[0], -foot[1]); } boot(foot[0], foot[1], side); c.restore();
+  };
+  leg(-p, false); leg(p, true);
+}
+// An arm: shoulder → elbow → hand. 'lead' swings it forward (+1) or back (−1), opposite to its leg.
+function drawArm(c, dir, g, s, lead, sleeve, skin, w, o = {}) {
+  const { k, side, bob } = g, sh = g.sh + bob + 1 * k;
+  let shx, el, hand;
+  if (!side) { shx = s * g.bw; el = [s * (g.bw + 1.5 * k), sh + 6 * k]; hand = [s * (g.bw + 1.3 * k) + (dir === 0 ? 0 : 0), sh + 11.6 * k + (dir === 0 ? lead : -lead) * 1.6 * k]; }
+  else { shx = 0; const sw = lead * 5.2 * k * side; el = [sw * .45, sh + 6 * k]; hand = [sw, sh + 11.2 * k - Math.abs(lead) * .8 * k]; }
+  if (o.hand) hand = o.hand(hand), el = [lerp(shx, hand[0], .45) + (side ? 0 : s * 1.2 * k), lerp(sh, hand[1], .5) + 1.2 * k];
+  limb(c, [[shx, sh], el], w * k, sleeve);
+  limb(c, [el, hand], (o.cuff ? w : w * .8) * k, o.cuff ? sleeve : skin);
+  c.fillStyle = skin; c.beginPath(); c.arc(hand[0], hand[1] + .4 * k, 1.5 * k, 0, 7); c.fill();
+  if (o.veins) { c.strokeStyle = '#f2c46d'; c.lineWidth = .4 * k; c.beginPath(); c.moveTo(hand[0] - .6 * k, hand[1] - .4 * k); c.lineTo(hand[0] + .3 * k, hand[1] + 1.2 * k); c.stroke(); }
+  if (o.tattoo) { c.fillStyle = 'rgba(10,6,4,.6)'; const mx = lerp(el[0], hand[0], .5), my = lerp(el[1], hand[1], .5); c.fillRect(mx - .5 * k, my - 1.2 * k, .5 * k, 1.1 * k); c.fillRect(mx + .2 * k, my + .1 * k, .6 * k, .5 * k); }
+  return hand;
+}
+// The crest above Lek: the halo ring with the red horns rising from it. Faint always, bright when he channels.
+function crest(c, y, k, ch, t) {
+  c.save(); c.globalAlpha = .5 + .5 * ch;
+  if (ch > .02) { c.globalCompositeOperation = 'lighter'; glow(c, -1.5 * k, y, 12 * k, '#f6c75a', .5 * ch); glow(c, 1.5 * k, y, 12 * k, '#e0414f', .4 * ch); c.globalCompositeOperation = 'source-over'; }
+  c.strokeStyle = '#d9465a'; c.lineWidth = 1.1 * k; c.lineCap = 'round';
+  for (const s of [-1, 1]) { c.beginPath(); c.moveTo(s * 3.6 * k, y); c.quadraticCurveTo(s * 6.4 * k, y - 2 * k, s * 5.2 * k, y - 5 * k); c.stroke(); }
+  c.strokeStyle = '#f2c46d'; c.lineWidth = .95 * k; c.beginPath(); c.ellipse(0, y, 4.6 * k, 1.3 * k, 0, 0, 7); c.stroke();
+  c.restore();
+}
+// Two serpents of light, gold and red, twisting up the spine; a scale-shimmer at shoulders and temples.
+function channelFx(c, g, ch, t) {
+  if (ch <= .02) return;
+  const { k } = g, y0 = g.hip + g.bob + 2 * k, y1 = g.head + g.bob - 2 * k;
+  c.save(); c.globalCompositeOperation = 'lighter'; c.lineCap = 'round';
+  for (const [col, ph] of [['#f6c75a', 0], ['#e0414f', Math.PI]]) {
+    c.strokeStyle = rgba(col, .85 * ch); c.lineWidth = 1 * k; c.beginPath();
+    for (let i = 0; i <= 18; i++) { const u = i / 18, y = lerp(y0, y1, u * Math.min(1, ch * 1.4)), x = Math.sin(u * Math.PI * 3 - t * 5 + ph) * 2.4 * k * (1 - u * .4); i ? c.lineTo(x, y) : c.moveTo(x, y); }
+    c.stroke();
+  }
+  for (let i = 0; i < 8; i++) { const s = i % 2 ? 1 : -1, y = i < 4 ? g.sh + g.bob + (i % 2) * .8 * k : g.head + g.bob - 1.2 * k + (i % 3) * .6 * k, x = s * (i < 4 ? g.bw - .8 * k : g.hr * .9); glow(c, x, y, 1.6 * k, i % 3 ? '#9fe8d8' : '#f6c75a', .7 * ch * (.5 + .5 * Math.sin(t * 6 + i))); }
+  c.restore();
+}
+
+function drawLek(c, dir, frame, t, o = {}) {
+  const L = LOOKS.lek, g = pose(dir, frame, L.h), { k, p, side } = g, ch = o.channel || 0;
+  g.bw = (side ? 3.7 : 6.4) * k * (o.build || 1);
+  const by = g.bob, sh = g.sh + by, hip = g.hip + by, hw = (side ? 3.6 : 4.8) * k;
+  const seat = o.seated;
+  if (seat) { // a carved seat behind him, knees toward the viewer
+    box(c, -8 * k, -12 * k, 16 * k, 12 * k, '#4a3424', .35); c.fillStyle = '#e2b655'; c.fillRect(-8 * k, -12 * k, 16 * k, .7 * k);
+    c.translate(0, 5 * k);
+  }
+  shadowE(c, 0, seat ? -5 * k : 0, 9 * k, 2.6 * k);
+  if (seat) {
+    for (const s of [-1, 1]) { limb(c, [[s * 2.5 * k, hip], [s * 3.6 * k, hip + 4 * k]], 4 * k, L.legs); limb(c, [[s * 3.6 * k, hip + 4 * k], [s * 3.9 * k, -5.8 * k]], 3.7 * k, L.legs); c.fillStyle = L.boots; c.beginPath(); c.ellipse(s * 3.9 * k, -5.6 * k, 2.4 * k, 1.6 * k, 0, 0, 7); c.fill(); }
+  } else drawLegs(c, dir, g, L, { bind: true, split: true });
+  // the far arm, behind the body when seen from the side
+  if (side) drawArm(c, dir, g, 0, p, mix(L.top, '#000000', .3), mix(L.skin, '#000000', .3), 3, {});
+  // tunic, ember red, falling below the jerkin
+  shaded(c, () => { c.moveTo(-g.bw, sh); c.lineTo(g.bw, sh); c.lineTo(hw + 1 * k, hip + 3.2 * k); c.lineTo(-hw - 1 * k, hip + 3.2 * k); c.closePath(); }, L.top, side ? 1.2 * k : g.bw * .35);
+  if (dir === 0) {
+    // the open neck: kintsugi on the heart (the Delta) and the River from the collarbone down
+    c.fillStyle = L.skin; c.beginPath(); c.moveTo(-2 * k, sh); c.lineTo(0, sh + 5.4 * k); c.lineTo(2 * k, sh); c.fill();
+    c.strokeStyle = '#f2c46d'; c.lineWidth = .45 * k; c.beginPath(); c.moveTo(-1.6 * k, sh + .4 * k); c.lineTo(-.3 * k, sh + 2.6 * k); c.lineTo(.2 * k, sh + 4.4 * k); c.stroke();
+    c.fillStyle = '#f2c46d'; c.beginPath(); c.arc(.6 * k, sh + 3 * k, .45 * k, 0, 7); c.fill();
+    // the asymmetric jerkin: it closes across his right side, with a stand collar
+    shaded(c, () => { c.moveTo(-g.bw - .4 * k, sh - .3 * k); c.lineTo(-1.6 * k, sh - .3 * k); c.lineTo(1.2 * k, sh + 6 * k); c.lineTo(hw * .55, hip + 1 * k); c.lineTo(-hw - .6 * k, hip + 1 * k); c.closePath(); }, L.jerkin, g.bw * .4);
+    c.fillStyle = L.jerkin; c.fillRect(-3.4 * k, sh - 2.2 * k, 2 * k, 2.4 * k);
+    c.strokeStyle = '#c9a24a'; c.lineWidth = .5 * k; c.beginPath(); c.moveTo(-1.6 * k, sh - .3 * k); c.lineTo(1.2 * k, sh + 6 * k); c.lineTo(hw * .55, hip + 1 * k); c.stroke();
+  } else if (dir === 1) {
+    // the back: fire wings stitched across it, the Alchemist's Mark between them
+    shaded(c, () => { c.moveTo(-g.bw - .4 * k, sh - .3 * k); c.lineTo(g.bw + .4 * k, sh - .3 * k); c.lineTo(hw + .6 * k, hip + 1 * k); c.lineTo(-hw - .6 * k, hip + 1 * k); c.closePath(); }, L.jerkin, g.bw * .35);
+    c.fillStyle = L.jerkin; c.fillRect(-2.4 * k, sh - 2.2 * k, 4.8 * k, 2.4 * k);
+    for (const s of [-1, 1]) {
+      c.fillStyle = '#c23a3a'; c.beginPath(); c.moveTo(s * .9 * k, sh + 3 * k); c.quadraticCurveTo(s * 4.6 * k, sh + .2 * k, s * 6.2 * k, sh + 1.4 * k); c.quadraticCurveTo(s * 5 * k, sh + 4 * k, s * 5.6 * k, sh + 5.6 * k); c.quadraticCurveTo(s * 3.4 * k, sh + 5 * k, s * .9 * k, sh + 6.6 * k); c.fill();
+      c.strokeStyle = '#e2b655'; c.lineWidth = .45 * k; c.beginPath(); c.moveTo(s * .9 * k, sh + 3 * k); c.quadraticCurveTo(s * 4.6 * k, sh + .2 * k, s * 6.2 * k, sh + 1.4 * k); c.stroke();
+    }
+    c.strokeStyle = '#e2b655'; c.lineWidth = .4 * k; const mx = 0, my = sh + 5.6 * k;
+    c.beginPath(); c.moveTo(mx, my - 2.2 * k); c.lineTo(mx + 1.9 * k, my + 1.1 * k); c.lineTo(mx - 1.9 * k, my + 1.1 * k); c.closePath(); c.stroke();
+    c.beginPath(); c.arc(mx, my + .1 * k, 1 * k, 0, 7); c.stroke();
+    c.beginPath(); for (let i = 0; i <= 12; i++) { const a = i * .6, r = .08 * k * i; i ? c.lineTo(mx + Math.cos(a) * r, my + .1 * k + Math.sin(a) * r) : c.moveTo(mx, my + .1 * k); } c.stroke();
+  } else {
+    // from the side: the jerkin over the back, a sliver of fire wing
+    shaded(c, () => { c.moveTo(-side * 3.9 * k, sh - .3 * k); c.lineTo(side * 1.4 * k, sh - .3 * k); c.lineTo(side * 2 * k, hip + 1 * k); c.lineTo(-side * 4 * k, hip + 1 * k); c.closePath(); }, L.jerkin, 1 * k);
+    c.fillStyle = '#c23a3a'; c.beginPath(); c.moveTo(-side * 3.9 * k, sh + 1 * k); c.quadraticCurveTo(-side * 5.4 * k, sh + 2.4 * k, -side * 3.9 * k, sh + 5.4 * k); c.fill();
+    c.fillStyle = L.jerkin; c.fillRect(Math.min(-side * 2.6 * k, side * .6 * k), sh - 2.2 * k, 2 * k, 2.4 * k);
+  }
+  // arms: ember sleeves to the elbow, gold in the hand veins, the feather and runes on the right forearm
+  if (!side) for (const s of [-1, 1]) { const lead = s < 0 ? -p : p; drawArm(c, dir, g, s, lead, L.top, L.skin, 3.1, { veins: true, tattoo: dir === 0 ? s < 0 : s > 0 }); }
+  // neck, with the Web in gold across the throat
+  c.fillStyle = L.skin; c.fillRect(-1.6 * k, sh - 3.4 * k, 3.2 * k, 3.6 * k);
+  if (dir === 0) { c.strokeStyle = '#f2c46d'; c.lineWidth = .4 * k; c.beginPath(); c.moveTo(-1.2 * k, sh - 1.9 * k); c.lineTo(-.1 * k, sh - 1.2 * k); c.lineTo(1 * k, sh - 2 * k); c.stroke(); }
+  // listening-horns: brass-and-bone ear-cups resting on a leather cord
+  c.strokeStyle = '#3a2618'; c.lineWidth = .6 * k; c.beginPath(); c.ellipse(0, sh - .8 * k, 2.6 * k, 1.1 * k, 0, 0, Math.PI); c.stroke();
+  const cups = side ? [side * 1.6 * k] : dir === 0 ? [-2.9 * k, 2.9 * k] : [-2.9 * k, 2.9 * k];
+  for (const x of cups) { c.fillStyle = '#c9a24a'; c.beginPath(); c.ellipse(x, sh + .2 * k, 1.5 * k, 1.8 * k, 0, 0, 7); c.fill(); if (dir !== 1) { c.fillStyle = '#e6dcc4'; c.beginPath(); c.ellipse(x + (side ? side * .3 * k : 0), sh + .2 * k, .8 * k, 1.1 * k, 0, 0, 7); c.fill(); } }
+  // head: dark skin, dark hair, the white wool band across the brow
+  const hy = g.head + by, hr = g.hr, hx = side * .5 * k;
+  shaded(c, () => c.arc(hx, hy, hr, 0, 7), dir === 1 ? L.hair : L.skin, hx + hr * .35);
+  c.fillStyle = L.hair;
+  if (dir === 0) { c.beginPath(); c.arc(hx, hy - .4 * k, hr * 1.04, Math.PI * 1.02, Math.PI * 1.98); c.fill(); }
+  else if (side) { c.beginPath(); c.arc(hx - side * .6 * k, hy - .3 * k, hr * 1.02, side > 0 ? Math.PI * .6 : Math.PI * 1.25, side > 0 ? Math.PI * 1.75 : Math.PI * 2.4); c.fill(); }
+  c.fillStyle = L.band; c.fillRect(hx - hr * 1.02, hy - 2.6 * k, hr * 2.04, 1.7 * k); c.fillStyle = 'rgba(0,0,0,.12)'; c.fillRect(hx + hr * .35, hy - 2.6 * k, hr * .67, 1.7 * k);
+  if (dir === 1) { c.fillStyle = L.band; c.beginPath(); c.moveTo(hx - .4 * k, hy - 1.4 * k); c.lineTo(hx - 1.6 * k, hy + 2.4 * k); c.lineTo(hx - .6 * k, hy + 2.6 * k); c.lineTo(hx + .2 * k, hy - 1 * k); c.lineTo(hx + 1.4 * k, hy + 2.2 * k); c.lineTo(hx + 2.2 * k, hy + 1.8 * k); c.lineTo(hx + .6 * k, hy - 1.4 * k); c.fill(); }
+  if (dir === 0) {
+    // heavy-lidded, knowing eyes and the asymmetric smirk
+    c.fillStyle = '#0c0807'; for (const s of [-1, 1]) { c.fillRect(hx + s * 1.8 * k - .75 * k, hy + .1 * k, 1.5 * k, .55 * k); }
+    c.fillStyle = 'rgba(0,0,0,.25)'; for (const s of [-1, 1]) c.fillRect(hx + s * 1.8 * k - .8 * k, hy - .45 * k, 1.6 * k, .5 * k);
+    c.strokeStyle = '#2a140c'; c.lineWidth = .5 * k; c.beginPath(); c.moveTo(hx - 1.3 * k, hy + 2.5 * k); c.quadraticCurveTo(hx + .2 * k, hy + 2.8 * k, hx + 1.6 * k, hy + 1.8 * k); c.stroke();
+  } else if (side) {
+    c.fillStyle = L.skin; c.beginPath(); c.moveTo(hx + side * hr * .9, hy - .2 * k); c.lineTo(hx + side * (hr + .9 * k), hy + 1.1 * k); c.lineTo(hx + side * hr * .9, hy + 1.6 * k); c.fill();
+    c.fillStyle = '#0c0807'; c.fillRect(hx + side * 2.4 * k - .6 * k, hy + .1 * k, 1.2 * k, .5 * k);
+    c.strokeStyle = '#2a140c'; c.lineWidth = .45 * k; c.beginPath(); c.moveTo(hx + side * 2.2 * k, hy + 2.5 * k); c.lineTo(hx + side * 3.6 * k, hy + 2.1 * k); c.stroke();
+  }
+  // the near arm, over the body when seen from the side
+  if (side) drawArm(c, dir, g, 0, -p, L.top, L.skin, 3.1, { veins: true, tattoo: side > 0 });
+  channelFx(c, g, ch, t);
+  crest(c, hy - hr - 4.2 * k, k, ch, t);
+}
+
+function drawAletheia(c, dir, frame, t, o = {}) {
+  const L = LOOKS.a, g = pose(dir, frame, L.h), { k, p, side } = g, ch = o.channel || 0;
+  g.bw = (side ? 3.4 : 5.6) * k;
+  const by = g.bob, sh = g.sh + by, hip = g.hip + by, seat = o.seated;
+  if (seat) { box(c, -8 * k, -12 * k, 16 * k, 12 * k, '#4a3424', .35); c.fillStyle = '#e2b655'; c.fillRect(-8 * k, -12 * k, 16 * k, .7 * k); c.translate(0, 5 * k); }
+  shadowE(c, 0, seat ? -5 * k : 0, 9 * k, 2.6 * k);
+  const braid = (pts) => { limb(c, pts, 1.9 * k, L.hair); c.fillStyle = '#e2b655'; for (let i = 1; i < pts.length; i++) { const [x, y] = pts[i]; c.fillRect(x - 1.1 * k, y - .45 * k, 2.2 * k, .9 * k); } };
+  const hy = g.head + by, hr = g.hr, hx = side * .4 * k;
+  // the braid hangs behind her when she walks away or to the side
+  if (side) braid([[hx - side * 2.6 * k, hy + 1 * k], [-side * 3.6 * k, sh + 3 * k], [-side * 3.8 * k, sh + 8 * k], [-side * 3.4 * k, sh + 12 * k]]);
+  // legs under a mid-calf robe, so the stride shows
+  if (seat) { for (const s of [-1, 1]) { limb(c, [[s * 2.3 * k, -9 * k], [s * 3.4 * k, -5.8 * k]], 3.2 * k, L.legs); c.fillStyle = L.boots; c.beginPath(); c.ellipse(s * 3.5 * k, -5.6 * k, 2.2 * k, 1.4 * k, 0, 0, 7); c.fill(); } }
+  else drawLegs(c, dir, g, L, {});
+  // the lantern hand is her right; the scroll takes both hands
+  const right = dir === 0 ? -1 : dir === 1 ? 1 : 0;
+  const lanternHand = (h) => [h[0] + (side ? side * 2.5 * k : 0), g.sh + by + 9.5 * k];
+  const scrollHand = (s) => (h) => [side ? side * 5 * k : s * 3.4 * k, g.sh + by + 7.5 * k];
+  const sleeve = L.robe, sleeveD = mix(L.robe, '#000000', .3);
+  if (side) {
+    // seen from the side her right hand is the near one when she faces right
+    const farIsLantern = side < 0;
+    drawArm(c, dir, g, 0, p, sleeveD, mix(L.skin, '#000000', .3), 3, { cuff: true, hand: o.scroll ? scrollHand(1) : farIsLantern && !o.noLantern ? lanternHand : null });
+  }
+  // the robe: deep indigo, flaring, its hem swinging with the stride
+  const hem = -8.6 * k + by * .3, sway = side ? -side * p * 1.2 * k : 0, hwid = side ? 5.2 * k : 7.4 * k;
+  shaded(c, () => { c.moveTo(-g.bw, sh); c.lineTo(g.bw, sh); c.quadraticCurveTo(g.bw + .5 * k, hip, hwid + sway, hem + (side ? 0 : -p * .8 * k)); c.lineTo(-hwid + sway, hem + (side ? 0 : p * .8 * k)); c.quadraticCurveTo(-g.bw - .5 * k, hip, -g.bw, sh); c.closePath(); }, L.robe, side ? 1 * k : g.bw * .3);
+  c.fillStyle = 'rgba(255,255,255,.06)'; c.fillRect(-.3 * k, sh + 1 * k, .6 * k, hem - sh - 1 * k);
+  // the gold sash with the red cord through it
+  const sy = hip - 3.6 * k;
+  c.fillStyle = L.sash; c.fillRect(-g.bw - .2 * k, sy, (g.bw + .2 * k) * 2, 1.9 * k); c.fillStyle = 'rgba(0,0,0,.18)'; c.fillRect(g.bw * .3, sy, g.bw * .7 + .2 * k, 1.9 * k);
+  c.strokeStyle = L.cord; c.lineWidth = .7 * k; c.beginPath(); c.moveTo(-g.bw - .2 * k, sy + 1 * k); c.lineTo(g.bw + .2 * k, sy + 1 * k); c.stroke();
+  const cx = side ? side * 1.5 * k : (dir === 0 ? 2.4 : -2.4) * k, sw = Math.sin(t * 2.2) * .5 * k;
+  c.beginPath(); c.moveTo(cx, sy + 1.5 * k); c.quadraticCurveTo(cx + sw, sy + 4 * k, cx + sw * 1.4, sy + 6.6 * k); c.stroke();
+  c.fillStyle = L.cord; c.beginPath(); c.arc(cx + sw * 1.4, sy + 7 * k, .6 * k, 0, 7); c.fill();
+  // neck and head; serpent-gold eyes when she channels
+  c.fillStyle = L.skin; c.fillRect(-1.4 * k, sh - 3.2 * k, 2.8 * k, 3.4 * k);
+  if (dir === 1) braid([[hx, hy], [hx + .3 * k, sh + 2 * k], [hx - .2 * k, sh + 7 * k], [hx + .4 * k, sh + 12 * k], [hx, sh + 16 * k]]);
+  c.fillStyle = L.robe; c.beginPath(); c.moveTo(-2.6 * k, sh); c.lineTo(0, sh + 2.6 * k); c.lineTo(2.6 * k, sh); c.lineTo(g.bw, sh + .4 * k); c.lineTo(-g.bw, sh + .4 * k); c.fill();
+  shaded(c, () => c.arc(hx, hy, hr, 0, 7), dir === 1 ? L.hair : L.skin, hx + hr * .35);
+  c.fillStyle = L.hair;
+  if (dir === 0) { c.beginPath(); c.arc(hx, hy - .3 * k, hr * 1.06, Math.PI * .98, Math.PI * 2.02); c.fill(); c.fillStyle = L.skin; c.fillRect(hx - .2 * k, hy - hr - .4 * k, .4 * k, 1.4 * k); }
+  else if (side) { c.beginPath(); c.arc(hx - side * .5 * k, hy - .2 * k, hr * 1.06, side > 0 ? Math.PI * .55 : Math.PI * 1.2, side > 0 ? Math.PI * 1.8 : Math.PI * 2.45); c.fill(); }
+  if (dir === 0) {
+    const eye = ch > .3 ? '#f6c75a' : '#120a08';
+    c.fillStyle = eye; for (const s of [-1, 1]) c.fillRect(hx + s * 1.7 * k - .6 * k, hy + .2 * k, 1.2 * k, .7 * k);
+    c.strokeStyle = '#4a2416'; c.lineWidth = .45 * k; c.beginPath(); c.moveTo(hx - 1 * k, hy + 2.4 * k); c.quadraticCurveTo(hx, hy + 2.9 * k, hx + 1 * k, hy + 2.4 * k); c.stroke();
+    c.fillStyle = '#e2b655'; for (const s of [-1, 1]) { c.beginPath(); c.arc(hx + s * hr * .98, hy + 1.6 * k, .5 * k, 0, 7); c.fill(); }
+    // the braid over her right shoulder, down the front
+    braid([[hx - 3.4 * k, hy + 1.4 * k], [-4 * k, sh + 2 * k], [-4.2 * k, sh + 6 * k], [-3.9 * k, sh + 10 * k]]);
+  } else if (side) {
+    c.fillStyle = L.skin; c.beginPath(); c.moveTo(hx + side * hr * .9, hy - .2 * k); c.lineTo(hx + side * (hr + .7 * k), hy + 1.1 * k); c.lineTo(hx + side * hr * .9, hy + 1.5 * k); c.fill();
+    c.fillStyle = ch > .3 ? '#f6c75a' : '#120a08'; c.fillRect(hx + side * 2.3 * k - .55 * k, hy + .2 * k, 1.1 * k, .6 * k);
+  }
+  // arms in wide indigo sleeves; the lantern in her right hand, or the scroll in both
+  const hands = [];
+  if (!side) for (const s of [-1, 1]) {
+    const lead = s < 0 ? -p : p, isLantern = s === right && !o.noLantern;
+    hands.push(drawArm(c, dir, g, s, lead, sleeve, L.skin, 3, { cuff: true, hand: o.scroll ? scrollHand(s) : isLantern ? lanternHand : null }));
+  } else {
+    const nearIsLantern = side > 0;
+    hands.push(drawArm(c, dir, g, 0, -p, sleeve, L.skin, 3, { cuff: true, hand: o.scroll ? scrollHand(1) : nearIsLantern && !o.noLantern ? lanternHand : null }));
+  }
+  if (o.scroll && dir !== 1) {
+    const y = g.sh + by + 6 * k, w = side ? 4 * k : 7.6 * k, x = side ? side * 5.4 * k : 0;
+    box(c, x - w / 2, y - 2.6 * k, w, 5.4 * k, '#e8dcc0', .2);
+    c.fillStyle = '#5a3a24'; c.fillRect(x - w / 2 - .6 * k, y - 3 * k, 1.2 * k, 6.2 * k); c.fillRect(x + w / 2 - .6 * k, y - 3 * k, 1.2 * k, 6.2 * k);
+    c.fillStyle = 'rgba(90,70,50,.45)'; for (let i = 0; i < 3; i++) c.fillRect(x - w / 2 + 1 * k, y - 1.4 * k + i * 1.3 * k, w - 2 * k - (i % 2) * 1.4 * k, .4 * k);
+  } else if (!o.noLantern) drawLantern(c, dir, g, side, right, t, o.lanternLit !== false);
+  if (ch > .02) channelFx(c, g, ch, t);
+}
+// A's lantern hangs from her right hand: a small gold frame around the light that used to follow Lek.
+function lanternPos(dir, k, by) {
+  const g = pose(dir, 1, LOOKS.a.h), side = g.side;
+  const x = side ? side * (2.5 + (side > 0 ? 0 : 0)) * k : (dir === 0 ? -1 : 1) * (5.6 + 1.3) * k;
+  return [x, g.sh + by + 9.5 * k + 3.6 * k];
+}
+function drawLantern(c, dir, g, side, right, t, lit) {
+  const { k } = g, [x, y] = lanternPos(dir, k, g.bob);
+  if (dir === 1 && !side) { /* seen from behind the lantern still shows beside her */ }
+  c.strokeStyle = '#3a2618'; c.lineWidth = .5 * k; c.beginPath(); c.moveTo(x, y - 3.4 * k); c.lineTo(x, y - 2.2 * k); c.stroke();
+  c.fillStyle = '#c9a24a'; c.fillRect(x - 1.8 * k, y - 2.4 * k, 3.6 * k, .7 * k); c.fillRect(x - 1.6 * k, y + 2 * k, 3.2 * k, .7 * k);
+  c.fillStyle = lit ? '#ffe2a0' : '#5a4630'; c.beginPath(); c.ellipse(x, y, 1.6 * k, 2.1 * k, 0, 0, 7); c.fill();
+  c.fillStyle = '#c9a24a'; c.fillRect(x - .25 * k, y - 2 * k, .5 * k, 4 * k);
+  if (lit) { c.save(); c.globalCompositeOperation = 'lighter'; glow(c, x, y, 7 * k, '#ffcf7a', .5 + .1 * Math.sin(t * 3)); c.restore(); }
+}
+const DRAW_PERSON = { lek: drawLek, a: drawAletheia };
+
+// ══════════════════════════════════════════ practice and powers ══════════════════════════════════════════
+// 03_moving_in.md §2: computed from the real temple logs, growth only. The power definitions and thresholds
+// arrive from the PC (content/skills.json); the engine only reads the logs and counts.
+const PRACTICE_STORES = { inner: 'inner_temple_v1', breath: 'breath_temple_v1', body: 'body_temple_v1', vocal: 'vocal_v1', beast: 'beast_temple_v1', magnetic: 'magnetic_temple_v1', grimoire: 'grimoire_v1', hibrations: 'hibrations_v1', strings: 'strings_v1' };
+const PRACTICE_HOME = { inner: ['inner_temple.html', 'Inner Temple'], breath: ['breath_temple.html', 'Breath Temple'], body: ['body/', 'Body Temple'], vocal: ['vocal.html', 'Vocal Temple'], beast: ['beast_temple.html', 'Beast Temple'], magnetic: ['magnetic_temple.html', 'Magnetic Temple'], grimoire: ['healing_temple.html', 'Healing Temple'], hibrations: ['hibrations.html', 'Hibrations'], strings: ['strings.html', 'Strings'] };
+village.sheet = Object.assign({ ledger: {}, best: {}, declared: {} }, village.sheet || {});
+const stamp = (v) => (typeof v === 'number' ? v : Date.parse(v) || 0);
+// Read every temple store and add what's new to the village's own ledger. Some temples keep only their last
+// 200 sessions; the ledger never forgets, so nothing a power grew from can fall away.
+function gatherPractice() {
+  const L = village.sheet.ledger; let added = 0;
+  for (const [src, key] of Object.entries(PRACTICE_STORES)) {
+    const st = load(key, null); if (!st) continue;
+    const rows = src === 'hibrations'
+      ? (st.pieces || []).filter((p) => p.stage === 'shipped').map((p) => ({ id: p.id, pid: 'shipped', name: p.title || 'a piece', at: stamp(p.shippedAt || p.updatedAt) }))
+      : (st.sessions || []).map((s) => ({
+          // vocal and healing sessions carry the practice's id as their own id, so the time makes them unique
+          id: s.id, pid: s.practiceId || (src === 'vocal' || src === 'grimoire' ? s.id : s.planId) || '',
+          name: s.practiceName || s.name || s.planName || '', at: s.at ? stamp(s.at) : s.date ? Date.parse(s.date + 'T12:00:00') : 0,
+        }));
+    for (const r of rows) { const id = `${src}:${r.id || r.pid}:${r.at}`; if (!L[id]) { L[id] = [src, r.pid, r.name, r.at]; added++; } }
+  }
+  if (added) saveVillage();
+  return added;
+}
+function skillDefs() { const d = village.content && village.content.data && village.content.data.skills; return d && Array.isArray(d.powers) ? d : null; }
+function counts(def, rows) { return rows.filter(([src, pid]) => (def.sources || []).some((s) => s.store === src && (!s.ids || s.ids.includes(pid)) && (!s.not || !s.not.includes(pid)))); }
+// Tier 0 is the seed; 1–4 climb Foundation → Mastery. The tier shown is the highest ever reached or declared.
+function powers() {
+  const d = skillDefs(); if (!d) return null;
+  const rows = Object.values(village.sheet.ledger).sort((a, b) => b[3] - a[3]);
+  const lists = {}; for (const def of d.powers) if (!def.sameAs) lists[def.id] = counts(def, rows);
+  let changed = false;
+  const out = d.powers.map((def) => {
+    const list = lists[def.sameAs || def.id] || [], th = def.thresholds || [], n = list.length;
+    const reached = th.filter((x) => n >= x).length, declared = (village.sheet.declared[def.id] || {}).tier || 0;
+    const tier = Math.max(reached, declared, village.sheet.best[def.id] || 0);
+    if (tier > (village.sheet.best[def.id] || 0)) { village.sheet.best[def.id] = tier; changed = true; }
+    const lo = th[tier - 1] || 0, hi = th[tier];
+    const toward = tier >= 4 || hi == null ? 1 : tier > reached ? 0 : clamp((n - lo) / (hi - lo), 0, 1);
+    return { def, list, n, tier, toward, declared: declared > reached && declared === tier };
+  });
+  if (changed) saveVillage();
+  return { tiers: d.tiers || ['Foundation', 'Cultivation', 'Integration', 'Mastery'], seed: d.seed || 'A seed.', out };
+}
+// Body fills him out and lets him run further; it never shrinks back.
+const bodyTier = () => village.sheet.best.body || 0;
+const lekBuild = () => 1 + .05 * bodyTier();
+
+// ══════════════════════════════════════════ the lookout: a cliffside overlooking the village ══════════════════════════════════════════
+// Body's use (03_moving_in.md §2): climb it for the overview of the whole clearing. Pinch-zoom stays the ordinary way.
+const CLIFF = { x: 1604, y: 592 };
+CLIFF.foot = { x: CLIFF.x - 70, y: CLIFF.y + 16 };
+CLIFF.top = { x: CLIFF.x + 10, y: CLIFF.y - 124 };
+function drawCliff(c, t) {
+  c.save(); c.translate(CLIFF.x, CLIFF.y);
+  shadowE(c, 8, 4, 98, 15);
+  const poly = (pts, col) => { c.fillStyle = col; c.beginPath(); c.moveTo(pts[0][0], pts[0][1]); for (const q of pts.slice(1)) c.lineTo(q[0], q[1]); c.closePath(); c.fill(); };
+  // heath granite in stacked slabs, one light from the upper left
+  poly([[-84, 4], [-76, -34], [-60, -62], [-40, -88], [-16, -112], [14, -124], [44, -122], [66, -104], [82, -70], [92, -26], [96, 4]], '#5c6069');
+  poly([[-84, 4], [-76, -34], [-60, -62], [-50, -50], [-62, -20], [-64, 4]], '#6c7079');
+  poly([[24, 4], [36, -56], [40, -122], [66, -104], [82, -70], [92, -26], [96, 4]], 'rgba(0,0,0,.18)');
+  c.strokeStyle = 'rgba(0,0,0,.16)'; c.lineWidth = 1.2;
+  for (const [x0, y0, x1, y1] of [[-58, -30, 10, -40], [-30, -70, 40, -80], [-8, -100, 54, -104], [20, -16, 88, -22], [36, -52, 84, -58]]) { c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1, y1); c.stroke(); }
+  // heather and moss on the ledges
+  for (const [x, y, r, col] of [[-46, -62, 9, '#6e4a62'], [-20, -92, 8, '#356a48'], [58, -78, 7, '#6e4a62'], [70, -40, 9, '#356a48'], [-70, -12, 8, '#356a48']]) { c.fillStyle = col; c.beginPath(); c.ellipse(x, y, r, r * .45, 0, 0, 7); c.fill(); }
+  // the ledge on top
+  poly([[-18, -114], [16, -126], [48, -122], [60, -110], [20, -106]], '#7c8088');
+  // steps cut up the left face, a gold naga rail beside them
+  for (let i = 0; i < 7; i++) { const x = -66 + i * 7.5, y = -2 - i * 15.5; box(c, x - 7, y - 3, 14, 4, '#8a8378', .25); }
+  c.strokeStyle = '#d9b04f'; c.lineWidth = 2; c.lineCap = 'round'; c.beginPath(); c.moveTo(-78, -4); c.quadraticCurveTo(-56, -60, -20, -112); c.stroke();
+  serpentHead(c, -78, -6, -1, .9, '#d9b04f');
+  // a cairn on the ledge with a pole: gold ribbon and red, the two fires together
+  for (const [x, y, w] of [[24, -114, 12], [25, -120, 9], [24, -125, 6]]) { c.fillStyle = '#8a8b8f'; c.beginPath(); c.ellipse(x, y, w / 2, 3, 0, 0, 7); c.fill(); }
+  box(c, 40, -152, 2.5, 34, '#4a3626', .5);
+  const w1 = Math.sin(t * 1.6) * 3, w2 = Math.sin(t * 1.4 + 1) * 3;
+  c.strokeStyle = '#f2c46d'; c.lineWidth = 2; c.beginPath(); c.moveTo(42, -150); c.quadraticCurveTo(50 + w1, -152, 58 + w1 * 1.5, -146); c.stroke();
+  c.strokeStyle = '#d9465a'; c.beginPath(); c.moveTo(42, -145); c.quadraticCurveTo(50 + w2, -146, 57 + w2 * 1.5, -140); c.stroke();
+  // runes beside Thai script at the foot of the path
+  sign(c, -40, 14, 'SE', 'จุดชมวิว', '#e2b655', 7);
+  c.restore();
+}
+function hitCliff(x, y) { return x > CLIFF.x - 90 && x < CLIFF.x + 98 && y > CLIFF.y - 160 && y < CLIFF.y + 22; }
+let lookout = false;
+const canClimb = () => !skillDefs() || bodyTier() >= 1;
+function climb() {
+  if (!canClimb()) { say(line('world', 'lookout'), 'The lookout'); return; }
+  history.pushState({ room: 'world', lookout: true }, '');
+  fadeTo(() => {
+    lookout = true; follow = false; lek.path = null;
+    lek.x = CLIFF.top.x; lek.y = CLIFF.top.y; lek.dir = 0; lek.moving = false;
+    ale.x = lek.x - 18; ale.y = lek.y + 2; ale.dir = 0; ale.moving = false;
+    clampCam(); $('roomChip').hidden = false; $('roomName').textContent = '↓ climb down'; $('brand').hidden = true; $('stick').hidden = true;
+  });
+}
+function climbDown(back = true) {
+  if (!lookout) return;
+  if (back && history.state && history.state.lookout) { history.back(); return; }
+  fadeTo(() => {
+    lookout = false; lek.x = CLIFF.foot.x; lek.y = CLIFF.foot.y; lek.dir = 0; placeA();
+    cam.z = zMin() * 1.08; centreOn(lek.x, lek.y - 30); follow = true;
+    $('roomChip').hidden = true; $('brand').hidden = false; $('stick').hidden = !TOUCH;
+  });
+}
+
+// ══════════════════════════════════════════ walking: maps and pathfinding (v1's grid A*) ══════════════════════════════════════════
+HUB.door = { x: HUB.x, y: HUB.y + 12 };
+function walkWorld(x, y) {
+  if (y < 360 || y > 1250 || x < 60 || x > 1740 || !inEll(x, y, CLEAR, -30)) return false;
+  if (inEll(x, y, POND, 6)) {
+    // the island in front of the Longhouse-sala, and the stepping stones out to it
+    if (inEll(x, y, { x: ISL.x, y: ISL.y + 2, rx: ISL.rx - 14, ry: ISL.ry - 10 })) return !(x > HUB.x - 104 && x < HUB.x + 104 && y > HUB.y - 44 && y < HUB.y - 4);
+    return Math.abs(x - 900) < 16 && y > ISL.y + 20;
+  }
+  for (const h of HOUSES) {
+    if (x > h.x - h.hw - 6 && x < h.x + h.hw + 6 && y > h.y - 58 && y < h.y + 4) return false;
+    const [px, py] = POST[h.kind]; if (Math.hypot(x - h.x - px, (y - h.y - py) * 2) < 9) return false;
+  }
+  if (x > CLIFF.x - 86 && x < CLIFF.x + 98 && y > CLIFF.y - 60 && y < CLIFF.y + 6) return false;
+  return true;
+}
+// furniture footprints on a room's floor, in furniture units (they're drawn at FS)
+const FOOT = { stove: [48, 30], boat: [116, 30], hearth: [140, 30], tingBench: [236, 16] };
+function footprint(o) {
+  if (o.z === 0 || o.y <= WB) return null;
+  const f = FOOT[o.kind] || (o.w ? [o.w, Math.min(40, o.h * .35)] : null); if (!f) return null;
+  return [o.x - f[0] * FS / 2, o.y - f[1] * FS, o.x + f[0] * FS / 2, o.y + 3];
+}
+function walkRoom(R, x, y) {
+  if (y < WB + 14 || y > RH - 4) return false;
+  const f = (y - WB) / (RH - WB); if (x < 34 - f * 30 || x > 406 + f * 30) return false;
+  for (const o of R.objects) { const p = footprint(o); if (p && x > p[0] && x < p[2] && y > p[1] && y < p[3]) return false; }
+  return true;
+}
+function makeGrid(w, h, cell, walk) {
+  const gc = Math.ceil(w / cell), gr = Math.ceil(h / cell), d = new Uint8Array(gc * gr), m = cell * .35;
+  for (let r = 0; r < gr; r++) for (let c = 0; c < gc; c++) { const x = c * cell + cell / 2, y = r * cell + cell / 2; d[r * gc + c] = walk(x, y) && walk(x - m, y) && walk(x + m, y) && walk(x, y - m * .6) && walk(x, y + m * .6) ? 1 : 0; }
+  return { cell, gc, gr, d, walk };
+}
+const grids = {};
+function gridFor(id) { return grids[id] || (grids[id] = id === 'world' ? makeGrid(W, H, 16, walkWorld) : makeGrid(RW, RH, 10, (x, y) => walkRoom(ROOMS[id], x, y))); }
+function nearestOpen(G, c, r) {
+  for (let d = 0; d < 30; d++) for (let dr = -d; dr <= d; dr++) for (let dc = -d; dc <= d; dc++) {
+    if (Math.max(Math.abs(dr), Math.abs(dc)) !== d) continue;
+    const cc = c + dc, rr = r + dr; if (cc >= 0 && rr >= 0 && cc < G.gc && rr < G.gr && G.d[rr * G.gc + cc]) return [cc, rr];
+  }
+  return null;
+}
+function clearLine(G, a, b) { const n = Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / (G.cell / 2)); for (let i = 1; i <= n; i++) if (!G.walk(lerp(a.x, b.x, i / n), lerp(a.y, b.y, i / n))) return false; return true; }
+function findPath(G, x0, y0, x1, y1) {
+  const { cell, gc, gr, d } = G;
+  const s = nearestOpen(G, Math.floor(x0 / cell), Math.floor(y0 / cell)), g = nearestOpen(G, Math.floor(x1 / cell), Math.floor(y1 / cell));
+  if (!s || !g) return null;
+  const si = s[1] * gc + s[0], gi = g[1] * gc + g[0];
+  const came = new Int32Array(gc * gr).fill(-1), cost = new Float32Array(gc * gr).fill(Infinity);
+  const open = [[0, si]]; cost[si] = 0;
+  const hfn = (i) => Math.hypot(i % gc - g[0], Math.floor(i / gc) - g[1]);
+  while (open.length) {
+    let bi = 0; for (let i = 1; i < open.length; i++) if (open[i][0] < open[bi][0]) bi = i;
+    const [, cur] = open.splice(bi, 1)[0];
+    if (cur === gi) break;
+    const cx = cur % gc, cy = Math.floor(cur / gc);
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      if (!dx && !dy) continue; const nx = cx + dx, ny = cy + dy; if (nx < 0 || ny < 0 || nx >= gc || ny >= gr) continue;
+      const ni = ny * gc + nx; if (!d[ni]) continue; if (dx && dy && (!d[cy * gc + nx] || !d[ny * gc + cx])) continue;
+      const nc = cost[cur] + (dx && dy ? 1.414 : 1);
+      if (nc < cost[ni]) { cost[ni] = nc; came[ni] = cur; open.push([nc + hfn(ni), ni]); }
+    }
+  }
+  if (came[gi] === -1 && gi !== si) return null;
+  const pts = []; for (let i = gi; i !== -1 && i !== si; i = came[i]) pts.unshift({ x: (i % gc) * cell + cell / 2, y: Math.floor(i / gc) * cell + cell / 2 });
+  if (G.walk(x1, y1)) pts.push({ x: x1, y: y1 });
+  // smooth: drop points with a clear line of sight
+  const out = []; let from = { x: x0, y: y0 };
+  for (let i = 0; i < pts.length; i++) if (i === pts.length - 1 || !clearLine(G, from, pts[i + 1])) { out.push(pts[i]); from = pts[i]; }
+  return out;
+}
+
+// ══════════════════════════════════════════ Lek and A ══════════════════════════════════════════
+const lek = { x: HOUSES[0].door.x, y: HOUSES[0].door.y + 22, dir: 0, dist: 0, moving: false, path: null, onArrive: null, trail: [] };
+const ale = { x: 0, y: 0, dir: 0, dist: 0, moving: false };
+const STRIDE = 8; // world units per pose: four poses make one full, obvious stride
+const frameOf = (p) => (p.moving ? WALK_SEQ[Math.floor(p.dist / STRIDE) % 4] : 1);
+const sceneScale = () => (scene === 'world' ? 1 : FS);
+const walkOK = (x, y) => (scene === 'world' ? walkWorld(x, y) : walkRoom(ROOMS[scene], x, y));
+// A walks at Lek's right shoulder, a little behind: facing the viewer his right is to screen-left.
+function shoulder(dir) { const s = sceneScale(); return [[-20, -5], [20, 6], [6, -13], [-6, 13]][dir].map((v) => v * s); }
+function placeA() { const [ox, oy] = shoulder(lek.dir); ale.x = lek.x + ox; ale.y = lek.y + oy; if (!walkOK(ale.x, ale.y)) { ale.x = lek.x; ale.y = lek.y - 2; } ale.dir = lek.dir; ale.moving = false; lek.trail = []; }
+let follow = false, marker = null;
+function goTo(x, y, cb) {
+  follow = true;
+  lek.path = findPath(gridFor(scene), lek.x, lek.y, x, y); lek.onArrive = cb || null;
+  if (lek.path && lek.path.length) return true;
+  lek.path = null; lek.onArrive = null;
+  if (cb && Math.hypot(lek.x - x, lek.y - y) < 60 * sceneScale()) { cb(); return true; }
+  return false;
+}
+const keys = new Set();
+// the thumb joystick, beside tap-to-walk (Lek chose both); pushed to the rim, he runs
+const stick = { x: 0, y: 0, id: null };
+const TOUCH = matchMedia('(pointer: coarse)').matches;
+function dirOf(vx, vy) { return Math.abs(vx) > Math.abs(vy) * 1.1 ? (vx > 0 ? 3 : 2) : (vy > 0 ? 0 : 1); }
+function moveBy(p, vx, vy, dt) {
+  const x0 = p.x, y0 = p.y, nx = p.x + vx * dt, ny = p.y + vy * dt;
+  if (walkOK(nx, p.y)) p.x = nx; if (walkOK(p.x, ny)) p.y = ny;
+  const moved = Math.hypot(p.x - x0, p.y - y0);
+  p.moving = moved > .01; if (p.moving) { p.dist += moved / sceneScale(); p.dir = dirOf(p.x - x0, p.y - y0); }
+  return moved;
+}
+function updatePeople(dt) {
+  if (busy || lookout) { lek.moving = ale.moving = false; return; }
+  const s = sceneScale();
+  let ix = 0, iy = 0;
+  if (keys.has('arrowleft') || keys.has('a')) ix -= 1; if (keys.has('arrowright') || keys.has('d')) ix += 1;
+  if (keys.has('arrowup') || keys.has('w')) iy -= 1; if (keys.has('arrowdown') || keys.has('s')) iy += 1;
+  const sm = Math.hypot(stick.x, stick.y);
+  if (!ix && !iy && sm > .18) { ix = stick.x; iy = stick.y; }
+  const byKeys = !!(ix || iy);
+  let left = 0;
+  if (byKeys) { lek.path = null; lek.onArrive = null; follow = true; }
+  else if (lek.path && lek.path.length) {
+    const tgt = lek.path[0], dx = tgt.x - lek.x, dy = tgt.y - lek.y, d = Math.hypot(dx, dy);
+    if (d < 4 * s) { lek.path.shift(); if (!lek.path.length) { lek.path = null; const cb = lek.onArrive; lek.onArrive = null; lek.moving = false; if (cb) cb(); return; } }
+    else { ix = dx / d; iy = dy / d; }
+    for (let i = 0, a = lek; i < (lek.path || []).length; i++) { left += Math.hypot(lek.path[i].x - a.x, lek.path[i].y - a.y); a = lek.path[i]; }
+  }
+  // Shift runs; on the phone a long walk runs by itself, as in v1. Body makes the run faster.
+  const run = keys.has('shift') || sm > .92 || left > 260 * s, sp = (run ? 175 + 15 * bodyTier() : 105) * s;
+  if (ix || iy) { const l = Math.hypot(ix, iy); moveBy(lek, ix / l * sp, iy / l * sp, dt); } else lek.moving = false;
+  if (lek.moving) { lek.trail.push({ x: lek.x, y: lek.y }); if (lek.trail.length > 40) lek.trail.shift(); }
+  // walking into a door goes in; walking out over the threshold goes out
+  if (byKeys && lek.moving) {
+    if (scene === 'world') { for (const h of [...HOUSES, HUB]) if (lek.dir === 1 && Math.hypot(lek.x - h.door.x, lek.y - h.door.y) < 14) { enter(h); break; } }
+    else if (lek.dir === 0 && lek.y > RH - 12) leaveRoom();
+  }
+  // A keeps to his right shoulder, keeps pace when he runs, and finds her own way round things
+  const [ox, oy] = shoulder(lek.dir);
+  let tx = lek.x + ox, ty = lek.y + oy;
+  if (!walkOK(tx, ty)) { const back = lek.trail[Math.max(0, lek.trail.length - 8)]; if (back) { tx = back.x; ty = back.y; } else { tx = ale.x; ty = ale.y; } }
+  const dx = tx - ale.x, dy = ty - ale.y, d = Math.hypot(dx, dy);
+  if (d > 2.5 * s) { const v = Math.min(d * 4, sp * 1.25, Math.max(sp, 105 * s) * 1.25); moveBy(ale, dx / d * v, dy / d * v, dt); if (!ale.moving && d > 60 * s) placeA(); }
+  else { ale.moving = false; if (!lek.moving) ale.dir = lek.dir; }
+  // the camera follows him outside, until a drag takes it
+  if (scene === 'world' && follow && !gesture) {
+    const k = 1 - Math.exp(-dt * 3), cx = lek.x - vw / cam.z / 2, cy = lek.y - 30 - vh / cam.z / 2;
+    cam.x += (cx - cam.x) * k; cam.y += (cy - cam.y) * k; clampCam();
+  }
+}
+function drawPersonAt(c, who, p, s, t) {
+  c.save(); c.translate(p.x, p.y); if (s !== 1) c.scale(s, s);
+  DRAW_PERSON[who](c, p.dir, frameOf(p), t, who === 'lek' ? { build: lekBuild() } : { lanternLit: SKY.n > .15 });
+  c.restore();
+}
+// where A's lantern light is, for the glow pass
+function lanternAt(s) { const k = LOOKS.a.h / 42, [x, y] = lanternPos(ale.dir, k, 0); return [ale.x + x * s, ale.y + y * s]; }
+function hitPerson(x, y, s) {
+  for (const [who, p, h] of [['lek', lek, 50], ['a', ale, 54]]) if (Math.abs(x - p.x) < 12 * s && y > p.y - h * s && y < p.y + 6 * s) return who;
+  return null;
+}
+function enter(h) { if (busy) return; lek.path = null; lek.onArrive = null; goRoom(h.id); }
+
+// ══════════════════════════════════════════ the character sheets ══════════════════════════════════════════
+const CHAR_PLACEHOLDER = { lek: { name: 'You', title: '', lines: [] }, a: { name: 'Your companion', title: '', lines: [] } };
+function charText(who) { const d = village.content && village.content.data && village.content.data.characters; return Object.assign({}, CHAR_PLACEHOLDER[who], d && d[who]); }
+let charWho = null, charMode = null, auraLevel = 0;
+const dayLabel = (ms) => new Date(ms).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+function renderChar() {
+  const who = charWho, t = charText(who);
+  $('charName').textContent = t.name; $('charTitle').textContent = t.title || '';
+  let html = '<canvas class="art" id="charArt"></canvas>';
+  if (t.lines && t.lines.length) html += `<section>${t.lines.map((l) => `<p class="lore">${esc(l)}</p>`).join('')}</section>`;
+  if (who === 'lek') {
+    gatherPractice();
+    const pw = powers();
+    html += '<section><h3>Powers</h3>';
+    if (charMode === 'declare') html += '<p class="hearthNote">At the hearth. A tier you know is yours can be declared here, and the sheet honours it at once.</p>';
+    if (!pw) {
+      const n = Object.keys(village.sheet.ledger).length;
+      html += `<p class="muted">The powers arrive from the PC with the next sync. ${n} practice session${n === 1 ? ' is' : 's are'} already gathered here, waiting to be counted.</p>`;
+      auraLevel = 0;
+    } else {
+      const en = pw.out.find((x) => x.def.aura); auraLevel = en ? (en.tier + (en.tier < 4 ? en.toward : 0)) / 4 : 0;
+      for (const x of pw.out) {
+        const { def, tier, toward, list, n } = x;
+        const pips = [0, 1, 2, 3].map((i) => `<i><b style="width:${i < tier ? 100 : i === tier ? Math.round(toward * 100) : 0}%"></b></i>`).join('');
+        const grew = list.slice(0, 4).map((r) => `<button data-src="${esc(r[0])}">${esc(r[2] || PRACTICE_HOME[r[0]][1])} <span>· ${esc(dayLabel(r[3]))}</span></button>`).join('');
+        html += `<div class="power${def.private ? ' private' : ''}">
+          <div class="ph"><b>${esc(def.name)}</b>${def.aura ? `<span class="aura" style="opacity:${(.25 + .75 * auraLevel).toFixed(2)}"></span>` : ''}<span class="tier">${tier ? esc(pw.tiers[tier - 1]) : 'seed'}${x.declared ? ' · declared' : ''}</span></div>
+          <div class="pips">${pips}</div>
+          ${def.sub ? `<div class="sub">${esc(def.sub)}</div>` : ''}
+          <div class="muted">${tier ? '' : esc(pw.seed) + ' '}Grown by ${esc(def.grownBy || '')}.</div>
+          ${n ? `<div class="grew"><div class="meta">${n} session${n === 1 ? '' : 's'}${def.sameAs ? ' (the same practice, deeper)' : ''}</div>${def.sameAs ? '' : grew}</div>` : ''}
+          ${def.uses ? `<div class="uses">${esc(def.uses)}</div>` : ''}
+          ${village.sheet.declared[def.id] ? `<div class="decl">Declared at the hearth · ${esc(dayLabel(stamp(village.sheet.declared[def.id].at)))}</div>` : ''}
+          ${charMode === 'declare' && tier < 4 ? `<button class="btn declare" data-power="${esc(def.id)}" data-tier="${tier + 1}">${esc(pw.tiers[tier])} is mine</button>` : ''}
+        </div>`;
+      }
+    }
+    html += '</section>';
+  }
+  html += `<section><h3>The twelve poses</h3><p class="muted">Toward you, away, left and right, three frames each${who === 'a' ? ', then the scroll and the seat' : ', then channelling and the seat'}.</p><canvas class="poses" id="charPoses"></canvas></section>`;
+  $('charBody').innerHTML = html;
+  for (const b of $('charBody').querySelectorAll('.declare')) b.onclick = () => declare(b.dataset.power, +b.dataset.tier);
+  for (const b of $('charBody').querySelectorAll('.grew button')) b.onclick = () => { const [src, title] = PRACTICE_HOME[b.dataset.src]; closeCharLayer(); openTemple(P(src), title); };
+  drawPoseSheet();
+}
+// A declaration is honoured at once and never taken back (growth only).
+function declare(id, tier) {
+  const P = powers(), x = P && P.out.find((o) => o.def.id === id); if (!x) return;
+  if (!confirm(`${x.def.name}: ${P.tiers[tier - 1]}. Declare it yours?`)) return;
+  village.sheet.declared[id] = { tier, at: new Date().toISOString() };
+  saveVillage(); renderChar();
+}
+function drawPoseSheet() {
+  const k = $('charPoses'); if (!k) return;
+  const cw = 34, chh = 60, cols = 4, w = k.clientWidth || 320, z = w / (cw * cols), dp = Math.min(3, devicePixelRatio || 1);
+  k.style.height = (chh * 4 * z) + 'px'; k.width = Math.round(w * dp); k.height = Math.round(chh * 4 * z * dp);
+  const c = k.getContext('2d'), draw = DRAW_PERSON[charWho];
+  c.fillStyle = '#2e3f2c'; c.fillRect(0, 0, k.width, k.height);
+  for (let d = 0; d < 4; d++) for (let f = 0; f < 4; f++) {
+    c.setTransform(z * dp, 0, 0, z * dp, (f * cw + cw / 2) * z * dp, (d * chh + chh - 6) * z * dp);
+    if (f < 3) draw(c, d, f, T, charWho === 'lek' ? { build: lekBuild() } : {});
+    else if (d === 0) draw(c, 0, 1, T, charWho === 'lek' ? { build: lekBuild(), channel: 1 } : { scroll: true });
+    else if (d === 1) draw(c, 0, 1, T, { seated: true, build: lekBuild() });
+  }
+}
+// the portrait: Lek channels now and then, A's eyes turn serpent-gold
+function drawPortrait() {
+  const k = $('charArt'); if (!k || !charWho) return;
+  const w = k.clientWidth, h = k.clientHeight, dp = Math.min(3, devicePixelRatio || 1);
+  if (k.width !== Math.round(w * dp)) { k.width = Math.round(w * dp); k.height = Math.round(h * dp); }
+  const c = k.getContext('2d'); c.setTransform(dp, 0, 0, dp, 0, 0);
+  const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#141834'); g.addColorStop(1, '#2a3a2a'); c.fillStyle = g; c.fillRect(0, 0, w, h);
+  const ch = clamp(Math.sin(T * .9) * 1.6 - .4, 0, 1), z = h / 62;
+  c.save(); c.globalCompositeOperation = 'lighter';
+  if (charWho === 'lek') glow(c, w / 2, h * .52, h * .55, '#f2c46d', .05 + .3 * auraLevel);
+  c.restore();
+  c.translate(w / 2, h - 8); c.scale(z, z);
+  DRAW_PERSON[charWho](c, 0, 1, T, charWho === 'lek' ? { build: lekBuild(), channel: ch } : { channel: ch, lanternLit: true });
+}
+function openChar(who, push = true, mode = null) {
+  charWho = who; charMode = mode;
+  if (push) history.pushState({ room: scene, layer: 'char', who, mode }, '');
+  $('char').classList.add('open'); $('char').setAttribute('aria-hidden', 'false');
+  renderChar();
+}
+function closeCharLayer() { charWho = null; $('char').classList.remove('open'); $('char').setAttribute('aria-hidden', 'true'); }
+
 // ══════════════════════════════════════════ canvas, camera, scenes ══════════════════════════════════════════
 const cv = $('c'), ctx = cv.getContext('2d');
 let vw = 0, vh = 0, dpr = 1;
@@ -1173,6 +1804,7 @@ let scene = 'world'; // or a room id
 let T = 0;
 function zMin() { return Math.max(vw / W, vh / H); }
 function clampCam() {
+  if (lookout) { cam.z = Math.min(vw / 1720, vh / (H - 240)); cam.x = (W - vw / cam.z) / 2; cam.y = (H + 200 - vh / cam.z) / 2; return; }
   cam.z = clamp(cam.z, zMin(), 2.4);
   cam.x = clamp(cam.x, 0, W - vw / cam.z);
   cam.y = clamp(cam.y, 0, H - vh / cam.z);
@@ -1184,7 +1816,7 @@ function resize() {
   dpr = Math.min(3, window.devicePixelRatio || 1);
   vw = innerWidth; vh = innerHeight;
   cv.width = Math.round(vw * dpr); cv.height = Math.round(vh * dpr);
-  if (first) { cam.z = zMin() * 1.08; centreOn(HUB.x, HUB.y - 40); }
+  if (first) { cam.z = zMin() * 1.08; centreOn(HUB.x, (HUB.y + lek.y) / 2 - 20); }
   else { clampCam(); centreOn(cx, cy); }
   const S = clamp(dpr * zMin() * 1.6, 1, 2);
   if (!back || Math.abs(S - staticS) > .2) buildStatic(S);
@@ -1211,15 +1843,16 @@ cv.addEventListener('pointermove', (e) => {
   pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   if (!gesture) return;
   if (Math.hypot(e.clientX - gesture.x0, e.clientY - gesture.y0) > 9) gesture.moved = true;
-  if (scene !== 'world') return;
+  if (scene !== 'world' || lookout) return;
   if (pointers.size >= 2) {
     const p = pinchState();
     const wx = p.mid.x / cam.z + cam.x, wy = p.mid.y / cam.z + cam.y; // world point under the old midpoint
     cam.z = clamp(cam.z * p.dist / (gesture.dist || p.dist), zMin(), 2.4);
     cam.x = wx - p.mid.x / cam.z - (p.mid.x - gesture.mid.x) / cam.z; cam.y = wy - p.mid.y / cam.z - (p.mid.y - gesture.mid.y) / cam.z;
-    gesture.dist = p.dist; gesture.mid = p.mid; clampCam();
+    gesture.dist = p.dist; gesture.mid = p.mid; clampCam(); follow = false;
   } else if (!gesture.multi) {
     const now_ = performance.now(), dx = e.clientX - gesture.lastX, dy = e.clientY - gesture.lastY, dt = Math.max(1, now_ - gesture.lastT) / 1000;
+    if (gesture.moved) follow = false;
     cam.x -= dx / cam.z; cam.y -= dy / cam.z; clampCam();
     cam.vx = lerp(cam.vx, -dx / cam.z / dt, .5); cam.vy = lerp(cam.vy, -dy / cam.z / dt, .5);
     gesture.lastX = e.clientX; gesture.lastY = e.clientY; gesture.lastT = now_;
@@ -1238,7 +1871,7 @@ function endPointer(e) {
 cv.addEventListener('pointerup', endPointer);
 cv.addEventListener('pointercancel', endPointer);
 cv.addEventListener('wheel', (e) => {
-  if (scene !== 'world') return;
+  if (scene !== 'world' || lookout) return;
   e.preventDefault();
   const wx = e.clientX / cam.z + cam.x, wy = e.clientY / cam.z + cam.y;
   cam.z = clamp(cam.z * Math.exp(-e.deltaY * .0015), zMin(), 2.4);
@@ -1258,27 +1891,75 @@ function hitObject(sx, sy) {
   return best;
 }
 function hover(sx, sy) {
-  if (scene === 'world') cv.style.cursor = hitHouse(sx / cam.z + cam.x, sy / cam.z + cam.y) ? 'pointer' : 'grab';
+  if (scene === 'world') { const wx = sx / cam.z + cam.x, wy = sy / cam.z + cam.y; cv.style.cursor = hitPerson(wx, wy, 1) || hitHouse(wx, wy) ? 'pointer' : 'grab'; }
   else cv.style.cursor = hitObject(sx, sy) ? 'pointer' : 'default';
 }
 let pressed = null; // { id, t } a brief glow on what was tapped
 function tap(sx, sy) {
   if (busy) return;
   if (!village.settings.seenHint) { village.settings.seenHint = true; saveVillage(); }
+  if (scene === 'world' && lookout) { climbDown(); return; }
   if (scene === 'world') {
-    const h = hitHouse(sx / cam.z + cam.x, sy / cam.z + cam.y);
-    if (h) { pressed = { id: h.id, t: T }; setTimeout(() => goRoom(h.id), 160); }
+    const wx = sx / cam.z + cam.x, wy = sy / cam.z + cam.y;
+    const who = hitPerson(wx, wy, 1);
+    if (!who && hitCliff(wx, wy)) {
+      if (Math.hypot(lek.x - CLIFF.foot.x, lek.y - CLIFF.foot.y) < 30 || !goTo(CLIFF.foot.x, CLIFF.foot.y, climb)) climb();
+      return;
+    }
+    if (who) { openChar(who); return; }
+    const h = hitHouse(wx, wy);
+    if (h) {
+      // step 1's tap-to-enter becomes Lek walking there
+      pressed = { id: h.id, t: T };
+      if (Math.hypot(lek.x - h.door.x, lek.y - h.door.y) < 30 || !goTo(h.door.x, h.door.y, () => enter(h))) setTimeout(() => enter(h), 160);
+      return;
+    }
+    marker = { x: wx, y: wy, t: T }; goTo(wx, wy);
     return;
   }
+  const v = roomView(), rx = (sx - v.ox) / v.z, ry = (sy - v.oy) / v.z;
+  const who = hitPerson(rx, ry, FS);
+  if (who) { openChar(who); return; }
   const o = hitObject(sx, sy);
-  if (!o) return;
-  if (o.door) { leaveRoom(); return; }
+  if (!o) { if (ry > WB && ry < RH) { marker = { x: rx, y: ry, t: T }; goTo(rx, ry); } return; }
+  if (o.door) { if (lek.y > RH - 40 || !goTo(220, RH - 6, leaveRoom)) leaveRoom(); return; }
   pressed = { o, t: T };
+  const at = standAt(o), act = () => { lek.dir = 1; useObject(o); };
+  if (Math.hypot(lek.x - at.x, lek.y - at.y) < 26 || !goTo(at.x, at.y, act)) act();
+}
+// where Lek stands to use a thing: in front of it, or below it on the floor when it's on the back wall
+function standAt(o) { return o.z === 0 || o.y <= WB ? { x: o.x, y: WB + 30 } : { x: o.x, y: o.y + 18 }; }
+function useObject(o) {
   const R = ROOMS[scene];
   if (o.act.open) setTimeout(() => openTemple(o.act.open, o.act.title), 140);
   else if (o.act.letters) openSheet();
+  else if (o.act.declare) openChar('lek', true, 'declare');
   else if (o.act.say) say(line(scene, o.act.say), o.label, R.c);
 }
+// Enter or E: go in at a door, use what's within reach, or step out over the threshold
+function useNearest() {
+  if (busy) return;
+  if (scene === 'world') {
+    if (lookout) { climbDown(); return; }
+    for (const h of [...HOUSES, HUB]) if (Math.hypot(lek.x - h.door.x, lek.y - h.door.y) < 34) { enter(h); return; }
+    if (Math.hypot(lek.x - CLIFF.foot.x, lek.y - CLIFF.foot.y) < 34) climb();
+    return;
+  }
+  if (lek.y > RH - 40) { leaveRoom(); return; }
+  let best = null, bd = 36;
+  for (const o of ROOMS[scene].objects) { if (!o.act) continue; const a = standAt(o), d = Math.hypot(lek.x - a.x, lek.y - a.y); if (d < bd) { bd = d; best = o; } }
+  if (best) { pressed = { o: best, t: T }; lek.dir = 1; useObject(best); }
+}
+addEventListener('keydown', (e) => {
+  if (/INPUT|TEXTAREA/.test(document.activeElement && document.activeElement.tagName)) return;
+  const k = e.key.toLowerCase();
+  if (k === 'escape') { backOrClose(); return; }
+  if (!$('temple').hidden || charWho || $('sheet').classList.contains('open')) return;
+  if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd', 'shift'].includes(k)) { keys.add(k); e.preventDefault(); }
+  if (k === 'enter' || k === 'e') useNearest();
+});
+addEventListener('keyup', (e) => keys.delete(e.key.toLowerCase()));
+addEventListener('blur', () => keys.clear());
 
 // ── scenes and layers, with the phone's back button ──
 let busy = false;
@@ -1287,7 +1968,16 @@ function fadeTo(fn) {
   setTimeout(() => { fn(); $('fade').classList.remove('on'); setTimeout(() => { busy = false; }, 220); }, 230);
 }
 function showScene(id) {
+  const prev = scene;
   scene = id;
+  keys.clear(); marker = null;
+  if (id === 'world' && prev !== 'world') {
+    const h = prev === 'hub' ? HUB : HOUSES.find((x) => x.id === prev);
+    lek.x = h.door.x; lek.y = h.door.y + 4; lek.dir = 0; placeA(); goTo(lek.x, lek.y + 16);
+    centreOn(lek.x, lek.y - 30); follow = true;
+  } else if (id !== 'world') {
+    lek.x = 220; lek.y = RH - 8; lek.dir = 1; placeA(); goTo(220, RH - 70);
+  }
   $('roomChip').hidden = id === 'world';
   $('brand').hidden = id !== 'world';
   if (id !== 'world') $('roomName').textContent = roomTitle(id);
@@ -1307,19 +1997,22 @@ function openTemple(src, title) {
   $('temple').appendChild(f);
   $('temple').hidden = false;
 }
-function closeTempleLayer() { $('temple').hidden = true; const f = $('templeFrame'); if (f) f.remove(); }
+function closeTempleLayer() { const f = $('templeFrame'); $('temple').hidden = true; if (f) { f.remove(); gatherPractice(); } }
 function openSheet() { history.pushState({ room: scene, layer: 'letters' }, ''); renderLetters(); sync(); $('sheet').classList.add('open'); $('sheet').setAttribute('aria-hidden', 'false'); }
 function closeSheetLayer() { $('sheet').classList.remove('open'); $('sheet').setAttribute('aria-hidden', 'true'); document.activeElement && document.activeElement.blur(); }
-const backOrClose = () => { closeTempleLayer(); closeSheetLayer(); if (history.state && history.state.layer) history.back(); };
+const backOrClose = () => { closeTempleLayer(); closeSheetLayer(); closeCharLayer(); if (history.state && history.state.layer) history.back(); };
+$('charClose').onclick = backOrClose;
 $('templeBack').onclick = backOrClose;
 $('sheetClose').onclick = backOrClose;
-$('roomChip').onclick = leaveRoom;
+$('roomChip').onclick = () => (lookout ? climbDown() : leaveRoom());
 // the temples' own back buttons post this
 addEventListener('message', (e) => { if ($('templeFrame') && e.source === $('templeFrame').contentWindow && (e.data === 'close-temple' || (e.data && e.data.action === 'close-temple'))) backOrClose(); });
 addEventListener('popstate', (e) => {
   const s = e.state || {};
   if (s.layer !== 'temple') closeTempleLayer();
   if (s.layer !== 'letters') closeSheetLayer();
+  if (s.layer !== 'char') closeCharLayer(); else if (!charWho) openChar(s.who, false, s.mode);
+  if (lookout && !s.lookout) climbDown(false);
   const want = s.room || 'world';
   if (want !== scene) fadeTo(() => showScene(want));
 });
@@ -1341,6 +2034,7 @@ function hideSay() { $('say').classList.remove('on'); }
 // ══════════════════════════════════════════ simulation & render ══════════════════════════════════════════
 function update(dt) {
   T += dt;
+  updatePeople(dt);
   if (scene === 'world' && !gesture && (cam.vx || cam.vy)) {
     cam.x += cam.vx * dt; cam.y += cam.vy * dt; clampCam();
     const k = Math.pow(.04, dt); cam.vx *= k; cam.vy *= k;
@@ -1354,6 +2048,12 @@ function update(dt) {
 
 function renderWorld(c, n, dusk) {
   c.setTransform(1, 0, 0, 1, 0, 0); c.fillStyle = '#070918'; c.fillRect(0, 0, cv.width, cv.height);
+  if (lookout) {
+    // from the cliff the whole clearing fits the width: sky above it, the forest floor below
+    const [top] = skyCols(n, dusk), y0 = -cam.y * cam.z * dpr, y1 = (H - cam.y) * cam.z * dpr;
+    c.fillStyle = top; c.fillRect(0, 0, cv.width, y0 + 2);
+    c.fillStyle = mix('#1f342b', '#0a1210', n); c.fillRect(0, y1 - 2, cv.width, cv.height - y1 + 2);
+  }
   const s = dpr * cam.z; c.setTransform(s, 0, 0, s, -cam.x * s, -cam.y * s);
   const vx0 = cam.x, vy0 = cam.y, vx1 = cam.x + vw / cam.z, vy1 = cam.y + vh / cam.z;
   // sky (looking north: dawn glows on the right, dusk on the left)
@@ -1406,6 +2106,9 @@ function renderWorld(c, n, dusk) {
   const things = HOUSES.map((h) => ({ y: h.y, d: () => { c.save(); c.translate(h.x, h.y); DRAW[h.kind](c, T, n > .25); c.restore(); } }));
   things.push({ y: HUB.y, d: () => drawLonghouse(c, T, n > .25) });
   things.push({ y: HUB.y + 1, d: () => drawRing(c, n, T) });
+  things.push({ y: CLIFF.y, d: () => drawCliff(c, T) });
+  const py = (p) => (lookout ? CLIFF.y + 1 + (p === lek ? .1 : 0) : p.y);
+  things.push({ y: py(lek), d: () => drawPersonAt(c, 'lek', lek, 1, T) }, { y: py(ale), d: () => drawPersonAt(c, 'a', ale, 1, T) });
   things.sort((a, b) => a.y - b.y).forEach((o) => o.d());
   c.drawImage(front, 0, FRONT_Y, W, H - FRONT_Y);
   // darkness
@@ -1427,13 +2130,15 @@ function renderWorld(c, n, dusk) {
   const es = HOUSES[3]; for (let i = 0; i < 6; i++) { const a = T * .5 + i, tw = .5 + .5 * Math.sin(T * 3 + i * 2); glow(c, es.x + Math.cos(a) * 70, es.y - 140 + Math.sin(a * .8) * 30, 6, '#d8cfff', .5 * tw * L); }
   const ho = HOUSES[7]; glow(c, ho.x - 200, ho.y - 8, 10, '#ff6a7a', .3 * L); glow(c, ho.x - 146, ho.y - 20, 22, '#ffcf7a', .35 * L);
   for (const h of HOUSES) { const [px, py] = POST[h.kind]; glow(c, h.x + px, h.y + py - 42, 14, '#ffcf7a', .25 * L); }
+  { const [lx, ly] = lanternAt(1); glow(c, lx, ly, 46, '#ffcf7a', .1 + .32 * n); }
+  drawMarker(c, 1);
   for (const f of fireflies) { const a = (.15 + .85 * n) * (.4 + .6 * Math.max(0, Math.sin(T * 2 + f.p))); glow(c, f.x, f.y, 7, '#e8f59a', .6 * a); }
   if (pressed && pressed.id && T - pressed.t < .5) { const h = pressed.id === 'hub' ? HUB : HOUSES.find((x) => x.id === pressed.id); glow(c, h.x, h.y - 60, 130, h.c, .35 * (1 - (T - pressed.t) / .5)); }
   c.globalCompositeOperation = 'source-over';
   // labels in screen space, so they stay readable at any zoom
   c.setTransform(dpr, 0, 0, dpr, 0, 0);
   c.textAlign = 'center';
-  for (const h of [...HOUSES, HUB]) {
+  for (const h of [...HOUSES, HUB, { name: 'The lookout', x: CLIFF.x, y: CLIFF.y + 2, c: '#9aa0aa' }]) {
     const sx = (h.x - cam.x) * cam.z, sy = ((h === HUB ? HUB.y + 30 : h.y + 34) - cam.y) * cam.z;
     if (sx < -60 || sx > vw + 60 || sy < -20 || sy > vh + 20) continue;
     c.font = '600 15px "Cormorant Garamond", Georgia, serif';
@@ -1444,7 +2149,7 @@ function renderWorld(c, n, dusk) {
   c.globalAlpha = 1;
   const vg = c.createRadialGradient(vw / 2, vh / 2, Math.min(vw, vh) * .45, vw / 2, vh / 2, Math.max(vw, vh) * .78); vg.addColorStop(0, 'rgba(5,6,16,0)'); vg.addColorStop(1, 'rgba(5,6,16,.5)'); c.fillStyle = vg; c.fillRect(0, 0, vw, vh);
   if (!village.settings.seenHint) {
-    c.font = '500 13px Inter, system-ui, sans-serif'; const msg = 'Drag to look around · pinch to zoom · tap a house to go in';
+    c.font = '500 13px Inter, system-ui, sans-serif'; const msg = TOUCH ? 'Tap or use the stick to walk · tap a house to go in · tap Lek' : 'Tap or WASD to walk · tap a house to go in · tap Lek';
     const w = Math.min(vw - 32, c.measureText(msg).width + 28), y = vh - Math.max(26, 26) - 18;
     c.fillStyle = 'rgba(14,16,34,.82)'; c.beginPath(); c.roundRect(vw / 2 - w / 2, y - 16, w, 32, 16); c.fill();
     c.fillStyle = '#ece6da'; c.fillText(msg, vw / 2, y + 4.5, w - 20);
@@ -1458,9 +2163,10 @@ function renderRoom(c, n) {
   c.save(); c.beginPath(); c.rect(0, 0, RW, RH); c.clip();
   drawShell(c, R, n, T);
   const lamps = R.lanterns.map((x, i) => hangingLantern(c, x, T, i));
-  const objs = [...R.objects].sort((a, b) => a.z - b.z);
-  for (const o of objs) { c.save(); c.translate(o.x, o.y); c.scale(FS, FS); FURN[o.kind](c, o, R, T, n); c.restore(); }
-  drawThreshold(c, n, T);
+  // furniture, the threshold and the people, back to front
+  const items = R.objects.map((o) => ({ z: o.z, d: () => { c.save(); c.translate(o.x, o.y); c.scale(FS, FS); FURN[o.kind](c, o, R, T, n); c.restore(); } }));
+  items.push({ z: 752, d: () => drawThreshold(c, n, T) }, { z: lek.y, d: () => drawPersonAt(c, 'lek', lek, FS, T) }, { z: ale.y, d: () => drawPersonAt(c, 'a', ale, FS, T) });
+  items.sort((a, b) => a.z - b.z).forEach((it) => it.d());
   // the same light as outside: dim with the sky, lamps glow at night, daylight through the windows
   c.fillStyle = `rgba(8,12,38,${.08 + .42 * n})`; c.fillRect(0, 0, RW, RH);
   c.globalCompositeOperation = 'lighter';
@@ -1468,6 +2174,8 @@ function renderRoom(c, n) {
   if (R.open) glow(c, 220, 300, 260, '#cfe0ff', .1 * (1 - n));
   for (const [x, y] of lamps) { glow(c, x, y, 70, '#ffcf7a', .12 + .35 * n); glow(c, x, y, 16, '#fff2c0', .3 + .3 * n); }
   for (const o of R.objects) for (const [dx, dy, r, col, an, ad] of FURN_LIGHT[o.kind] || []) glow(c, o.x + dx * FS, o.y + dy * FS, r * FS, col, lerp(ad, an, n));
+  { const [lx, ly] = lanternAt(FS); glow(c, lx, ly, 52, '#ffcf7a', .1 + .3 * n); }
+  drawMarker(c, FS);
   if (pressed && pressed.o && T - pressed.t < .5) glow(c, pressed.o.x, pressed.o.y - pressed.o.h * FS / 2, Math.max(pressed.o.w, pressed.o.h) * FS * .8, R.c, .35 * (1 - (T - pressed.t) / .5));
   c.globalCompositeOperation = 'source-over';
   c.restore();
@@ -1485,18 +2193,41 @@ function renderRoom(c, n) {
   c.font = '500 11px Inter, system-ui, sans-serif'; c.fillStyle = 'rgba(243,236,223,.75)'; c.fillText('↓  OUT', vw / 2, Math.min(vh - 10, dy));
 }
 
+// a soft gold ring where a tap sent him
+function drawMarker(c, s) {
+  if (!marker || T - marker.t > .7) return;
+  const u = (T - marker.t) / .7; c.strokeStyle = rgba('#f2c46d', .7 * (1 - u)); c.lineWidth = 1.4 * s;
+  c.beginPath(); c.ellipse(marker.x, marker.y, (4 + 10 * u) * s, (1.6 + 4 * u) * s, 0, 0, 7); c.stroke();
+}
 let last = performance.now(), DT = 0, skyT = 0;
 function loop(now_) {
   DT = Math.min(.05, (now_ - last) / 1000); last = now_;
   if ((skyT -= DT) <= 0) { updateSky(); skyT = 20; }
   update(DT);
   if (scene === 'world') renderWorld(ctx, SKY.n, SKY.dusk); else renderRoom(ctx, SKY.n);
+  if (charWho) drawPortrait();
   requestAnimationFrame(loop);
 }
+
+function moveStick(e) {
+  const r = $('stick').getBoundingClientRect(), R = r.width / 2;
+  let dx = (e.clientX - r.left - R) / R, dy = (e.clientY - r.top - R) / R; const m = Math.hypot(dx, dy);
+  if (m > 1) { dx /= m; dy /= m; }
+  stick.x = dx; stick.y = dy; $('stick').firstElementChild.style.transform = `translate(${dx * R * .6}px, ${dy * R * .6}px)`;
+}
+function endStick(e) { if (e.pointerId !== stick.id) return; stick.id = null; stick.x = stick.y = 0; $('stick').firstElementChild.style.transform = ''; }
+$('stick').addEventListener('pointerdown', (e) => { stick.id = e.pointerId; try { $('stick').setPointerCapture(e.pointerId); } catch {} moveStick(e); e.preventDefault(); });
+$('stick').addEventListener('pointermove', (e) => { if (e.pointerId === stick.id) moveStick(e); });
+$('stick').addEventListener('pointerup', endStick);
+$('stick').addEventListener('pointercancel', endStick);
+$('stick').hidden = !TOUCH;
 
 // ══════════════════════════════════════════ start ══════════════════════════════════════════
 resize();
 updateSky();
+placeA();
+gatherPractice();
+powers();
 history.replaceState(null, '', location.pathname + location.search); // a fresh start is the world
 if (location.hash.startsWith('#pair=')) {
   // arriving from the PC's QR code: don't leave the token in the address bar, then show the letter box
