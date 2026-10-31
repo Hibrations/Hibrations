@@ -315,14 +315,25 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sa
     { name:'Crown · Sahasrara',       color:'#c2c8d8', bija:'silence / NG', vowel:'EEE', freq:246.94, gathers:'presence, the divine, unity', where:'the silent sit · the crown' }
   ];
 
+  // One file, three homes in Lysningen (decided 2026-10-31): ?part= shows only that house's part.
+  // Without it (the Portal) everything shows, as before. Same store either way.
+  var PARTS = {
+    sauna: { sub:'the throat, unarmoured · the daily routine', tabs:['warmups','daily'], cats:['Throat de-armor'], ids:[] },
+    sing:  { sub:'singing · warmups, range, pitch', tabs:['warmups','voice'], cats:['Warmup (SOVT)','Resonance','Range'], ids:['free_song'] },
+    chant: { sub:'breath · chanting · the seed sounds', tabs:['warmups','resonance'], cats:['Breath'], ids:['toning','bija_om','overtone'] }
+  };
+  var PART = PARTS[new URLSearchParams(location.search).get('part')] || null;
+  if (PART) PRACTICES = PRACTICES.filter(function(p){ return PART.cats.indexOf(p.cat)>=0 || PART.ids.indexOf(p.id)>=0; });
+
   var KEY = 'vocal_v1';
   var state = load();
   var tab = state.lastTab || 'warmups';
+  if (PART && PART.tabs.indexOf(tab)<0) tab = PART.tabs[0];
   var formOpenId = null;
   var noteOpenId = null;
   var expandedCats = {};
   function load(){ try{ var r=localStorage.getItem(KEY); if(r){var p=JSON.parse(r); if(!p.sessions)p.sessions=[]; return p;} }catch(e){} return { sessions:[], lastTab:'warmups' }; }
-  function save(){ state.lastTab=tab; try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+  function save(){ if(!PART) state.lastTab=tab; try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
   function el(t,c,h){ var n=document.createElement(t); if(c)n.className=c; if(h!=null)n.innerHTML=h; return n; }
   function esc(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
   var toastTimer; function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(function(){t.classList.remove('show');},1600); }
@@ -491,6 +502,11 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sa
   document.getElementById('tov-cancel').addEventListener('click', function(){ finish(false); });
   document.getElementById('tov-done').addEventListener('click', function(){ finish(true); });
 
+  if (PART) {
+    document.querySelectorAll('.tab').forEach(function(t){ if(PART.tabs.indexOf(t.dataset.tab)<0) t.remove(); else if(t.dataset.tab==='warmups') t.textContent='practices'; });
+    document.querySelector('.brand-sub').textContent = PART.sub;
+    CAT_ORDER.forEach(function(c){ expandedCats[c]=true; });
+  }
   document.getElementById('tabs').addEventListener('click', function(e){ var t=e.target.closest('.tab'); if(!t)return; if(tab!=='voice') stopDrone(); tab=t.dataset.tab; save(); render(); });
   document.getElementById('back-btn').addEventListener('click', function(){ stopDrone(); try{ window.parent.postMessage('close-temple','*'); }catch(e){} try{ window.location.href='index.html'; }catch(e){} });
   render();

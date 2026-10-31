@@ -6,7 +6,7 @@
 // It never touches localStorage or IndexedDB — Lek's history lives there.
 //
 // Bump VERSION on every deploy that changes a file below.
-const VERSION = '2026-10-31.5';
+const VERSION = '2026-10-31.6';
 const CACHE = 'halohorns-' + VERSION;
 
 const SHELL = [
@@ -15,7 +15,7 @@ const SHELL = [
   './magnetic_temple.html', './hibrations.html', './strings.html', './vocal.html', './mirror.html',
   './body/', './body/index.html', './body/manifest.json', './body/icon.svg',
   './village/', './village/index.html', './village/manifest.json', './village/icon.svg',
-  './tarot.html', './astrology.html',
+  './tarot.html', './astrology.html', './kaching.html',
   './observatory/', './observatory/index.html', './observatory/tarot.html', './observatory/astrology.html',
   './fonts/fonts.css',
   './fonts/CormorantGaramond-italic-latin-1.woff2', './fonts/CormorantGaramond-italic-latin-ext-0.woff2',

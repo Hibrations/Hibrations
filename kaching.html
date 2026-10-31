@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kaching — make · save · grow</title>
+<style>
+  :root{
+    --bg:#0b0f1a; --panel:#141a2b; --panel2:#1b2238; --line:#26304b;
+    --txt:#eaf0ff; --mut:#8b97b8; --acc:#34e0a1; --acc2:#7c9bff;
+    --warn:#ffb454; --save:#34e0a1; --make:#7c9bff; --grow:#c08bff; --bad:#ff6b81;
+    --shadow:0 16px 40px rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:
+      radial-gradient(900px 500px at 80% -10%,rgba(124,155,255,.18),transparent),
+      radial-gradient(700px 500px at -10% 110%,rgba(52,224,161,.14),transparent),
+      var(--bg);
+    color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 12px 60px}
+  .stage{display:flex;gap:30px;flex-wrap:wrap;justify-content:center;align-items:flex-start;width:100%;max-width:1000px}
+  /* phone */
+  .phone{width:390px;height:780px;background:var(--bg);border-radius:42px;border:1px solid var(--line);
+    box-shadow:var(--shadow);position:relative;overflow:hidden;flex:0 0 auto}
+  .notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:150px;height:26px;background:#000;border-radius:0 0 18px 18px;z-index:30}
+  .status{position:absolute;top:0;left:0;right:0;height:44px;display:flex;justify-content:space-between;align-items:center;padding:0 24px;font-size:13px;font-weight:600;color:var(--txt);z-index:20}
+  .screen{position:absolute;inset:44px 0 76px 0;overflow-y:auto;overflow-x:hidden;padding:6px 18px 24px}
+  .screen::-webkit-scrollbar{width:0}
+  /* tabbar */
+  .tabbar{position:absolute;left:0;right:0;bottom:0;height:76px;background:rgba(16,21,36,.92);backdrop-filter:blur(12px);
+    border-top:1px solid var(--line);display:flex;z-index:25}
+  .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--mut);font-size:10.5px;font-weight:600;cursor:pointer;padding-top:6px}
+  .tab svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .tab.on{color:var(--acc)}
+  /* generic */
+  .hi{font-size:13px;color:var(--mut)}
+  .h1{font-size:21px;font-weight:800;letter-spacing:-.3px}
+  .row{display:flex;align-items:center;justify-content:space-between}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:16px;margin-top:14px}
+  .pill{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px}
+  .up{color:var(--acc);background:rgba(52,224,161,.12)}
+  .muted{color:var(--mut)}
+  .big{font-size:34px;font-weight:850;letter-spacing:-1px}
+  .mini{font-size:12px;color:var(--mut)}
+  .seg{display:flex;gap:10px;margin-top:6px}
+  .chip{flex:1;text-align:center;border:1px solid var(--line);border-radius:14px;padding:10px 6px;background:var(--panel2)}
+  .chip .lab{font-size:10.5px;color:var(--mut);font-weight:600}
+  .chip .val{font-size:15px;font-weight:800;margin-top:3px}
+  .barwrap{height:9px;background:var(--panel2);border-radius:99px;overflow:hidden;margin-top:8px}
+  .bar{height:100%;border-radius:99px}
+  .listitem{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+  .listitem:last-child{border-bottom:0}
+  .ico{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 auto}
+  .btn{display:block;width:100%;text-align:center;border:0;border-radius:14px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;margin-top:14px;color:#06210f;background:var(--acc)}
+  .btn.ghost{background:var(--panel2);color:var(--txt);border:1px solid var(--line)}
+  .sec{font-size:12px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.6px;margin:20px 2px 2px}
+  .ai{background:linear-gradient(135deg,rgba(124,155,255,.16),rgba(192,139,255,.12));border:1px solid #33406b}
+  .ai .tag{font-size:10px;font-weight:800;color:var(--acc2);letter-spacing:.5px}
+  .streak{display:flex;gap:6px;margin-top:10px}
+  .dot{flex:1;height:30px;border-radius:8px;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:13px}
+  .dot.on{background:rgba(52,224,161,.18);color:var(--acc)}
+  .toggle{display:flex;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:11px;font-weight:700}
+  .toggle span{padding:5px 9px;cursor:pointer;color:var(--mut)}
+  .toggle span.on{background:var(--acc);color:#06210f}
+  .ring{transform:rotate(-90deg)}
+  .center{display:flex;flex-direction:column;align-items:center}
+  /* side panel */
+  .side{flex:1 1 280px;max-width:340px;color:var(--mut);font-size:13.5px;line-height:1.6;padding-top:8px}
+  .side h2{color:var(--txt);font-size:18px;margin:0 0 4px}
+  .side h3{color:var(--txt);font-size:13px;margin:18px 0 4px;text-transform:uppercase;letter-spacing:.5px}
+  .side .k{color:var(--acc);font-weight:700}
+  .side ul{padding-left:18px;margin:6px 0}
+  .side li{margin:5px 0}
+  .toast{position:absolute;left:50%;bottom:92px;transform:translateX(-50%) translateY(20px);background:var(--acc);color:#06210f;
+    font-weight:800;font-size:13px;padding:11px 18px;border-radius:14px;opacity:0;transition:.35s;z-index:40;box-shadow:var(--shadow);white-space:nowrap}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .grow-anim{transition:width .6s cubic-bezier(.2,.8,.2,1)}
+  @media(max-width:430px){.phone{width:100%;height:760px;border-radius:0}}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="status">
+      <span id="clock">9:41</span>
+      <span style="display:flex;gap:6px;align-items:center">
+        <span class="toggle" id="lang"><span data-l="da" class="on">DA</span><span data-l="en">EN</span></span>
+      </span>
+    </div>
+    <div class="screen" id="screen"></div>
+    <div class="toast" id="toast"></div>
+    <div class="tabbar" id="tabbar"></div>
+  </div>
+
+  <div class="side">
+    <h2>Kaching</h2>
+    <p><span class="k">make · save · grow</span> — one app for all three, built Denmark-first and personalised for Lek (DKK, dansk/English toggle, local rails).</p>
+    <h3>Try it</h3>
+    <ul>
+      <li>Tap the bottom tabs to move between the 3 pillars.</li>
+      <li><b>Grow</b> → "Rund op nu" to watch spare change invest.</li>
+      <li><b>Goals</b> → "+150 kr" to close a ring.</li>
+      <li>Top-right <b>DA/EN</b> switches language live.</li>
+    </ul>
+    <h3>The thinking</h3>
+    <p>One hero number (net worth). AI reads your data in plain language. Streaks reward consistency, never shame a bad day. Every game mechanic maps to real kroner — no empty points.</p>
+    <p style="margin-top:14px;font-size:12px;color:#5f6b8c">Mock data for demo. See <b>Kaching_Product_Spec.md</b> for the full design rationale &amp; research.</p>
+  </div>
+</div>
+
+<script>
+/* ---------------- i18n ---------------- */
+const T={
+ da:{home:"Overblik",save:"Spar",make:"Tjen",grow:"Invester",goals:"Mål",
+   hello:"Hej Lek 👋",networth:"Din formue",thismonth:"denne måned",
+   spend:"Forbrug",income:"Indtægt",invested:"Investeret",
+   topinsight:"Dagens indsigt",streaktitle:"Spare-stime",weeks:"uger under budget",
+   keepup:"Bliv ved — du er 1 uge fra din rekord.",
+   leftspend:"Tilbage at bruge",budget:"Budget",ofbudget:"af budget brugt",
+   categories:"Kategorier",insights:"Indsigter",
+   sub_t:"6 abonnementer = 700 kr/md",sub_d:"2 er ikke brugt siden marts. Spar 200 kr/md ved at opsige.",
+   take_t:"Takeaway +40% denne måned",take_d:"Det er 600 kr mere end normalt. En aften mindre = ~150 kr til dit mål.",
+   streams:"Indtægtskilder",aftertax:"Sæt til side (skat)",
+   madeafter:"Tjent efter skat",thismo:"denne måned",
+   make_tip:"Din freelance er steget 3 måneder i træk. Hæv din timepris 10%?",
+   roundups:"Rund op",pool:"Spare-pulje klar til at investere",
+   portfolio:"Portefølje",projected:"Forventet om 10 år",
+   roundnow:"Rund op nu",autoinvest:"Auto-invester 50 kr/uge",
+   invested_msg:"investeret 🎉",
+   activegoals:"Aktive mål",addmoney:"+150 kr",
+   g_buffer:"Buffer (3 mdr)",g_japan:"En rejse",g_invest:"Invester-mål",
+   reached:"nået",toreach:"mangler",added:"tilføjet til",
+   round_done:"rundet op & investeret",weekday:["M","T","O","T","F","L","S"],
+   challenge:"Ugens udfordring",ch_t:"Takeaway-fri uge",ch_d:"≈ 500 kr lige til dit rejsemål.",
+   netgrow:"Formuen vokser",
+   save_blurb:"Rolige tal, ikke røde alarmer. AI læser dit forbrug for dig.",
+   make_blurb:"Sidefortjeneste skilt fra løn — og altid efter skat.",
+   grow_blurb:"Småpenge bliver til formue helt automatisk."},
+ en:{home:"Home",save:"Save",make:"Make",grow:"Grow",goals:"Goals",
+   hello:"Hi Lek 👋",networth:"Your net worth",thismonth:"this month",
+   spend:"Spend",income:"Income",invested:"Invested",
+   topinsight:"Today's insight",streaktitle:"Save streak",weeks:"weeks under budget",
+   keepup:"Keep going — you're 1 week from your record.",
+   leftspend:"Left to spend",budget:"Budget",ofbudget:"of budget used",
+   categories:"Categories",insights:"Insights",
+   sub_t:"6 subscriptions = 700 kr/mo",sub_d:"2 unused since March. Cancel them to save 200 kr/mo.",
+   take_t:"Takeaway +40% this month",take_d:"That's 600 kr above normal. One night fewer = ~150 kr toward your goal.",
+   streams:"Income streams",aftertax:"Set aside (tax)",
+   madeafter:"Made after tax",thismo:"this month",
+   make_tip:"Your freelance grew 3 months running. Raise your rate 10%?",
+   roundups:"Round-ups",pool:"Spare-change pool ready to invest",
+   portfolio:"Portfolio",projected:"Projected in 10 yrs",
+   roundnow:"Round up now",autoinvest:"Auto-invest 50 kr/week",
+   invested_msg:"invested 🎉",
+   activegoals:"Active goals",addmoney:"+150 kr",
+   g_buffer:"Buffer (3 mo)",g_japan:"A trip",g_invest:"Invest goal",
+   reached:"reached",toreach:"to go",added:"added to",
+   round_done:"rounded up & invested",weekday:["M","T","W","T","F","S","S"],
+   challenge:"This week's challenge",ch_t:"Takeaway-free week",ch_d:"≈ 500 kr straight to your trip goal.",
+   netgrow:"Net worth growing",
+   save_blurb:"Calm numbers, not red alarms. AI reads your spending for you.",
+   make_blurb:"Side income kept apart from salary — always after tax.",
+   grow_blurb:"Spare change becomes wealth, automatically."}
+};
+
+/* ---------------- state ---------------- */
+let L="da", tab="home";
+let pool=200, invested=50000, netbase=100000;
+let streak=[1,1,1,1,1,0,0];
+const cats=[
+  {emoji:"🛒",key:{da:"Dagligvarer",en:"Groceries"},spent:3000,bud:3500,c:"--save"},
+  {emoji:"🍔",key:{da:"Takeaway",en:"Takeaway"},spent:1000,bud:800,c:"--bad"},
+  {emoji:"🚆",key:{da:"Transport",en:"Transport"},spent:500,bud:800,c:"--make"},
+  {emoji:"🎬",key:{da:"Abonnementer",en:"Subscriptions"},spent:700,bud:600,c:"--warn"},
+  {emoji:"⚽",key:{da:"Underholdning",en:"Entertainment"},spent:300,bud:400,c:"--grow"},
+];
+const streams=[
+  {emoji:"💻",key:{da:"Freelance design",en:"Freelance design"},amt:5000,tax:2000},
+  {emoji:"📦",key:{da:"DBA / salg",en:"Marketplace sales"},amt:1000,tax:0},
+  {emoji:"🚲",key:{da:"Budkørsel",en:"Delivery gigs"},amt:1000,tax:400},
+];
+const goals=[
+  {key:"g_buffer",cur:20000,tgt:30000,c:"--save",emoji:"🛟"},
+  {key:"g_japan",cur:10000,tgt:20000,c:"--make",emoji:"✈️"},
+  {key:"g_invest",cur:50000,tgt:100000,c:"--grow",emoji:"📈"},
+];
+
+/* ---------------- helpers ---------------- */
+const t=k=>T[L][k];
+function kr(n){return n.toLocaleString("da-DK",{maximumFractionDigits:0})+" kr";}
+function cssv(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+function toast(msg){const e=document.getElementById("toast");e.textContent=msg;e.classList.add("show");clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove("show"),1800);}
+function netWorth(){return netbase+invested-50000+pool;}
+
+/* ---------------- screens ---------------- */
+function ring(pct,color,size=64,sw=8,label){
+  const r=(size-sw)/2,c=2*Math.PI*r,off=c*(1-pct);
+  return `<svg width="${size}" height="${size}" class="ring"><circle cx="${size/2}" cy="${size/2}" r="${r}" stroke="${cssv('--panel2')}" stroke-width="${sw}" fill="none"/>
+  <circle cx="${size/2}" cy="${size/2}" r="${r}" stroke="${cssv(color)}" stroke-width="${sw}" fill="none" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}"/></svg>`;
+}
+
+function vHome(){
+  const spend=cats.reduce((a,b)=>a+b.spent,0);
+  const inc=streams.reduce((a,b)=>a+b.amt,0);
+  return `
+  <div class="hi">${t('hello')}</div>
+  <div class="card" style="background:linear-gradient(135deg,#16203a,#101627)">
+    <div class="row"><span class="muted" style="font-size:13px">${t('networth')}</span><span class="pill up">▲ 4,2% ${t('thismonth')}</span></div>
+    <div class="big">${kr(netWorth())}</div>
+    ${spark()}
+    <div class="seg">
+      <div class="chip"><div class="lab">${t('spend')}</div><div class="val" style="color:var(--save)">${kr(spend)}</div></div>
+      <div class="chip"><div class="lab">${t('income')}</div><div class="val" style="color:var(--make)">${kr(inc)}</div></div>
+      <div class="chip"><div class="lab">${t('invested')}</div><div class="val" style="color:var(--grow)">${kr(invested)}</div></div>
+    </div>
+  </div>
+
+  <div class="card ai">
+    <div class="tag">✦ KACHING AI · ${t('topinsight').toUpperCase()}</div>
+    <div style="font-weight:800;margin-top:6px">${t('take_t')}</div>
+    <div class="mini" style="margin-top:4px;color:#aab6dd">${t('take_d')}</div>
+  </div>
+
+  <div class="card">
+    <div class="row"><b>${t('streaktitle')} 🔥</b><span class="pill up">5 ${t('weeks')}</span></div>
+    <div class="streak">${T[L].weekday.map((d,i)=>`<div class="dot ${streak[i]?'on':''}">${streak[i]?'✓':d}</div>`).join('')}</div>
+    <div class="mini" style="margin-top:8px">${t('keepup')}</div>
+  </div>
+
+  <div class="sec">${t('challenge')}</div>
+  <div class="card" style="border-color:#3a4a2e;background:rgba(52,224,161,.06)">
+    <div class="row"><b>🥡 ${t('ch_t')}</b><span class="pill up">+500 kr</span></div>
+    <div class="mini" style="margin-top:5px">${t('ch_d')}</div>
+  </div>
+  <div style="height:10px"></div>`;
+}
+
+function spark(){
+  const pts=[40,38,44,42,50,48,56,54,62,60,70,82];
+  const w=320,h=54,max=Math.max(...pts),min=Math.min(...pts);
+  const d=pts.map((p,i)=>`${(i/(pts.length-1))*w},${h-((p-min)/(max-min))*h}`).join(" ");
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="46" style="margin-top:10px" preserveAspectRatio="none">
+    <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${cssv('--acc')}" stop-opacity=".35"/><stop offset="1" stop-color="${cssv('--acc')}" stop-opacity="0"/></linearGradient></defs>
+    <polyline points="0,${h} ${d} ${w},${h}" fill="url(#g)" stroke="none"/>
+    <polyline points="${d}" fill="none" stroke="${cssv('--acc')}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+
+function vSave(){
+  const spend=cats.reduce((a,b)=>a+b.spent,0);
+  const bud=cats.reduce((a,b)=>a+b.bud,0);
+  const left=bud-spend, pct=Math.min(spend/bud,1);
+  return `
+  <div class="h1">${t('save')} · ${t('spend')}</div>
+  <div class="mini">${t('save_blurb')}</div>
+  <div class="card center">
+    <div style="position:relative">${ring(pct,'--save',120,12)}
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+        <div class="mini">${t('leftspend')}</div><div style="font-size:22px;font-weight:850;color:var(--save)">${kr(left)}</div>
+      </div></div>
+    <div class="mini" style="margin-top:6px">${Math.round(pct*100)}% ${t('ofbudget')} · ${t('budget')} ${kr(bud)}</div>
+  </div>
+  <div class="sec">${t('categories')}</div>
+  <div class="card">
+    ${cats.map(c=>{const p=Math.min(c.spent/c.bud,1);const over=c.spent>c.bud;
+      return `<div style="padding:9px 0;border-bottom:1px solid var(--line)">
+        <div class="row"><span>${c.emoji} ${c.key[L]}</span><span class="mini" style="${over?'color:var(--bad);font-weight:700':''}">${kr(c.spent)} / ${kr(c.bud)}</span></div>
+        <div class="barwrap"><div class="bar" style="width:${p*100}%;background:var(--${over?'bad':c.c.replace('--','')})"></div></div></div>`;}).join('')}
+  </div>
+  <div class="sec">${t('insights')}</div>
+  <div class="card ai"><div class="tag">✦ AI</div><div style="font-weight:800;margin-top:5px">${t('sub_t')}</div><div class="mini" style="margin-top:4px;color:#aab6dd">${t('sub_d')}</div></div>
+  <div style="height:10px"></div>`;
+}
+
+function vMake(){
+  const gross=streams.reduce((a,b)=>a+b.amt,0);
+  const tax=streams.reduce((a,b)=>a+b.tax,0);
+  const net=gross-tax;
+  return `
+  <div class="h1">${t('make')} · ${t('income')}</div>
+  <div class="mini">${t('make_blurb')}</div>
+  <div class="card" style="background:linear-gradient(135deg,#172044,#101627)">
+    <div class="muted" style="font-size:13px">${t('madeafter')} · ${t('thismo')}</div>
+    <div class="big" style="color:var(--make)">${kr(net)}</div>
+    <div class="seg">
+      <div class="chip"><div class="lab">${t('income')}</div><div class="val">${kr(gross)}</div></div>
+      <div class="chip"><div class="lab">${t('aftertax')}</div><div class="val" style="color:var(--warn)">${kr(tax)}</div></div>
+    </div>
+  </div>
+  <div class="sec">${t('streams')}</div>
+  <div class="card">
+    ${streams.map(s=>`<div class="listitem"><div class="ico" style="background:var(--panel2)">${s.emoji}</div>
+      <div style="flex:1"><div style="font-weight:700">${s.key[L]}</div><div class="mini">${t('aftertax')}: ${kr(s.tax)}</div></div>
+      <div style="font-weight:800;color:var(--make)">+${kr(s.amt)}</div></div>`).join('')}
+  </div>
+  <div class="card ai"><div class="tag">✦ AI</div><div style="font-weight:800;margin-top:5px;color:#dfe6ff">💡</div><div class="mini" style="color:#aab6dd">${t('make_tip')}</div></div>
+  <div style="height:10px"></div>`;
+}
+
+function vGrow(){
+  const proj=Math.round((invested+pool)*Math.pow(1.07,10)+50*52*10*1.4);
+  return `
+  <div class="h1">${t('grow')} · ${t('invested')}</div>
+  <div class="mini">${t('grow_blurb')}</div>
+  <div class="card center" style="background:linear-gradient(135deg,#211a44,#101627)">
+    <div class="mini">${t('roundups')} · ${t('pool')}</div>
+    <div class="big" style="color:var(--grow)" id="poolv">${kr(pool)}</div>
+    <div class="barwrap" style="width:100%"><div class="bar grow-anim" id="poolbar" style="width:${Math.min(pool/300*100,100)}%;background:var(--grow)"></div></div>
+    <div class="mini" style="margin-top:6px">300 kr → auto-invest</div>
+    <button class="btn" style="background:var(--grow);color:#fff" onclick="roundup()">${t('roundnow')}</button>
+    <button class="btn ghost" onclick="toast('✓ '+T[L].autoinvest)">${t('autoinvest')}</button>
+  </div>
+  <div class="sec">${t('portfolio')}</div>
+  <div class="card">
+    <div class="row"><b>${t('invested')}</b><span class="pill up">▲ 7,1% år</span></div>
+    <div class="big" id="invv" style="font-size:26px;color:var(--grow)">${kr(invested)}</div>
+    ${spark()}
+    <div class="row" style="margin-top:10px"><span class="mini">${t('projected')}</span><b style="color:var(--grow)">${kr(proj)}</b></div>
+    <div class="mini" style="margin-top:4px">Global ETF · 0,25% · netto for gebyr</div>
+  </div>
+  <div style="height:10px"></div>`;
+}
+
+function vGoals(){
+  return `
+  <div class="h1">${t('goals')}</div>
+  <div class="mini">${t('netgrow')} 📈</div>
+  ${goals.map((g,i)=>{const p=Math.min(g.cur/g.tgt,1);
+    return `<div class="card"><div class="row">
+      <div style="display:flex;gap:12px;align-items:center">
+        <div style="position:relative">${ring(p,g.c,58,7)}
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:20px">${g.emoji}</div></div>
+        <div><div style="font-weight:800">${t(g.key)}</div>
+        <div class="mini">${kr(g.cur)} / ${kr(g.tgt)}</div>
+        <div class="mini" style="color:var(--${g.c.replace('--','')})">${Math.round(p*100)}% ${t('reached')} · ${kr(g.tgt-g.cur)} ${t('toreach')}</div></div>
+      </div>
+      <button class="btn" style="width:auto;margin:0;padding:9px 14px;background:var(--${g.c.replace('--','')});color:#06210f" onclick="addGoal(${i})">${t('addmoney')}</button>
+    </div></div>`;}).join('')}
+  <div style="height:10px"></div>`;
+}
+
+/* ---------------- actions ---------------- */
+function roundup(){
+  const add=Math.floor(Math.random()*40)+18;
+  pool+=add;
+  if(pool>=300){const inv=pool;invested+=inv;pool=0;render();toast(kr(inv)+" "+t('invested_msg'));}
+  else{render();toast("+"+kr(add)+" "+t('round_done'));}
+}
+function addGoal(i){goals[i].cur=Math.min(goals[i].cur+150,goals[i].tgt);render();toast("+150 kr "+t('added')+" "+t(goals[i].key));}
+
+/* ---------------- render ---------------- */
+const views={home:vHome,save:vSave,make:vMake,grow:vGrow,goals:vGoals};
+const icons={
+  home:'<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>',
+  save:'<path d="M3 7h18v12H3z"/><path d="M3 11h18"/><circle cx="17" cy="15" r="1.4"/>',
+  make:'<path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
+  grow:'<path d="M3 17l6-6 4 4 7-8"/><path d="M21 7h-5"/><path d="M21 7v5"/>',
+  goals:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/>'
+};
+function render(){
+  document.getElementById("screen").innerHTML=views[tab]();
+  document.getElementById("tabbar").innerHTML=["home","save","make","grow","goals"].map(k=>
+    `<div class="tab ${tab===k?'on':''}" onclick="go('${k}')"><svg viewBox="0 0 24 24">${icons[k]}</svg>${t(k)}</div>`).join('');
+}
+function go(k){tab=k;render();document.getElementById("screen").scrollTop=0;}
+document.getElementById("lang").onclick=e=>{const l=e.target.dataset.l;if(!l)return;
+  L=l;document.querySelectorAll("#lang span").forEach(s=>s.classList.toggle("on",s.dataset.l===l));
+  document.documentElement.lang=l;render();};
+const ck=document.getElementById("clock");setInterval(()=>{const d=new Date();ck.textContent=d.getHours()+":"+String(d.getMinutes()).padStart(2,"0");},1000);
+render();
+</script>
+</body>
+</html>
