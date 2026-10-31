@@ -144,11 +144,6 @@ function pair(link) {
   return true;
 }
 
-if (location.hash.startsWith('#pair=')) {
-  pair(location.href);
-  history.replaceState(null, '', location.pathname); // don't leave the token in the address bar
-}
-
 // ── Sync (phone ↔ PC). Home only, as close as a web app can get: never on mobile data. ──
 function onMobileData() {
   const c = navigator.connection;
@@ -242,8 +237,15 @@ addEventListener('offline', render);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) sync(); });
 setInterval(() => { if (!document.hidden) sync(); }, 30000);
 
-render();
-sync();
+// Arriving from the PC's QR code. Runs after everything above is defined; pair() renders and syncs.
+if (location.hash.startsWith('#pair=')) {
+  const link = location.hash;
+  history.replaceState(null, '', location.pathname); // don't leave the token in the address bar
+  if (!pair(link)) render();
+} else {
+  render();
+  sync();
+}
 
 // ── Offline: one service worker for the whole site, at the apps/ root ──
 if ('serviceWorker' in navigator) {
