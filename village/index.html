@@ -497,8 +497,8 @@ setInterval(() => { if (document.hidden) return; if (onMobileData() && village.l
 // ══════════════════════════════════════════ real jobs (step 5): A's scroll ══════════════════════════════════════════
 // 06_jobs.md. Tasks and goals go out through the outbox; the PC routes them, runs them and sends back the state of
 // every task, goal and card, the two briefs, the chronicle and the round's lines for the path. They live in village_v1.jobs.
-const JOB_KINDS = new Set(['task', 'goal', 'card', 'brief', 'chronicle', 'round', 'practice']);
-village.jobs = Object.assign({ tasks: {}, goals: {}, cards: {}, briefs: [], chronicle: [], round: null, seen: {}, readBrief: null }, village.jobs || {});
+const JOB_KINDS = new Set(['task', 'goal', 'card', 'brief', 'chronicle', 'round', 'practice', 'hire', 'leave']);
+village.jobs = Object.assign({ tasks: {}, goals: {}, cards: {}, briefs: [], chronicle: [], round: null, seen: {}, readBrief: null, moves: {} }, village.jobs || {});
 const J = village.jobs;
 let briefArrived = null;
 function applyJob(e) {
@@ -509,6 +509,8 @@ function applyJob(e) {
   else if (e.kind === 'brief') { J.briefs = J.briefs.filter((b) => b.id !== d.id).concat(d).slice(-14); briefArrived = d; }
   else if (e.kind === 'chronicle') { if (!J.chronicle.some((c) => c.id === d.id)) J.chronicle = J.chronicle.concat(d).slice(-100); }
   else if (e.kind === 'round') J.round = d;
+  // step 7: a hire walks into the village, a retired apprentice walks out (once, when the PC's roster arrives)
+  else if (e.kind === 'hire' || e.kind === 'leave') { const M = J.moves[d.id]; if (!M || M.at !== d.at) J.moves[d.id] = { kind: e.kind, at: d.at, name: d.name }; }
   // practice told to a house joins the sheet's ledger and counts toward that power
   else if (e.kind === 'practice') village.sheet.ledger['told:' + d.id] = ['told', d.power, d.practice, Date.parse(d.at)];
 }
@@ -610,17 +612,23 @@ function boardHtml() {
       ${t.result && !t.error ? `<details${priv ? '' : ''} data-seen="${esc(t.id)}"><summary>${priv ? 'Show (private)' : 'What came back'}${t.file ? ' · saved in ' + esc(t.file.split('/')[0]) : ''}</summary><pre>${esc(t.result)}</pre></details>` : ''}</div>`;
   }).join('')}</section>`;
 }
-const CARD_KIND = { yes: 'Needs your yes', email: 'An email to copy', goal: 'A goal plan', proposal: 'An instruction change', suggestion: 'A suggestion' };
+const CARD_KIND = { yes: 'Needs your yes', email: 'An email to copy', goal: 'A goal plan', proposal: 'An instruction change', suggestion: 'A suggestion', hire: 'A hire', retire: 'A retirement', install: 'An install, for you to do' };
+// step 7: what a yes card is about, so a spend or a post reads as one
+const YES_TOPIC = { spend: 'A spend: needs your yes', post: 'A post or publication: needs your yes', install: 'An install: needs your yes', instructions: 'An instruction change: needs your yes' };
+const cardKind = (k) => (k.kind === 'yes' && YES_TOPIC[k.topic]) || (k.kind === 'proposal' && k.tamper ? 'An instruction change the bridge stopped' : CARD_KIND[k.kind]) || 'A card';
 function cardsHtml() {
   const open = openCards().sort((a, b) => (a.at < b.at ? 1 : -1)), past = Object.values(J.cards).filter((k) => k.state !== 'open').sort((a, b) => (a.answered < b.answered ? 1 : -1)).slice(0, 8);
   const one = (k) => {
     const priv = k.house === 'cupidity';
-    const acts = k.state !== 'open' ? `<div class="meta">${k.state === 'yes' ? 'yes' : 'no'} · ${time(k.answered)}</div>`
+    const copy = k.kind === 'install' ? `<button class="btn" data-copy="${esc(k.id)}">Copy the steps</button>` : '';
+    const acts = k.state !== 'open' ? `<div class="meta">${k.state === 'yes' ? 'yes' : 'no'} · ${time(k.answered)}${k.noWhy ? ' · ' + esc(k.noWhy) : ''}</div>${k.state === 'yes' && copy ? `<div class="acts">${copy}</div>` : ''}`
+      : k.kind === 'hire' ? `<div class="acts"><button class="btn" data-interview="${esc(k.house)}">Interview</button><button class="btn" data-ans="yes" data-card="${esc(k.id)}">Yes, hire</button><button class="btn" data-ans="no" data-card="${esc(k.id)}">No</button><button class="btn" data-ans="change" data-card="${esc(k.id)}">Change it</button></div>`
+      : k.kind === 'install' ? `<div class="acts">${copy}<button class="btn" data-ans="yes" data-card="${esc(k.id)}">Yes, I’ll install it</button><button class="btn" data-ans="no" data-card="${esc(k.id)}">No</button><button class="btn" data-ans="change" data-card="${esc(k.id)}">Change it</button></div>`
       : k.kind === 'email' ? `<div class="acts"><button class="btn" data-copy="${esc(k.id)}">Copy</button><button class="btn" data-ans="yes" data-card="${esc(k.id)}">Got it</button></div>`
       : k.kind === 'suggestion' ? `<div class="acts"><button class="btn" data-ans="yes" data-card="${esc(k.id)}">Yes, make it a task</button><button class="btn" data-ans="no" data-card="${esc(k.id)}">Not now</button></div>`
       : `<div class="acts"><button class="btn" data-ans="yes" data-card="${esc(k.id)}">Yes</button><button class="btn" data-ans="no" data-card="${esc(k.id)}">No</button><button class="btn" data-ans="change" data-card="${esc(k.id)}">Change it</button></div>`;
     const body = `<div class="what">${esc(k.what)}</div>${k.why ? `<div class="muted">${esc(k.why)}</div>` : ''}${k.content ? `<pre>${esc(k.content)}</pre>` : ''}`;
-    return `<div class="card${priv ? ' private' : ''}"><div class="meta">${esc(CARD_KIND[k.kind] || 'A card')} · ${esc(k.who)} · ${time(k.at)}</div>
+    return `<div class="card${priv ? ' private' : ''}"><div class="meta">${esc(cardKind(k))} · ${esc(k.who)} · ${time(k.at)}</div>
       ${priv ? `<details><summary>Private · tap to show</summary>${body}</details>` : body}${acts}</div>`;
   };
   return `<section>${open.length ? open.map(one).join('') : '<p class="muted">No cards waiting. Anything that needs your yes arrives here and waits until you answer. Cards never expire.</p>'}</section>
@@ -664,15 +672,19 @@ function wireScroll() {
   };
   for (const d of B.querySelectorAll('[data-seen]')) d.ontoggle = () => { if (d.open) { J.seen[d.dataset.seen] = true; afterJobs(); } };
   for (const b of B.querySelectorAll('[data-copy]')) b.onclick = () => { const k = J.cards[b.dataset.copy]; navigator.clipboard.writeText(k.content).then(() => { b.textContent = 'Copied'; }, () => { b.textContent = 'Couldn’t copy'; }); };
+  for (const b of B.querySelectorAll('[data-interview]')) b.onclick = () => { const h = b.dataset.interview; backOrClose(); setTimeout(() => openChat(h + '.c'), 80); };
   for (const b of B.querySelectorAll('[data-ans]')) b.onclick = () => {
     const k = J.cards[b.dataset.card], choice = b.dataset.ans;
-    outbox.push({ id: crypto.randomUUID(), kind: 'answer', to: 'A', text: JSON.stringify({ ref: k.id, choice }), at: new Date().toISOString() }); save(K.outbox, outbox);
-    if (choice !== 'change') { k.state = choice; k.answered = new Date().toISOString(); }
+    // step 7: a no to a hire, a retirement or an install can say why; the one who asked is told
+    let why;
+    if (choice === 'no' && ['hire', 'retire', 'install'].includes(k.kind)) { why = prompt('No. Want to say why? (optional)', ''); if (why === null) return; }
+    outbox.push({ id: crypto.randomUUID(), kind: 'answer', to: 'A', text: JSON.stringify(why ? { ref: k.id, choice, why } : { ref: k.id, choice }), at: new Date().toISOString() }); save(K.outbox, outbox);
+    if (choice !== 'change') { k.state = choice; k.answered = new Date().toISOString(); if (why) k.noWhy = why; }
     saveVillage(); sync();
     // "Change it" opens a letter to whoever made the card; a goal plan goes back to the goal box with its text
     if (choice === 'change') {
       if (k.kind === 'goal') { const g = J.goals[k.goal]; village.jobs.draft = { kind: 'goal', text: (g ? g.text : '') + '\n\nChange: ' }; scrollTab = 'goals'; renderScroll(); }
-      else { backOrClose(); setTimeout(() => { openChat(k.house === 'longhouse' ? 'a' : k.house + '.d'); $('chatText').value = `About your card “${k.what}”: `; $('chatText').focus(); }, 80); }
+      else { backOrClose(); setTimeout(() => { openChat(k.agent === 'aletheia' || k.house === 'longhouse' ? 'a' : k.agent === 'kham' || k.house === 'hub' ? 'hub.d' : k.house + '.d'); $('chatText').value = `About your card “${k.what}”: `; $('chatText').focus(); }, 80); }
       return;
     }
     renderScroll(); afterJobs();
@@ -1225,7 +1237,7 @@ const ROOMS = {
   hub: { title: 'The Longhouse-sala', c: '#f2c46d', wall: '#3a2a20', roof: '#24170f', floor: '#4a3828', rune: 'TIŊ', thai: 'ศาลา', open: true,
     windows: [], lanterns: [80, 220, 360],
     objects: [
-      { kind: 'scroll', x: 70, y: 560, w: 56, h: 150, label: 'Goals and chronicle', act: { scroll: 'goals' } },
+      { kind: 'scroll', x: 70, y: 560, w: 56, h: 150, label: 'Cards, goals and chronicle', act: { scroll: 'sala' } }, // step 7: cards wait here too
       { kind: 'letterBox', x: 368, y: 520, w: 60, h: 96, label: 'Letter box', act: { letters: true } },
       ...CHAIRS_AT.map(([x, y], i) => ({ kind: 'chair', x, y, who: ['halohorns', 'esoteric', 'hibrations', 'cupidity', 'baby', 'fitness', 'kaching', 'hobby'][i] })),
       { kind: 'hearth', x: 220, y: 590, w: 120, h: 44, label: 'Hearth', act: { declare: true } },
@@ -2086,7 +2098,7 @@ function hair(c, L, dir, side, hx, hy, hr, k, pass) {
   if (L.style === 'knot' || L.style === 'topknot') { const r = (L.style === 'topknot' ? 1.9 : 1.6) * k; c.beginPath(); c.arc(hx + side * -.6 * k, hy - hr - r * .6, r, 0, 7); c.fill(); if (L.style === 'topknot') { c.fillStyle = '#e2b655'; c.fillRect(hx - 1.4 * k + side * -.6 * k, hy - hr - .3 * k, 2.8 * k, .6 * k); } else { c.fillStyle = '#c9a070'; c.fillRect(hx - 2.2 * k, hy - hr - r * .6, 4.4 * k, .5 * k); } }
 }
 // Who draws whom: Lek and A have their own; every villager shares the rig and their own look.
-const drawerFor = (who) => DRAW_PERSON[who] || ((c, dir, f, t, o = {}) => drawVillager(c, dir, f, t, { ...o, id: who }));
+const drawerFor = (who) => (/\.c$/.test(who) ? drawerFor(who.slice(0, -2) + '.a') : DRAW_PERSON[who]) || ((c, dir, f, t, o = {}) => drawVillager(c, dir, f, t, { ...o, id: who }));
 
 // ══════════════════════════════════════════ practice and powers ══════════════════════════════════════════
 // 03_moving_in.md §2: computed from the real temple logs, growth only. The power definitions and thresholds
@@ -2535,11 +2547,26 @@ const isNight = () => clock.eve < 720;
 const person = (id, house, role) => ({ id, house, role, scene: house, x: 220, y: 600, dir: 0, dist: 0, moving: false, legs: [], path: null, then: null, sit: null, perch: false, act: false, mode: null, wait: 0, nodT: -9, near: false, greet: null, stuck: 0 });
 const villagers = [...VLOOK_IDS].flatMap((house) => ['d', 'a'].map((role) => person(`${house}.${role}`, house, role)));
 // Step 6b: retired apprentices leave; Kham ('hub.d', role 'k') moves in once the PC has sent his name
+// Step 7: a new hire walks in from the forest edge to their house; a retired apprentice walks out the same way.
+// Cupidity's people never cross the shared map: they simply arrive at, or leave, their house.
 function syncPeople(placeNew) {
-  for (let i = villagers.length - 1; i >= 0; i--) if (isRetired(villagers[i].id)) villagers.splice(i, 1);
   const d = village.content && village.content.data && village.content.data.villagers;
+  const fresh = (id, kind) => { const M = J.moves[id]; return placeNew && M && M.kind === kind && !M.done && Date.now() - Date.parse(M.at) < 6 * 3600e3 && !id.startsWith('cupidity.') ? M : null; };
+  for (let i = villagers.length - 1; i >= 0; i--) {
+    const v = villagers[i]; if (!isRetired(v.id) || v.leaving) continue;
+    const M = fresh(v.id, 'leave');
+    if (M) { M.done = true; saveVillage(); v.leaving = true; v.called = null; v.mode = null; v.wait = 0; } else villagers.splice(i, 1);
+  }
+  if (d) for (const h of HOUSE_IDS) {
+    const id = h + '.a'; if (!d[id] || d[id].retired || villagers.some((v) => v.id === id)) continue;
+    const v = person(id, h, 'a'); villagers.push(v);
+    const M = fresh(id, 'hire');
+    if (M) { M.done = true; saveVillage(); const [x, y] = edgeSpot(); Object.assign(v, { scene: 'world', x, y, arriving: true, mode: null, wait: 0 }); }
+    else if (placeNew) settle(v);
+  }
   if (d && d['hub.d'] && !villagers.some((v) => v.id === 'hub.d')) { const v = person('hub.d', 'hub', 'k'); villagers.push(v); if (placeNew) settle(v); }
 }
+function edgeSpot() { const G = gridFor('world'), n = nearestOpen(G, Math.floor(900 / G.cell), Math.floor((H - 20) / G.cell)); return n ? [(n[0] + .5) * G.cell, (n[1] + .5) * G.cell] : [900, H - 60]; }
 syncPeople(false);
 // Kham keeps his place by the letter box in the Longhouse-sala, facing the room
 function khamSpot() { const G = gridFor('hub'); let x = 330, y = 560; if (!G.walk(x, y)) { const n = nearestOpen(G, Math.floor(x / G.cell), Math.floor(y / G.cell)); if (n) { x = (n[0] + .5) * G.cell; y = (n[1] + .5) * G.cell; } } return [x, y]; }
@@ -2548,6 +2575,8 @@ const objIn = (room, f) => ROOMS[room].objects.find(f);
 // Step 6: called over by Lek comes first; a meeting brings the directors to their chairs (and the apprentices to
 // the walls when invited); Strings on the green brings everyone out round him.
 function wantMode(v) {
+  if (v.leaving) return 'leave';
+  if (v.arriving) return 'arrive';
   if (v.called) return 'called';
   const mk = meetKind();
   if (v.role === 'k') return mk === 'green' ? 'green' : 'post';
@@ -2558,6 +2587,8 @@ function wantMode(v) {
 }
 // where a mode takes them: [scene, x, y, what to do there]
 function goalOf(v, mode) {
+  if (mode === 'arrive') { const o = objIn(v.house, (o) => o.kind === 'bench'); return [v.house, o.x, o.y + 18, () => { sitDown(v, o); v.arriving = false; v.mode = null; v.wait = T + 20; }]; }
+  if (mode === 'leave') { const [x, y] = edgeSpot(); return ['world', x, y, () => { const i = villagers.indexOf(v); if (i >= 0) villagers.splice(i, 1); }]; }
   if (mode === 'post') { const [x, y] = khamSpot(); return ['hub', x, y, () => { v.dir = 0; }]; }
   if (mode === 'meet') { const o = objIn('hub', (o) => o.kind === 'chair' && o.who === v.house); return ['hub', o.x, o.y + 14, () => sitDown(v, o)]; }
   if (mode === 'called') { const [x, y] = calledSpot(v); return [scene, x, y, () => arrived(v)]; }
@@ -2664,6 +2695,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) away 
 // ══════════════════════════════════════════ the character sheets ══════════════════════════════════════════
 const CHAR_PLACEHOLDER = { lek: { name: 'You', title: '', lines: [] }, a: { name: 'Your companion', title: '', lines: [] } };
 function charText(who) {
+  if (/\.c$/.test(who)) { const h = who.slice(0, -2), k = Object.values(J.cards).filter((x) => x.kind === 'hire' && x.house === h).sort((a, b) => (a.at < b.at ? 1 : -1))[0]; return { name: k && k.candidate ? k.candidate.name : 'The candidate', title: 'Candidate lærling · ' + ROOMS[h].title.split(' · ')[0] + ' · an interview', lines: [] }; }
   if (VLOOK[who]) return villagerText(who);
   const d = village.content && village.content.data && village.content.data.characters; return Object.assign({}, CHAR_PLACEHOLDER[who], d && d[who]);
 }
@@ -2930,7 +2962,7 @@ function useObject(o) {
   else if (o.act.letters) openSheet();
   else if (o.act.declare) openChar('lek', true, 'declare');
   else if ((o.act.say === 'seat' || o.act.say === 'bench') && sitting(o)) openChat(sitting(o).id);
-  else if (o.act.scroll) openScroll(o.act.scroll);
+  else if (o.act.scroll) openScroll(o.act.scroll === 'sala' ? (openCards().length ? 'cards' : 'goals') : o.act.scroll);
   else if (o.act.say) say(line(scene, o.act.say), o.label, R.c);
 }
 // Enter or E: go in at a door, use what's within reach, or step out over the threshold
@@ -3189,7 +3221,7 @@ function drawFace(k, who) {
 $('chatSend').onclick = sendChat;
 $('chatText').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !TOUCH) { e.preventDefault(); sendChat(); } });
 $('chatClose').onclick = () => backOrClose();
-$('chatCard').onclick = () => { const who = chatWho; backOrClose(); setTimeout(() => (who === 'a' ? openScroll() : openChar(who)), 80); };
+$('chatCard').onclick = () => { const who = chatWho; backOrClose(); setTimeout(() => (who === 'a' ? openScroll() : /\.c$/.test(who) ? openScroll('cards') : openChar(who)), 80); };
 $('chatNew').onclick = (e) => { e.preventDefault(); newThread(); };
 
 // ── the voice: speech-to-text on every chat box, English (Lek, 2026-11-01). The Low Hum only adds a glow. ──
