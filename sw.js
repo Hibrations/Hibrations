@@ -6,7 +6,7 @@
 // It never touches localStorage or IndexedDB — Lek's history lives there.
 //
 // Bump VERSION on every deploy that changes a file below.
-const VERSION = '2026-11-01.3';
+const VERSION = '2026-11-01.4';
 const CACHE = 'halohorns-' + VERSION;
 
 const SHELL = [
@@ -34,6 +34,27 @@ self.addEventListener('activate', (e) => {
   e.waitUntil((async () => {
     for (const k of await caches.keys()) if (k.startsWith('halohorns-') && k !== CACHE) await caches.delete(k);
     await self.clients.claim();
+  })());
+});
+
+// Step 5: the village's buzz. The bridge sends Web Push; the phone shows it and the watch mirrors it.
+// The text arrives already discreet (bridge/push.js). Tapping opens the village at that house.
+self.addEventListener('push', (e) => {
+  let d = {}; try { d = e.data ? e.data.json() : {}; } catch {}
+  e.waitUntil(self.registration.showNotification(d.title || 'Lysningen', {
+    body: d.body || 'Something in the village is waiting for you.', tag: d.tag || 'lysningen', renotify: true,
+    icon: './village/icon.svg', data: { house: d.house || null },
+  }));
+});
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  const house = e.notification.data && e.notification.data.house;
+  const url = new URL('./village/' + (house ? '?house=' + encodeURIComponent(house) : ''), self.registration.scope).href;
+  e.waitUntil((async () => {
+    for (const c of await self.clients.matchAll({ type: 'window', includeUncontrolled: true })) {
+      if (new URL(c.url).pathname.endsWith('/village/') || new URL(c.url).pathname.endsWith('/village/index.html')) { await c.focus(); c.postMessage({ type: 'open', house }); return; }
+    }
+    await self.clients.openWindow(url);
   })());
 });
 

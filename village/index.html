@@ -115,6 +115,35 @@ textarea:focus, input:focus { outline: none; border-color: rgba(242, 196, 109, .
 .letter .meta { color: var(--ink-faint); font-size: 12px; }
 code { font-size: 12.5px; background: rgba(255, 255, 255, .07); border-radius: 4px; padding: 0 4px; }
 #unpair { color: var(--ink-faint); font-size: 12.5px; }
+/* A's scroll (step 5) */
+#taskBtn { position: relative; width: 38px; height: 38px; padding: 0; justify-content: center; font-size: 16px; }
+.badge { position: absolute; top: -3px; right: -3px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--red); color: #fff; font: 600 10.5px/16px var(--sans); text-align: center; }
+#scrollP { max-height: 92vh; }
+.brief { font: 400 16.5px/1.5 var(--serif); }
+.brief h4 { font: 600 17px/1.3 var(--serif); color: var(--gold); margin: 12px 0 2px; }
+.brief p { margin: 4px 0; }
+.brief ul { margin: 4px 0; padding-left: 18px; }
+.tabs { display: flex; gap: 6px; margin: 0 0 4px; }
+.tabs button { flex: 1; border: 1px solid var(--line); background: none; border-radius: 999px; padding: 7px 0; font-size: 13.5px; }
+.tabs button.on { border-color: var(--gold); color: var(--gold); }
+.card { border: 1px solid var(--line); border-left: 3px solid var(--gold); border-radius: 10px; padding: 10px 12px; margin: 10px 0; }
+.card.private { border-left-color: var(--red); }
+.card .meta, .task .meta { color: var(--ink-faint); font-size: 12px; }
+.card .what { font: 600 17px/1.3 var(--serif); margin: 2px 0; }
+.card pre { white-space: pre-wrap; font: 13.5px/1.45 var(--sans); background: rgba(0,0,0,.25); border-radius: 8px; padding: 8px 10px; margin: 8px 0 0; max-height: 40vh; overflow: auto; }
+.card .acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.card .acts .btn { margin-top: 10px; padding: 7px 14px; }
+.task { padding: 8px 0; border-top: 1px solid var(--line); }
+.task:first-child { border-top: 0; }
+.task b { font-weight: 500; }
+.state { display: inline-block; font-size: 11.5px; letter-spacing: .06em; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-dim); margin-left: 6px; }
+.state.working { color: var(--gold); border-color: rgba(242,196,109,.5); }
+.state.yes { color: var(--red); border-color: rgba(217,70,90,.5); }
+.state.done { color: var(--ok); border-color: rgba(127,224,165,.4); }
+.task select { margin-top: 6px; background: rgba(0,0,0,.28); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 4px 6px; font: inherit; font-size: 13px; }
+.task details { margin-top: 4px; font-size: 13.5px; }
+.task details pre { white-space: pre-wrap; font: inherit; margin: 6px 0 0; color: var(--ink-dim); }
+.chron { font: italic 400 15.5px/1.45 var(--serif); color: var(--ink-dim); margin: 6px 0; }
 
 #update { display: none; position: fixed; left: 50%; top: max(64px, calc(env(safe-area-inset-top) + 52px)); transform: translateX(-50%); background: var(--glass2); border: 1px solid rgba(242, 196, 109, .45); color: var(--gold); border-radius: 999px; padding: 9px 18px; font-size: 14px; white-space: nowrap; z-index: 8; }
 </style>
@@ -126,6 +155,7 @@ code { font-size: 12.5px; background: rgba(255, 255, 255, .07); border-radius: 4
   <div class="chip" id="brand"><span class="dot" id="syncDot"></span><b>Lysningen</b></div>
   <div class="chip" id="roomChip" hidden><span id="roomName"></span></div>
   <span class="sp"></span>
+  <button class="chip" id="taskBtn" title="A's scroll: tasks, briefs, cards" aria-label="A's scroll">✎<span class="badge" id="taskBadge" hidden></span></button>
   <button class="chip" id="light" title="Light">◐</button>
   <button class="chip" id="gear" title="Settings" aria-label="Settings">⚙</button>
 </div>
@@ -170,6 +200,11 @@ code { font-size: 12.5px; background: rgba(255, 255, 255, .07); border-radius: 4
   <div class="scroll" id="charBody"></div>
 </div>
 
+<div id="scrollP" class="panel" aria-hidden="true">
+  <header><h2>A’s scroll</h2><button id="scrollClose" aria-label="Close">×</button></header>
+  <div class="scroll" id="scrollBody"></div>
+</div>
+
 <div id="settings" class="panel" aria-hidden="true">
   <header><h2>Settings</h2><button id="settingsClose" aria-label="Close">×</button></header>
   <div class="scroll">
@@ -179,6 +214,13 @@ code { font-size: 12.5px; background: rgba(255, 255, 255, .07); border-radius: 4
       <button class="btn" id="paintMap">Paint this map</button>
       <button class="btn" id="mapPicture">Save a picture of this map</button>
       <p class="muted" id="mapNote"></p>
+    </section>
+    <section>
+      <h3>The buzz</h3>
+      <p class="muted">Approvals, finished tasks, the two briefs and suggestions buzz this phone, and the watch mirrors them. The text is always discreet.</p>
+      <button class="btn" id="buzzOn">Let the village buzz this phone</button>
+      <button class="btn" id="buzzTest" hidden>Send a test buzz</button>
+      <p class="muted" id="buzzNote"></p>
     </section>
     <section>
       <h3>The meeting</h3>
@@ -276,12 +318,14 @@ async function sync() {
   bridgeState = { cls: 'warn', text: 'reaching the PC…' }; renderLetters();
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 10000);
+  gatherPractice();
+  const dg = digestOut();
   try {
     const res = await fetch(village.bridge.url + '/sync', {
       method: 'POST',
       signal: ctrl.signal,
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + village.bridge.token },
-      body: JSON.stringify({ outbox, after: cursor.seq, digest: null, contentHash: village.content ? village.content.hash : null }),
+      body: JSON.stringify({ outbox, after: cursor.seq, digest: dg, contentHash: village.content ? village.content.hash : null }),
     });
     if (res.status === 401) { bridgeState = { cls: 'bad', text: 'the PC doesn’t know this phone — pair again' }; return; }
     if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -290,7 +334,9 @@ async function sync() {
     outbox = outbox.filter((m) => !acked.has(m.id));
     save(K.outbox, outbox);
     const known = new Set(village.events.map((e) => e.id));
-    for (const e of data.events || []) if (!known.has(e.id)) village.events.push(e);
+    for (const e of data.events || []) { if (JOB_KINDS.has(e.kind)) applyJob(e); else if (!known.has(e.id)) village.events.push(e); }
+    digestSent(dg);
+    if (data.push) village.pushKey = data.push;
     cursor = { seq: Math.max(cursor.seq, data.cursor || 0) };
     save(K.cursor, cursor);
     if (data.content && data.content.hash && data.content.data) { village.content = data.content; mapsArrived(); }
@@ -304,6 +350,7 @@ async function sync() {
     syncing = false;
     renderLetters();
     if (charWho && VLOOK[charWho] && !($('vText') && $('vText').value)) renderChar();
+    afterJobs();
   }
 }
 function sendLetter() {
@@ -351,6 +398,216 @@ addEventListener('offline', renderLetters);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) sync(); });
 const MOBILE_EVERY = 3 * 60 * 1000;
 setInterval(() => { if (document.hidden) return; if (onMobileData() && village.lastSync && Date.now() - Date.parse(village.lastSync) < MOBILE_EVERY) return; sync(); }, 30000);
+
+// ══════════════════════════════════════════ real jobs (step 5): A's scroll ══════════════════════════════════════════
+// 06_jobs.md. Tasks and goals go out through the outbox; the PC routes them, runs them and sends back the state of
+// every task, goal and card, the two briefs, the chronicle and the round's lines for the path. They live in village_v1.jobs.
+const JOB_KINDS = new Set(['task', 'goal', 'card', 'brief', 'chronicle', 'round', 'practice']);
+village.jobs = Object.assign({ tasks: {}, goals: {}, cards: {}, briefs: [], chronicle: [], round: null, seen: {}, readBrief: null }, village.jobs || {});
+const J = village.jobs;
+let briefArrived = null;
+function applyJob(e) {
+  const d = e.data; if (!d || !d.id) return;
+  if (e.kind === 'task') J.tasks[d.id] = d;
+  else if (e.kind === 'goal') J.goals[d.id] = d;
+  else if (e.kind === 'card') J.cards[d.id] = d;
+  else if (e.kind === 'brief') { J.briefs = J.briefs.filter((b) => b.id !== d.id).concat(d).slice(-14); briefArrived = d; }
+  else if (e.kind === 'chronicle') { if (!J.chronicle.some((c) => c.id === d.id)) J.chronicle = J.chronicle.concat(d).slice(-100); }
+  else if (e.kind === 'round') J.round = d;
+  // practice told to a house joins the sheet's ledger and counts toward that power
+  else if (e.kind === 'practice') village.sheet.ledger['told:' + d.id] = ['told', d.power, d.practice, Date.parse(d.at)];
+}
+// The practice digest: the sheet's ledger rows the PC hasn't had yet, and the Portal stores the briefs read (HRV, day flow).
+function strHash(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); return (h >>> 0).toString(36); }
+function digestOut() {
+  const keys = Object.keys(village.sheet.ledger), from = village.ledgerSent || 0, upto = Math.min(keys.length, from + 800);
+  const d = { ledger: keys.slice(from, upto).filter((id) => !id.startsWith('told:')).map((id) => ({ id, row: village.sheet.ledger[id] })), upto };
+  const P = { hrv: load('portal_hrv_v1', null), schedule: load('portal_flow_schedule_v1', null), plan: load('portal_plan_v1', null), extras: load('portal_flow_extras_v1', null) };
+  const h = strHash(JSON.stringify(P));
+  if (h !== village.portalSent) Object.assign(d, P, { portalHash: h });
+  return d;
+}
+function digestSent(d) { village.ledgerSent = d.upto; if (d.portalHash) village.portalSent = d.portalHash; }
+
+const HOUSE_IDS = ['halohorns', 'esoteric', 'cupidity', 'fitness', 'hibrations', 'kaching', 'hobby', 'baby'];
+const dirName = (house) => (house === 'longhouse' ? 'A' : charText(house + '.d').name);
+const houseShort = (house) => (ROOMS[house] ? ROOMS[house].title.split(' · ')[0] : 'the Longhouse-sala');
+const STATE_WORD = { waiting: 'waiting', queued: 'queued', working: 'working', yes: 'needs your yes', done: 'done' };
+const ago = (iso) => { const m = (Date.now() - Date.parse(iso)) / 60000; return m < 60 ? Math.max(1, Math.round(m)) + ' min' : m < 1440 ? Math.round(m / 60) + ' h' : Math.round(m / 1440) + ' d'; };
+const openCards = () => Object.values(J.cards).filter((k) => k.state === 'open');
+const unseenDone = () => Object.values(J.tasks).filter((t) => t.state === 'done' && !J.seen[t.id]);
+let doneHouses = new Set();
+function afterJobs() {
+  for (const [id, t] of Object.entries(J.tasks)) if (t.state === 'done' && Date.now() - Date.parse(t.updated) > 30 * 864e5) { delete J.tasks[id]; delete J.seen[id]; }
+  doneHouses = new Set(unseenDone().map((t) => t.house));
+  const n = openCards().length + (latestBrief() && J.readBrief !== latestBrief().id ? 1 : 0);
+  $('taskBadge').hidden = !n; $('taskBadge').textContent = n;
+  saveVillage();
+  if ($('scrollP').classList.contains('open') && !($('tText') && $('tText').value) && document.activeElement.tagName !== 'SELECT') renderScroll();
+  // A reads a new brief out when Lek opens the village
+  if (briefArrived && J.readBrief !== briefArrived.id && !anyLayerOpen()) openScroll('brief');
+  briefArrived = null;
+}
+const anyLayerOpen = () => !$('temple').hidden || !!charWho || ['sheet', 'settings', 'scrollP'].some((id) => $(id).classList.contains('open'));
+const latestBrief = () => J.briefs.slice().sort((a, b) => (a.at < b.at ? 1 : -1))[0] || null;
+
+// A brief is markdown from A; this draws the little of it she uses (headings, bold, italics, lists).
+function md(s) {
+  const inl = (t) => esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\*(.+?)\*/g, '<i>$1</i>');
+  let html = '', list = false;
+  for (const raw of String(s).split('\n')) {
+    const l = raw.trim();
+    if (/^[-*•]\s+/.test(l)) { if (!list) { html += '<ul>'; list = true; } html += `<li>${inl(l.replace(/^[-*•]\s+/, ''))}</li>`; continue; }
+    if (list) { html += '</ul>'; list = false; }
+    if (/^#{1,4}\s/.test(l)) html += `<h4>${inl(l.replace(/^#+\s*/, ''))}</h4>`;
+    else if (l) html += `<p>${inl(l)}</p>`;
+  }
+  return html + (list ? '</ul>' : '');
+}
+let scrollTab = 'brief', briefShown = null;
+function openScroll(tab) {
+  if (tab) scrollTab = tab;
+  if (!$('scrollP').classList.contains('open')) history.pushState({ room: scene, layer: 'scroll' }, '');
+  renderScroll(); sync();
+  $('scrollP').classList.add('open'); $('scrollP').setAttribute('aria-hidden', 'false');
+}
+function closeScrollLayer() { $('scrollP').classList.remove('open'); $('scrollP').setAttribute('aria-hidden', 'true'); if (speechSynthesis && speechSynthesis.speaking) speechSynthesis.cancel(); }
+function renderScroll() {
+  const tabs = [['brief', 'Brief'], ['tasks', 'Tasks'], ['cards', 'Cards' + (openCards().length ? ' · ' + openCards().length : '')], ['goals', 'Goals']];
+  let h = `<div class="tabs">${tabs.map(([id, l]) => `<button data-tab="${id}" class="${scrollTab === id ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+  if (!village.bridge) h += '<p class="muted">Tasks reach the houses once the phone is paired with the PC, at the letter box in the Longhouse-sala. You can write them now; they wait.</p>';
+  if (scrollTab === 'brief') h += briefHtml();
+  if (scrollTab === 'tasks') h += writeHtml('task') + boardHtml();
+  if (scrollTab === 'cards') h += cardsHtml();
+  if (scrollTab === 'goals') h += writeHtml('goal') + goalsHtml() + chronicleHtml();
+  $('scrollBody').innerHTML = h;
+  for (const b of $('scrollBody').querySelectorAll('[data-tab]')) b.onclick = () => { scrollTab = b.dataset.tab; renderScroll(); };
+  wireScroll();
+}
+function briefHtml() {
+  const all = J.briefs.slice().sort((a, b) => (a.at < b.at ? 1 : -1));
+  const b = all.find((x) => x.id === briefShown) || all[0];
+  if (!b) return '<section><p class="hearthNote">No brief yet. The day brief is ready at 06:00 and the evening brief at 18:00, Danish time.</p></section>';
+  if (b === all[0] && J.readBrief !== b.id) { J.readBrief = b.id; saveVillage(); $('taskBadge').hidden = !openCards().length; $('taskBadge').textContent = openCards().length; }
+  const label = (x) => `${x.kind === 'day' ? '☉ Day brief' : '☾ Evening brief'} · ${new Date(x.day + 'T12:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}`;
+  return `<section><h3>${esc(label(b))}</h3><div class="brief">${md(b.text)}</div>
+    ${'speechSynthesis' in window ? '<button class="btn" id="readOut">▶ A reads it out</button>' : ''}</section>
+    ${all.length > 1 ? `<section><h3>Earlier briefs</h3>${all.filter((x) => x !== b).map((x) => `<button class="btn" data-brief="${esc(x.id)}">${esc(label(x))}</button>`).join(' ')}</section>` : ''}`;
+}
+function writeHtml(kind) {
+  const waiting = outbox.filter((m) => m.kind === kind).map((m) => `<div class="letter waiting"><div class="meta">waiting for the PC · ${time(m.at)}</div>${esc(m.text)}</div>`).join('');
+  return `<section><h3>${kind === 'task' ? 'A task for the village' : 'A goal'}</h3>
+    <textarea id="tText" rows="3" placeholder="${kind === 'task' ? 'Anything you want done. A finds the house for it.' : 'Bigger than a task, e.g. have the barsel plan and budget ready by December.'}">${esc(village.jobs.draft && village.jobs.draft.kind === kind ? village.jobs.draft.text : '')}</textarea>
+    <button class="btn" id="tSend" data-kind="${kind}">${kind === 'task' ? 'Give it to A' : 'Ask A to plan it'}</button>
+    ${kind === 'goal' ? '<p class="muted">A splits it into tasks across the houses, with a target date. Her plan comes back as a card for your yes.</p>' : ''}${waiting}</section>`;
+}
+function boardHtml() {
+  const ts = Object.values(J.tasks).sort((a, b) => (a.state === 'done') - (b.state === 'done') || (a.at < b.at ? 1 : -1));
+  if (!ts.length) return '<section><h3>The board</h3><p class="muted">Nothing on the board yet.</p></section>';
+  const opts = (t) => HOUSE_IDS.map((hid) => `<option value="${hid}"${hid === t.house ? ' selected' : ''}>${esc(dirName(hid))} · ${esc(houseShort(hid))}</option>`).join('');
+  return `<section><h3>The board</h3>${ts.map((t) => {
+    const waits = (t.waitsOn || []).map((w) => J.tasks[w]).filter((w) => w && w.state !== 'done');
+    const priv = t.house === 'cupidity';
+    return `<div class="task"><b>${priv ? 'A private task' : esc(t.title)}</b><span class="state ${t.state}">${STATE_WORD[t.state] || t.state}</span>
+      <div class="meta">${esc(dirName(t.house))} · ${esc(houseShort(t.house))} · ${ago(t.at)}${waits.length ? ' · waiting on ' + waits.map((w) => esc(dirName(w.house))).join(', ') : ''}${t.error ? ' · will try again when the PC restarts' : ''}</div>
+      ${['waiting', 'queued'].includes(t.state) && !t.error ? `<select data-move="${esc(t.id)}" aria-label="Move to another house">${opts(t)}</select>` : ''}
+      ${t.result && !t.error ? `<details${priv ? '' : ''} data-seen="${esc(t.id)}"><summary>${priv ? 'Show (private)' : 'What came back'}${t.file ? ' · saved in ' + esc(t.file.split('/')[0]) : ''}</summary><pre>${esc(t.result)}</pre></details>` : ''}</div>`;
+  }).join('')}</section>`;
+}
+const CARD_KIND = { yes: 'Needs your yes', email: 'An email to copy', goal: 'A goal plan', proposal: 'An instruction change', suggestion: 'A suggestion' };
+function cardsHtml() {
+  const open = openCards().sort((a, b) => (a.at < b.at ? 1 : -1)), past = Object.values(J.cards).filter((k) => k.state !== 'open').sort((a, b) => (a.answered < b.answered ? 1 : -1)).slice(0, 8);
+  const one = (k) => {
+    const priv = k.house === 'cupidity';
+    const acts = k.state !== 'open' ? `<div class="meta">${k.state === 'yes' ? 'yes' : 'no'} · ${time(k.answered)}</div>`
+      : k.kind === 'email' ? `<div class="acts"><button class="btn" data-copy="${esc(k.id)}">Copy</button><button class="btn" data-ans="yes" data-card="${esc(k.id)}">Got it</button></div>`
+      : k.kind === 'suggestion' ? `<div class="acts"><button class="btn" data-ans="yes" data-card="${esc(k.id)}">Yes, make it a task</button><button class="btn" data-ans="no" data-card="${esc(k.id)}">Not now</button></div>`
+      : `<div class="acts"><button class="btn" data-ans="yes" data-card="${esc(k.id)}">Yes</button><button class="btn" data-ans="no" data-card="${esc(k.id)}">No</button><button class="btn" data-ans="change" data-card="${esc(k.id)}">Change it</button></div>`;
+    const body = `<div class="what">${esc(k.what)}</div>${k.why ? `<div class="muted">${esc(k.why)}</div>` : ''}${k.content ? `<pre>${esc(k.content)}</pre>` : ''}`;
+    return `<div class="card${priv ? ' private' : ''}"><div class="meta">${esc(CARD_KIND[k.kind] || 'A card')} · ${esc(k.who)} · ${time(k.at)}</div>
+      ${priv ? `<details><summary>Private · tap to show</summary>${body}</details>` : body}${acts}</div>`;
+  };
+  return `<section>${open.length ? open.map(one).join('') : '<p class="muted">No cards waiting. Anything that needs your yes arrives here and waits until you answer. Cards never expire.</p>'}</section>
+    ${past.length ? `<section><h3>Answered</h3>${past.map(one).join('')}</section>` : ''}`;
+}
+function goalsHtml() {
+  const gs = Object.values(J.goals).sort((a, b) => (a.at < b.at ? 1 : -1));
+  if (!gs.length) return '';
+  return `<section><h3>The goal board</h3>${gs.map((g) => {
+    const ts = (g.tasks || []).map((id) => J.tasks[id]).filter(Boolean);
+    const done = ts.filter((t) => t.state === 'done'), next = ts.filter((t) => t.state !== 'done');
+    const where = { planning: 'A is planning it', card: 'her plan is waiting in the cards', active: '', done: 'done', declined: 'set aside', stuck: g.note || 'A couldn’t plan it yet' }[g.state];
+    return `<div class="task"><b>${esc(g.title)}</b>${g.target ? `<span class="state">by ${esc(g.target)}</span>` : ''}${where ? `<div class="meta">${esc(where)}</div>` : ''}
+      ${done.length ? `<div class="muted">Done: ${done.map((t) => esc(t.title.replace(g.title + ': ', '') + ' (' + dirName(t.house) + ')')).join(' · ')}</div>` : ''}
+      ${next.length ? `<div class="muted">Next: ${next.slice(0, 3).map((t) => esc(dirName(t.house) + ': ' + t.text.slice(0, 80))).join(' · ')}</div>` : ''}</div>`;
+  }).join('')}</section>`;
+}
+function chronicleHtml() {
+  const c = J.chronicle.slice(-12).reverse();
+  return `<section><h3>The chronicle</h3>${c.length ? c.map((x) => `<p class="chron">${esc(x.text)} <span class="muted">· ${esc(dayLabel(Date.parse(x.at)))}</span></p>`).join('') : `<p class="muted">${esc(line('hub', 'chronicle'))}</p>`}</section>`;
+}
+function wireScroll() {
+  const B = $('scrollBody');
+  if ($('tText')) $('tText').oninput = () => { village.jobs.draft = { kind: $('tSend').dataset.kind, text: $('tText').value }; saveVillage(); };
+  if ($('tSend')) $('tSend').onclick = () => {
+    const text = $('tText').value.trim(); if (!text) return;
+    outbox.push({ id: crypto.randomUUID(), kind: $('tSend').dataset.kind, to: 'A', text, at: new Date().toISOString() }); save(K.outbox, outbox);
+    village.jobs.draft = null; saveVillage(); renderScroll(); sync();
+  };
+  for (const b of B.querySelectorAll('[data-brief]')) b.onclick = () => { briefShown = b.dataset.brief; renderScroll(); };
+  if ($('readOut')) $('readOut').onclick = () => {
+    if (speechSynthesis.speaking) { speechSynthesis.cancel(); return; }
+    const b = J.briefs.find((x) => x.id === briefShown) || latestBrief();
+    const u = new SpeechSynthesisUtterance(String(b.text).replace(/[#*•]/g, '').replace(/^- /gm, ''));
+    const v = speechSynthesis.getVoices().find((x) => /en-GB/i.test(x.lang)); if (v) u.voice = v;
+    u.rate = .95; speechSynthesis.speak(u);
+  };
+  for (const s of B.querySelectorAll('[data-move]')) s.onchange = () => {
+    outbox.push({ id: crypto.randomUUID(), kind: 'taskMove', to: 'A', text: JSON.stringify({ id: s.dataset.move, house: s.value }), at: new Date().toISOString() }); save(K.outbox, outbox);
+    J.tasks[s.dataset.move].house = s.value; saveVillage(); sync();
+  };
+  for (const d of B.querySelectorAll('[data-seen]')) d.ontoggle = () => { if (d.open) { J.seen[d.dataset.seen] = true; afterJobs(); } };
+  for (const b of B.querySelectorAll('[data-copy]')) b.onclick = () => { const k = J.cards[b.dataset.copy]; navigator.clipboard.writeText(k.content).then(() => { b.textContent = 'Copied'; }, () => { b.textContent = 'Couldn’t copy'; }); };
+  for (const b of B.querySelectorAll('[data-ans]')) b.onclick = () => {
+    const k = J.cards[b.dataset.card], choice = b.dataset.ans;
+    outbox.push({ id: crypto.randomUUID(), kind: 'answer', to: 'A', text: JSON.stringify({ ref: k.id, choice }), at: new Date().toISOString() }); save(K.outbox, outbox);
+    if (choice !== 'change') { k.state = choice; k.answered = new Date().toISOString(); }
+    saveVillage(); sync();
+    // "Change it" opens a letter to whoever made the card; a goal plan goes back to the goal box with its text
+    if (choice === 'change') {
+      if (k.kind === 'goal') { const g = J.goals[k.goal]; village.jobs.draft = { kind: 'goal', text: (g ? g.text : '') + '\n\nChange: ' }; scrollTab = 'goals'; renderScroll(); }
+      else { backOrClose(); setTimeout(() => { openChar(k.house + '.d'); setTimeout(() => { if ($('vText')) { $('vText').value = `About your card “${k.what}”: `; $('vText').focus(); } }, 50); }, 60); }
+      return;
+    }
+    renderScroll(); afterJobs();
+  };
+}
+$('taskBtn').onclick = () => openScroll(openCards().length ? 'cards' : null);
+$('scrollClose').onclick = () => backOrClose();
+
+// ── the buzz: Web Push to this phone, mirrored on the watch (01_platform.md §5) ──
+function b64u(s) { const p = '='.repeat((4 - s.length % 4) % 4), b = atob((s + p).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(b, (c) => c.charCodeAt(0)); }
+async function buzzOn() {
+  const note = (t) => { $('buzzNote').textContent = t; };
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return note('This browser can’t take a buzz.');
+  if (!village.pushKey) { note('The PC’s key arrives with a sync. Pair first, or try again in a moment.'); sync(); return; }
+  const perm = await Notification.requestPermission();
+  if (perm !== 'granted') return note('Notifications are off for the village. Android settings can turn them on.');
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if (sub && village.pushFor !== village.pushKey) { await sub.unsubscribe(); sub = null; }
+    if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64u(village.pushKey) });
+    village.pushFor = village.pushKey; village.settings.buzz = true; saveVillage();
+    outbox.push({ id: crypto.randomUUID(), kind: 'pushsub', to: 'A', text: JSON.stringify(sub.toJSON()), at: new Date().toISOString() }); save(K.outbox, outbox);
+    sync(); note('The village can buzz this phone now.'); renderSettings();
+  } catch (e) { note('Couldn’t set up the buzz: ' + e.message); }
+}
+$('buzzOn').onclick = buzzOn;
+$('buzzTest').onclick = () => { outbox.push({ id: crypto.randomUUID(), kind: 'pushtest', to: 'A', text: 'test', at: new Date().toISOString() }); save(K.outbox, outbox); sync(); $('buzzNote').textContent = 'A test buzz is on its way: “Your day brief is ready ☉”.'; };
+// tapping a notification opens the village at that house
+function openHouse(id) { if (!ROOMS[id] || id === scene) return; backOrClose(); setTimeout(() => goRoom(id), 80); }
+if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', (e) => { if (e.data && e.data.type === 'open') { if (e.data.house) openHouse(e.data.house); sync(); } });
 
 // ══════════════════════════════════════════ the sky over Billund ══════════════════════════════════════════
 const BILLUND = { lat: 55.7308, lon: 9.1153 };
@@ -872,7 +1129,7 @@ const ROOMS = {
   hub: { title: 'The Longhouse-sala', c: '#f2c46d', wall: '#3a2a20', roof: '#24170f', floor: '#4a3828', rune: 'TIŊ', thai: 'ศาลา', open: true,
     windows: [], lanterns: [80, 220, 360],
     objects: [
-      { kind: 'scroll', x: 70, y: 560, w: 56, h: 150, label: 'Chronicle', act: { say: 'chronicle' } },
+      { kind: 'scroll', x: 70, y: 560, w: 56, h: 150, label: 'Goals and chronicle', act: { scroll: 'goals' } },
       { kind: 'letterBox', x: 368, y: 520, w: 60, h: 96, label: 'Letter box', act: { letters: true } },
       ...CHAIRS_AT.map(([x, y], i) => ({ kind: 'chair', x, y, who: ['halohorns', 'esoteric', 'hibrations', 'cupidity', 'baby', 'fitness', 'kaching', 'hobby'][i] })),
       { kind: 'hearth', x: 220, y: 590, w: 120, h: 44, label: 'Hearth', act: { declare: true } },
@@ -1189,7 +1446,7 @@ function sleepingCat(c, x, y, t) {
   c.strokeStyle = '#8a7a6a'; c.lineWidth = 2.4; c.lineCap = 'round'; c.beginPath(); c.moveTo(x - 10, y - 1); c.quadraticCurveTo(x - 4, y + 2, x + 5, y); c.stroke();
 }
 // A villager seated at their place, breathing slowly; they nod when Lek comes near.
-function sitter(c, v, x, y, t) { c.save(); c.translate(x, y + Math.sin(t * 1.3 + x) * .25); drawVillager(c, 0, 1, t, { id: v.id, seated: true, noSeat: true, nod: nodOf(v) }); c.restore(); }
+function sitter(c, v, x, y, t) { c.save(); c.translate(x, y + Math.sin(t * 1.3 + x) * .25); drawVillager(c, 0, 1, t, { id: v.id, seated: true, noSeat: true, nod: nodOf(v), scroll: v.role === 'd' && doneHouses.has(v.house) }); c.restore(); }
 const sitting = (o) => villagers.find((v) => v.sit === o && v.scene === scene);
 // lights inside each room, relative to the object: [dx, dy, radius, colour, strength at night, strength by day]
 const FURN_LIGHT = {
@@ -1620,6 +1877,13 @@ function drawVillager(c, dir, frame, t, o = {}) {
   }
   if (L.item === 'quill' && dir !== 1) { c.strokeStyle = '#ece6da'; c.lineWidth = .8 * k; c.beginPath(); const qx = hx + (side ? -side * 1 : 1) * hr * .9; c.moveTo(qx, hy - .4 * k); c.quadraticCurveTo(qx + 1.6 * k, hy - 3.4 * k, qx + 2.4 * k, hy - 5.6 * k); c.stroke(); }
   if (side) { const h = drawArm(c, dir, g, 0, -p, sleeve, L.skin, 3 * B, armOpt); ringFx(h); }
+  // a director with finished work for Lek holds the scroll in front (step 5)
+  if (o.scroll && dir !== 1) {
+    const y = g.sh + g.bob + 10.5 * k, w = side ? 4 * k : 7 * k, x = side ? side * 4.6 * k : 0;
+    box(c, x - w / 2, y - 2.4 * k, w, 5 * k, '#e8dcc0', .2);
+    c.fillStyle = '#5a3a24'; c.fillRect(x - w / 2 - .6 * k, y - 2.8 * k, 1.2 * k, 5.8 * k); c.fillRect(x + w / 2 - .6 * k, y - 2.8 * k, 1.2 * k, 5.8 * k);
+    c.fillStyle = '#c0392b'; c.beginPath(); c.arc(x, y + 2.6 * k, .9 * k, 0, 7); c.fill();
+  }
 }
 // hair in two passes: what falls behind the head, then what frames the face
 function hair(c, L, dir, side, hx, hy, hr, k, pass) {
@@ -1674,7 +1938,8 @@ function gatherPractice() {
   return added;
 }
 function skillDefs() { const d = village.content && village.content.data && village.content.data.skills; return d && Array.isArray(d.powers) ? d : null; }
-function counts(def, rows) { return rows.filter(([src, pid]) => (def.sources || []).some((s) => s.store === src && (!s.ids || s.ids.includes(pid)) && (!s.not || !s.not.includes(pid)))); }
+// practice told to a house arrives as ['told', power id, what, time] and counts toward that power
+function counts(def, rows) { return rows.filter(([src, pid]) => src === 'told' ? pid === def.id : (def.sources || []).some((s) => s.store === src && (!s.ids || s.ids.includes(pid)) && (!s.not || !s.not.includes(pid)))); }
 // Tier 0 is the seed; 1–4 climb Foundation → Mastery. The tier shown is the highest ever reached or declared.
 function powers() {
   const d = skillDefs(); if (!d) return null;
@@ -1958,8 +2223,37 @@ function updatePeople(dt) {
 function drawPersonAt(c, who, p, s, t) {
   c.save(); c.translate(p.x, p.y); if (s !== 1) c.scale(s, s);
   if (DRAW_PERSON[who]) DRAW_PERSON[who](c, p.dir, frameOf(p), t, who === 'lek' ? { build: lekBuild() } : { lanternLit: SKY.n > .15 });
-  else { drawVillager(c, p.dir, frameOf(p), t, { id: who, nod: nodOf(p), seated: !!p.perch }); if (p.act && !p.moving) YARD[p.house].fx(c, p, t); }
+  else { drawVillager(c, p.dir, frameOf(p), t, { id: who, nod: nodOf(p), seated: !!p.perch, scroll: p.role === 'd' && doneHouses.has(p.house) }); if (p.act && !p.moving) YARD[p.house].fx(c, p, t); }
   c.restore();
+  if (p.greet && p.greet.line && T >= p.greet.from && T < p.greet.to) bubble(c, p.x, p.y - (VLOOK[who].h + 6) * s, p.greet.line, s);
+}
+// a speech bubble over an apprentice, with the words from the morning's round
+function bubble(c, x, y, text, s) {
+  const fs = 7 * s, maxW = 92 * s;
+  c.save(); c.font = `400 ${fs}px Inter, system-ui, sans-serif`;
+  const words = String(text).split(/\s+/), rows = [];
+  let row = '';
+  for (const w of words) { const t = row ? row + ' ' + w : w; if (c.measureText(t).width > maxW && row) { rows.push(row); row = w; } else row = t; }
+  if (row) rows.push(row);
+  rows.splice(3);
+  const w = Math.max(...rows.map((r) => c.measureText(r).width)) + 10 * s, h = rows.length * fs * 1.25 + 7 * s;
+  c.fillStyle = 'rgba(236,230,218,.94)'; c.beginPath(); c.roundRect(x - w / 2, y - h - 4 * s, w, h, 5 * s); c.moveTo(x - 3 * s, y - 4 * s); c.lineTo(x, y); c.lineTo(x + 3 * s, y - 4 * s); c.fill();
+  c.fillStyle = '#1a1622'; c.textAlign = 'center'; c.textBaseline = 'top';
+  rows.forEach((r, i) => c.fillText(r, x, y - h - 4 * s + 3.5 * s + i * fs * 1.25));
+  c.restore();
+}
+// A's lantern is the task button too (06_jobs.md §3)
+function hitLantern(x, y, s) { if (ale.scene && ale.scene !== scene) return false; const [lx, ly] = lanternAt(s); return Math.hypot(x - lx, y - ly) < 9 * s; }
+// a lantern on a pole by the door of a house whose finished work waits for Lek
+const lanternSpot = (h, t) => [h.x + h.hw * .62, h.y - 30 + Math.sin(t * 1.6 + h.x) * .6];
+function houseLantern(c, h, t) {
+  const px = h.x + h.hw * .62, [x, y] = lanternSpot(h, t);
+  c.fillStyle = '#3a2a1e'; c.fillRect(px - 1, h.y - 44, 2, 46); c.fillRect(px - 1, h.y - 44, 7, 1.6);
+  c.strokeStyle = '#3a2a1e'; c.lineWidth = .8; c.beginPath(); c.moveTo(px + 5, h.y - 43); c.lineTo(x + 5, y - 6); c.stroke();
+  const lx = x + 5;
+  c.fillStyle = '#5a3a24'; c.fillRect(lx - 4, y - 6, 8, 2); c.fillRect(lx - 4, y + 5, 8, 2);
+  c.fillStyle = '#ffd98a'; c.fillRect(lx - 3, y - 4, 6, 9);
+  c.fillStyle = 'rgba(160,60,30,.5)'; c.fillRect(lx - .5, y - 4, 1, 9);
 }
 // where A's lantern light is, for the glow pass
 function lanternAt(s) { const k = LOOKS.a.h / 42, [x, y] = lanternPos(ale.dir, k, 0); return [ale.x + x * s, ale.y + y * s]; }
@@ -1967,7 +2261,9 @@ function hitPerson(x, y, s) {
   for (const [who, p, h] of [['lek', lek, 50], ['a', ale, 54], ...villagers.filter((v) => v.scene === scene && !v.sit).map((v) => [v.id, v, VLOOK[v.id].h + 8])]) if (Math.abs(x - p.x) < 12 * s && y > p.y - h * s && y < p.y + 6 * s) return who;
   return null;
 }
-function enter(h) { if (busy) return; lek.path = null; lek.onArrive = null; goRoom(h.id); }
+function enter(h) { if (busy) return; lek.path = null; lek.onArrive = null; goRoom(h.id); seeHouse(h.id); }
+// walking into a house where work came back: the lantern over it goes out (the work stays on the board and in the card)
+function seeHouse(id) { let n = 0; for (const t of unseenDone()) if (t.house === id) { J.seen[t.id] = true; n++; } if (n) { afterJobs(); setTimeout(() => say(n > 1 ? `${dirName(id)} has ${n} finished pieces for you. They're on A's scroll.` : `${dirName(id)} has finished work for you. It's on A's scroll.`, dirName(id), ROOMS[id].c), 700); } }
 
 // ══════════════════════════════════════════ the villagers on their feet (05_movement.md §3) ══════════════════════════════════════════
 // Every move is walked, through doors, by the path. Directors spend the day in their own yard doing something in
@@ -2145,7 +2441,10 @@ function updateVillagers(dt) {
   for (let i = 0; i < free.length; i++) for (let j = i + 1; j < free.length; j++) {
     const a = free[i], b = free[j];
     if (a.greet || b.greet || Math.hypot(a.x - b.x, a.y - b.y) > 30 || metToday(a, b)) continue;
-    a.greet = { with: b, until: T + 3.2 }; b.greet = { with: a, until: T + 3.2 }; a.nodT = T + .3; b.nodT = T + .5; markMet(a, b);
+    // the words come from the morning's round, when there is one for today; otherwise they nod (Pim's line is never written)
+    const lines = J.round && J.round.day === clock.day ? J.round.greetings || {} : {}, la = lines[a.id], lb = lines[b.id];
+    const long = la || lb ? 5.2 : 3.2;
+    a.greet = { with: b, until: T + long, line: la, from: T, to: T + 2.6 }; b.greet = { with: a, until: T + long, line: lb, from: T + 2.6, to: T + 5.2 }; a.nodT = T + .3; b.nodT = T + .5; markMet(a, b);
   }
 }
 // window lights: a director home at night keeps the lamp lit a while, then the houses dim one by one
@@ -2190,7 +2489,7 @@ function renderChar() {
       for (const x of pw.out) {
         const { def, tier, toward, list, n } = x;
         const pips = [0, 1, 2, 3].map((i) => `<i><b style="width:${i < tier ? 100 : i === tier ? Math.round(toward * 100) : 0}%"></b></i>`).join('');
-        const grew = list.slice(0, 4).map((r) => `<button data-src="${esc(r[0])}">${esc(r[2] || PRACTICE_HOME[r[0]][1])} <span>· ${esc(dayLabel(r[3]))}</span></button>`).join('');
+        const grew = list.slice(0, 4).map((r) => `<button data-src="${esc(r[0])}">${esc(r[2] || (PRACTICE_HOME[r[0]] || [0, 'told to a house'])[1])} <span>· ${esc(dayLabel(r[3]))}</span></button>`).join('');
         html += `<div class="power${def.private ? ' private' : ''}">
           <div class="ph"><b>${esc(def.name)}</b>${def.aura ? `<span class="aura" style="opacity:${(.25 + .75 * auraLevel).toFixed(2)}"></span>` : ''}<span class="tier">${tier ? esc(pw.tiers[tier - 1]) : 'seed'}${x.declared ? ' · declared' : ''}</span></div>
           <div class="pips">${pips}</div>
@@ -2205,13 +2504,22 @@ function renderChar() {
     }
     html += '</section>';
   }
+  if (VLOOK[who] && who.endsWith('.d')) html += houseWork(who.split('.')[0]);
   if (VLOOK[who]) html += villagerLetters(who, t);
   html += `<section><h3>The twelve poses</h3><p class="muted">Toward you, away, left and right, three frames each${VLOOK[who] ? ', then the seat' : who === 'a' ? ', then the scroll and the seat' : ', then channelling and the seat'}.</p><canvas class="poses" id="charPoses"></canvas></section>`;
   $('charBody').innerHTML = html;
   if ($('vSend')) $('vSend').onclick = () => sendVillagerLetter(who);
   for (const b of $('charBody').querySelectorAll('.declare')) b.onclick = () => declare(b.dataset.power, +b.dataset.tier);
-  for (const b of $('charBody').querySelectorAll('.grew button')) b.onclick = () => { const [src, title] = PRACTICE_HOME[b.dataset.src]; closeCharLayer(); openTemple(P(src), title); };
+  for (const b of $('charBody').querySelectorAll('.grew button')) b.onclick = () => { if (!PRACTICE_HOME[b.dataset.src]) return; const [src, title] = PRACTICE_HOME[b.dataset.src]; closeCharLayer(); openTemple(P(src), title); };
   drawPoseSheet();
+}
+// The house's work from A's board, on the director's card (step 5)
+function houseWork(house) {
+  const ts = Object.values(J.tasks).filter((t) => t.house === house).sort((a, b) => (a.updated < b.updated ? 1 : -1)).slice(0, 5);
+  if (!ts.length) return '';
+  for (const t of ts) if (t.state === 'done') J.seen[t.id] = true;
+  setTimeout(afterJobs, 0);
+  return `<section><h3>Work from this house</h3>${ts.map((t) => `<div class="task"><b>${esc(t.title)}</b><span class="state ${t.state}">${STATE_WORD[t.state] || t.state}</span><div class="meta">${ago(t.updated)} ago${t.file ? ' · ' + esc(t.file) : ''}</div>${t.result && !t.error ? `<details><summary>What came back</summary><pre>${esc(t.result)}</pre></details>` : ''}</div>`).join('')}</section>`;
 }
 // Letters to a villager (step 3): the bridge runs them as a real agent on the PC and the answer comes back on a sync.
 function villagerLetters(who, t) {
@@ -2385,6 +2693,7 @@ function tap(sx, sy) {
   if (scene === 'world' && lookout) { climbDown(); return; }
   if (scene === 'world') {
     const wx = sx / cam.z + cam.x, wy = sy / cam.z + cam.y;
+    if (hitLantern(wx, wy, 1)) { openScroll(); return; }
     const who = hitPerson(wx, wy, 1);
     if (!who && hitCliff(wx, wy)) {
       if (Math.hypot(lek.x - CLIFF.foot.x, lek.y - CLIFF.foot.y) < 30 || !goTo(CLIFF.foot.x, CLIFF.foot.y, climb)) climb();
@@ -2402,6 +2711,7 @@ function tap(sx, sy) {
     return;
   }
   const v = roomView(), rx = (sx - v.ox) / v.z, ry = (sy - v.oy) / v.z;
+  if (hitLantern(rx, ry, FS)) { openScroll(); return; }
   const who = hitPerson(rx, ry, FS);
   if (who) { meetPerson(who); return; }
   const o = hitObject(sx, sy);
@@ -2419,6 +2729,7 @@ function useObject(o) {
   else if (o.act.letters) openSheet();
   else if (o.act.declare) openChar('lek', true, 'declare');
   else if ((o.act.say === 'seat' || o.act.say === 'bench') && sitting(o)) openChar(sitting(o).id);
+  else if (o.act.scroll) openScroll(o.act.scroll);
   else if (o.act.say) say(line(scene, o.act.say), o.label, R.c);
 }
 // Enter or E: go in at a door, use what's within reach, or step out over the threshold
@@ -2439,7 +2750,7 @@ addEventListener('keydown', (e) => {
   if (/INPUT|TEXTAREA/.test(document.activeElement && document.activeElement.tagName)) return;
   const k = e.key.toLowerCase();
   if (k === 'escape') { backOrClose(); return; }
-  if (!$('temple').hidden || charWho || $('sheet').classList.contains('open')) return;
+  if (anyLayerOpen()) return;
   if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd', 'shift'].includes(k)) { keys.add(k); e.preventDefault(); }
   if (k === 'enter' || k === 'e') useNearest();
 });
@@ -2485,7 +2796,7 @@ function openTemple(src, title) {
 function closeTempleLayer() { const f = $('templeFrame'); $('temple').hidden = true; if (f) { f.remove(); gatherPractice(); } }
 function openSheet() { history.pushState({ room: scene, layer: 'letters' }, ''); renderLetters(); sync(); $('sheet').classList.add('open'); $('sheet').setAttribute('aria-hidden', 'false'); }
 function closeSheetLayer() { $('sheet').classList.remove('open'); $('sheet').setAttribute('aria-hidden', 'true'); document.activeElement && document.activeElement.blur(); }
-const backOrClose = () => { closeTempleLayer(); closeSheetLayer(); closeCharLayer(); closeSettingsLayer(); if (history.state && history.state.layer) history.back(); };
+const backOrClose = () => { closeTempleLayer(); closeSheetLayer(); closeCharLayer(); closeSettingsLayer(); closeScrollLayer(); if (history.state && history.state.layer) history.back(); };
 $('charClose').onclick = backOrClose;
 $('templeBack').onclick = backOrClose;
 $('sheetClose').onclick = backOrClose;
@@ -2497,6 +2808,7 @@ addEventListener('popstate', (e) => {
   if (s.layer !== 'temple') closeTempleLayer();
   if (s.layer !== 'letters') closeSheetLayer();
   if (s.layer !== 'settings') closeSettingsLayer();
+  if (s.layer !== 'scroll') closeScrollLayer();
   if (s.layer !== 'char') closeCharLayer(); else if (!charWho) openChar(s.who, false, s.mode);
   if (lookout && !s.lookout) climbDown(false);
   const want = s.room || 'world';
@@ -2600,6 +2912,8 @@ function renderSettings() {
   $('paintMap').textContent = 'Paint this map · ' + (scene === 'world' ? 'the clearing' : here.split(' · ').pop());
   $('mapNote').textContent = pending.length ? `Painted on this phone, waiting for the PC: ${pending.map((id) => (id === 'world' ? 'the clearing' : roomTitle(id).split(' · ')[0])).join(', ')}.` : '';
   $('meetBtn').textContent = meeting ? 'End the meeting' : 'Call the directors to the Longhouse-sala';
+  $('buzzOn').textContent = village.settings.buzz ? 'Set up the buzz again' : 'Let the village buzz this phone';
+  $('buzzTest').hidden = !village.settings.buzz;
 }
 function openSettings() { history.pushState({ room: scene, layer: 'settings' }, ''); renderSettings(); $('settings').classList.add('open'); $('settings').setAttribute('aria-hidden', 'false'); }
 function closeSettingsLayer() { $('settings').classList.remove('open'); $('settings').setAttribute('aria-hidden', 'true'); }
@@ -2684,6 +2998,7 @@ function renderWorld(c, n, dusk) {
   c.fillStyle = 'rgba(120,150,90,.25)'; c.beginPath(); c.ellipse(ISL.x - 14, ISL.y - 8, ISL.rx * .7, ISL.ry * .5, 0, 0, 7); c.fill();
   // y-sorted
   const things = HOUSES.map((h) => ({ y: h.y, d: () => { c.save(); c.translate(h.x, h.y); DRAW[h.kind](c, T, n > .25 && !houseDim(h.id)); c.restore(); } }));
+  for (const h of HOUSES) if (doneHouses.has(h.id)) things.push({ y: h.y + 4, d: () => houseLantern(c, h, T) });
   for (const h of HOUSES) { const Y = YARD[h.id]; things.push({ y: Y.foot ? Y.foot[3] : Y.y - 1, d: () => Y.prop(c, T) }); }
   for (const v of villagers) if (v.scene === 'world' && v.x > vx0 - 40 && v.x < vx1 + 40 && v.y > vy0 - 10 && v.y < vy1 + 70) things.push({ y: v.y, d: () => drawPersonAt(c, v.id, v, 1, T) });
   things.push({ y: HUB.y, d: () => drawLonghouse(c, T, n > .25) });
@@ -2712,6 +3027,8 @@ function renderWorld(c, n, dusk) {
   const es = HOUSES[3]; for (let i = 0; i < 6; i++) { const a = T * .5 + i, tw = .5 + .5 * Math.sin(T * 3 + i * 2); glow(c, es.x + Math.cos(a) * 70, es.y - 140 + Math.sin(a * .8) * 30, 6, '#d8cfff', .5 * tw * L); }
   const ho = HOUSES[7]; glow(c, ho.x - 200, ho.y - 8, 10, '#ff6a7a', .3 * L); glow(c, ho.x - 146, ho.y - 20, 22, '#ffcf7a', .35 * L);
   for (const h of HOUSES) { const [px, py] = POST[h.kind]; glow(c, h.x + px, h.y + py - 42, 14, '#ffcf7a', .25 * L); }
+  // a lantern over a house whose finished work Lek hasn't seen yet
+  for (const h of HOUSES) if (doneHouses.has(h.id)) { const [x, y] = lanternSpot(h, T); glow(c, x + 5, y, 30, '#ffcf7a', .55 * Math.max(L, .5)); }
   { const [lx, ly] = lanternAt(1); glow(c, lx, ly, 46, '#ffcf7a', .1 + .32 * n); }
   drawMarker(c, 1);
   for (const f of fireflies) { const a = (.15 + .85 * n) * (.4 + .6 * Math.max(0, Math.sin(T * 2 + f.p))); glow(c, f.x, f.y, 7, '#e8f59a', .6 * a); }
@@ -2817,7 +3134,13 @@ placeA();
 clock = cph(); villagers.forEach(settle);
 gatherPractice();
 powers();
-history.replaceState(null, '', location.pathname + location.search); // a fresh start is the world
+// a tapped notification opens the village at that house: ?house=<id>
+const openAt = params.get('house');
+if (openAt) params.delete('house');
+history.replaceState(null, '', location.pathname + (params.toString() ? '?' + params : '')); // a fresh start is the world
+afterJobs();
+if (openAt && ROOMS[openAt] && openAt !== 'world') { showScene(openAt); history.pushState({ room: openAt }, ''); seeHouse(openAt); }
+else if (latestBrief() && J.readBrief !== latestBrief().id) setTimeout(() => { if (!anyLayerOpen()) openScroll('brief'); }, 900);
 if (location.hash.startsWith('#pair=')) {
   // arriving from the PC's QR code: don't leave the token in the address bar, then show the letter box
   const link = location.hash;
