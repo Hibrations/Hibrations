@@ -145,6 +145,49 @@ code { font-size: 12.5px; background: rgba(255, 255, 255, .07); border-radius: 4
 .task details pre { white-space: pre-wrap; font: inherit; margin: 6px 0 0; color: var(--ink-dim); }
 .chron { font: italic 400 15.5px/1.45 var(--serif); color: var(--ink-dim); margin: 6px 0; }
 
+/* step 6: talking */
+#chat, #meetP { max-height: 58vh; display: flex; flex-direction: column; }
+#chat header, #meetP header { padding-bottom: 6px; }
+#chat header .ht, #meetP header .ht { flex: 1; min-width: 0; }
+#chat header h2, #meetP header h2 { font-size: 23px; color: var(--accent, var(--gold)); }
+#chatHouse { font-size: 12px; color: var(--ink-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#chatFace { width: 44px; height: 44px; flex: none; }
+#chat header #chatCard { width: auto; padding: 0 10px; font-size: 13px; color: var(--ink-dim); }
+#chatBody, #meetBody { flex: 1; min-height: 90px; overflow-y: auto; padding: 4px 18px 8px; }
+.talk { max-width: 86%; margin: 8px 0; padding: 8px 12px; border-radius: 14px; white-space: pre-wrap; word-wrap: break-word; font-size: 14.5px; line-height: 1.45; }
+.talk.me { margin-left: auto; background: rgba(242,196,109,.13); border: 1px solid rgba(242,196,109,.28); border-bottom-right-radius: 4px; }
+.talk.me.waiting { border-style: dashed; }
+.talk.them { background: rgba(255,255,255,.05); border: 1px solid var(--line); border-left: 2px solid var(--c, var(--accent, var(--ok))); border-bottom-left-radius: 4px; }
+.talk.them b { color: var(--c, var(--gold)); font-weight: 600; margin-right: 4px; }
+.talk.err { color: var(--ink-dim); }
+.talk.pend { color: var(--ink-dim); font-style: italic; }
+.talk.private::after { content: 'only here'; display: block; margin-top: 4px; font: 500 10px var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--red); }
+.talk.sys { max-width: none; text-align: center; color: var(--ink-dim); font: italic 400 15px/1.4 var(--serif); padding: 4px 8px; }
+.talk .meta { font-size: 11.5px; color: var(--ink-faint); margin-top: 3px; white-space: normal; }
+.dots::after { content: ''; animation: dots 1.4s steps(4) infinite; }
+@keyframes dots { 0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; } }
+.earlier { margin: 6px 0 10px; color: var(--ink-dim); font-size: 13px; }
+.earlier hr { border: 0; border-top: 1px solid var(--line); }
+.composer { display: flex; gap: 8px; align-items: flex-end; padding: 8px 14px calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); }
+.composer textarea { flex: 1; resize: none; padding: 9px 12px; min-height: 42px; max-height: 120px; }
+.composer .btn { margin: 0; padding: 10px 16px; }
+.mic { flex: none; width: 42px; height: 42px; border-radius: 50%; background: transparent; border: 1px solid var(--line); color: var(--ink-dim); font-size: 17px; }
+.mic.hum { border-color: rgba(242,196,109,.45); box-shadow: 0 0 10px rgba(242,196,109,.25); color: var(--gold); }
+.mic.on { background: rgba(217,70,90,.2); border-color: var(--red); color: var(--ink); animation: hum 1.2s ease-in-out infinite; }
+@keyframes hum { 50% { box-shadow: 0 0 16px rgba(217,70,90,.5); } }
+.chatFoot { display: flex; justify-content: flex-end; padding: 0 18px 4px; font-size: 12.5px; }
+.chatFoot a { color: var(--ink-faint); }
+#meetWho { display: flex; gap: 6px; overflow-x: auto; padding: 0 14px 8px; scrollbar-width: none; }
+#meetWho button { flex: none; background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 4px 11px; font-size: 13px; color: var(--ink-dim); }
+#meetWho button.on { color: var(--night); background: var(--c, var(--gold)); border-color: transparent; font-weight: 500; }
+.meetActs { display: flex; gap: 8px; padding: 0 14px 6px; }
+.meetActs .btn { margin: 0; padding: 6px 13px; font-size: 13px; }
+.people { display: grid; gap: 6px; }
+.people .who { display: grid; grid-template-columns: 12px 1fr; column-gap: 10px; align-items: center; text-align: left; background: rgba(255,255,255,.03); border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; transition: background .5s; }
+.people .who i { width: 10px; height: 10px; border-radius: 50%; background: var(--c); grid-row: span 2; }
+.people .who b { font: 600 17px/1.15 var(--serif); }
+.people .who span { font-size: 12px; color: var(--ink-dim); }
+.people .who.holding { background: rgba(242,196,109,.14); }
 #update { display: none; position: fixed; left: 50%; top: max(64px, calc(env(safe-area-inset-top) + 52px)); transform: translateX(-50%); background: var(--glass2); border: 1px solid rgba(242, 196, 109, .45); color: var(--gold); border-radius: 999px; padding: 9px 18px; font-size: 14px; white-space: nowrap; z-index: 8; }
 </style>
 </head>
@@ -155,6 +198,7 @@ code { font-size: 12.5px; background: rgba(255, 255, 255, .07); border-radius: 4
   <div class="chip" id="brand"><span class="dot" id="syncDot"></span><b>Lysningen</b></div>
   <div class="chip" id="roomChip" hidden><span id="roomName"></span></div>
   <span class="sp"></span>
+  <button class="chip" id="peopleBtn" title="The village: talk to anyone, call them over, gather" aria-label="The village">⁂</button>
   <button class="chip" id="taskBtn" title="A's scroll: tasks, briefs, cards" aria-label="A's scroll">✎<span class="badge" id="taskBadge" hidden></span></button>
   <button class="chip" id="light" title="Light">◐</button>
   <button class="chip" id="gear" title="Settings" aria-label="Settings">⚙</button>
@@ -200,6 +244,26 @@ code { font-size: 12.5px; background: rgba(255, 255, 255, .07); border-radius: 4
   <div class="scroll" id="charBody"></div>
 </div>
 
+<div id="chat" class="panel" aria-hidden="true">
+  <header><canvas id="chatFace"></canvas><div class="ht"><h2 id="chatName"></h2><div id="chatHouse"></div></div><button id="chatCard" title="Their card">card</button><button id="chatClose" aria-label="Close">×</button></header>
+  <div id="chatBody"></div>
+  <div class="chatFoot"><a href="#" id="chatNew">New thread</a></div>
+  <div class="composer"><textarea id="chatText" rows="1"></textarea><button class="mic" id="chatMic" title="Speak" aria-label="Speak">🎙</button><button class="btn" id="chatSend">Send</button></div>
+</div>
+
+<div id="meetP" class="panel" aria-hidden="true">
+  <header><div class="ht"><h2 id="meetTitle">The Longhouse-sala</h2></div><button id="meetClose" aria-label="Close">×</button></header>
+  <div id="meetBody"></div>
+  <div class="meetActs"><button class="btn" id="meetAgenda">Agenda</button><button class="btn" id="meetEnd">End the meeting</button></div>
+  <div id="meetWho"></div>
+  <div class="composer"><textarea id="meetText" rows="1"></textarea><button class="mic" id="meetMic" title="Speak" aria-label="Speak">🎙</button><button class="btn" id="meetSend">Ask</button></div>
+</div>
+
+<div id="roster" class="panel" aria-hidden="true">
+  <header><h2>The village</h2><button id="rosterClose" aria-label="Close">×</button></header>
+  <div class="scroll" id="rosterBody"></div>
+</div>
+
 <div id="scrollP" class="panel" aria-hidden="true">
   <header><h2>A’s scroll</h2><button id="scrollClose" aria-label="Close">×</button></header>
   <div class="scroll" id="scrollBody"></div>
@@ -221,11 +285,6 @@ code { font-size: 12.5px; background: rgba(255, 255, 255, .07); border-radius: 4
       <button class="btn" id="buzzOn">Let the village buzz this phone</button>
       <button class="btn" id="buzzTest" hidden>Send a test buzz</button>
       <p class="muted" id="buzzNote"></p>
-    </section>
-    <section>
-      <h3>The meeting</h3>
-      <p class="muted">A test until step 6 builds the meeting: the eight directors walk to the Longhouse-sala and sit in their own chairs.</p>
-      <button class="btn" id="meetBtn"></button>
     </section>
   </div>
 </div>
@@ -320,6 +379,8 @@ async function sync() {
   const timer = setTimeout(() => ctrl.abort(), 10000);
   gatherPractice();
   const dg = digestOut();
+  // a letter that has waited a while (the PC was away) buzzes "answered your letter" when its answer is in
+  for (const m of outbox) if (m.kind === 'message' && !m.letter && Date.now() - Date.parse(m.at) > 60000) m.letter = true;
   try {
     const res = await fetch(village.bridge.url + '/sync', {
       method: 'POST',
@@ -334,7 +395,13 @@ async function sync() {
     outbox = outbox.filter((m) => !acked.has(m.id));
     save(K.outbox, outbox);
     const known = new Set(village.events.map((e) => e.id));
-    for (const e of data.events || []) { if (JOB_KINDS.has(e.kind)) applyJob(e); else if (!known.has(e.id)) village.events.push(e); }
+    for (const e of data.events || []) {
+      if (JOB_KINDS.has(e.kind)) applyJob(e);
+      else if (e.kind === 'meeting') { if (e.data) village.meet = e.data; }
+      else if (e.who && (e.kind === 'reply' || e.kind === 'thread')) talkIn(e); // step 6: threads live in IndexedDB
+      else if (!known.has(e.id)) village.events.push(e);
+    }
+    if (village.meetLocal && village.meet && (village.meet.at === village.meetLocal.at || village.meetLocal.ended && village.meet.state !== 'open')) village.meetLocal = null;
     digestSent(dg);
     if (data.push) village.pushKey = data.push;
     cursor = { seq: Math.max(cursor.seq, data.cursor || 0) };
@@ -349,8 +416,10 @@ async function sync() {
     clearTimeout(timer);
     syncing = false;
     renderLetters();
-    if (charWho && VLOOK[charWho] && !($('vText') && $('vText').value)) renderChar();
     afterJobs();
+    if (chatWho) renderChat();
+    if ($('meetP').classList.contains('open') && !$('meetText').value) renderMeet();
+    if ($('roster').classList.contains('open')) renderRoster();
   }
 }
 function sendLetter() {
@@ -448,7 +517,7 @@ function afterJobs() {
   if (briefArrived && J.readBrief !== briefArrived.id && !anyLayerOpen()) openScroll('brief');
   briefArrived = null;
 }
-const anyLayerOpen = () => !$('temple').hidden || !!charWho || ['sheet', 'settings', 'scrollP'].some((id) => $(id).classList.contains('open'));
+const anyLayerOpen = () => !$('temple').hidden || !!charWho || !!chatWho || ['sheet', 'settings', 'scrollP', 'roster', 'meetP'].some((id) => $(id).classList.contains('open'));
 const latestBrief = () => J.briefs.slice().sort((a, b) => (a.at < b.at ? 1 : -1))[0] || null;
 
 // A brief is markdown from A; this draws the little of it she uses (headings, bold, italics, lists).
@@ -576,7 +645,7 @@ function wireScroll() {
     // "Change it" opens a letter to whoever made the card; a goal plan goes back to the goal box with its text
     if (choice === 'change') {
       if (k.kind === 'goal') { const g = J.goals[k.goal]; village.jobs.draft = { kind: 'goal', text: (g ? g.text : '') + '\n\nChange: ' }; scrollTab = 'goals'; renderScroll(); }
-      else { backOrClose(); setTimeout(() => { openChar(k.house + '.d'); setTimeout(() => { if ($('vText')) { $('vText').value = `About your card “${k.what}”: `; $('vText').focus(); } }, 50); }, 60); }
+      else { backOrClose(); setTimeout(() => { openChat(k.house === 'longhouse' ? 'a' : k.house + '.d'); $('chatText').value = `About your card “${k.what}”: `; $('chatText').focus(); }, 80); }
       return;
     }
     renderScroll(); afterJobs();
@@ -1133,6 +1202,7 @@ const ROOMS = {
       { kind: 'letterBox', x: 368, y: 520, w: 60, h: 96, label: 'Letter box', act: { letters: true } },
       ...CHAIRS_AT.map(([x, y], i) => ({ kind: 'chair', x, y, who: ['halohorns', 'esoteric', 'hibrations', 'cupidity', 'baby', 'fitness', 'kaching', 'hobby'][i] })),
       { kind: 'hearth', x: 220, y: 590, w: 120, h: 44, label: 'Hearth', act: { declare: true } },
+      { kind: 'headChair', x: 394, y: 640, z: 640 }, // step 6: the head of the table, Lek's chair in a meeting
     ] },
 };
 const VLOOK_IDS = new Set(['halohorns', 'esoteric', 'cupidity', 'fitness', 'hibrations', 'kaching', 'hobby', 'baby']); // houses with a director and an apprentice
@@ -1427,7 +1497,8 @@ function twinLamp(c, t) {
 const FURN = {
   deskSeat: (c, o, R, t) => { const v = sitting(o); deskSeat(c, R.c, t, v && (() => sitter(c, v, 0, -30, t))); },
   bench: (c, o, R, t) => { const v = sitting(o); bench(c, !!VLOOK[scene + '.a']); if (v) sitter(c, v, -16, -8, t); },
-  chair: (c, o, R, t) => { const v = sitting(o); chair(c, HOUSES.find((h) => h.id === o.who).c, v && (() => sitter(c, v, 0, -10, t))); }, altar: (c, o, R, t) => altar(c, t), mirror: (c, o, R, t) => bronzeMirror(c, t),
+  chair: (c, o, R, t) => { const v = sitting(o); chair(c, HOUSES.find((h) => h.id === o.who).c, v && (() => sitter(c, v, 0, -10, t))); },
+  headChair: (c, o, R, t) => chair(c, '#f2c46d', lek.sit && (() => { c.save(); c.translate(0, -10 + Math.sin(t * 1.1) * .25); drawLek(c, 0, 1, t, { seated: true, build: lekBuild() }); c.restore(); })), altar: (c, o, R, t) => altar(c, t), mirror: (c, o, R, t) => bronzeMirror(c, t),
   board: (c, o, R) => board(c, R.c), chest: (c) => chest(c), cushion: (c, o, R, t) => cushion(c, t), herbs: (c) => herbs(c), telescope: (c, o, R, t) => telescope(c, t),
   bowl: (c, o, R, t) => bowl(c, t), curtain: (c, o, R, t) => curtain(c, t), lanternRoom: (c, o, R, t, n) => lanternRoom(c, t, n), rack: (c) => rack(c),
   sauna: (c, o, R, t) => saunaBench(c, t), hrv: (c) => hrv(c), notice: (c) => notice(c), writingDesk: (c, o, R, t) => writingDesk(c, t), counter: (c, o, R, t) => counter(c, t),
@@ -2137,7 +2208,7 @@ function shoulder(dir) { const s = sceneScale(); return [[-20, -5], [20, 6], [6,
 function placeA() { const [ox, oy] = shoulder(lek.dir); ale.x = lek.x + ox; ale.y = lek.y + oy; if (!walkOK(ale.x, ale.y)) { ale.x = lek.x; ale.y = lek.y - 2; } ale.dir = lek.dir; ale.moving = false; lek.trail = []; }
 let follow = false, marker = null;
 function goTo(x, y, cb) {
-  follow = true; lek.reach = null;
+  follow = true; lek.reach = null; if (lek.sit) { lek.sit = null; lek.x = HEAD.x; lek.y = HEAD.y + 14; }
   lek.path = findPath(gridFor(scene), lek.x, lek.y, x, y); lek.onArrive = cb || null;
   if (lek.path && lek.path.length) return true;
   lek.path = null; lek.onArrive = null;
@@ -2188,6 +2259,8 @@ function updatePeople(dt) {
   const byKeys = !!(ix || iy);
   let left = 0;
   if (byKeys) { lek.path = null; lek.onArrive = null; lek.reach = null; follow = true; }
+  if (lek.sit && (byKeys || lek.path)) { lek.sit = null; lek.y = HEAD.y + 14; }
+  if (lek.sit) { lek.moving = false; ale.moving = false; return; }
   else if (lek.path && lek.path.length) {
     // walking over to someone: close enough is there
     if (lek.reach && Math.hypot(lek.x - lek.reach.p.x, lek.y - lek.reach.p.y) < lek.reach.r) { lek.path = null; lek.reach = null; const cb = lek.onArrive; lek.onArrive = null; lek.moving = false; if (cb) cb(); return; }
@@ -2216,16 +2289,18 @@ function updatePeople(dt) {
   else { ale.moving = false; if (!lek.moving) ale.dir = lek.dir; }
   // the camera follows him outside, until a drag takes it
   if (scene === 'world' && follow && !gesture) {
-    const k = 1 - Math.exp(-dt * 3), cx = lek.x - vw / cam.z / 2, cy = lek.y - 30 - vh / cam.z / 2;
+    const k = 1 - Math.exp(-dt * 3), cx = lek.x - vw / cam.z / 2, cy = lek.y - 30 - (vh - sheetLift()) / cam.z / 2;
     cam.x += (cx - cam.x) * k; cam.y += (cy - cam.y) * k; clampCam();
   }
 }
 function drawPersonAt(c, who, p, s, t) {
+  if (who === 'lek' && lek.sit) return; // drawn in his chair at the head of the table
   c.save(); c.translate(p.x, p.y); if (s !== 1) c.scale(s, s);
   if (DRAW_PERSON[who]) DRAW_PERSON[who](c, p.dir, frameOf(p), t, who === 'lek' ? { build: lekBuild() } : { lanternLit: SKY.n > .15 });
   else { drawVillager(c, p.dir, frameOf(p), t, { id: who, nod: nodOf(p), seated: !!p.perch, scroll: p.role === 'd' && doneHouses.has(p.house) }); if (p.act && !p.moving) YARD[p.house].fx(c, p, t); }
   c.restore();
   if (p.greet && p.greet.line && T >= p.greet.from && T < p.greet.to) bubble(c, p.x, p.y - (VLOOK[who].h + 6) * s, p.greet.line, s);
+  if (who === 'a') drawHeld(c, p, s);
 }
 // a speech bubble over an apprentice, with the words from the morning's round
 function bubble(c, x, y, text, s) {
@@ -2344,8 +2419,6 @@ const YARD = {
 };
 // Errands: the yards in front of each door, the jetty bank below the boathouse, the green, the landing at the stepping stones
 const ERRANDS = [...HOUSES.map((h) => ({ x: h.door.x, y: h.door.y + 38 })), { x: 1236, y: 880 }, { x: 900, y: 900 }, { x: 640, y: 640 }, { x: 1160, y: 640 }, { x: 600, y: 900 }, { x: 1200, y: 760 }];
-// The meeting (a test button until step 6): the directors walk to their own chairs in the Longhouse-sala
-let meeting = false;
 
 // Copenhagen time: night runs from 18:00 to 06:00 (?at=… shifts it for checking, and runs on from there)
 const cphFmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Copenhagen', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
@@ -2356,10 +2429,22 @@ const isNight = () => clock.eve < 720;
 const villagers = [...VLOOK_IDS].flatMap((house) => ['d', 'a'].map((role) => ({ id: `${house}.${role}`, house, role, scene: house, x: 220, y: 600, dir: 0, dist: 0, moving: false, legs: [], path: null, then: null, sit: null, perch: false, act: false, mode: null, wait: 0, nodT: -9, near: false, greet: null, stuck: 0 })));
 const doorOf = (id) => (id === 'hub' ? HUB : HOUSES.find((h) => h.id === id));
 const objIn = (room, f) => ROOMS[room].objects.find(f);
-function wantMode(v) { if (meeting && v.role === 'd') return 'meet'; if (isNight()) return 'home'; return v.role === 'd' ? 'yard' : 'errand'; }
+// Step 6: called over by Lek comes first; a meeting brings the directors to their chairs (and the apprentices to
+// the walls when invited); Strings on the green brings everyone out round him.
+function wantMode(v) {
+  if (v.called) return 'called';
+  const mk = meetKind();
+  if (mk === 'sala' && v.role === 'd') return 'meet';
+  if (mk === 'sala' && meetApprentices()) return 'wall';
+  if (mk === 'green') return 'green';
+  if (isNight()) return 'home'; return v.role === 'd' ? 'yard' : 'errand';
+}
 // where a mode takes them: [scene, x, y, what to do there]
 function goalOf(v, mode) {
   if (mode === 'meet') { const o = objIn('hub', (o) => o.kind === 'chair' && o.who === v.house); return ['hub', o.x, o.y + 14, () => sitDown(v, o)]; }
+  if (mode === 'called') { const [x, y] = calledSpot(v); return [scene, x, y, () => arrived(v)]; }
+  if (mode === 'wall') { const [x, y] = wallSpot(v); return ['hub', x, y, () => { v.dir = 0; }]; }
+  if (mode === 'green') { const [x, y] = greenSpot(v); return ['world', x, y, () => faceTo(v, GREEN.x, GREEN.y - 10)]; }
   if (mode === 'home') { const o = objIn(v.house, (o) => o.kind === (v.role === 'd' ? 'deskSeat' : 'bench')); return [v.house, o.x, o.y + 18, () => sitDown(v, o)]; }
   if (mode === 'yard') { const Y = YARD[v.house]; return ['world', Y.x, Y.y, () => { v.act = true; v.perch = !!Y.perch; v.dir = Y.dir; }]; }
   const R = rng(Math.floor(Math.random() * 1e9)), opts = ERRANDS.filter((e) => !v.last || e !== v.last), e = opts[Math.floor(R() * opts.length)];
@@ -2385,6 +2470,7 @@ function travel(v, sc, x, y, then) {
 function decide(v) { v.mode = wantMode(v); const [sc, x, y, then] = goalOf(v, v.mode); travel(v, sc, x, y, then); }
 // Placed where they'd be by now, without a walk: only when the village starts, or comes back after a long time away.
 function settle(v) {
+  if (v.called) { v.called = null; v.arrived = false; }
   v.mode = wantMode(v); v.greet = null; standUp(v);
   const [sc, x, y, then] = goalOf(v, v.mode);
   v.scene = sc; v.x = x; v.y = y; v.legs = []; v.path = null; v.then = null; v.moving = false; v.dir = 0; then(); v.wait = T + Math.random() * 8;
@@ -2407,7 +2493,7 @@ function walkOn(v, dt) {
     return;
   }
   let left = 0; for (let i = 0, a = v; i < v.path.length; i++) { left += Math.hypot(v.path[i].x - a.x, v.path[i].y - a.y); a = v.path[i]; }
-  const sp = (left > 520 * s || v.mode === 'meet' && left > 300 * s ? 150 : 64) * s; // far off and wanted, they run
+  const sp = (left > 520 * s || (v.mode === 'meet' || v.mode === 'called') && left > 160 * s ? 150 : 64) * s; // far off and wanted, they run
   const dx = tgt.x - v.x, dy = tgt.y - v.y, d = Math.hypot(dx, dy);
   moveBy(v, dx / d * sp, dy / d * sp, dt);
   if (!v.moving) { v.stuck += dt; if (v.stuck > 1.2) { v.stuck = 0; v.path = null; v.tries = (v.tries || 0) + 1; if (v.tries > 4) { v.tries = 0; v.legs = []; v.mode = null; v.wait = T + 2 + Math.random() * 3; } } }
@@ -2425,6 +2511,7 @@ function updateVillagers(dt) {
   for (const v of villagers) {
     // a change of mode (night falls, a meeting is called) interrupts what they're doing
     if (!v.greet && v.mode !== wantMode(v) && (v.mode !== null || T > v.wait)) decide(v);
+    if (v.called) keepCalled(v);
     // Lek passes within a few steps: they turn to look at him and nod. An apprentice on an errand stops a moment.
     const near = v.scene === scene && !lookout && Math.hypot(v.x - lek.x, v.y - lek.y) < 46 * ls;
     if (near && !v.near) { v.nodT = T + .15; if (v.mode === 'errand' && v.legs.length) v.hold = T + 1.8; }
@@ -2505,10 +2592,11 @@ function renderChar() {
     html += '</section>';
   }
   if (VLOOK[who] && who.endsWith('.d')) html += houseWork(who.split('.')[0]);
-  if (VLOOK[who]) html += villagerLetters(who, t);
+  if (VLOOK[who]) html += `<section><h3>Talk</h3><button class="btn" id="vTalk">Talk with ${esc(t.name)}</button><button class="btn" id="vCall">Call ${esc(t.name)} over</button></section>`;
   html += `<section><h3>The twelve poses</h3><p class="muted">Toward you, away, left and right, three frames each${VLOOK[who] ? ', then the seat' : who === 'a' ? ', then the scroll and the seat' : ', then channelling and the seat'}.</p><canvas class="poses" id="charPoses"></canvas></section>`;
   $('charBody').innerHTML = html;
-  if ($('vSend')) $('vSend').onclick = () => sendVillagerLetter(who);
+  if ($('vTalk')) $('vTalk').onclick = () => { closeCharLayer(); history.replaceState({ room: scene, layer: 'chat', who }, ''); openChat(who, false); };
+  if ($('vCall')) $('vCall').onclick = () => { backOrClose(); setTimeout(() => callOver(who, 'roster'), 80); };
   for (const b of $('charBody').querySelectorAll('.declare')) b.onclick = () => declare(b.dataset.power, +b.dataset.tier);
   for (const b of $('charBody').querySelectorAll('.grew button')) b.onclick = () => { if (!PRACTICE_HOME[b.dataset.src]) return; const [src, title] = PRACTICE_HOME[b.dataset.src]; closeCharLayer(); openTemple(P(src), title); };
   drawPoseSheet();
@@ -2520,26 +2608,6 @@ function houseWork(house) {
   for (const t of ts) if (t.state === 'done') J.seen[t.id] = true;
   setTimeout(afterJobs, 0);
   return `<section><h3>Work from this house</h3>${ts.map((t) => `<div class="task"><b>${esc(t.title)}</b><span class="state ${t.state}">${STATE_WORD[t.state] || t.state}</span><div class="meta">${ago(t.updated)} ago${t.file ? ' · ' + esc(t.file) : ''}</div>${t.result && !t.error ? `<details><summary>What came back</summary><pre>${esc(t.result)}</pre></details>` : ''}</div>`).join('')}</section>`;
-}
-// Letters to a villager (step 3): the bridge runs them as a real agent on the PC and the answer comes back on a sync.
-function villagerLetters(who, t) {
-  const mine = outbox.filter((m) => m.to === who).map((m) => ({ at: m.at, text: m.text, cls: 'waiting', meta: 'a letter waiting' }));
-  const sent = new Set(village.events.filter((e) => e.who === who && e.ref).map((e) => e.ref));
-  const sentRows = (village.sentTo || []).filter((m) => m.to === who).map((m) => ({ at: m.at, text: m.text, cls: 'mine', meta: sent.has(m.id) ? 'your letter' : 'your letter · with ' + t.name }));
-  const theirs = village.events.filter((e) => e.who === who).map((e) => ({ at: e.at, text: e.text, cls: 'reply', meta: e.from || t.name }));
-  const rows = [...mine, ...sentRows, ...theirs].sort((a, b) => stamp(b.at) - stamp(a.at)).slice(0, 12);
-  if (!village.bridge) return '<section><h3>Letters</h3><p class="muted">Letters reach the villagers once the phone is paired with the PC, at the letter box in the Longhouse-sala.</p></section>';
-  return `<section><h3>Letters</h3><textarea id="vText" rows="3" placeholder="A letter for ${esc(t.name)}…"></textarea><button class="btn" id="vSend">Send</button>
-    <p class="muted">${esc(t.name)} works on the PC. The answer comes back with a sync, often a few minutes later.</p>
-    ${rows.map((r) => `<div class="letter ${r.cls}"><div class="meta">${esc(r.meta)} · ${time(r.at)}</div>${esc(r.text)}</div>`).join('')}</section>`;
-}
-function sendVillagerLetter(who) {
-  const text = $('vText').value.trim(); if (!text) return;
-  const m = { id: crypto.randomUUID(), kind: 'message', to: who, text, at: new Date().toISOString() };
-  outbox.push(m); save(K.outbox, outbox);
-  // keep our own side of the thread: the outbox empties once the PC has the letter
-  village.sentTo = (village.sentTo || []).concat(m).slice(-200); saveVillage();
-  renderChar(); sync().then(() => { if (charWho === who) renderChar(); });
 }
 // A declaration is honoured at once and never taken back (growth only).
 function declare(id, tier) {
@@ -2596,7 +2664,7 @@ function clampCam() {
   if (lookout) { cam.z = Math.min(vw / 1720, vh / (H - 240)); cam.x = (W - vw / cam.z) / 2; cam.y = (H + 200 - vh / cam.z) / 2; return; }
   cam.z = clamp(cam.z, zMin(), 2.4);
   cam.x = clamp(cam.x, 0, W - vw / cam.z);
-  cam.y = clamp(cam.y, 0, H - vh / cam.z);
+  cam.y = clamp(cam.y, 0, H - (vh - sheetLift()) / cam.z); // with a chat open, far enough down that Lek stays above it
 }
 function centreOn(x, y) { cam.x = x - vw / cam.z / 2; cam.y = y - vh / cam.z / 2; clampCam(); }
 function resize() {
@@ -2613,15 +2681,24 @@ function resize() {
 let rT; addEventListener('resize', () => { clearTimeout(rT); rT = setTimeout(resize, 120); });
 
 // room camera: the whole room fits the screen, centred
-function roomView() { if (picturing) return { z: 2, ox: 0, oy: 0 }; const z = Math.min(vw / RW, (vh - 20) / RH); return { z, ox: (vw - RW * z) / 2, oy: Math.max(0, (vh - RH * z) / 2 + 10) }; }
+function roomView() {
+  if (picturing) return { z: 2, ox: 0, oy: 0 };
+  // a chat or the meeting open in a room: the floor fills the space above the sheet, so the people stay in sight
+  const lift = sheetLift();
+  if (lift) { const top = WB - 70, z = Math.min(vw / RW, (vh - lift - 16) / (RH - top)); return { z, ox: (vw - RW * z) / 2, oy: Math.max(6, (vh - lift - (RH - top) * z) / 2) - top * z }; }
+  const z = Math.min(vw / RW, (vh - 20) / RH); return { z, ox: (vw - RW * z) / 2, oy: Math.max(0, (vh - RH * z) / 2 + 10) };
+}
 
 // ── input: drag to pan, pinch to zoom, tap to enter ──
 const pointers = new Map();
 let gesture = null; // { moved, t0, x0, y0, multi, lastX, lastY, lastT, dist, mid }
+let longT = null;
 cv.addEventListener('pointerdown', (e) => {
   try { cv.setPointerCapture(e.pointerId); } catch {}
   pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   if (pointers.size === 1) gesture = { moved: false, t0: performance.now(), x0: e.clientX, y0: e.clientY, multi: false, lastX: e.clientX, lastY: e.clientY, lastT: performance.now() };
+  // a long press reaches (Telekinesis, step 6)
+  if (pointers.size === 1 && !painting) { const g = gesture, x = e.clientX, y = e.clientY; clearTimeout(longT); longT = setTimeout(() => { if (gesture === g && !g.moved && !g.multi && !busy && longPress(x, y)) g.long = true; }, 560); }
   else if (gesture) { gesture.multi = true; startPinch(); }
   if (painting && pointers.size === 1) paintStart(e.clientX, e.clientY); else paintAt = null;
   cam.vx = cam.vy = 0;
@@ -2654,8 +2731,8 @@ function endPointer(e) {
   pointers.delete(e.pointerId);
   if (pointers.size === 1 && gesture) { const [p] = pointers.values(); gesture.lastX = p.x; gesture.lastY = p.y; gesture.lastT = performance.now(); cam.vx = cam.vy = 0; }
   if (pointers.size) return;
-  const g = gesture; gesture = null;
-  if (!g) return;
+  const g = gesture; gesture = null; clearTimeout(longT);
+  if (!g || g.long) return;
   if (painting) { paintAt = null; cam.vx = cam.vy = 0; return; }
   if (e.type === 'pointerup' && !g.moved && !g.multi && performance.now() - g.t0 < 600) { cam.vx = cam.vy = 0; tap(e.clientX, e.clientY); }
   else if (performance.now() - g.lastT > 80) { cam.vx = cam.vy = 0; }
@@ -2712,6 +2789,11 @@ function tap(sx, sy) {
   }
   const v = roomView(), rx = (sx - v.ox) / v.z, ry = (sy - v.oy) / v.z;
   if (hitLantern(rx, ry, FS)) { openScroll(); return; }
+  // in a meeting, tap a seated director (or their chair) to talk to them alone, in front of the others
+  if (scene === 'hub' && meetKind() === 'sala') {
+    for (const o of ROOMS.hub.objects) if (o.kind === 'chair' && Math.abs(rx - o.x) < 24 && ry > o.y - 70 && ry < o.y + 12) { meetTo = o.who + '.d'; openMeet(); return; }
+    if (Math.hypot(rx - HEAD.x, ry - HEAD.y + 20) < 30) { lek.sitTried = false; openMeet(); return; } // his chair: sit again
+  }
   const who = hitPerson(rx, ry, FS);
   if (who) { meetPerson(who); return; }
   const o = hitObject(sx, sy);
@@ -2728,7 +2810,7 @@ function useObject(o) {
   if (o.act.open) setTimeout(() => openTemple(o.act.open, o.act.title), 140);
   else if (o.act.letters) openSheet();
   else if (o.act.declare) openChar('lek', true, 'declare');
-  else if ((o.act.say === 'seat' || o.act.say === 'bench') && sitting(o)) openChar(sitting(o).id);
+  else if ((o.act.say === 'seat' || o.act.say === 'bench') && sitting(o)) openChat(sitting(o).id);
   else if (o.act.scroll) openScroll(o.act.scroll);
   else if (o.act.say) say(line(scene, o.act.say), o.label, R.c);
 }
@@ -2752,7 +2834,9 @@ addEventListener('keydown', (e) => {
   if (k === 'escape') { backOrClose(); return; }
   if (anyLayerOpen()) return;
   if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd', 'shift'].includes(k)) { keys.add(k); e.preventDefault(); }
-  if (k === 'enter' || k === 'e') useNearest();
+  if (k === 'enter' || k === 'e') { const p = nearestPerson(30); if (p) openChat(p.id); else useNearest(); }
+  if (k === 't') { const p = nearestPerson(60); if (p) openChat(p.id); else say('Nobody within a few steps. Walk up to someone, or tap them.', 'Talk'); }
+  if (k === 'q') openChat('a');
 });
 addEventListener('keyup', (e) => keys.delete(e.key.toLowerCase()));
 addEventListener('blur', () => keys.clear());
@@ -2796,7 +2880,7 @@ function openTemple(src, title) {
 function closeTempleLayer() { const f = $('templeFrame'); $('temple').hidden = true; if (f) { f.remove(); gatherPractice(); } }
 function openSheet() { history.pushState({ room: scene, layer: 'letters' }, ''); renderLetters(); sync(); $('sheet').classList.add('open'); $('sheet').setAttribute('aria-hidden', 'false'); }
 function closeSheetLayer() { $('sheet').classList.remove('open'); $('sheet').setAttribute('aria-hidden', 'true'); document.activeElement && document.activeElement.blur(); }
-const backOrClose = () => { closeTempleLayer(); closeSheetLayer(); closeCharLayer(); closeSettingsLayer(); closeScrollLayer(); if (history.state && history.state.layer) history.back(); };
+const backOrClose = () => { closeTempleLayer(); closeSheetLayer(); closeCharLayer(); closeSettingsLayer(); closeScrollLayer(); closeChatLayer(); closeRosterLayer(); closeMeetLayer(); if (history.state && history.state.layer) history.back(); };
 $('charClose').onclick = backOrClose;
 $('templeBack').onclick = backOrClose;
 $('sheetClose').onclick = backOrClose;
@@ -2810,6 +2894,9 @@ addEventListener('popstate', (e) => {
   if (s.layer !== 'settings') closeSettingsLayer();
   if (s.layer !== 'scroll') closeScrollLayer();
   if (s.layer !== 'char') closeCharLayer(); else if (!charWho) openChar(s.who, false, s.mode);
+  if (s.layer !== 'chat') closeChatLayer(); else if (!chatWho) openChat(s.who, false);
+  if (s.layer !== 'roster') closeRosterLayer();
+  if (s.layer !== 'meet') closeMeetLayer();
   if (lookout && !s.lookout) climbDown(false);
   const want = s.room || 'world';
   if (want !== scene) fadeTo(() => showScene(want));
@@ -2829,14 +2916,429 @@ function say(text, title, col) {
 }
 function hideSay() { $('say').classList.remove('on'); }
 
-// Tap a person: Lek walks over to them, then their card opens (talking comes in step 6).
+// Tap a person: Lek walks over to them, then the chat opens (step 6). Lek himself opens his sheet; A talks at once.
 function meetPerson(who) {
+  if (who === 'lek') { openChar('lek'); return; }
+  if (who === 'a') { openChat('a'); return; }
   const v = villagers.find((x) => x.id === who), s = sceneScale();
-  if (!v || Math.hypot(lek.x - v.x, lek.y - v.y) < 34 * s) { openChar(who); return; }
+  if (!v || Math.hypot(lek.x - v.x, lek.y - v.y) < 34 * s) { openChat(who); return; }
   const d = Math.hypot(lek.x - v.x, lek.y - v.y), tx = v.x + (lek.x - v.x) / d * 18 * s, ty = v.y + (lek.y - v.y) / d * 18 * s;
-  if (!goTo(tx, ty, () => { faceTo(lek, v.x, v.y); openChar(who); })) openChar(who);
+  if (!goTo(tx, ty, () => { faceTo(lek, v.x, v.y); openChat(who); })) openChat(who);
   else lek.reach = { p: v, r: 30 * s };
 }
+// T (or E beside them): talk to whoever is nearest, within a few steps
+function nearestPerson(r) { const s = sceneScale(); let best = null, bd = r * s; for (const v of villagers) { if (v.scene !== scene) continue; const x = v.sit ? v.sit.x : v.x, y = v.sit ? v.sit.y : v.y, d = Math.hypot(lek.x - x, lek.y - y); if (d < bd) { bd = d; best = v; } } return best; }
+
+// ══════════════════════════════════════════ talking (step 6): chat, call over, meetings, Strings, the voice ══════════════════════════════════════════
+// 07_talking.md, with Lek's decisions in the box at its top (2026-11-01). Tap anyone to talk; the thread is the same one
+// the step 3 letters started, in the same PC session. Long-press a name in the village list to call them over.
+// The Longhouse-sala meeting and Strings on the green run on the PC (bridge/meeting.js) and come back as one object.
+
+// ── threads, in IndexedDB (they outgrow localStorage): one record per villager, { who, threads: [{ id, at, rows }] } ──
+const TDB = (() => { let p = null; return () => p || (p = new Promise((res) => {
+  try { const r = indexedDB.open('lysningen', 1); r.onupgradeneeded = () => r.result.createObjectStore('threads', { keyPath: 'who' }); r.onsuccess = () => res(r.result); r.onerror = () => res(null); } catch { res(null); }
+})); })();
+const threads = {}; // who → record, kept in memory once read
+async function threadOf(who) {
+  if (threads[who]) return threads[who];
+  const db = await TDB(); let rec = null;
+  if (db) rec = await new Promise((res) => { try { const q = db.transaction('threads').objectStore('threads').get(who); q.onsuccess = () => res(q.result || null); q.onerror = () => res(null); } catch { res(null); } });
+  return threads[who] || (threads[who] = rec || { who, threads: [{ id: 't0', at: new Date().toISOString(), rows: [] }] });
+}
+function putThread(rec) { TDB().then((db) => { if (db) try { db.transaction('threads', 'readwrite').objectStore('threads').put(rec); } catch {} }); }
+const curThread = (rec) => rec.threads[rec.threads.length - 1];
+// rows: Lek's { id, at, me, text } · an answer { id, ref, at, from, text, error } · a quiet line { id, at, sys, text }
+async function addTalk(who, row) {
+  const rec = await threadOf(who);
+  if (rec.threads.some((t) => t.rows.some((r) => r.id === row.id))) return;
+  curThread(rec).rows.push(row); putThread(rec);
+  if (chatWho === who) renderChat();
+}
+// what arrives from the PC for a thread: answers, and a new thread after the handover note
+function talkIn(e) {
+  if (e.kind === 'thread') {
+    threadOf(e.who).then((rec) => {
+      if (rec.threads.some((t) => t.id === e.id)) return;
+      rec.threads.push({ id: e.id, at: e.at, rows: [{ id: e.id + ':h', at: e.at, sys: true, text: e.text ? `A new thread. ${e.text}` : 'A new thread.' }] });
+      rec.threads = rec.threads.slice(-20); putThread(rec);
+      if (chatWho === e.who) renderChat();
+    });
+    return;
+  }
+  addTalk(e.who, { id: e.id, ref: e.ref, at: e.at, from: e.from, text: e.text, error: !!e.error });
+}
+// once: the step 3 letters (kept in village_v1) become the first thread of each villager. Nothing is removed there.
+async function moveLetters() {
+  if (village.talkMoved) return;
+  const by = {};
+  for (const m of village.sentTo || []) (by[m.to] = by[m.to] || []).push({ id: m.id, at: m.at, me: true, text: m.text });
+  for (const e of village.events) if (e.who && e.kind === 'reply') (by[e.who] = by[e.who] || []).push({ id: e.id, ref: e.ref, at: e.at, from: e.from, text: e.text, error: !!e.error });
+  for (const [who, rows] of Object.entries(by)) {
+    const rec = await threadOf(who), have = new Set(curThread(rec).rows.map((r) => r.id));
+    curThread(rec).rows = rows.filter((r) => !have.has(r.id)).concat(curThread(rec).rows).sort((a, b) => stamp(a.at) - stamp(b.at));
+    putThread(rec);
+  }
+  village.talkMoved = true; saveVillage();
+}
+
+const talkName = (who) => (who === 'a' ? charText('a').name || 'A' : charText(who).name);
+const talkHouse = (who) => (who === 'a' ? 'Chief of staff · the Longhouse-sala' : charText(who).title);
+const talkColour = (who) => (who === 'a' ? '#f2c46d' : ROOMS[who.split('.')[0]].c);
+// The PC can't be reached: every letter waits in A's hand, whoever it's for, until it can (07_talking.md §4)
+const pcAway = () => !!village.bridge && (bridgeState.cls === 'bad' || !navigator.onLine);
+const lettersHeld = () => outbox.filter((m) => m.kind === 'message').length;
+// Lek's lines in this thread still waiting for an answer (the last half hour)
+function waitingIn(rec) {
+  const rows = curThread(rec).rows, answered = new Set(rows.filter((r) => r.ref).map((r) => r.ref));
+  return rows.filter((r) => r.me && !answered.has(r.id) && Date.now() - stamp(r.at) < 30 * 60000);
+}
+
+let chatWho = null;
+function openChat(who, push = true) {
+  if (who === 'lek') { openChar('lek'); return; }
+  if (chatWho && chatWho !== who) closeChatLayer(false);
+  chatWho = who; follow = true;
+  if (push) history.pushState({ room: scene, layer: 'chat', who }, '');
+  $('chat').style.setProperty('--accent', talkColour(who));
+  $('chatName').textContent = talkName(who); $('chatHouse').textContent = talkHouse(who); $('chatBody').innerHTML = '';
+  $('chatText').placeholder = who === 'a' ? `Talk with A… or “bring me ${talkName('esoteric.d')}”` : `Talk with ${talkName(who)}…`;
+  $('chat').classList.add('open'); $('chat').setAttribute('aria-hidden', 'false');
+  micFor($('chatMic'), $('chatText'));
+  drawFace($('chatFace'), who);
+  renderChat(); sync();
+}
+function closeChatLayer(release = true) {
+  if (!chatWho) return;
+  const v = villagers.find((x) => x.id === chatWho);
+  if (release && v && v.called) v.called.until = T + 60; // a called villager waits a minute, then goes back to their day
+  chatWho = null; $('chat').classList.remove('open'); $('chat').setAttribute('aria-hidden', 'true');
+  document.activeElement && document.activeElement.blur();
+}
+async function renderChat() {
+  const who = chatWho; if (!who) return;
+  const rec = await threadOf(who); if (chatWho !== who) return;
+  const th = curThread(rec), name = talkName(who), answered = new Set(rec.threads.flatMap((t) => t.rows.filter((r) => r.ref).map((r) => r.ref)));
+  const out = new Set(outbox.map((m) => m.id)), away = pcAway();
+  const row = (r) => {
+    if (r.sys) return `<div class="talk sys">${esc(r.text)}</div>`;
+    if (r.me) {
+      const meta = out.has(r.id) ? (away || !village.bridge ? (who === 'a' ? 'a letter waiting with A' : `A holds this letter for ${name} until the PC is back`) : 'a letter waiting') : answered.has(r.id) ? '' : `with ${name} at the PC<span class="dots"></span>`;
+      return `<div class="talk me${out.has(r.id) ? ' waiting' : ''}">${esc(r.text)}${meta ? `<div class="meta">${meta}</div>` : ''}</div>`;
+    }
+    return `<div class="talk them${r.error ? ' err' : ''}">${esc(r.text)}<div class="meta">${esc(r.from || name)} · ${esc(time(r.at))}</div></div>`;
+  };
+  const earlier = rec.threads.slice(0, -1).filter((t) => t.rows.length);
+  let html = earlier.length ? `<details class="earlier"><summary>Earlier thread${earlier.length > 1 ? 's' : ''} (${earlier.length})</summary>${earlier.map((t) => t.rows.map(row).join('')).join('<hr>')}</details>` : '';
+  html += th.rows.map(row).join('') || `<p class="muted">${who === 'a' ? 'A walks at your right shoulder. Ask her anything, or tell her who to fetch.' : `${esc(name)} is listening.`}${village.bridge ? '' : ' Letters reach the PC once the phone is paired, at the letter box in the Longhouse-sala.'}</p>`;
+  if (away && lettersHeld()) html += `<p class="muted">The PC can’t be reached just now. A holds ${lettersHeld()} letter${lettersHeld() > 1 ? 's' : ''} and passes each to its house when it’s back.</p>`;
+  $('chatBody').innerHTML = html;
+  $('chatBody').scrollTop = $('chatBody').scrollHeight;
+}
+function sendChat() {
+  const who = chatWho, text = $('chatText').value.trim();
+  if (!who || !text) return;
+  $('chatText').value = '';
+  // "Bring me Hekka": A fetches them, read here on the phone so it works offline too
+  if (who === 'a') { const v = bringWho(text); if (v) { const id = crypto.randomUUID(); addTalk('a', { id, at: new Date().toISOString(), me: true, text }); callOver(v.id, 'a'); addTalk('a', { id: id + ':a', ref: id, at: new Date().toISOString(), from: talkName('a'), text: `${talkName(v.id)} is on the way.` }); return; } }
+  const m = { id: crypto.randomUUID(), kind: 'message', to: who, text, at: new Date().toISOString(), chat: true };
+  if (pcAway() || !village.bridge) m.letter = true;
+  outbox.push(m); save(K.outbox, outbox);
+  addTalk(who, { id: m.id, at: m.at, me: true, text });
+  sync();
+}
+function bringWho(text) {
+  const m = /^\s*(?:please\s+)?(?:bring|fetch|get|call)\s+(?:me\s+)?(.+?)[\s.!?]*$/i.exec(text); if (!m) return null;
+  const want = m[1].toLowerCase().replace(/^(the\s+)?/, '');
+  return villagers.find((v) => talkName(v.id).toLowerCase() === want) || null;
+}
+// New thread: the villager writes a handover note first, then the next talk starts fresh (on the PC)
+function newThread() {
+  const who = chatWho; if (!who || !village.bridge) return;
+  if (!confirm(`Start a new thread with ${talkName(who)}? ${talkName(who)} writes a handover note first.`)) return;
+  outbox.push({ id: crypto.randomUUID(), kind: 'newThread', to: who, text: 'new thread', at: new Date().toISOString() }); save(K.outbox, outbox);
+  addTalk(who, { id: crypto.randomUUID(), at: new Date().toISOString(), sys: true, text: `${talkName(who)} is writing a handover note. The new thread starts when it’s done.` });
+  sync();
+}
+// the face from their sheet, head and shoulders
+function drawFace(k, who) {
+  const dp = Math.min(3, devicePixelRatio || 1), w = 44, h = 44; k.width = w * dp; k.height = h * dp;
+  const c = k.getContext('2d'); c.setTransform(dp, 0, 0, dp, 0, 0); c.clearRect(0, 0, w, h);
+  c.fillStyle = rgba(talkColour(who), .16); c.beginPath(); c.arc(22, 22, 22, 0, 7); c.fill();
+  c.save(); c.beginPath(); c.arc(22, 22, 22, 0, 7); c.clip(); c.translate(22, 92); c.scale(2.05, 2.05);
+  drawerFor(who)(c, 0, 1, T, { lanternLit: true }); c.restore();
+}
+$('chatSend').onclick = sendChat;
+$('chatText').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !TOUCH) { e.preventDefault(); sendChat(); } });
+$('chatClose').onclick = () => backOrClose();
+$('chatCard').onclick = () => { const who = chatWho; backOrClose(); setTimeout(() => (who === 'a' ? openScroll() : openChar(who)), 80); };
+$('chatNew').onclick = (e) => { e.preventDefault(); newThread(); };
+
+// ── the voice: speech-to-text on every chat box, English (Lek, 2026-11-01). The Low Hum only adds a glow. ──
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let listening = null;
+function micFor(btn, ta) {
+  if (!SR) { btn.hidden = true; return; }
+  btn.classList.toggle('hum', powerTier('hum') >= 1);
+  btn.onclick = () => {
+    if (listening) { listening.stop(); return; }
+    const rec = new SR(), base = ta.value.trim() ? ta.value.trim() + ' ' : '';
+    rec.lang = 'en-GB'; rec.interimResults = true; rec.continuous = false;
+    rec.onresult = (e) => { let s = ''; for (const r of e.results) s += r[0].transcript; ta.value = base + s; };
+    rec.onerror = (e) => {
+      if (e.error === 'network') say('The voice needs a connection on this phone just now. Typing always works.', 'The voice');
+      else if (e.error === 'not-allowed' || e.error === 'service-not-allowed') say('The microphone isn’t allowed for the village yet. Chrome asks once; the site settings can allow it.', 'The voice');
+    };
+    rec.onend = () => { listening = null; btn.classList.remove('on'); };
+    try { rec.start(); listening = rec; btn.classList.add('on'); } catch { listening = null; }
+  };
+}
+function powerTier(id) { const p = powers(), x = p && p.out.find((o) => o.def.id === id); return x ? x.tier : 0; }
+
+// ── call over (05_movement.md §3): they stop what they're doing, walk or run to Lek by the path, and stand facing him ──
+let reachFx = null; // the light that went out to fetch them: { from, to, t, col }
+function callOver(who, how) {
+  const v = villagers.find((x) => x.id === who); if (!v) return;
+  v.called = { how, until: null }; v.greet = null; v.hold = 0; v.arrived = false; v.wait = 0; decide(v);
+  if (how === 'reach') reachFx = { from: lek, to: v, t: T, col: '#f2c46d' };
+  if (how === 'a') reachFx = { from: ale, to: v, t: T, col: '#ffcf7a' };
+  if (how !== 'a') say(v.scene === scene && Math.hypot(v.x - lek.x, v.y - lek.y) < 60 * sceneScale() ? `${talkName(who)} is here.` : `${talkName(who)} is on the way.`, how === 'reach' ? 'The reach' : 'Called over', talkColour(who));
+}
+// where a called villager stands: a step in front of Lek, on open floor
+function calledSpot(v) {
+  const s = sceneScale(), [dx, dy] = [[0, 22], [0, -22], [-22, 0], [22, 0]][lek.dir], G = gridFor(scene);
+  let x = lek.x + dx * s, y = lek.y + dy * s;
+  if (!G.walk(x, y)) { const n = nearestOpen(G, Math.floor(x / G.cell), Math.floor(y / G.cell)); if (n) { x = (n[0] + .5) * G.cell; y = (n[1] + .5) * G.cell; } }
+  return [x, y];
+}
+function arrived(v) {
+  v.arrived = true; faceTo(v, lek.x, lek.y); faceTo(lek, v.x, v.y);
+  if (!anyLayerOpen()) openChat(v.id); else v.called.until = T + 90;
+}
+// each second: a called villager keeps up with Lek, and goes back once the talk is over
+function keepCalled(v) {
+  const c = v.called; if (!c) return;
+  if (c.until && T > c.until && chatWho !== v.id) { v.called = null; v.arrived = false; return; }
+  if (v.legs.length || T < (c.next || 0)) return;
+  c.next = T + 1;
+  if (v.scene !== scene || Math.hypot(v.x - lek.x, v.y - lek.y) > 70 * sceneScale()) { v.arrived = false; decide(v); }
+  else if (!v.sit) faceTo(v, lek.x, lek.y);
+}
+
+// ── the village list: a people button in the HUD (Lek, 2026-11-01). Tap a name to talk, hold it to call them over. ──
+const WHERE = { yard: 'in the yard', errand: 'about the village', home: 'at home', meet: 'in the Longhouse-sala', wall: 'in the Longhouse-sala', green: 'on the green', called: 'coming to you' };
+function openRoster() { history.pushState({ room: scene, layer: 'roster' }, ''); renderRoster(); $('roster').classList.add('open'); $('roster').setAttribute('aria-hidden', 'false'); }
+function closeRosterLayer() { $('roster').classList.remove('open'); $('roster').setAttribute('aria-hidden', 'true'); }
+function renderRoster() {
+  const mk = meetKind(), st = powerTier('strings'), pend = new Set(outbox.filter((m) => m.kind === 'message').map((m) => m.to));
+  let html = '<section><h3>Gather</h3>';
+  if (mk) html += `<p class="muted">${mk === 'green' ? 'Strings on the green: the village has gathered.' : 'A meeting in the Longhouse-sala.'}</p><button class="btn" id="rMeetOpen">Back to the ${mk === 'green' ? 'green' : 'meeting'}</button><button class="btn" id="rMeetEnd">End the ${mk === 'green' ? 'gathering' : 'meeting'}</button>`;
+  else {
+    html += `<button class="btn" id="rMeet">Call a meeting in the Longhouse-sala</button><label class="toggle"><input type="checkbox" id="rAppr"${village.settings.meetApprentices ? ' checked' : ''}> Bring the apprentices too (they stand along the walls)</label>`;
+    html += st >= 1 ? '<button class="btn" id="rGreen">Play Strings on the green</button><p class="muted">The village comes out to listen, and every director says in a line what they’re on.</p>' : '<p class="muted">Strings on the green wakes with the first Strings session.</p>';
+  }
+  html += '</section><section><h3>Everyone</h3><p class="muted">Tap a name to talk. Hold it to call them over.</p><div class="people">';
+  const one = (id, name, sub, col) => `<button class="who" data-who="${id}" style="--c:${col}"><i></i><b>${esc(name)}</b><span>${esc(sub)}</span></button>`;
+  html += one('a', talkName('a'), 'at your right shoulder' + (pcAway() && lettersHeld() ? ` · holds ${lettersHeld()} letter${lettersHeld() > 1 ? 's' : ''}` : ''), '#f2c46d');
+  for (const h of HOUSE_IDS) for (const r of ['d', 'a']) {
+    const id = `${h}.${r}`, v = villagers.find((x) => x.id === id), t = charText(id);
+    const where = v ? (v.called ? (v.arrived ? 'with you' : 'coming to you') : WHERE[v.mode] || '') : '';
+    html += one(id, t.name, `${r === 'd' ? 'director' : 'apprentice'}, ${houseShort(h)}${where ? ' · ' + where : ''}${pend.has(id) ? ' · a letter waiting' : ''}`, ROOMS[h].c);
+  }
+  html += '</div></section>';
+  $('rosterBody').innerHTML = html;
+  for (const b of $('rosterBody').querySelectorAll('.who')) holdable(b, () => { backOrClose(); setTimeout(() => openChat(b.dataset.who), 80); }, () => {
+    if (b.dataset.who === 'a') { say('A is already at your shoulder.', talkName('a')); return; }
+    backOrClose(); setTimeout(() => callOver(b.dataset.who, 'roster'), 80);
+  });
+  if ($('rAppr')) $('rAppr').onchange = () => { village.settings.meetApprentices = $('rAppr').checked; saveVillage(); };
+  if ($('rMeet')) $('rMeet').onclick = () => { backOrClose(); setTimeout(() => startMeeting('sala'), 80); };
+  if ($('rGreen')) $('rGreen').onclick = () => { backOrClose(); setTimeout(() => startMeeting('green'), 80); };
+  if ($('rMeetOpen')) $('rMeetOpen').onclick = () => { backOrClose(); setTimeout(openMeet, 80); };
+  if ($('rMeetEnd')) $('rMeetEnd').onclick = () => { backOrClose(); setTimeout(endMeeting, 80); };
+}
+// a tap, and a hold that does something else (with a little ring while it fills)
+function holdable(el, onTap, onHold) {
+  let t = null, held = false;
+  el.addEventListener('pointerdown', () => { held = false; el.classList.add('holding'); t = setTimeout(() => { held = true; el.classList.remove('holding'); if (navigator.vibrate) navigator.vibrate(18); onHold(); }, 520); });
+  const stop = () => { clearTimeout(t); el.classList.remove('holding'); };
+  el.addEventListener('pointerup', stop); el.addEventListener('pointerleave', stop); el.addEventListener('pointercancel', stop);
+  el.addEventListener('click', (e) => { e.preventDefault(); if (!held) onTap(); });
+  el.addEventListener('contextmenu', (e) => e.preventDefault());
+}
+$('peopleBtn').onclick = openRoster;
+$('rosterClose').onclick = () => backOrClose();
+
+// ── long-press in the scene: Telekinesis (Foundation, Lek 2026-11-01). Reach toward someone and they come;
+//    reach toward the Longhouse-sala and its doors open for a meeting. The village list does both without the power. ──
+function longPress(sx, sy) {
+  const [x, y] = scenePoint(sx, sy), s = sceneScale(), who = hitPerson(x, y, s);
+  const tk = powerTier('telekinesis') >= 1, wait = 'The reach wakes with Telekinesis at Foundation. Meanwhile the village list (⁂) calls anyone over.';
+  if (who && who !== 'lek' && who !== 'a') { if (tk) callOver(who, 'reach'); else say(wait, 'Telekinesis'); return true; }
+  if (scene === 'world' && !lookout && hitHouse(x, y) === HUB) {
+    if (!tk) { say('The Longhouse doors open with Telekinesis at Foundation. The village list (⁂) calls a meeting meanwhile.', 'Telekinesis'); return true; }
+    reachFx = { from: lek, to: { x: HUB.door.x, y: HUB.door.y - 20, scene: 'world' }, t: T, col: '#f2c46d' };
+    startMeeting('sala'); return true;
+  }
+  return false;
+}
+function drawReach(c, s) {
+  if (!reachFx || T - reachFx.t > 1.1) return;
+  const { from, to } = reachFx, u = (T - reachFx.t) / 1.1;
+  if ((from.scene || scene) !== scene || (to.scene || scene) !== scene) return;
+  const x0 = from.x, y0 = from.y - 26 * s, x1 = to.x, y1 = to.y - 22 * s;
+  c.save(); c.globalCompositeOperation = 'lighter';
+  for (const [k, col] of [[1, reachFx.col], [-1, '#e0414f']]) { // two serpents of light, gold and red, twisting along the reach
+    c.strokeStyle = rgba(col, .75 * (1 - u)); c.lineWidth = 1.6 * s; c.beginPath();
+    for (let i = 0; i <= 24; i++) { const f = i / 24, w = Math.sin(f * Math.PI * 3 + T * 9) * 5 * s * k * Math.sin(f * Math.PI); c[i ? 'lineTo' : 'moveTo'](lerp(x0, x1, f) + w, lerp(y0, y1, f) - w * .4); }
+    c.stroke();
+  }
+  glow(c, x1, y1, 26 * s, reachFx.col, .5 * (1 - u));
+  c.restore();
+}
+
+// ── meetings in the Longhouse-sala, and Strings on the green (07_talking.md §3) ──
+// village.meet is the PC's latest picture of the meeting; village.meetLocal is one started here and not yet confirmed.
+const HEAD = { x: 394, y: 640 }; // the head of the table, where Lek sits; A stands beside him
+const GREEN = { x: 900, y: 900 };
+function meetNow() {
+  const m = village.meet, l = village.meetLocal;
+  if (l && !(m && m.at === l.at)) return l.ended ? null : l;
+  return m && m.state === 'open' ? m : null;
+}
+const meetKind = () => { const m = meetNow(); return m ? m.kind : null; };
+const meetApprentices = () => { const m = meetNow(); return !!(m && m.apprentices); };
+function meetSend(op, extra = {}) {
+  const item = { id: crypto.randomUUID(), kind: 'meeting', to: 'longhouse', text: JSON.stringify({ op, ...extra }), at: new Date().toISOString() };
+  outbox.push(item); save(K.outbox, outbox); sync(); return item;
+}
+function startMeeting(kind) {
+  if (meetKind()) { openMeet(); return; }
+  const it = meetSend('start', { kind, apprentices: kind === 'sala' && !!village.settings.meetApprentices });
+  village.meetLocal = { id: it.id, at: it.at, kind, apprentices: kind === 'sala' && !!village.settings.meetApprentices, rows: [], state: 'open' }; saveVillage();
+  meetTo = 'all';
+  if (kind === 'green') {
+    if (scene !== 'world') { say('Strings plays on the green, outside. Walk out and the village gathers round you.', 'Strings'); }
+    else goTo(GREEN.x, GREEN.y - 4, () => { lek.dir = 0; });
+    say('You play, and the village comes out to the green.', 'Strings', ROOMS.hobby.c);
+  } else say(scene === 'hub' ? 'The directors are on their way to their chairs.' : 'The directors are walking to the Longhouse-sala. Your chair is at the head of the table.', 'The meeting');
+  setTimeout(openMeet, 600);
+}
+function endMeeting() {
+  const m = meetNow(); if (!m) return;
+  meetSend('end');
+  if (village.meetLocal) village.meetLocal.ended = true;
+  if (village.meet && village.meet.state === 'open') village.meet = { ...village.meet, state: 'closing' };
+  saveVillage();
+  lek.sit = null; closeMeetLayer(); if (history.state && history.state.layer === 'meet') history.back();
+  say(m.kind === 'green' ? 'The music ends and the village goes back to its day.' : 'The meeting is over. Each director writes down what they took from it.', m.kind === 'green' ? 'Strings' : 'The meeting');
+}
+let meetTo = 'all';
+function openMeet() {
+  if (!meetNow()) return;
+  if (!$('meetP').classList.contains('open')) history.pushState({ room: scene, layer: 'meet' }, '');
+  $('meetP').classList.add('open'); $('meetP').setAttribute('aria-hidden', 'false');
+  micFor($('meetMic'), $('meetText'));
+  renderMeet(); sync();
+}
+function closeMeetLayer() { $('meetP').classList.remove('open'); $('meetP').setAttribute('aria-hidden', 'true'); document.activeElement && document.activeElement.blur(); }
+function renderMeet() {
+  const m = meetNow(); if (!m) { closeMeetLayer(); return; }
+  $('meetTitle').textContent = m.kind === 'green' ? 'Strings on the green' : 'The Longhouse-sala';
+  const seats = HOUSE_IDS.map((h) => h + '.d').concat(m.apprentices ? HOUSE_IDS.map((h) => h + '.a') : []);
+  if (meetTo !== 'all' && !seats.includes(meetTo)) meetTo = 'all';
+  $('meetWho').innerHTML = `<button data-to="all" class="${meetTo === 'all' ? 'on' : ''}">Everyone</button>` + seats.map((id) => `<button data-to="${id}" class="${meetTo === id ? 'on' : ''}" style="--c:${talkColour(id)}">${esc(talkName(id))}</button>`).join('');
+  for (const b of $('meetWho').querySelectorAll('button')) b.onclick = () => { meetTo = b.dataset.to; renderMeet(); };
+  $('meetText').placeholder = meetTo === 'all' ? (m.kind === 'green' ? 'Ask everyone…' : 'One question to every director…') : `To ${talkName(meetTo)}, in front of the others…`;
+  const waiting = outbox.filter((it) => it.kind === 'meeting').map((it) => { try { return JSON.parse(it.text); } catch { return {}; } }).filter((o) => o.op === 'ask');
+  const rows = (m.rows || []).map((r) => {
+    if (r.who === 'lek') return `<div class="talk me">${esc(r.text)}<div class="meta">to ${r.to === 'all' ? 'everyone' : r.to === 'a' ? 'A' : esc(talkName(r.to.includes('.') ? r.to : idOf(r.to)))}</div></div>`;
+    const id = r.who === 'aletheia' ? 'a' : idOf(r.who), name = r.name || talkName(id);
+    if (r.pending) return `<div class="talk them pend" style="--c:${talkColour(id)}"><b>${esc(name)}</b> is thinking at the PC<span class="dots"></span></div>`;
+    return `<div class="talk them${r.error ? ' err' : ''}${r.private ? ' private' : ''}" style="--c:${talkColour(id)}"><b>${esc(name)}</b> ${esc(r.text)}</div>`;
+  }).concat(waiting.map((o) => `<div class="talk me waiting">${esc(o.q)}<div class="meta">${pcAway() ? 'waits until the PC is back' : 'on its way to the PC'}</div></div>`));
+  $('meetBody').innerHTML = rows.join('') || `<p class="muted">${m.kind === 'green' ? 'They’re gathering. Each director says in a line what they’re on.' : 'Ask everyone one question, tap a name to talk to one of them, or let A walk you through the agenda.'}</p>`;
+  $('meetBody').scrollTop = $('meetBody').scrollHeight;
+  $('meetAgenda').hidden = m.kind === 'green';
+  $('meetEnd').textContent = m.kind === 'green' ? 'End the gathering' : 'End the meeting';
+}
+// a bridge villager id (garr) → the phone's '<house>.<d|a>'
+function idOf(agentId) {
+  const d = village.content && village.content.data && village.content.data.villagers;
+  if (d) for (const [k, v] of Object.entries(d)) if (v.name && v.name.toLowerCase() === String(agentId).toLowerCase()) return k;
+  return 'a';
+}
+function sendMeet() {
+  const q = $('meetText').value.trim(); if (!q || !meetNow()) return;
+  $('meetText').value = '';
+  meetSend('ask', { q, to: meetTo === 'all' ? 'all' : agentIdOf(meetTo) });
+  renderMeet();
+}
+// '<house>.<d|a>' → the bridge's agent id, which is the villager's name in lower case (content/directors.json)
+const agentIdOf = (who) => talkName(who).toLowerCase();
+$('meetSend').onclick = sendMeet;
+$('meetText').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !TOUCH) { e.preventDefault(); sendMeet(); } });
+$('meetAgenda').onclick = () => { meetSend('agenda'); renderMeet(); };
+$('meetEnd').onclick = () => { if (confirm('End it here? Each director who spoke writes down what they took.')) endMeeting(); };
+$('meetClose').onclick = () => backOrClose();
+
+// their words over their heads: in the meeting one at a time, in the order they answered. Rak's never (Lek, 2026-11-01).
+let talkCycle = 0;
+function meetWords() {
+  for (const v of villagers) v.words = null;
+  const m = meetNow(); if (!m || !m.rows) return;
+  const lastQ = [...m.rows].reverse().find((r) => r.who === 'lek'); if (!lastQ) return;
+  const answers = m.rows.filter((r) => r.ref === lastQ.id && r.who !== 'aletheia' && !r.private && !r.error);
+  const done = answers.filter((r) => !r.pending && r.text);
+  for (const r of answers) if (r.pending) { const v = villagers.find((x) => x.id === idOf(r.who)); if (v) v.words = '…'; }
+  if (!done.length) return;
+  const r = done[Math.floor(talkCycle / 5) % done.length], v = villagers.find((x) => x.id === idOf(r.who));
+  if (v) v.words = r.text.length > 90 ? r.text.slice(0, 88).replace(/\s+\S*$/, '') + '…' : r.text;
+}
+function drawWords(c, s) {
+  for (const v of villagers) {
+    if (!v.words || v.scene !== scene) continue;
+    const h = VLOOK[v.id].h;
+    if (v.sit) bubble(c, v.sit.x, v.sit.y - (h + 4) * FS, v.words, FS);
+    else bubble(c, v.x, v.y - (h + 6) * s, v.words, s);
+  }
+}
+// Lek takes his chair at the head of the table when a meeting is on and he's in the Longhouse-sala
+function takeHead() {
+  if (scene !== 'hub' || meetKind() !== 'sala') { lek.sitTried = false; if (lek.sit) { lek.sit = null; lek.y = HEAD.y + 14; } return; }
+  if (lek.sit || lek.path) return;
+  if (Math.hypot(lek.x - HEAD.x, lek.y - (HEAD.y + 14)) < 8) { lek.sit = HEAD; lek.x = HEAD.x; lek.y = HEAD.y + 2; lek.dir = 0; placeA(); return; }
+  if (!lek.sitTried) { lek.sitTried = true; if (!goTo(HEAD.x, HEAD.y + 14, () => { lek.sit = HEAD; lek.x = HEAD.x; lek.y = HEAD.y + 2; lek.dir = 0; placeA(); })) { lek.sit = HEAD; lek.x = HEAD.x; lek.y = HEAD.y + 2; placeA(); } }
+}
+// where the apprentices stand when invited: along the back wall, by house
+function wallSpot(v) { const i = HOUSE_IDS.indexOf(v.house), G = gridFor('hub'); let x = 96 + i * 36, y = WB + 26; if (!G.walk(x, y)) { const n = nearestOpen(G, Math.floor(x / G.cell), Math.floor(y / G.cell)); if (n) { x = (n[0] + .5) * G.cell; y = (n[1] + .5) * G.cell; } } return [x, y]; }
+// round the green: directors close, apprentices behind them
+function greenSpot(v) {
+  const i = HOUSE_IDS.indexOf(v.house), inner = v.role === 'd', a = Math.PI * (.08 + .84 * (i + (inner ? 0 : .5)) / 8), r = inner ? 46 : 72, G = gridFor('world');
+  let x = GREEN.x - Math.cos(a) * r * 1.3, y = GREEN.y + Math.sin(a) * r * .8 + 6;
+  if (!G.walk(x, y)) { const n = nearestOpen(G, Math.floor(x / G.cell), Math.floor(y / G.cell)); if (n) { x = (n[0] + .5) * G.cell; y = (n[1] + .5) * G.cell; } }
+  return [x, y];
+}
+// the letters A holds when the PC can't be reached, small in her free hand
+function drawHeld(c, p, s) {
+  if (!pcAway() || !lettersHeld()) return;
+  const x = p.x + 7 * s, y = p.y - 20 * s;
+  c.save(); c.fillStyle = '#efe4cc'; c.strokeStyle = '#8a7a5a'; c.lineWidth = .5 * s;
+  for (let i = Math.min(3, lettersHeld()) - 1; i >= 0; i--) { c.fillRect(x - 3.5 * s + i * s, y - i * 1.2 * s, 7 * s, 5 * s); c.strokeRect(x - 3.5 * s + i * s, y - i * 1.2 * s, 7 * s, 5 * s); }
+  c.beginPath(); c.moveTo(x - 3.5 * s, y); c.lineTo(x, y + 2.6 * s); c.lineTo(x + 3.5 * s, y); c.stroke();
+  c.restore();
+}
+// Lek's chat sheet covers the lower part of the screen: the camera keeps him above it (v1 did this)
+function sheetLift() { for (const id of ['chat', 'meetP']) { const el = $(id); if (el.classList.contains('open')) return el.offsetHeight; } return 0; }
+// waiting on an answer with the panel open: sync every few seconds (Lek, 2026-11-01), only while the PC answers
+let fastAt = 0;
+setInterval(() => {
+  if (document.hidden || syncing || !village.bridge || bridgeState.cls !== 'ok' || Date.now() - fastAt < 3000) return;
+  const m = meetNow(), chatWaits = chatWho && threads[chatWho] && waitingIn(threads[chatWho]).length;
+  const meetWaits = m && $('meetP').classList.contains('open') && ((m.rows || []).some((r) => r.pending) || outbox.some((it) => it.kind === 'meeting'));
+  if (chatWaits || meetWaits) { fastAt = Date.now(); sync(); }
+}, 1000);
+setInterval(() => { talkCycle++; meetWords(); }, 1000);
+moveLetters();
 
 // ══════════════════════════════════════════ the walk map: overlay, painting, a picture to colour in ══════════════════════════════════════════
 // 05_movement.md §1. Settings → the overlay shows every scene's walk grid, green walkable and red blocked.
@@ -2911,7 +3413,6 @@ function renderSettings() {
   const pending = Object.keys(village.maps), here = roomTitle(scene === 'world' ? 'hub' : scene);
   $('paintMap').textContent = 'Paint this map · ' + (scene === 'world' ? 'the clearing' : here.split(' · ').pop());
   $('mapNote').textContent = pending.length ? `Painted on this phone, waiting for the PC: ${pending.map((id) => (id === 'world' ? 'the clearing' : roomTitle(id).split(' · ')[0])).join(', ')}.` : '';
-  $('meetBtn').textContent = meeting ? 'End the meeting' : 'Call the directors to the Longhouse-sala';
   $('buzzOn').textContent = village.settings.buzz ? 'Set up the buzz again' : 'Let the village buzz this phone';
   $('buzzTest').hidden = !village.settings.buzz;
 }
@@ -2922,13 +3423,13 @@ $('settingsClose').onclick = () => backOrClose();
 $('showMap').onchange = () => { village.settings.showMap = $('showMap').checked; saveVillage(); };
 $('paintMap').onclick = () => { if (lookout) return; backOrClose(); setTimeout(() => setPainting(true), 60); };
 $('mapPicture').onclick = savePicture;
-$('meetBtn').onclick = () => { meeting = !meeting; renderSettings(); say(meeting ? 'The directors are on their way to the Longhouse-sala.' : 'The meeting is over. Back to their day.', 'The meeting'); };
 
 // ══════════════════════════════════════════ simulation & render ══════════════════════════════════════════
 function update(dt) {
   T += dt;
   updatePeople(dt);
   updateVillagers(dt);
+  takeHead();
   if (scene === 'world' && !gesture && (cam.vx || cam.vy)) {
     cam.x += cam.vx * dt; cam.y += cam.vy * dt; clampCam();
     const k = Math.pow(.04, dt); cam.vx *= k; cam.vy *= k;
@@ -3031,6 +3532,7 @@ function renderWorld(c, n, dusk) {
   for (const h of HOUSES) if (doneHouses.has(h.id)) { const [x, y] = lanternSpot(h, T); glow(c, x + 5, y, 30, '#ffcf7a', .55 * Math.max(L, .5)); }
   { const [lx, ly] = lanternAt(1); glow(c, lx, ly, 46, '#ffcf7a', .1 + .32 * n); }
   drawMarker(c, 1);
+  c.globalCompositeOperation = 'source-over'; drawWords(c, 1); drawReach(c, 1); c.globalCompositeOperation = 'lighter';
   for (const f of fireflies) { const a = (.15 + .85 * n) * (.4 + .6 * Math.max(0, Math.sin(T * 2 + f.p))); glow(c, f.x, f.y, 7, '#e8f59a', .6 * a); }
   if (pressed && pressed.id && T - pressed.t < .5) { const h = pressed.id === 'hub' ? HUB : HOUSES.find((x) => x.id === pressed.id); glow(c, h.x, h.y - 60, 130, h.c, .35 * (1 - (T - pressed.t) / .5)); }
   c.globalCompositeOperation = 'source-over';
@@ -3070,6 +3572,7 @@ function renderRoom(c, n) {
   items.push({ z: 752, d: () => drawThreshold(c, n, T) }, { z: lek.y, d: () => drawPersonAt(c, 'lek', lek, FS, T) }, { z: ale.y, d: () => drawPersonAt(c, 'a', ale, FS, T) });
   for (const v of villagers) if (v.scene === scene && !v.sit) items.push({ z: v.y, d: () => drawPersonAt(c, v.id, v, FS, T) });
   items.sort((a, b) => a.z - b.z).forEach((it) => it.d());
+  drawWords(c, FS);
   // the same light as outside: dim with the sky, lamps glow at night, daylight through the windows
   c.fillStyle = `rgba(8,12,38,${.08 + .42 * n})`; c.fillRect(0, 0, RW, RH);
   c.globalCompositeOperation = 'lighter';
@@ -3079,6 +3582,7 @@ function renderRoom(c, n) {
   for (const o of R.objects) for (const [dx, dy, r, col, an, ad] of FURN_LIGHT[o.kind] || []) glow(c, o.x + dx * FS, o.y + dy * FS, r * FS, col, lerp(ad, an, n));
   { const [lx, ly] = lanternAt(FS); glow(c, lx, ly, 52, '#ffcf7a', .1 + .3 * n); }
   drawMarker(c, FS);
+  c.globalCompositeOperation = 'source-over'; drawReach(c, FS); c.globalCompositeOperation = 'lighter';
   if (pressed && pressed.o && T - pressed.t < .5) glow(c, pressed.o.x, pressed.o.y - pressed.o.h * FS / 2, Math.max(pressed.o.w, pressed.o.h) * FS * .8, R.c, .35 * (1 - (T - pressed.t) / .5));
   c.globalCompositeOperation = 'source-over';
   if (showMap()) drawMapOverlay(c, gridFor(scene), 0, 0, RW, RH);
