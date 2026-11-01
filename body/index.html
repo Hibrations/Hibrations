@@ -2286,6 +2286,7 @@ function setView(name) {
   if (mode === 'fuel') fuelView = name; else currentView = name;
   renderTabBar();
   render();
+  if (!editingPlan) applyGarrInbox();
 }
 
 function enterWorld(m) {
@@ -2374,8 +2375,16 @@ function render() {
 // ============================================================
 // HOME
 // ============================================================
+let justClosed = null; // the session just kept: the home screen offers to tell Garr how it went
 function renderHome() {
   const wrap = document.createElement('div');
+  if (justClosed) {
+    const g = el('div', 'garr-after');
+    g.appendChild(el('span', '', 'session kept.'));
+    g.appendChild(garrButton(justClosed, 'tell Garr how it went'));
+    const x = el('button', 'garr-link', '×'); x.addEventListener('click', () => { justClosed = null; render(); }); g.appendChild(x);
+    wrap.appendChild(g);
+  }
   const day = todayDayName();
   const scheduledId = state.schedule[day];
   const plan = getPlan(scheduledId);
@@ -3593,6 +3602,7 @@ function closeSession() {
   };
   state.sessions.unshift(newSession);
   saveState();
+  justClosed = { kind: 'session', id: newSession.id, name: (newSession.planName || 'session') + ', ' + newSession.date };
   activeSession = null;
   stopTimer();
   // Round 21 — PR detection
@@ -3665,6 +3675,7 @@ function renderPlans() {
   const wrap = document.createElement('div');
   wrap.appendChild(el('div', 'today-eyebrow', 'plans'));
   wrap.appendChild(el('div', 'session-sub', 'edit, duplicate, or build new.'));
+  wrap.appendChild(renderGarrPanel());
 
   const newBtn = el('button', 'btn-primary', '+ new plan');
   newBtn.style.marginBottom = '20px';
@@ -3742,7 +3753,7 @@ function renderPlans() {
 function renderPlanRow(plan) {
   const row = document.createElement('div');
   row.className = 'plan-row';
-  row.innerHTML = `<div class="plan-row-info"><div class="plan-row-name">${escapeHtml(plan.name)}</div><div class="plan-row-sub">${plan.exercises.length} movements${plan.duration ? ' · ' + escapeHtml(plan.duration) : ''}</div></div>`;
+  row.innerHTML = `<div class="plan-row-info"><div class="plan-row-name">${escapeHtml(plan.name)}</div><div class="plan-row-sub">${plan.exercises.length} movements${plan.duration ? ' · ' + escapeHtml(plan.duration) : ''}${plan.by === 'Garr' ? ' · Garr’s version' : ''}</div></div>`;
   const actions = document.createElement('div');
   actions.className = 'plan-row-actions';
 
@@ -3761,7 +3772,22 @@ function renderPlanRow(plan) {
   actions.appendChild(start);
 
   row.appendChild(actions);
-  return row;
+  // Garr (step 8): his reason for a version, its earlier versions, the button, and what was said about this plan
+  const extra = el('div', 'garr-row');
+  if (plan.by === 'Garr' && plan.garrWhy) extra.appendChild(el('div', 'garr-why', 'Garr: ' + plan.garrWhy));
+  const links = el('div', 'garr-links');
+  links.appendChild(garrButton({ kind: 'plan', id: plan.id, name: plan.name }));
+  if (plan.history && plan.history.length) {
+    const v = el('button', 'garr-link', 'earlier versions (' + plan.history.length + ')');
+    v.addEventListener('click', () => { const open = extra.querySelector('.garr-versions'); if (open) open.remove(); else extra.appendChild(renderPlanVersions(plan)); });
+    links.appendChild(v);
+  }
+  extra.appendChild(links);
+  const said = garrAsksFor({ kind: 'plan', id: plan.id });
+  if (said.length) extra.appendChild(renderGarrThread(said));
+  const outer = el('div', 'plan-row-wrap');
+  outer.appendChild(row); outer.appendChild(extra);
+  return outer;
 }
 
 function duplicatePlan(id) {
@@ -4046,6 +4072,10 @@ function renderHistory() {
       n.style.marginTop = '6px';
       card.appendChild(n);
     }
+    const ref = { kind: 'session', id: s.id, name: (s.planName || 'session') + (s.date ? ', ' + s.date : '') };
+    const said = garrAsksFor(ref);
+    if (said.length) card.appendChild(renderGarrThread(said));
+    const gl = el('div', 'garr-links'); gl.appendChild(garrButton(ref, 'tell Garr')); card.appendChild(gl);
     wrap.appendChild(card);
   });
   return wrap;
@@ -4394,14 +4424,204 @@ function openTargetsModal() {
 }
 
 
+// ============================================================
+// GARR — the temple link with the village (Lysningen step 8)
+// ============================================================
+// Garr is the Fitness director in Lek's village. The village reads this store to show Garr the workouts; it never
+// writes it. Garr's plans arrive in body_inbox_v1 after Lek's yes, and this temple lands them itself: a new version of
+// the plan with the old one kept, or a separate plan if Lek changed his own since Garr looked. Never on an empty store,
+// never while Lek is editing a plan, never twice. The Garr button's notes live in body_garr_v1 and go straight to the
+// PC with the village's pairing (the village carries any still waiting).
+const GARR_INBOX = 'body_inbox_v1', GARR_KEY = 'body_garr_v1';
+// The fingerprint of a plan: word for word the same in apps/village/index.html and village/bridge/body.js.
+function planHash(p) {
+  const s = JSON.stringify([p.name || '', p.subtitle || '', p.duration || '', p.warmup || [], (p.exercises || []).map((e) => [e.letter || '', e.name || '', e.libraryId || '', e.alt || '', e.sets || 0, String(e.reps || ''), e.rest || 0, e.cues || '']), p.cooldown || []]);
+  let h = 2166136261; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
+  return (h >>> 0).toString(36);
+}
+function garrStr(v, n) { return typeof v === 'string' ? v.trim().slice(0, n) : ''; }
+function garrInt(v, lo, hi, d) { const n = Math.round(Number(v)); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : d; }
+// checked again here: whatever is in the inbox, only a well-formed plan lands
+function cleanGarrPlan(p, library, old) {
+  if (!p || typeof p !== 'object' || !garrStr(p.name, 60) || !Array.isArray(p.exercises)) return null;
+  const exercises = p.exercises.slice(0, 15).map((e, i) => {
+    if (!e || typeof e !== 'object' || !garrStr(e.name, 80)) return null;
+    const name = garrStr(e.name, 80), letter = garrStr(e.letter, 3) || String.fromCharCode(65 + i);
+    const lib = (library || []).find(l => l.id === e.libraryId) || findLibraryMatch(name, library || []);
+    const same = old && old.exercises.find(o => o.letter === letter && o.name === name);
+    return { id: same ? same.id : uid('ex'), libraryId: lib ? lib.id : undefined, letter, name, alt: garrStr(e.alt, 80),
+      sets: garrInt(e.sets, 1, 10, 3), reps: garrStr(String(e.reps == null ? '' : e.reps), 12) || '8–12', rest: garrInt(e.rest, 0, 600, 90), cues: garrStr(e.cues, 300) };
+  }).filter(Boolean);
+  if (!exercises.length) return null;
+  const lines = (v) => Array.isArray(v) ? v.map(x => garrStr(x, 160)).filter(Boolean).slice(0, 12) : [];
+  return { name: garrStr(p.name, 60), subtitle: garrStr(p.subtitle, 120), type: 'training', duration: garrStr(p.duration, 30), warmup: lines(p.warmup), exercises, cooldown: lines(p.cooldown) };
+}
+function readJSON(key) { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { return null; } }
+function applyGarrInbox() {
+  if (editingPlan) return 0; // Lek's own edit goes first; Garr's plan lands when he leaves the editor
+  const box = readJSON(GARR_INBOX);
+  if (!box || !Array.isArray(box.items) || !box.items.some(x => x && x.status === 'waiting')) return 0;
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return 0; // never on an empty store: it waits until the temple has Lek's data
+  let fresh; try { fresh = migrateState(JSON.parse(raw)); } catch (e) { return 0; } // read-merge-write: the store as it is now
+  if (!Array.isArray(fresh.plans)) return 0;
+  fresh.garrLanded = fresh.garrLanded || {};
+  const now = new Date().toISOString();
+  let n = 0;
+  for (const x of box.items) {
+    if (!x || x.status !== 'waiting' || typeof x.id !== 'string') continue;
+    if (fresh.garrLanded[x.id]) { x.status = 'landed:' + fresh.garrLanded[x.id]; continue; }
+    const cur = typeof x.planId === 'string' ? fresh.plans.find(p => p.id === x.planId) : null;
+    const plan = cleanGarrPlan(x.plan, fresh.library, cur);
+    if (!plan) { x.status = 'refused'; continue; }
+    if (cur && x.base && planHash(cur) === x.base) {
+      // a new version: the plan as it was goes into its history, to switch back to
+      const old = JSON.parse(JSON.stringify(cur)); delete old.history;
+      cur.history = (cur.history || []).concat({ at: now, by: cur.by || 'Lek', plan: old }).slice(-20);
+      Object.assign(cur, plan, { by: 'Garr', garrWhy: garrStr(x.why, 500), versionAt: now });
+      x.status = 'landed:version'; x.landedName = cur.name;
+    } else {
+      // Lek changed his plan since Garr looked (or it's a new plan): Garr's goes beside it, his own untouched
+      const name = cur ? (plan.name === cur.name ? plan.name + ' · Garr' : plan.name) : plan.name;
+      fresh.plans.push(Object.assign({ id: uid('plan') }, plan, { name, by: 'Garr', garrWhy: garrStr(x.why, 500), versionAt: now }));
+      x.status = 'landed:new'; x.landedName = name;
+    }
+    fresh.garrLanded[x.id] = x.status.slice(7); x.landedAt = now; n++;
+  }
+  if (n) { state = fresh; saveState(); }
+  try { localStorage.setItem(GARR_INBOX, JSON.stringify(box)); } catch (e) {}
+  if (n) { toast(n === 1 ? 'Garr’s plan is in your plans' : n + ' plans from Garr are in'); render(); }
+  return n;
+}
+// switch a plan back to one of its earlier versions; the version it was becomes history too, so nothing is lost
+function switchPlanVersion(planId, idx) {
+  const p = getPlan(planId); if (!p || !p.history || !p.history[idx]) return;
+  const now = JSON.parse(JSON.stringify(p)); delete now.history;
+  const back = p.history[idx].plan;
+  const hist = p.history.filter((_, i) => i !== idx).concat({ at: new Date().toISOString(), by: p.by || 'Lek', plan: now }).slice(-20);
+  Object.keys(p).forEach(k => delete p[k]);
+  Object.assign(p, JSON.parse(JSON.stringify(back)), { id: planId, history: hist });
+  saveState(); toast('switched back'); render();
+}
+function renderPlanVersions(plan) {
+  const box = el('div', 'garr-versions');
+  (plan.history || []).slice().reverse().forEach((h, ri) => {
+    const idx = plan.history.length - 1 - ri;
+    const row = el('div', 'garr-version');
+    row.appendChild(el('span', '', (h.by === 'Garr' ? 'Garr’s' : 'your') + ' version · ' + (h.at ? h.at.slice(0, 10) : '') + ' · ' + ((h.plan && h.plan.exercises) || []).length + ' movements'));
+    const b = el('button', 'garr-link', 'switch back');
+    b.addEventListener('click', () => { if (confirm('Switch ' + plan.name + ' back to this version? The one you have now is kept too.')) switchPlanVersion(plan.id, idx); });
+    row.appendChild(b); box.appendChild(row);
+  });
+  return box;
+}
+
+// ── the Garr button ──
+function garrLoad() { const g = readJSON(GARR_KEY); return g && Array.isArray(g.asks) ? g : { asks: [] }; }
+function garrSave(g) { try { localStorage.setItem(GARR_KEY, JSON.stringify(g)); } catch (e) { toast('could not save the note'); } }
+function villageBridge() { const v = readJSON('village_v1'); return v && v.bridge && v.bridge.url && v.bridge.token ? v.bridge : null; }
+function openGarrModal(ref) {
+  const modal = document.getElementById('modal');
+  const about = ref ? 'about ' + (ref.name || (ref.kind === 'plan' ? 'this plan' : 'this session')) : '';
+  modal.innerHTML = '<div class="modal-header"><div class="modal-title">to Garr</div><button class="modal-close" id="modal-close-btn">×</button></div>'
+    + '<div class="subtle" style="margin-bottom:10px;">' + escapeHtml(about) + '</div>'
+    + '<div class="editor-field"><textarea id="garr-text" rows="4" placeholder="a question or a note"></textarea></div>'
+    + '<div class="subtle" id="garr-hint" style="margin-bottom:14px;line-height:1.5;"></div>'
+    + '<div class="editor-actions"><button class="btn-primary" id="garr-send">send</button></div>';
+  document.getElementById('garr-hint').textContent = villageBridge() ? 'His answer comes back here and in the village.' : 'The village isn’t paired with the PC yet. The note waits here and goes when it is.';
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('modal-close-btn').onclick = closeModal;
+  document.getElementById('garr-send').onclick = () => {
+    const text = document.getElementById('garr-text').value.trim(); if (!text) return;
+    const g = garrLoad();
+    g.asks.push({ id: uid('garr') + Math.random().toString(36).slice(2, 6), text: text.slice(0, 4000), at: new Date().toISOString(), ref: ref || undefined });
+    g.asks = g.asks.slice(-60); garrSave(g);
+    closeModal(); toast('to Garr'); render(); garrSync();
+  };
+}
+let garrBusy = false;
+async function garrSync() {
+  const br = villageBridge(); if (!br || garrBusy || !navigator.onLine) return;
+  const pending = garrLoad().asks.filter(a => !a.answer && Date.now() - Date.parse(a.at) < 14 * 864e5);
+  if (!pending.length) return;
+  garrBusy = true;
+  const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), 10000);
+  try {
+    const res = await fetch(br.url + '/temple', { method: 'POST', signal: ctrl.signal, headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + br.token },
+      body: JSON.stringify({ app: 'body', asks: pending.map(a => ({ id: a.id, text: a.text, at: a.at, ref: a.ref })) }) });
+    if (!res.ok) return;
+    const data = await res.json();
+    const g = garrLoad(); let got = 0; // read again: another window may have added a note meanwhile
+    for (const a of g.asks) {
+      if ((data.acked || []).includes(a.id)) a.acked = true;
+      const ans = data.answers && data.answers[a.id];
+      if (ans && !a.answer && typeof ans.text === 'string') { a.answer = ans.text.slice(0, 6000); a.answeredAt = ans.at; got++; }
+    }
+    garrSave(g);
+    if (got) { toast('Garr answered'); render(); }
+  } catch (e) { /* the PC isn't reachable: the note waits */ } finally { clearTimeout(t); garrBusy = false; }
+}
+setInterval(() => { if (document.visibilityState === 'visible') garrSync(); }, 20000);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { garrSync(); applyGarrInbox(); } });
+// another window wrote the store or the inbox (the village, or this temple open twice): follow it, never overwrite it
+window.addEventListener('storage', (e) => {
+  if (e.key === GARR_INBOX) applyGarrInbox();
+  else if (e.key === STORAGE_KEY && e.newValue && !editingPlan) { state = loadState(); render(); }
+  else if (e.key === GARR_KEY) render();
+});
+function garrAsksFor(ref) { return garrLoad().asks.filter(a => a.ref && ref && a.ref.kind === ref.kind && a.ref.id === ref.id); }
+function renderGarrThread(asks) {
+  const box = el('div', 'garr-thread');
+  asks.slice(-4).forEach(a => {
+    box.appendChild(el('div', 'garr-q', a.text));
+    box.appendChild(el('div', a.answer ? 'garr-a' : 'garr-wait', a.answer ? 'Garr: ' + a.answer : (a.acked ? 'with Garr…' : 'waiting for the PC')));
+  });
+  return box;
+}
+function garrButton(ref, label) {
+  const b = el('button', 'garr-link', label || 'ask Garr');
+  b.addEventListener('click', (e) => { e.stopPropagation(); openGarrModal(ref); });
+  return b;
+}
+function renderGarrPanel() {
+  const asks = garrLoad().asks.slice(-5);
+  const wrap = el('div', 'garr-panel');
+  const head = el('div', 'garr-head');
+  head.appendChild(el('div', 'section-header', 'Garr'));
+  head.appendChild(garrButton(null, 'write to Garr'));
+  wrap.appendChild(head);
+  if (!asks.length) wrap.appendChild(el('div', 'subtle', 'ask Garr about a plan or a session. his answer comes back here.'));
+  else wrap.appendChild(renderGarrThread(asks));
+  return wrap;
+}
+
 // ── boot ──
 renderTabBar();
 render();
+applyGarrInbox();
+garrSync();
 </script>
 
 <style>
 /* ── Codex × Pleroma skin (R56) ── */
 body{font-family:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;}.today-name,.detail-name,.ex-name,.lib-card-name,.day-card-name{font-family:'Cormorant Garamond',serif;font-weight:500;}.today-eyebrow,.section-eyebrow{letter-spacing:0.24em;}
+
+/* ── GARR (Lysningen step 8) ── */
+.plan-row-wrap{display:flex;flex-direction:column;gap:4px;}
+.garr-row{padding:0 4px 4px;}
+.garr-links{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;}
+.garr-link{background:none;border:none;padding:4px 0;color:var(--emerald);font-size:12px;letter-spacing:.06em;cursor:pointer;}
+.garr-why{font-size:12px;color:var(--ink-dim);font-style:italic;line-height:1.45;}
+.garr-versions{margin-top:6px;border-left:2px solid var(--border);padding-left:10px;}
+.garr-version{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:12px;color:var(--ink-dim);}
+.garr-thread{margin-top:8px;display:flex;flex-direction:column;gap:4px;}
+.garr-q{font-size:13px;color:var(--ink);}
+.garr-a{font-size:13px;color:var(--ink-dim);border-left:2px solid var(--emerald-dim);padding-left:8px;white-space:pre-wrap;line-height:1.45;}
+.garr-wait{font-size:11px;color:var(--ink-faint);letter-spacing:.06em;}
+.garr-panel{border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px;margin-bottom:20px;background:var(--bg-card);}
+.garr-head{display:flex;justify-content:space-between;align-items:center;}
+.garr-head .section-header{margin:0;}
+.garr-after{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--ink-dim);margin-bottom:14px;}
 
 /* ── FUEL TRACKER (R-fuel) ── */
 :root{--fuel:#d0a05e;--protein:#c98b7d;--carbs:#c7a15e;--fat:#a98fc4;}

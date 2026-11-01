@@ -6,7 +6,7 @@
 // It never touches localStorage or IndexedDB — Lek's history lives there.
 //
 // Bump VERSION on every deploy that changes a file below.
-const VERSION = '2026-11-01.8';
+const VERSION = '2026-11-01.9';
 const CACHE = 'halohorns-' + VERSION;
 
 const SHELL = [
