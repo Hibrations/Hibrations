@@ -102,6 +102,7 @@ textarea:focus, input:focus { outline: none; border-color: rgba(242, 196, 109, .
 .letter { border-left: 2px solid var(--line); padding: 6px 0 6px 12px; margin: 10px 0; }
 .letter.waiting { border-color: var(--gold); }
 .letter.reply { border-color: var(--ok); }
+.letter.mine { border-color: var(--line); color: var(--ink-faint); }
 .letter .meta { color: var(--ink-faint); font-size: 12px; }
 code { font-size: 12.5px; background: rgba(255, 255, 255, .07); border-radius: 4px; padding: 0 4px; }
 #unpair { color: var(--ink-faint); font-size: 12.5px; }
@@ -134,7 +135,7 @@ code { font-size: 12.5px; background: rgba(255, 255, 255, .07); border-radius: 4
       <div class="row"><span>Network</span><span id="net">…</span></div>
       <div class="row"><span>Bridge</span><span id="bridge">…</span></div>
       <div class="row"><span>Last sync</span><span id="last">never</span></div>
-      <p class="muted" id="reachHint" hidden>If it keeps failing at home: check that Tailscale is on, the PC's bridge window is open, and that Chrome is allowed to reach devices on your local network (Chrome → ⋮ → Settings → Site settings → hibrations.github.io → Local network access → Allow).</p>
+      <p class="muted" id="reachHint" hidden>If it keeps failing: check that Tailscale is on (on the phone, wherever you are), the PC is on with its bridge window open, and that Chrome is allowed to reach devices on your local network (Chrome → ⋮ → Settings → Site settings → hibrations.github.io → Local network access → Allow).</p>
       <button class="btn" id="syncNow" hidden>Sync now</button>
     </section>
     <section id="pairBox" hidden>
@@ -233,7 +234,8 @@ function pair(link) {
   sync();
   return true;
 }
-// Home only, as close as a web app can get: never on mobile data.
+// Anywhere Tailscale reaches (Lek, 2026-11-01): Wi-Fi preferred, mobile data too but sparingly.
+// On mobile data the background sync runs every few minutes instead of every 30 s; sending or opening still syncs at once.
 function onMobileData() { const c = navigator.connection; return !!(c && c.type === 'cellular'); }
 
 let syncing = false;
@@ -241,7 +243,6 @@ let bridgeState = { cls: '', text: 'not paired' };
 async function sync() {
   if (!village.bridge || syncing) return;
   if (!navigator.onLine) { bridgeState = { cls: 'warn', text: 'offline — letters wait' }; renderLetters(); return; }
-  if (onMobileData()) { bridgeState = { cls: 'warn', text: 'on mobile data — waits for Wi-Fi' }; renderLetters(); return; }
   syncing = true;
   bridgeState = { cls: 'warn', text: 'reaching the PC…' }; renderLetters();
   const ctrl = new AbortController();
@@ -273,6 +274,7 @@ async function sync() {
     clearTimeout(timer);
     syncing = false;
     renderLetters();
+    if (charWho && VLOOK[charWho] && !($('vText') && $('vText').value)) renderChar();
   }
 }
 function sendLetter() {
@@ -296,9 +298,13 @@ function renderLetters() {
   $('reachHint').hidden = !(paired && bridgeState.cls === 'bad');
   $('unpair').hidden = !paired;
   $('syncDot').className = 'dot ' + (paired ? bridgeState.cls : '');
-  const waiting = outbox.map((m) => `<div class="letter waiting"><div class="meta">a letter waiting · ${time(m.at)}</div>${esc(m.text)}</div>`);
+  const waiting = outbox.filter((m) => m.kind === 'message').map((m) => `<div class="letter waiting"><div class="meta">a letter waiting · ${time(m.at)}</div>${esc(m.text)}</div>`);
   const arrived = village.events.slice(-20).reverse().map((e) => `<div class="letter reply"><div class="meta">${esc(e.from || 'the PC')} · ${time(e.at)}</div>${esc(e.text)}</div>`);
-  $('letters').innerHTML = waiting.join('') + arrived.join('');
+  // A asks before the village works past today's cap; "go" lets the waiting letters run
+  const capAt = Math.max(0, ...village.events.filter((e) => e.kind === 'capHeld').map((e) => e.seq));
+  const goBtn = capAt > (village.goSeq || 0) && !outbox.some((m) => m.kind === 'go') ? '<button class="btn" id="capGo">Go: let them work past today’s cap</button>' : '';
+  $('letters').innerHTML = goBtn + waiting.join('') + arrived.join('');
+  if ($('capGo')) $('capGo').onclick = () => { village.goSeq = capAt; saveVillage(); outbox.push({ id: crypto.randomUUID(), kind: 'go', to: 'village', text: 'go', at: new Date().toISOString() }); save(K.outbox, outbox); renderLetters(); sync(); };
 }
 $('send').onclick = sendLetter;
 $('syncNow').onclick = sync;
@@ -314,7 +320,8 @@ $('unpair').onclick = (e) => {
 addEventListener('online', sync);
 addEventListener('offline', renderLetters);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) sync(); });
-setInterval(() => { if (!document.hidden) sync(); }, 30000);
+const MOBILE_EVERY = 3 * 60 * 1000;
+setInterval(() => { if (document.hidden) return; if (onMobileData() && village.lastSync && Date.now() - Date.parse(village.lastSync) < MOBILE_EVERY) return; sync(); }, 30000);
 
 // ══════════════════════════════════════════ the sky over Billund ══════════════════════════════════════════
 const BILLUND = { lat: 55.7308, lon: 9.1153 };
@@ -841,11 +848,17 @@ const ROOMS = {
       { kind: 'tingBench', x: 220, y: 700 },
     ] },
 };
+const VLOOK_IDS = new Set(['halohorns', 'esoteric', 'cupidity', 'fitness', 'hibrations', 'kaching', 'hobby', 'baby']); // houses with a director and an apprentice
 const ROOM_ORDER = ['halohorns', 'esoteric', 'cupidity', 'fitness', 'hibrations', 'kaching', 'hobby', 'baby', 'hub'];
-for (const id of ROOM_ORDER) for (const o of ROOMS[id].objects) if (o.z == null) o.z = o.y;
+for (const id of ROOM_ORDER) for (const o of ROOMS[id].objects) {
+  if (o.z == null) o.z = o.y;
+  if (o.kind === 'bench') o.hh = 66;
+  // the seat and the bench are labelled with who sits there, once their names arrive from the PC
+  if ((o.kind === 'deskSeat' || o.kind === 'bench') && VLOOK_IDS.has(id)) { const who = id + (o.kind === 'bench' ? '.a' : '.d'), base = o.label; Object.defineProperty(o, 'label', { get: () => { const v = village.content && village.content.data && village.content.data.villagers && village.content.data.villagers[who]; return v ? v.name : base; } }); }
+}
 
 // ── furniture ──
-function deskSeat(c, col, t) {
+function deskSeat(c, col, t, sit) {
   // the seat, carved, with chofa curls on its back
   shadowE(c, 0, -26, 20, 5);
   c.fillStyle = '#3a2618'; c.fillRect(-13, -42, 3, 16); c.fillRect(10, -42, 3, 16);
@@ -854,6 +867,7 @@ function deskSeat(c, col, t) {
   c.strokeStyle = '#e2b655'; c.lineWidth = 2; c.lineCap = 'round';
   for (const s of [-1, 1]) { c.beginPath(); c.moveTo(s * 13, -88); c.quadraticCurveTo(s * 18, -92, s * 15, -99); c.stroke(); }
   c.beginPath(); c.moveTo(-13, -88); c.lineTo(13, -88); c.stroke();
+  if (sit) sit(); // the director, between the seat and the desk
   // the desk in front
   shadowE(c, 0, 1, 46, 7);
   c.fillStyle = '#3a2618'; c.fillRect(-40, -26, 4, 26); c.fillRect(36, -26, 4, 26);
@@ -861,11 +875,12 @@ function deskSeat(c, col, t) {
   c.fillStyle = '#e8dcc0'; c.save(); c.translate(-14, -36); c.rotate(-.08); c.fillRect(-12, -3, 24, 4); c.restore();
   c.fillStyle = '#1a1412'; c.fillRect(14, -40, 6, 6); c.fillStyle = '#c9a24a'; c.fillRect(13, -41, 8, 1.5);
 }
-function bench(c) {
+function bench(c, worn) {
   shadowE(c, 0, 1, 42, 6);
   c.fillStyle = '#3a2618'; c.fillRect(-34, -14, 4, 14); c.fillRect(30, -14, 4, 14);
   box(c, -40, -20, 80, 7, '#7a5a3a', .3);
-  // the saffron sash, folded on the bench and trailing down: the apprentice's mark
+  // the saffron sash, folded on the bench and trailing down: the apprentice's mark (until the apprentice wears it)
+  if (worn) return;
   c.fillStyle = '#e8a33a'; c.beginPath(); c.moveTo(4, -21); c.lineTo(22, -21); c.lineTo(24, -13); c.lineTo(20, -2); c.lineTo(15, -3); c.lineTo(17, -13); c.lineTo(4, -14); c.closePath(); c.fill();
   c.fillStyle = 'rgba(0,0,0,.18)'; c.fillRect(17, -13, 7, 10);
 }
@@ -1113,7 +1128,8 @@ function twinLamp(c, t) {
   flame(c, -8, -5, .55, '#f6c75a', t, 0); flame(c, 8, -5, .55, '#e0414f', t, 2);
 }
 const FURN = {
-  deskSeat: (c, o, R, t) => deskSeat(c, R.c, t), bench: (c) => bench(c), altar: (c, o, R, t) => altar(c, t), mirror: (c, o, R, t) => bronzeMirror(c, t),
+  deskSeat: (c, o, R, t) => deskSeat(c, R.c, t, VLOOK[scene + '.d'] && (() => sitter(c, scene + '.d', 0, -30, t))),
+  bench: (c, o, R, t) => { const id = scene + '.a'; bench(c, !!VLOOK[id]); if (VLOOK[id]) sitter(c, id, -16, -8, t); }, altar: (c, o, R, t) => altar(c, t), mirror: (c, o, R, t) => bronzeMirror(c, t),
   board: (c, o, R) => board(c, R.c), chest: (c) => chest(c), cushion: (c, o, R, t) => cushion(c, t), herbs: (c) => herbs(c), telescope: (c, o, R, t) => telescope(c, t),
   bowl: (c, o, R, t) => bowl(c, t), curtain: (c, o, R, t) => curtain(c, t), lanternRoom: (c, o, R, t, n) => lanternRoom(c, t, n), rack: (c) => rack(c),
   sauna: (c, o, R, t) => saunaBench(c, t), hrv: (c) => hrv(c), notice: (c) => notice(c), writingDesk: (c, o, R, t) => writingDesk(c, t), counter: (c, o, R, t) => counter(c, t),
@@ -1121,6 +1137,18 @@ const FURN = {
   boat: (c, o, R, t) => boatInside(c, t), cradle: (c, o, R, t) => cradle(c, t), stove: (c, o, R, t) => stove(c, t), scroll: (c) => scroll(c),
   letterBox: (c, o, R, t) => letterBox(c, t, outbox.length > 0), hearth: (c, o, R, t) => hearth(c, t), tingBench: (c) => tingBench(c), twinLamp: (c, o, R, t) => twinLamp(c, t),
 };
+// The Baby director's cat, asleep on the windowsill: a curl of grey, one ear, a slow breath.
+function sleepingCat(c, x, y, t) {
+  const b = 1 + Math.sin(t * 1.1) * .03;
+  c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(x - 15, y, 30, 2);
+  c.fillStyle = '#8a7a6a'; c.beginPath(); c.ellipse(x, y - 4.5 * b, 11, 5 * b, 0, Math.PI, 0); c.fill(); c.fillRect(x - 11, y - 4.5, 22, 4.5);
+  c.beginPath(); c.arc(x + 9, y - 4, 4, 0, 7); c.fill();
+  c.beginPath(); c.moveTo(x + 8, y - 7); c.lineTo(x + 9.5, y - 10.5); c.lineTo(x + 11.5, y - 6.5); c.fill();
+  c.fillStyle = 'rgba(0,0,0,.18)'; c.beginPath(); c.ellipse(x + 3, y - 3, 8, 3, 0, Math.PI, 0); c.fill();
+  c.strokeStyle = '#8a7a6a'; c.lineWidth = 2.4; c.lineCap = 'round'; c.beginPath(); c.moveTo(x - 10, y - 1); c.quadraticCurveTo(x - 4, y + 2, x + 5, y); c.stroke();
+}
+// A villager at home: seated at their place, breathing slowly (they walk from step 4).
+function sitter(c, id, x, y, t) { c.save(); c.translate(x, y + Math.sin(t * 1.3 + x) * .25); drawVillager(c, 0, 1, t, { id, seated: true, noSeat: true }); c.restore(); }
 // lights inside each room, relative to the object: [dx, dy, radius, colour, strength at night, strength by day]
 const FURN_LIGHT = {
   altar: [[0, -86, 70, '#ffcf7a', .5, .25], [0, -66, 40, '#ff8a5a', .3, .12]], twinLamp: [[0, -12, 34, '#ffcf7a', .45, .15]], hearth: [[0, -24, 150, '#ff9a4a', .5, .3]],
@@ -1448,6 +1476,136 @@ function drawLantern(c, dir, g, side, right, t, lit) {
 }
 const DRAW_PERSON = { lek: drawLek, a: drawAletheia };
 
+// ── The villagers (04_directors.md §1): a director and an apprentice per house, keyed '<house>.d' / '<house>.a'.
+// Directors wear their house colour with Nagavar gold; apprentices wear plain undyed wool and the saffron sash
+// knotted at the hip. Names and lines arrive from the PC; the looks are all the engine holds.
+const SAFFRON = '#e8a33a';
+const VLOOK = {
+  'halohorns.d': { h: 44, skin: '#8a5a3a', hair: '#1a1210', style: 'short', beard: 1, top: '#1c1a21', cut: 'tunic', trim: '#f2c46d', apron: '#5a3a24', legs: '#2a2420', boots: '#121014', item: 'chisel', pin: 1, mouth: 'flat' },
+  'esoteric.d': { h: 44, skin: '#a8744e', hair: '#16121c', streak: '#cfd4e8', style: 'long', top: '#2a2350', cut: 'robe', cloak: '#4b3c92', stars: 1, legs: '#1c1838', boots: '#1a1420', item: 'key', moon: 1, mouth: 'wry' },
+  'cupidity.d': { h: 50, build: 1.35, skin: '#7a4a2e', hair: '#140f0c', style: 'topknot', beard: 1, top: '#b8303e', cut: 'vest', bands: '#e2b655', legs: '#3a1a1c', boots: '#1a1010', item: 'horn', mouth: 'laugh' },
+  'fitness.d': { h: 46, build: 1.25, skin: '#c08a64', hair: '#6a4a30', style: 'short', beard: 1, top: '#c8692e', cut: 'wrap', bare: 1, rings: '#8a8f96', legs: '#3a2e26', boots: '#1e1610', item: 'whisk', mouth: 'flat' },
+  'hibrations.d': { h: 41, skin: '#9a6a46', hair: '#1a1210', style: 'bob', top: '#2a8a80', cut: 'tunic', trim: '#e2b655', ink: 1, legs: '#1e3a38', boots: '#161210', item: 'quill', satchel: '#6a4a2a', mouth: 'smile' },
+  'kaching.d': { h: 41, skin: '#a07048', hair: '#2a2420', style: 'bald', top: '#47702e', cut: 'coat', trim: '#e2b655', legs: '#2a2a1e', boots: '#1a1610', item: 'coins', mouth: 'flat' },
+  'hobby.d': { h: 40, skin: '#8a5a3a', hair: '#140f0c', style: 'tail', pin: 0, top: '#3a6a9e', cut: 'tunic', legs: '#2e3a4a', bare: 1, boots: '#2a2018', item: 'rod', mouth: 'smile' },
+  'baby.d': { h: 42, skin: '#b07a52', hair: '#2a1a12', style: 'knot', top: '#b8706c', cut: 'robe', apron: '#d6c4aa', legs: '#4a2e2a', boots: '#2a1a14', item: 'cat', mouth: 'smile' },
+  'halohorns.a': { h: 39, skin: '#9a6a46', hair: '#1a1210', style: 'short', top: '#6a5a48' },
+  'esoteric.a': { h: 38, skin: '#c89a74', hair: '#3a2a20', style: 'tail', top: '#5c5650' },
+  'cupidity.a': { h: 39, skin: '#7a4a2e', hair: '#140f0c', style: 'short', top: '#74604a' },
+  'fitness.a': { h: 40, skin: '#d8a888', hair: '#c8a060', style: 'short', top: '#66604e' },
+  'hibrations.a': { h: 38, skin: '#a8744e', hair: '#1a1210', style: 'bob', top: '#6a6052' },
+  'kaching.a': { h: 38, skin: '#9a6a46', hair: '#1a1210', style: 'short', top: '#5e5444' },
+  'hobby.a': { h: 37, skin: '#8a5a3a', hair: '#140f0c', style: 'knot', top: '#6c6250' },
+  'baby.a': { h: 38, skin: '#b07a52', hair: '#2a1a12', style: 'tail', top: '#70624e' },
+};
+for (const [id, L] of Object.entries(VLOOK)) if (id.endsWith('.a')) Object.assign(L, { cut: 'tunic', sash: 1, legs: '#3a342c', bind: '#6a5e4a', boots: '#241c14', mouth: 'smile' }, { ...L });
+function drawVillager(c, dir, frame, t, o = {}) {
+  const L = VLOOK[o.id], g = pose(dir, frame, L.h), { k, p, side } = g, B = L.build || 1;
+  g.bw = (side ? 3.6 : 6) * k * B;
+  const by = g.bob, sh = g.sh + by, hip = g.hip + by, hw = (side ? 3.6 : 4.8) * k * B, seat = o.seated;
+  const dk = (col, a = .3) => mix(col, '#000000', a);
+  if (seat) {
+    if (!o.noSeat) { box(c, -8 * k, -12 * k, 16 * k, 12 * k, '#4a3424', .35); c.fillStyle = '#e2b655'; c.fillRect(-8 * k, -12 * k, 16 * k, .7 * k); }
+    c.translate(0, 5 * k);
+  }
+  if (!o.noSeat) shadowE(c, 0, seat ? -5 * k : 0, 9 * k * B, 2.6 * k);
+  // the Hobby director's rod rides over the shoulder, behind her when she faces you
+  const rod = () => { c.strokeStyle = '#7a5a34'; c.lineWidth = .7 * k; c.beginPath(); c.moveTo(-side * 3 * k - (side ? 0 : 3 * k), hip + 4 * k); c.lineTo((side ? -side * 9 : 8) * k, sh - 20 * k); c.stroke(); c.strokeStyle = 'rgba(230,230,230,.5)'; c.lineWidth = .25 * k; c.beginPath(); c.moveTo((side ? -side * 9 : 8) * k, sh - 20 * k); c.lineTo((side ? -side * 10 : 9.5) * k, sh - 6 * k); c.stroke(); };
+  if (L.item === 'rod' && dir !== 1) rod();
+  // the Esoteric director's star cloak hangs behind
+  const cloak = () => { const w = g.bw + 2 * k, hem = -6 * k; shaded(c, () => { c.moveTo(-g.bw + .5 * k, sh - 1 * k); c.lineTo(g.bw - .5 * k, sh - 1 * k); c.lineTo(w + 1.5 * k, hem); c.lineTo(-w - 1.5 * k, hem); c.closePath(); }, L.cloak, w * .4); c.fillStyle = 'rgba(230,230,255,.7)'; for (let i = 0; i < 9; i++) { const u = (i * .37) % 1, v = (i * .61) % 1; c.fillRect(lerp(-w, w, u), lerp(sh + 2 * k, hem - 1 * k, v), .45 * k, .45 * k); } };
+  if (L.cloak && dir !== 1) cloak();
+  if (seat) {
+    for (const s of [-1, 1]) { limb(c, [[s * 2.5 * k, hip], [s * 3.6 * k, hip + 4 * k]], 4 * k, L.legs); limb(c, [[s * 3.6 * k, hip + 4 * k], [s * 3.9 * k, -5.8 * k]], 3.7 * k, L.legs); c.fillStyle = L.boots; c.beginPath(); c.ellipse(s * 3.9 * k, -5.6 * k, 2.4 * k, 1.6 * k, 0, 0, 7); c.fill(); }
+  } else drawLegs(c, dir, g, L, { bind: !!L.sash });
+  const sleeve = L.bare ? L.skin : L.top;
+  if (side) drawArm(c, dir, g, 0, p, dk(sleeve), dk(L.skin), 3 * B, { cuff: !L.bare });
+  // the garment: tunic to the hip, robe and coat longer, flaring with the stride
+  const hem = L.cut === 'robe' ? -8.6 * k + by * .3 : L.cut === 'coat' ? -11 * k + by * .3 : hip + 3.4 * k;
+  const flare = L.cut === 'robe' ? 7 * k : L.cut === 'coat' ? 6 * k : hw + 1 * k, sway = side ? -side * p * 1.1 * k : 0;
+  shaded(c, () => { c.moveTo(-g.bw, sh); c.lineTo(g.bw, sh); c.quadraticCurveTo(g.bw + .4 * k, hip, flare * (side ? .75 : 1) + sway, hem); c.lineTo(-flare * (side ? .75 : 1) + sway, hem); c.quadraticCurveTo(-g.bw - .4 * k, hip, -g.bw, sh); c.closePath(); }, L.top, side ? 1 * k : g.bw * .35);
+  if (L.cut === 'vest' && dir === 0) { c.fillStyle = L.skin; c.beginPath(); c.moveTo(-2.4 * k, sh); c.lineTo(2.4 * k, sh); c.lineTo(1.2 * k, hip + 2 * k); c.lineTo(-1.2 * k, hip + 2 * k); c.fill(); c.fillStyle = 'rgba(0,0,0,.18)'; c.fillRect(.6 * k, sh, 1.8 * k, hip + 2 * k - sh); }
+  if (L.cut === 'wrap' && dir !== 1) { c.fillStyle = dk(L.top, .22); c.beginPath(); c.moveTo(-g.bw, sh + .5 * k); c.lineTo(-g.bw + 2.6 * k, sh + .5 * k); c.lineTo(g.bw, hip - 1 * k); c.lineTo(g.bw, hip + 1.6 * k); c.closePath(); c.fill(); }
+  if (L.trim && dir === 0) { c.strokeStyle = L.trim; c.lineWidth = .45 * k; c.beginPath(); c.moveTo(-flare, hem - .3 * k); c.lineTo(flare, hem - .3 * k); c.stroke(); if (L.cut === 'coat') { c.beginPath(); c.moveTo(0, sh + 1 * k); c.lineTo(0, hem); c.stroke(); } }
+  if (L.apron && dir === 0) { box(c, -3.6 * k * B, sh + 4 * k, 7.2 * k * B, hem - sh - 3 * k, L.apron, .3); if (L.item === 'chisel') { c.fillStyle = '#c9a24a'; c.fillRect(1.4 * k, hip + .4 * k, .6 * k, 3 * k); c.fillStyle = '#3a2618'; c.fillRect(1.3 * k, hip + 2.6 * k, .8 * k, 1.6 * k); } }
+  if (L.cloak && dir === 1) cloak();
+  // belt, or the apprentice's saffron sash knotted at the hip with its tails hanging
+  const bY = hip - 3 * k;
+  if (L.sash) {
+    c.fillStyle = SAFFRON; c.fillRect(-g.bw - .2 * k, bY, (g.bw + .2 * k) * 2, 1.8 * k); c.fillStyle = 'rgba(0,0,0,.18)'; c.fillRect(g.bw * .3, bY, g.bw * .7 + .2 * k, 1.8 * k);
+    const kx = side ? side * 1.2 * k : (dir === 0 ? -1 : 1) * (g.bw - 1 * k), sw = Math.sin(t * 2 + k) * .4 * k;
+    c.fillStyle = SAFFRON; c.beginPath(); c.arc(kx, bY + .9 * k, 1.1 * k, 0, 7); c.fill();
+    c.beginPath(); c.moveTo(kx - .8 * k, bY + 1.4 * k); c.lineTo(kx - 1.6 * k + sw, bY + 6.4 * k); c.lineTo(kx - .2 * k + sw, bY + 6.2 * k); c.closePath(); c.fill();
+    c.fillStyle = mix(SAFFRON, '#000000', .15); c.beginPath(); c.moveTo(kx + .4 * k, bY + 1.4 * k); c.lineTo(kx + 1.4 * k + sw, bY + 5.2 * k); c.lineTo(kx + 2.4 * k + sw, bY + 4.6 * k); c.closePath(); c.fill();
+  } else if (L.cut !== 'robe' || L.item === 'key') {
+    c.fillStyle = '#2a1c14'; c.fillRect(-g.bw - .1 * k, bY, (g.bw + .1 * k) * 2, 1.1 * k);
+    if (dir !== 1) { c.fillStyle = '#e2b655'; c.fillRect(side ? side * .6 * k : -.7 * k, bY - .1 * k, 1.4 * k, 1.3 * k); }
+  }
+  // what hangs at the belt
+  const bx = side ? -side * 1.6 * k : (dir === 0 ? 1 : -1) * (g.bw - .8 * k);
+  if (dir !== 1 || side) {
+    if (L.item === 'key') { c.strokeStyle = '#cfd4e0'; c.lineWidth = .5 * k; c.beginPath(); c.moveTo(bx, bY + 1 * k); c.lineTo(bx, bY + 4.6 * k); c.lineTo(bx + .9 * k, bY + 4.6 * k); c.stroke(); c.beginPath(); c.arc(bx, bY + 1.4 * k, .7 * k, 0, 7); c.stroke(); }
+    if (L.item === 'horn') { c.fillStyle = '#e6dcc4'; c.beginPath(); c.moveTo(bx - 1 * k, bY + 1 * k); c.quadraticCurveTo(bx + 2.8 * k, bY + 2.4 * k, bx + 1.6 * k, bY + 6.4 * k); c.lineTo(bx + .8 * k, bY + 6 * k); c.quadraticCurveTo(bx + 1.6 * k, bY + 3 * k, bx - 1 * k, bY + 2.4 * k); c.fill(); c.fillStyle = '#e2b655'; c.fillRect(bx - 1.2 * k, bY + .9 * k, .7 * k, 1.6 * k); }
+    if (L.item === 'whisk') { c.strokeStyle = '#6a7a3a'; c.lineWidth = .35 * k; for (let i = -2; i <= 2; i++) { c.beginPath(); c.moveTo(bx, bY + .6 * k); c.lineTo(bx + i * .6 * k, bY + 6 * k); c.stroke(); } c.fillStyle = '#c9b48a'; c.fillRect(bx - .6 * k, bY - .2 * k, 1.2 * k, 1.8 * k); }
+    if (L.item === 'coins') { c.fillStyle = '#e2b655'; for (let i = 0; i < 4; i++) { c.beginPath(); c.arc(bx + (i % 2 ? .4 : -.4) * k, bY + 1.6 * k + i * 1.2 * k, .6 * k, 0, 7); c.fill(); } }
+  }
+  if (L.satchel) { c.strokeStyle = dk(L.satchel, .2); c.lineWidth = .7 * k; c.beginPath(); c.moveTo(side ? -side * 2 * k : (dir === 0 ? -1 : 1) * g.bw * .8, sh); c.lineTo(side ? side * 1 * k : (dir === 0 ? 1 : -1) * g.bw * .7, hip + 1 * k); c.stroke(); if (dir !== 1) box(c, (side ? -side * 3 : dir === 0 ? 3.6 : -6.6) * k, hip - .5 * k, 3.2 * k, 3 * k, L.satchel, .3); }
+  if (L.item === 'rod' && dir === 1) rod();
+  // arms; bare arms carry arm-rings or gold bands; the skald's fingers are inky
+  const armOpt = { cuff: !L.bare };
+  const ringFx = (hand) => { if (!L.rings && !L.bands) return; c.fillStyle = L.rings || L.bands; c.fillRect(hand[0] - 1.3 * k, hand[1] - 3.2 * k, 2.6 * k, .8 * k); };
+  if (!side) for (const s of [-1, 1]) { const h = drawArm(c, dir, g, s, s < 0 ? -p : p, sleeve, L.skin, 3 * B, armOpt); ringFx(h); if (L.ink && dir === 0 && s > 0) { c.fillStyle = '#1a2a4a'; c.beginPath(); c.arc(h[0], h[1] + .6 * k, .9 * k, 0, 7); c.fill(); } }
+  // neck and head
+  c.fillStyle = L.skin; c.fillRect(-1.5 * k * B, sh - 3.3 * k, 3 * k * B, 3.5 * k);
+  if (L.pin && dir === 0) { c.fillStyle = '#f2c46d'; c.beginPath(); c.arc(-2.6 * k, sh + 1.4 * k, .7 * k, 0, 7); c.fill(); c.fillStyle = '#d9465a'; c.fillRect(-2.8 * k, sh + .4 * k, .4 * k, .6 * k); }
+  if (L.moon && dir === 0) { c.fillStyle = '#e8ecf8'; c.beginPath(); c.arc(2.4 * k, sh + 1.6 * k, .8 * k, 0, 7); c.fill(); c.fillStyle = L.top; c.beginPath(); c.arc(2.8 * k, sh + 1.4 * k, .65 * k, 0, 7); c.fill(); }
+  const hy = g.head + by, hr = g.hr * (B > 1.2 ? 1.08 : 1), hx = side * .5 * k;
+  hair(c, L, dir, side, hx, hy, hr, k, 'back');
+  shaded(c, () => c.arc(hx, hy, hr, 0, 7), dir === 1 && L.style !== 'bald' ? L.hair : L.skin, hx + hr * .35);
+  hair(c, L, dir, side, hx, hy, hr, k, 'front');
+  if (L.beard && dir !== 1) { c.fillStyle = L.hair; c.beginPath(); c.arc(hx + side * .8 * k, hy + 1.4 * k, hr * .82, .15 * Math.PI, .85 * Math.PI); c.fill(); }
+  if (dir === 0) {
+    c.fillStyle = '#0c0807'; for (const s of [-1, 1]) c.fillRect(hx + s * 1.7 * k - .55 * k, hy + .1 * k, 1.1 * k, .6 * k);
+    c.strokeStyle = '#2a140c'; c.lineWidth = .45 * k; c.beginPath();
+    const my = hy + (L.beard ? 2.1 : 2.4) * k;
+    if (L.mouth === 'laugh') { c.fillStyle = '#3a140c'; c.beginPath(); c.ellipse(hx, my, 1.3 * k, .8 * k, 0, 0, Math.PI); c.fill(); }
+    else if (L.mouth === 'smile') { c.moveTo(hx - 1 * k, my); c.quadraticCurveTo(hx, my + .6 * k, hx + 1 * k, my); c.stroke(); }
+    else if (L.mouth === 'wry') { c.moveTo(hx - 1 * k, my + .2 * k); c.lineTo(hx + 1.2 * k, my - .3 * k); c.stroke(); }
+    else { c.moveTo(hx - .9 * k, my); c.lineTo(hx + .9 * k, my); c.stroke(); }
+  } else if (side) {
+    c.fillStyle = L.skin; c.beginPath(); c.moveTo(hx + side * hr * .9, hy - .2 * k); c.lineTo(hx + side * (hr + .8 * k), hy + 1.1 * k); c.lineTo(hx + side * hr * .9, hy + 1.6 * k); c.fill();
+    c.fillStyle = '#0c0807'; c.fillRect(hx + side * 2.3 * k - .55 * k, hy + .1 * k, 1.1 * k, .55 * k);
+  }
+  if (L.item === 'quill' && dir !== 1) { c.strokeStyle = '#ece6da'; c.lineWidth = .8 * k; c.beginPath(); const qx = hx + (side ? -side * 1 : 1) * hr * .9; c.moveTo(qx, hy - .4 * k); c.quadraticCurveTo(qx + 1.6 * k, hy - 3.4 * k, qx + 2.4 * k, hy - 5.6 * k); c.stroke(); }
+  if (side) { const h = drawArm(c, dir, g, 0, -p, sleeve, L.skin, 3 * B, armOpt); ringFx(h); }
+}
+// hair in two passes: what falls behind the head, then what frames the face
+function hair(c, L, dir, side, hx, hy, hr, k, pass) {
+  if (L.style === 'bald') { if (pass === 'front' && dir !== 1) { c.fillStyle = L.hair; c.fillRect(hx - hr, hy - .6 * k, .8 * k, 1.8 * k); c.fillRect(hx + hr - .8 * k, hy - .6 * k, .8 * k, 1.8 * k); } return; }
+  c.fillStyle = L.hair;
+  if (pass === 'back') {
+    if (L.style === 'long' && dir !== 1) { c.fillRect(hx - hr * 1.1, hy - .5 * k, hr * 2.2, 7 * k); if (L.streak) { c.fillStyle = L.streak; c.fillRect(hx - hr * 1.1, hy - .5 * k, .7 * k, 7 * k); } }
+    if (L.style === 'bob') c.fillRect(hx - hr * 1.12, hy - .8 * k, hr * 2.24, 3.4 * k);
+    return;
+  }
+  if (dir === 1) {
+    c.beginPath(); c.arc(hx, hy, hr * 1.04, 0, 7); c.fill();
+    if (L.style === 'long') { c.fillRect(hx - hr * 1.1, hy, hr * 2.2, 8 * k); if (L.streak) { c.fillStyle = L.streak; c.fillRect(hx + hr * .5, hy - hr, .7 * k, 8 * k + hr); c.fillStyle = L.hair; } }
+    if (L.style === 'tail') limb(c, [[hx, hy + 1 * k], [hx + .3 * k, hy + 5 * k], [hx - .2 * k, hy + 8 * k]], 1.6 * k, L.hair);
+  } else if (side) {
+    c.beginPath(); c.arc(hx - side * .6 * k, hy - .3 * k, hr * 1.04, side > 0 ? Math.PI * .6 : Math.PI * 1.25, side > 0 ? Math.PI * 1.75 : Math.PI * 2.4); c.fill();
+    if (L.style === 'tail') limb(c, [[hx - side * hr, hy - .5 * k], [hx - side * (hr + 2 * k), hy + 2 * k], [hx - side * (hr + 1.6 * k), hy + 5 * k]], 1.6 * k, L.hair);
+    if (L.style === 'long') c.fillRect(hx - side * hr - (side > 0 ? 1.6 * k : 0), hy - .5 * k, 1.6 * k, 7 * k);
+  } else {
+    c.beginPath(); c.arc(hx, hy - .4 * k, hr * 1.05, Math.PI * 1.02, Math.PI * 1.98); c.fill();
+    if (L.style === 'long' || L.style === 'bob') { c.fillRect(hx - hr * 1.1, hy - 1 * k, 1.2 * k, L.style === 'long' ? 7 * k : 3.6 * k); c.fillRect(hx + hr * 1.1 - 1.2 * k, hy - 1 * k, 1.2 * k, L.style === 'long' ? 7 * k : 3.6 * k); }
+    if (L.streak) { c.fillStyle = L.streak; c.fillRect(hx - hr * .5, hy - hr - .2 * k, .7 * k, 2 * k); c.fillStyle = L.hair; }
+  }
+  if (L.style === 'knot' || L.style === 'topknot') { const r = (L.style === 'topknot' ? 1.9 : 1.6) * k; c.beginPath(); c.arc(hx + side * -.6 * k, hy - hr - r * .6, r, 0, 7); c.fill(); if (L.style === 'topknot') { c.fillStyle = '#e2b655'; c.fillRect(hx - 1.4 * k + side * -.6 * k, hy - hr - .3 * k, 2.8 * k, .6 * k); } else { c.fillStyle = '#c9a070'; c.fillRect(hx - 2.2 * k, hy - hr - r * .6, 4.4 * k, .5 * k); } }
+}
+// Who draws whom: Lek and A have their own; every villager shares the rig and their own look.
+const drawerFor = (who) => DRAW_PERSON[who] || ((c, dir, f, t, o = {}) => drawVillager(c, dir, f, t, { ...o, id: who }));
+
 // ══════════════════════════════════════════ practice and powers ══════════════════════════════════════════
 // 03_moving_in.md §2: computed from the real temple logs, growth only. The power definitions and thresholds
 // arrive from the PC (content/skills.json); the engine only reads the logs and counts.
@@ -1711,7 +1869,16 @@ function enter(h) { if (busy) return; lek.path = null; lek.onArrive = null; goRo
 
 // ══════════════════════════════════════════ the character sheets ══════════════════════════════════════════
 const CHAR_PLACEHOLDER = { lek: { name: 'You', title: '', lines: [] }, a: { name: 'Your companion', title: '', lines: [] } };
-function charText(who) { const d = village.content && village.content.data && village.content.data.characters; return Object.assign({}, CHAR_PLACEHOLDER[who], d && d[who]); }
+function charText(who) {
+  if (VLOOK[who]) return villagerText(who);
+  const d = village.content && village.content.data && village.content.data.characters; return Object.assign({}, CHAR_PLACEHOLDER[who], d && d[who]);
+}
+// A villager's name and line arrive from the PC (content/directors.json); until then they're "the director".
+function villagerText(who) {
+  const [house, r] = who.split('.'), v = village.content && village.content.data && village.content.data.villagers && village.content.data.villagers[who];
+  const houseName = ROOMS[house].title.split(' · ')[0];
+  return { name: (v && v.name) || (r === 'd' ? 'The director' : 'The apprentice'), title: (r === 'd' ? 'Director · ' : 'Apprentice, lærling · ') + houseName, lines: v && v.line ? [v.line] : [] };
+}
 let charWho = null, charMode = null, auraLevel = 0;
 const dayLabel = (ms) => new Date(ms).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
 function renderChar() {
@@ -1748,11 +1915,33 @@ function renderChar() {
     }
     html += '</section>';
   }
-  html += `<section><h3>The twelve poses</h3><p class="muted">Toward you, away, left and right, three frames each${who === 'a' ? ', then the scroll and the seat' : ', then channelling and the seat'}.</p><canvas class="poses" id="charPoses"></canvas></section>`;
+  if (VLOOK[who]) html += villagerLetters(who, t);
+  html += `<section><h3>The twelve poses</h3><p class="muted">Toward you, away, left and right, three frames each${VLOOK[who] ? ', then the seat' : who === 'a' ? ', then the scroll and the seat' : ', then channelling and the seat'}.</p><canvas class="poses" id="charPoses"></canvas></section>`;
   $('charBody').innerHTML = html;
+  if ($('vSend')) $('vSend').onclick = () => sendVillagerLetter(who);
   for (const b of $('charBody').querySelectorAll('.declare')) b.onclick = () => declare(b.dataset.power, +b.dataset.tier);
   for (const b of $('charBody').querySelectorAll('.grew button')) b.onclick = () => { const [src, title] = PRACTICE_HOME[b.dataset.src]; closeCharLayer(); openTemple(P(src), title); };
   drawPoseSheet();
+}
+// Letters to a villager (step 3): the bridge runs them as a real agent on the PC and the answer comes back on a sync.
+function villagerLetters(who, t) {
+  const mine = outbox.filter((m) => m.to === who).map((m) => ({ at: m.at, text: m.text, cls: 'waiting', meta: 'a letter waiting' }));
+  const sent = new Set(village.events.filter((e) => e.who === who && e.ref).map((e) => e.ref));
+  const sentRows = (village.sentTo || []).filter((m) => m.to === who).map((m) => ({ at: m.at, text: m.text, cls: 'mine', meta: sent.has(m.id) ? 'your letter' : 'your letter · with ' + t.name }));
+  const theirs = village.events.filter((e) => e.who === who).map((e) => ({ at: e.at, text: e.text, cls: 'reply', meta: e.from || t.name }));
+  const rows = [...mine, ...sentRows, ...theirs].sort((a, b) => stamp(b.at) - stamp(a.at)).slice(0, 12);
+  if (!village.bridge) return '<section><h3>Letters</h3><p class="muted">Letters reach the villagers once the phone is paired with the PC, at the letter box in the Longhouse-sala.</p></section>';
+  return `<section><h3>Letters</h3><textarea id="vText" rows="3" placeholder="A letter for ${esc(t.name)}…"></textarea><button class="btn" id="vSend">Send</button>
+    <p class="muted">${esc(t.name)} works on the PC. The answer comes back with a sync, often a few minutes later.</p>
+    ${rows.map((r) => `<div class="letter ${r.cls}"><div class="meta">${esc(r.meta)} · ${time(r.at)}</div>${esc(r.text)}</div>`).join('')}</section>`;
+}
+function sendVillagerLetter(who) {
+  const text = $('vText').value.trim(); if (!text) return;
+  const m = { id: crypto.randomUUID(), kind: 'message', to: who, text, at: new Date().toISOString() };
+  outbox.push(m); save(K.outbox, outbox);
+  // keep our own side of the thread: the outbox empties once the PC has the letter
+  village.sentTo = (village.sentTo || []).concat(m).slice(-200); saveVillage();
+  renderChar(); sync().then(() => { if (charWho === who) renderChar(); });
 }
 // A declaration is honoured at once and never taken back (growth only).
 function declare(id, tier) {
@@ -1765,11 +1954,12 @@ function drawPoseSheet() {
   const k = $('charPoses'); if (!k) return;
   const cw = 34, chh = 60, cols = 4, w = k.clientWidth || 320, z = w / (cw * cols), dp = Math.min(3, devicePixelRatio || 1);
   k.style.height = (chh * 4 * z) + 'px'; k.width = Math.round(w * dp); k.height = Math.round(chh * 4 * z * dp);
-  const c = k.getContext('2d'), draw = DRAW_PERSON[charWho];
+  const c = k.getContext('2d'), draw = drawerFor(charWho), vil = !!VLOOK[charWho];
   c.fillStyle = '#2e3f2c'; c.fillRect(0, 0, k.width, k.height);
   for (let d = 0; d < 4; d++) for (let f = 0; f < 4; f++) {
     c.setTransform(z * dp, 0, 0, z * dp, (f * cw + cw / 2) * z * dp, (d * chh + chh - 6) * z * dp);
     if (f < 3) draw(c, d, f, T, charWho === 'lek' ? { build: lekBuild() } : {});
+    else if (vil) { if (d === 0) draw(c, 0, 1, T, { seated: true }); }
     else if (d === 0) draw(c, 0, 1, T, charWho === 'lek' ? { build: lekBuild(), channel: 1 } : { scroll: true });
     else if (d === 1) draw(c, 0, 1, T, { seated: true, build: lekBuild() });
   }
@@ -1785,8 +1975,9 @@ function drawPortrait() {
   c.save(); c.globalCompositeOperation = 'lighter';
   if (charWho === 'lek') glow(c, w / 2, h * .52, h * .55, '#f2c46d', .05 + .3 * auraLevel);
   c.restore();
+  if (VLOOK[charWho]) { c.save(); c.globalCompositeOperation = 'lighter'; glow(c, w / 2, h * .55, h * .5, ROOMS[charWho.split('.')[0]].c, .14); c.restore(); }
   c.translate(w / 2, h - 8); c.scale(z, z);
-  DRAW_PERSON[charWho](c, 0, 1, T, charWho === 'lek' ? { build: lekBuild(), channel: ch } : { channel: ch, lanternLit: true });
+  drawerFor(charWho)(c, 0, 1, T, charWho === 'lek' ? { build: lekBuild(), channel: ch } : { channel: ch, lanternLit: true });
 }
 function openChar(who, push = true, mode = null) {
   charWho = who; charMode = mode;
@@ -1887,7 +2078,7 @@ function hitObject(sx, sy) {
   const R = ROOMS[scene], v = roomView(), x = (sx - v.ox) / v.z, y = (sy - v.oy) / v.z;
   if (x > 160 && x < 280 && y > 735 && y < RH + 30) return { door: true };
   let best = null;
-  for (const o of R.objects) if (o.act && x > o.x - o.w * FS / 2 - 6 && x < o.x + o.w * FS / 2 + 6 && y > o.y - o.h * FS - 6 && y < o.y + 10) if (!best || o.z > best.z) best = o;
+  for (const o of R.objects) if (o.act && x > o.x - o.w * FS / 2 - 6 && x < o.x + o.w * FS / 2 + 6 && y > o.y - (o.hh || o.h) * FS - 6 && y < o.y + 10) if (!best || o.z > best.z) best = o;
   return best;
 }
 function hover(sx, sy) {
@@ -1934,6 +2125,8 @@ function useObject(o) {
   if (o.act.open) setTimeout(() => openTemple(o.act.open, o.act.title), 140);
   else if (o.act.letters) openSheet();
   else if (o.act.declare) openChar('lek', true, 'declare');
+  else if (o.act.say === 'seat' && VLOOK[scene + '.d']) openChar(scene + '.d');
+  else if (o.act.say === 'bench' && VLOOK[scene + '.a']) openChar(scene + '.a');
   else if (o.act.say) say(line(scene, o.act.say), o.label, R.c);
 }
 // Enter or E: go in at a door, use what's within reach, or step out over the threshold
@@ -2162,6 +2355,7 @@ function renderRoom(c, n) {
   const s = dpr * v.z; c.setTransform(s, 0, 0, s, v.ox * dpr, v.oy * dpr);
   c.save(); c.beginPath(); c.rect(0, 0, RW, RH); c.clip();
   drawShell(c, R, n, T);
+  if (scene === 'baby') { c.save(); c.translate(109, 262); c.scale(1.5, 1.5); sleepingCat(c, 0, 0, T); c.restore(); }
   const lamps = R.lanterns.map((x, i) => hangingLantern(c, x, T, i));
   // furniture, the threshold and the people, back to front
   const items = R.objects.map((o) => ({ z: o.z, d: () => { c.save(); c.translate(o.x, o.y); c.scale(FS, FS); FURN[o.kind](c, o, R, T, n); c.restore(); } }));
