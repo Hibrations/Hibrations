@@ -2351,7 +2351,10 @@ function crowded(p, x, y) {
 }
 const TURNS = [0, .6, -.6, 1.2, -1.2, 1.8, -1.8];
 function moveBy(p, vx, vy, dt) {
-  const x0 = p.x, y0 = p.y, ok = gridFor(p.scene).walk, want = Math.hypot(vx, vy) * dt;
+  const x0 = p.x, y0 = p.y, walk = gridFor(p.scene).walk, want = Math.hypot(vx, vy) * dt;
+  // placed on a blocked cell (the room's threshold on entering): let them step off it. Small steps on a fast
+  // screen never cleared the cell in one frame, so on the PC Lek stood frozen at the door.
+  const ok = walk(x0, y0) ? walk : () => true;
   // walls slide you along them; only a person in the way turns you aside
   for (const a of TURNS) {
     const c = Math.cos(a), s = Math.sin(a), ux = (vx * c - vy * s) * dt, uy = (vx * s + vy * c) * dt;
