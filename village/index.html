@@ -56,6 +56,15 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 .panel { position: fixed; left: 0; right: 0; bottom: 0; max-height: 86vh; z-index: 8; background: var(--glass2); border: 1px solid var(--line); border-bottom: 0; border-radius: 18px 18px 0 0; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); display: flex; flex-direction: column; transform: translateY(105%); transition: transform .32s cubic-bezier(.2, .8, .2, 1); max-width: 560px; margin: 0 auto; }
 .panel.open { transform: none; }
+#paint { position: fixed; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; gap: 6px; padding: 6px; background: var(--glass2); border: 1px solid var(--line); border-radius: 999px; z-index: 6; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+#paint[hidden] { display: none; }
+#paint button { border: 1px solid var(--line); background: none; border-radius: 999px; padding: 8px 10px; font-size: 13.5px; white-space: nowrap; }
+#paint button.on { border-color: var(--gold); color: var(--gold); }
+#paint .g::before, #paint .r::before { content: ''; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; background: #46dc78; }
+#paint .r::before { background: #eb3c46; }
+.toggle { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+.toggle input { width: 20px; height: 20px; flex: none; accent-color: #f2c46d; }
+.btn + .btn { margin-top: 8px; }
 #char { max-height: 92vh; z-index: 8; }
 #char header > div { flex: 1; min-width: 0; }
 #char header h2 { flex: none; }
@@ -118,6 +127,7 @@ code { font-size: 12.5px; background: rgba(255, 255, 255, .07); border-radius: 4
   <div class="chip" id="roomChip" hidden><span id="roomName"></span></div>
   <span class="sp"></span>
   <button class="chip" id="light" title="Light">◐</button>
+  <button class="chip" id="gear" title="Settings" aria-label="Settings">⚙</button>
 </div>
 <div id="say"></div>
 <div id="stick" hidden aria-label="Walk"><i></i></div>
@@ -159,6 +169,25 @@ code { font-size: 12.5px; background: rgba(255, 255, 255, .07); border-radius: 4
   <header><div><h2 id="charName"></h2><div id="charTitle"></div></div><button id="charClose" aria-label="Close">×</button></header>
   <div class="scroll" id="charBody"></div>
 </div>
+
+<div id="settings" class="panel" aria-hidden="true">
+  <header><h2>Settings</h2><button id="settingsClose" aria-label="Close">×</button></header>
+  <div class="scroll">
+    <section>
+      <h3>The walk map</h3>
+      <label class="toggle"><input type="checkbox" id="showMap"> Show where people can walk: green walkable, red blocked</label>
+      <button class="btn" id="paintMap">Paint this map</button>
+      <button class="btn" id="mapPicture">Save a picture of this map</button>
+      <p class="muted" id="mapNote"></p>
+    </section>
+    <section>
+      <h3>The meeting</h3>
+      <p class="muted">A test until step 6 builds the meeting: the eight directors walk to the Longhouse-sala and sit in their own chairs.</p>
+      <button class="btn" id="meetBtn"></button>
+    </section>
+  </div>
+</div>
+<div id="paint" hidden><button class="g on" id="pWalk">Walk</button><button class="r" id="pBlock">Block</button><button id="pFine">Wide</button><button id="pUndo">Undo</button><button id="pDone">Done</button></div>
 
 <div id="update">New version — tap to reload</div>
 
@@ -264,7 +293,7 @@ async function sync() {
     for (const e of data.events || []) if (!known.has(e.id)) village.events.push(e);
     cursor = { seq: Math.max(cursor.seq, data.cursor || 0) };
     save(K.cursor, cursor);
-    if (data.content && data.content.hash && data.content.data) village.content = data.content;
+    if (data.content && data.content.hash && data.content.data) { village.content = data.content; mapsArrived(); }
     village.lastSync = new Date().toISOString();
     saveVillage();
     bridgeState = { cls: 'ok', text: 'reached' };
@@ -761,6 +790,8 @@ function smoke(c, x, y, t, col, a, n = 5, rise = 70, drift = 18) {
 const RW = 440, RH = 780, WB = 380; // room width/height; WB is where the back wall meets the floor
 const FS = 1.25; // things in a room (and, from step 2, the people in it) are drawn at this scale
 const P = (file) => '../' + file;
+// the Longhouse-sala's eight chairs, two rows of four (step 4): back row behind the hearth, front row before it
+const CHAIRS_AT = [[128, 458], [186, 458], [244, 458], [302, 458], [128, 708], [186, 708], [254, 708], [312, 708]];
 const ROOMS = {
   halohorns: { title: 'HaloHorns · the hall', c: '#f2c46d', wall: '#3e2c22', roof: '#2a1c16', floor: '#5a4030', rune: 'HAL', thai: 'วิหาร',
     windows: [{ x: 108, y: 196, w: 46, h: 74 }, { x: 286, y: 196, w: 46, h: 74 }], lanterns: [150, 290],
@@ -843,9 +874,8 @@ const ROOMS = {
     objects: [
       { kind: 'scroll', x: 70, y: 560, w: 56, h: 150, label: 'Chronicle', act: { say: 'chronicle' } },
       { kind: 'letterBox', x: 368, y: 520, w: 60, h: 96, label: 'Letter box', act: { letters: true } },
-      { kind: 'tingBench', x: 220, y: 470 },
+      ...CHAIRS_AT.map(([x, y], i) => ({ kind: 'chair', x, y, who: ['halohorns', 'esoteric', 'hibrations', 'cupidity', 'baby', 'fitness', 'kaching', 'hobby'][i] })),
       { kind: 'hearth', x: 220, y: 590, w: 120, h: 44, label: 'Hearth', act: { declare: true } },
-      { kind: 'tingBench', x: 220, y: 700 },
     ] },
 };
 const VLOOK_IDS = new Set(['halohorns', 'esoteric', 'cupidity', 'fitness', 'hibrations', 'kaching', 'hobby', 'baby']); // houses with a director and an apprentice
@@ -1122,14 +1152,25 @@ function tingBench(c) {
   box(c, -118, -20, 236, 8, '#6a4a30', .2);
   c.fillStyle = '#e2b655'; c.fillRect(-118, -20, 236, 1.5);
 }
+// a carved chair for one director: a back with chofa curls, a cushion in the house's colour
+function chair(c, col, sit) {
+  shadowE(c, 0, 0, 15, 4);
+  c.fillStyle = '#2a1a10'; c.fillRect(-11, -12, 3, 12); c.fillRect(8, -12, 3, 12);
+  box(c, -12, -46, 24, 32, '#5a3a24', .3); c.fillStyle = rgba(col, .8); c.fillRect(-8, -42, 16, 22);
+  c.strokeStyle = '#e2b655'; c.lineWidth = 1.6; c.lineCap = 'round';
+  for (const s of [-1, 1]) { c.beginPath(); c.moveTo(s * 12, -46); c.quadraticCurveTo(s * 16, -49, s * 13, -55); c.stroke(); }
+  box(c, -13, -16, 26, 5, '#6a4428', .3); c.fillStyle = rgba(col, .9); c.fillRect(-11, -17.5, 22, 2);
+  if (sit) sit();
+}
 function twinLamp(c, t) {
   box(c, -18, -2, 36, 5, '#3a2618', .2);
   c.fillStyle = '#c9a24a'; c.beginPath(); c.ellipse(-8, -4, 5, 2.5, 0, 0, 7); c.fill(); c.fillStyle = '#8a2333'; c.beginPath(); c.ellipse(8, -4, 5, 2.5, 0, 0, 7); c.fill();
   flame(c, -8, -5, .55, '#f6c75a', t, 0); flame(c, 8, -5, .55, '#e0414f', t, 2);
 }
 const FURN = {
-  deskSeat: (c, o, R, t) => deskSeat(c, R.c, t, VLOOK[scene + '.d'] && (() => sitter(c, scene + '.d', 0, -30, t))),
-  bench: (c, o, R, t) => { const id = scene + '.a'; bench(c, !!VLOOK[id]); if (VLOOK[id]) sitter(c, id, -16, -8, t); }, altar: (c, o, R, t) => altar(c, t), mirror: (c, o, R, t) => bronzeMirror(c, t),
+  deskSeat: (c, o, R, t) => { const v = sitting(o); deskSeat(c, R.c, t, v && (() => sitter(c, v, 0, -30, t))); },
+  bench: (c, o, R, t) => { const v = sitting(o); bench(c, !!VLOOK[scene + '.a']); if (v) sitter(c, v, -16, -8, t); },
+  chair: (c, o, R, t) => { const v = sitting(o); chair(c, HOUSES.find((h) => h.id === o.who).c, v && (() => sitter(c, v, 0, -10, t))); }, altar: (c, o, R, t) => altar(c, t), mirror: (c, o, R, t) => bronzeMirror(c, t),
   board: (c, o, R) => board(c, R.c), chest: (c) => chest(c), cushion: (c, o, R, t) => cushion(c, t), herbs: (c) => herbs(c), telescope: (c, o, R, t) => telescope(c, t),
   bowl: (c, o, R, t) => bowl(c, t), curtain: (c, o, R, t) => curtain(c, t), lanternRoom: (c, o, R, t, n) => lanternRoom(c, t, n), rack: (c) => rack(c),
   sauna: (c, o, R, t) => saunaBench(c, t), hrv: (c) => hrv(c), notice: (c) => notice(c), writingDesk: (c, o, R, t) => writingDesk(c, t), counter: (c, o, R, t) => counter(c, t),
@@ -1147,8 +1188,9 @@ function sleepingCat(c, x, y, t) {
   c.fillStyle = 'rgba(0,0,0,.18)'; c.beginPath(); c.ellipse(x + 3, y - 3, 8, 3, 0, Math.PI, 0); c.fill();
   c.strokeStyle = '#8a7a6a'; c.lineWidth = 2.4; c.lineCap = 'round'; c.beginPath(); c.moveTo(x - 10, y - 1); c.quadraticCurveTo(x - 4, y + 2, x + 5, y); c.stroke();
 }
-// A villager at home: seated at their place, breathing slowly (they walk from step 4).
-function sitter(c, id, x, y, t) { c.save(); c.translate(x, y + Math.sin(t * 1.3 + x) * .25); drawVillager(c, 0, 1, t, { id, seated: true, noSeat: true }); c.restore(); }
+// A villager seated at their place, breathing slowly; they nod when Lek comes near.
+function sitter(c, v, x, y, t) { c.save(); c.translate(x, y + Math.sin(t * 1.3 + x) * .25); drawVillager(c, 0, 1, t, { id: v.id, seated: true, noSeat: true, nod: nodOf(v) }); c.restore(); }
+const sitting = (o) => villagers.find((v) => v.sit === o && v.scene === scene);
 // lights inside each room, relative to the object: [dx, dy, radius, colour, strength at night, strength by day]
 const FURN_LIGHT = {
   altar: [[0, -86, 70, '#ffcf7a', .5, .25], [0, -66, 40, '#ff8a5a', .3, .12]], twinLamp: [[0, -12, 34, '#ffcf7a', .45, .15]], hearth: [[0, -24, 150, '#ff9a4a', .5, .3]],
@@ -1559,7 +1601,7 @@ function drawVillager(c, dir, frame, t, o = {}) {
   c.fillStyle = L.skin; c.fillRect(-1.5 * k * B, sh - 3.3 * k, 3 * k * B, 3.5 * k);
   if (L.pin && dir === 0) { c.fillStyle = '#f2c46d'; c.beginPath(); c.arc(-2.6 * k, sh + 1.4 * k, .7 * k, 0, 7); c.fill(); c.fillStyle = '#d9465a'; c.fillRect(-2.8 * k, sh + .4 * k, .4 * k, .6 * k); }
   if (L.moon && dir === 0) { c.fillStyle = '#e8ecf8'; c.beginPath(); c.arc(2.4 * k, sh + 1.6 * k, .8 * k, 0, 7); c.fill(); c.fillStyle = L.top; c.beginPath(); c.arc(2.8 * k, sh + 1.4 * k, .65 * k, 0, 7); c.fill(); }
-  const hy = g.head + by, hr = g.hr * (B > 1.2 ? 1.08 : 1), hx = side * .5 * k;
+  const hy = g.head + by + (o.nod || 0) * k, hr = g.hr * (B > 1.2 ? 1.08 : 1), hx = side * .5 * k;
   hair(c, L, dir, side, hx, hy, hr, k, 'back');
   shaded(c, () => c.arc(hx, hy, hr, 0, 7), dir === 1 && L.style !== 'bald' ? L.hair : L.skin, hx + hr * .35);
   hair(c, L, dir, side, hx, hy, hr, k, 'front');
@@ -1712,6 +1754,9 @@ function climbDown(back = true) {
 }
 
 // ══════════════════════════════════════════ walking: maps and pathfinding (v1's grid A*) ══════════════════════════════════════════
+// Step 4 (05_movement.md §1): the walk grid is the one truth, for everyone. The engine works out a default
+// from each scene's shapes; the PC's content/maps/<scene>.json overrides it, and a map painted on the phone
+// overrides both until the PC has it. '.' is walkable, '#' is blocked.
 HUB.door = { x: HUB.x, y: HUB.y + 12 };
 function walkWorld(x, y) {
   if (y < 360 || y > 1250 || x < 60 || x > 1740 || !inEll(x, y, CLEAR, -30)) return false;
@@ -1725,10 +1770,11 @@ function walkWorld(x, y) {
     const [px, py] = POST[h.kind]; if (Math.hypot(x - h.x - px, (y - h.y - py) * 2) < 9) return false;
   }
   if (x > CLIFF.x - 86 && x < CLIFF.x + 98 && y > CLIFF.y - 60 && y < CLIFF.y + 6) return false;
+  for (const a of Object.values(YARD)) if (a.foot && x > a.foot[0] && x < a.foot[2] && y > a.foot[1] && y < a.foot[3]) return false;
   return true;
 }
 // furniture footprints on a room's floor, in furniture units (they're drawn at FS)
-const FOOT = { stove: [48, 30], boat: [116, 30], hearth: [140, 30], tingBench: [236, 16] };
+const FOOT = { stove: [48, 30], boat: [116, 30], hearth: [140, 30], tingBench: [236, 16], chair: [26, 14] };
 function footprint(o) {
   if (o.z === 0 || o.y <= WB) return null;
   const f = FOOT[o.kind] || (o.w ? [o.w, Math.min(40, o.h * .35)] : null); if (!f) return null;
@@ -1740,13 +1786,36 @@ function walkRoom(R, x, y) {
   for (const o of R.objects) { const p = footprint(o); if (p && x > p[0] && x < p[2] && y > p[1] && y < p[3]) return false; }
   return true;
 }
+const MAPDIM = (id) => (id === 'world' ? [W, H, 16] : [RW, RH, 10]);
 function makeGrid(w, h, cell, walk) {
   const gc = Math.ceil(w / cell), gr = Math.ceil(h / cell), d = new Uint8Array(gc * gr), m = cell * .35;
   for (let r = 0; r < gr; r++) for (let c = 0; c < gc; c++) { const x = c * cell + cell / 2, y = r * cell + cell / 2; d[r * gc + c] = walk(x, y) && walk(x - m, y) && walk(x + m, y) && walk(x, y - m * .6) && walk(x, y + m * .6) ? 1 : 0; }
-  return { cell, gc, gr, d, walk };
+  return { cell, gc, gr, d };
 }
-const grids = {};
-function gridFor(id) { return grids[id] || (grids[id] = id === 'world' ? makeGrid(W, H, 16, walkWorld) : makeGrid(RW, RH, 10, (x, y) => walkRoom(ROOMS[id], x, y))); }
+function defaultGrid(id) { const [w, h, cell] = MAPDIM(id); return makeGrid(w, h, cell, id === 'world' ? walkWorld : (x, y) => walkRoom(ROOMS[id], x, y)); }
+const gridRows = (G) => Array.from({ length: G.gr }, (_, r) => Array.from(G.d.subarray(r * G.gc, (r + 1) * G.gc), (v) => (v ? '.' : '#')).join(''));
+function gridFromRows(m, id) {
+  const [w, h, cell] = MAPDIM(id), gc = Math.ceil(w / cell), gr = Math.ceil(h / cell);
+  if (!m || m.cell !== cell || !Array.isArray(m.rows) || m.rows.length !== gr || m.rows.some((r) => typeof r !== 'string' || r.length !== gc)) return null;
+  const d = new Uint8Array(gc * gr); m.rows.forEach((row, r) => { for (let c = 0; c < gc; c++) d[r * gc + c] = row[c] === '.' ? 1 : 0; });
+  return { cell, gc, gr, d };
+}
+let grids = {};
+const contentMaps = () => (village.content && village.content.data && village.content.data.maps) || {};
+village.maps = village.maps || {}; // painted on this phone, not yet on the PC
+function gridFor(id) {
+  if (grids[id]) return grids[id];
+  const G = gridFromRows(village.maps[id], id) || gridFromRows(contentMaps()[id], id) || defaultGrid(id);
+  G.id = id; G.walk = (x, y) => cellOpen(G, x, y);
+  return (grids[id] = G);
+}
+function cellOpen(G, x, y) { const c = Math.floor(x / G.cell), r = Math.floor(y / G.cell); return c >= 0 && r >= 0 && c < G.gc && r < G.gr && G.d[r * G.gc + c] === 1; }
+// when the PC sends maps: forget the cached grids, and drop a painted map once the PC holds the same one
+function mapsArrived() {
+  const cm = contentMaps();
+  for (const id of Object.keys(village.maps)) if (cm[id] && cm[id].rows && cm[id].rows.join('') === village.maps[id].rows.join('')) delete village.maps[id];
+  grids = {};
+}
 function nearestOpen(G, c, r) {
   for (let d = 0; d < 30; d++) for (let dr = -d; dr <= d; dr++) for (let dc = -d; dc <= d; dc++) {
     if (Math.max(Math.abs(dr), Math.abs(dc)) !== d) continue;
@@ -1755,24 +1824,27 @@ function nearestOpen(G, c, r) {
   return null;
 }
 function clearLine(G, a, b) { const n = Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / (G.cell / 2)); for (let i = 1; i <= n; i++) if (!G.walk(lerp(a.x, b.x, i / n), lerp(a.y, b.y, i / n))) return false; return true; }
+// A* with a binary heap: sixteen villagers path across the clearing, so the open list has to be quick
 function findPath(G, x0, y0, x1, y1) {
   const { cell, gc, gr, d } = G;
   const s = nearestOpen(G, Math.floor(x0 / cell), Math.floor(y0 / cell)), g = nearestOpen(G, Math.floor(x1 / cell), Math.floor(y1 / cell));
   if (!s || !g) return null;
   const si = s[1] * gc + s[0], gi = g[1] * gc + g[0];
-  const came = new Int32Array(gc * gr).fill(-1), cost = new Float32Array(gc * gr).fill(Infinity);
-  const open = [[0, si]]; cost[si] = 0;
+  const came = new Int32Array(gc * gr).fill(-1), cost = new Float32Array(gc * gr).fill(Infinity), shut = new Uint8Array(gc * gr);
+  const hk = [], hv = [];
+  const push = (k, v) => { let i = hk.length; hk.push(k); hv.push(v); while (i) { const p = (i - 1) >> 1; if (hk[p] <= k) break; hk[i] = hk[p]; hv[i] = hv[p]; i = p; } hk[i] = k; hv[i] = v; };
+  const pop = () => { const v = hv[0], k = hk.pop(), x = hv.pop(); if (hk.length) { let i = 0; for (;;) { let m = 2 * i + 1; if (m >= hk.length) break; if (m + 1 < hk.length && hk[m + 1] < hk[m]) m++; if (hk[m] >= k) break; hk[i] = hk[m]; hv[i] = hv[m]; i = m; } hk[i] = k; hv[i] = x; } return v; };
   const hfn = (i) => Math.hypot(i % gc - g[0], Math.floor(i / gc) - g[1]);
-  while (open.length) {
-    let bi = 0; for (let i = 1; i < open.length; i++) if (open[i][0] < open[bi][0]) bi = i;
-    const [, cur] = open.splice(bi, 1)[0];
+  push(0, si); cost[si] = 0;
+  while (hk.length) {
+    const cur = pop(); if (shut[cur]) continue; shut[cur] = 1;
     if (cur === gi) break;
     const cx = cur % gc, cy = Math.floor(cur / gc);
     for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
       if (!dx && !dy) continue; const nx = cx + dx, ny = cy + dy; if (nx < 0 || ny < 0 || nx >= gc || ny >= gr) continue;
-      const ni = ny * gc + nx; if (!d[ni]) continue; if (dx && dy && (!d[cy * gc + nx] || !d[ny * gc + cx])) continue;
+      const ni = ny * gc + nx; if (!d[ni] || shut[ni]) continue; if (dx && dy && (!d[cy * gc + nx] || !d[ny * gc + cx])) continue;
       const nc = cost[cur] + (dx && dy ? 1.414 : 1);
-      if (nc < cost[ni]) { cost[ni] = nc; came[ni] = cur; open.push([nc + hfn(ni), ni]); }
+      if (nc < cost[ni]) { cost[ni] = nc; came[ni] = cur; push(nc + hfn(ni), ni); }
     }
   }
   if (came[gi] === -1 && gi !== si) return null;
@@ -1787,16 +1859,20 @@ function findPath(G, x0, y0, x1, y1) {
 // ══════════════════════════════════════════ Lek and A ══════════════════════════════════════════
 const lek = { x: HOUSES[0].door.x, y: HOUSES[0].door.y + 22, dir: 0, dist: 0, moving: false, path: null, onArrive: null, trail: [] };
 const ale = { x: 0, y: 0, dir: 0, dist: 0, moving: false };
+// Lek and A are always in the scene on screen; each ignores the other when stepping (she keeps to his shoulder)
+for (const p of [lek, ale]) Object.defineProperty(p, 'scene', { get: () => scene });
+lek.ignore = ale; ale.ignore = lek;
 const STRIDE = 8; // world units per pose: four poses make one full, obvious stride
 const frameOf = (p) => (p.moving ? WALK_SEQ[Math.floor(p.dist / STRIDE) % 4] : 1);
-const sceneScale = () => (scene === 'world' ? 1 : FS);
-const walkOK = (x, y) => (scene === 'world' ? walkWorld(x, y) : walkRoom(ROOMS[scene], x, y));
+const scaleOf = (sc) => (sc === 'world' ? 1 : FS);
+const sceneScale = () => scaleOf(scene);
+const walkOK = (x, y) => gridFor(scene).walk(x, y);
 // A walks at Lek's right shoulder, a little behind: facing the viewer his right is to screen-left.
 function shoulder(dir) { const s = sceneScale(); return [[-20, -5], [20, 6], [6, -13], [-6, 13]][dir].map((v) => v * s); }
 function placeA() { const [ox, oy] = shoulder(lek.dir); ale.x = lek.x + ox; ale.y = lek.y + oy; if (!walkOK(ale.x, ale.y)) { ale.x = lek.x; ale.y = lek.y - 2; } ale.dir = lek.dir; ale.moving = false; lek.trail = []; }
 let follow = false, marker = null;
 function goTo(x, y, cb) {
-  follow = true;
+  follow = true; lek.reach = null;
   lek.path = findPath(gridFor(scene), lek.x, lek.y, x, y); lek.onArrive = cb || null;
   if (lek.path && lek.path.length) return true;
   lek.path = null; lek.onArrive = null;
@@ -1808,11 +1884,32 @@ const keys = new Set();
 const stick = { x: 0, y: 0, id: null };
 const TOUCH = matchMedia('(pointer: coarse)').matches;
 function dirOf(vx, vy) { return Math.abs(vx) > Math.abs(vy) * 1.1 ? (vx > 0 ? 3 : 2) : (vy > 0 ? 0 : 1); }
+// Nobody walks through walls, furniture, water or people (§2). A step that would bring someone closer than
+// arm's length to another person is refused; they steer round instead, trying a little left and right of the way.
+const ROOMY = 9; // feet apart, in world units
+function everyone() { return [lek, ale, ...villagers]; }
+function crowded(p, x, y) {
+  const r = ROOMY * scaleOf(p.scene);
+  for (const q of everyone()) {
+    if (q === p || q === p.ignore || q.sit || q.scene !== p.scene) continue;
+    const d = Math.hypot(x - q.x, y - q.y); if (d < r && d < Math.hypot(p.x - q.x, p.y - q.y)) return true;
+  }
+  return false;
+}
+const TURNS = [0, .6, -.6, 1.2, -1.2, 1.8, -1.8];
 function moveBy(p, vx, vy, dt) {
-  const x0 = p.x, y0 = p.y, nx = p.x + vx * dt, ny = p.y + vy * dt;
-  if (walkOK(nx, p.y)) p.x = nx; if (walkOK(p.x, ny)) p.y = ny;
+  const x0 = p.x, y0 = p.y, ok = gridFor(p.scene).walk, want = Math.hypot(vx, vy) * dt;
+  // walls slide you along them; only a person in the way turns you aside
+  for (const a of TURNS) {
+    const c = Math.cos(a), s = Math.sin(a), ux = (vx * c - vy * s) * dt, uy = (vx * s + vy * c) * dt;
+    let x = x0, y = y0;
+    if (ok(x + ux, y) && !crowded(p, x + ux, y)) x += ux;
+    if (ok(x, y + uy) && !crowded(p, x, y + uy)) y += uy;
+    const m = Math.hypot(x - x0, y - y0);
+    if (a === 0 ? !crowded(p, x0 + ux, y0 + uy) || m > want * .6 : m > want * .5) { p.x = x; p.y = y; break; }
+  }
   const moved = Math.hypot(p.x - x0, p.y - y0);
-  p.moving = moved > .01; if (p.moving) { p.dist += moved / sceneScale(); p.dir = dirOf(p.x - x0, p.y - y0); }
+  p.moving = moved > .01; if (p.moving) { p.dist += moved / scaleOf(p.scene); p.dir = dirOf(p.x - x0, p.y - y0); }
   return moved;
 }
 function updatePeople(dt) {
@@ -1825,8 +1922,10 @@ function updatePeople(dt) {
   if (!ix && !iy && sm > .18) { ix = stick.x; iy = stick.y; }
   const byKeys = !!(ix || iy);
   let left = 0;
-  if (byKeys) { lek.path = null; lek.onArrive = null; follow = true; }
+  if (byKeys) { lek.path = null; lek.onArrive = null; lek.reach = null; follow = true; }
   else if (lek.path && lek.path.length) {
+    // walking over to someone: close enough is there
+    if (lek.reach && Math.hypot(lek.x - lek.reach.p.x, lek.y - lek.reach.p.y) < lek.reach.r) { lek.path = null; lek.reach = null; const cb = lek.onArrive; lek.onArrive = null; lek.moving = false; if (cb) cb(); return; }
     const tgt = lek.path[0], dx = tgt.x - lek.x, dy = tgt.y - lek.y, d = Math.hypot(dx, dy);
     if (d < 4 * s) { lek.path.shift(); if (!lek.path.length) { lek.path = null; const cb = lek.onArrive; lek.onArrive = null; lek.moving = false; if (cb) cb(); return; } }
     else { ix = dx / d; iy = dy / d; }
@@ -1835,6 +1934,8 @@ function updatePeople(dt) {
   // Shift runs; on the phone a long walk runs by itself, as in v1. Body makes the run faster.
   const run = keys.has('shift') || sm > .92 || left > 260 * s, sp = (run ? 175 + 15 * bodyTier() : 105) * s;
   if (ix || iy) { const l = Math.hypot(ix, iy); moveBy(lek, ix / l * sp, iy / l * sp, dt); } else lek.moving = false;
+  // held up by someone in the way for long enough: find another way round them
+  if ((ix || iy) && !lek.moving && lek.path) { lek.stuck = (lek.stuck || 0) + dt; if (lek.stuck > .8) { lek.stuck = 0; const end = lek.path[lek.path.length - 1]; const p = findPath(gridFor(scene), lek.x, lek.y, end.x, end.y); if (p) lek.path = p; } } else lek.stuck = 0;
   if (lek.moving) { lek.trail.push({ x: lek.x, y: lek.y }); if (lek.trail.length > 40) lek.trail.shift(); }
   // walking into a door goes in; walking out over the threshold goes out
   if (byKeys && lek.moving) {
@@ -1846,7 +1947,7 @@ function updatePeople(dt) {
   let tx = lek.x + ox, ty = lek.y + oy;
   if (!walkOK(tx, ty)) { const back = lek.trail[Math.max(0, lek.trail.length - 8)]; if (back) { tx = back.x; ty = back.y; } else { tx = ale.x; ty = ale.y; } }
   const dx = tx - ale.x, dy = ty - ale.y, d = Math.hypot(dx, dy);
-  if (d > 2.5 * s) { const v = Math.min(d * 4, sp * 1.25, Math.max(sp, 105 * s) * 1.25); moveBy(ale, dx / d * v, dy / d * v, dt); if (!ale.moving && d > 60 * s) placeA(); }
+  if (d > 2.5 * s) { const v = Math.min(d * 4, sp * 1.25, Math.max(sp, 105 * s) * 1.25); moveBy(ale, dx / d * v, dy / d * v, dt); if (!ale.moving && d > 60 * s && !crowded(ale, tx, ty)) placeA(); }
   else { ale.moving = false; if (!lek.moving) ale.dir = lek.dir; }
   // the camera follows him outside, until a drag takes it
   if (scene === 'world' && follow && !gesture) {
@@ -1856,16 +1957,205 @@ function updatePeople(dt) {
 }
 function drawPersonAt(c, who, p, s, t) {
   c.save(); c.translate(p.x, p.y); if (s !== 1) c.scale(s, s);
-  DRAW_PERSON[who](c, p.dir, frameOf(p), t, who === 'lek' ? { build: lekBuild() } : { lanternLit: SKY.n > .15 });
+  if (DRAW_PERSON[who]) DRAW_PERSON[who](c, p.dir, frameOf(p), t, who === 'lek' ? { build: lekBuild() } : { lanternLit: SKY.n > .15 });
+  else { drawVillager(c, p.dir, frameOf(p), t, { id: who, nod: nodOf(p), seated: !!p.perch }); if (p.act && !p.moving) YARD[p.house].fx(c, p, t); }
   c.restore();
 }
 // where A's lantern light is, for the glow pass
 function lanternAt(s) { const k = LOOKS.a.h / 42, [x, y] = lanternPos(ale.dir, k, 0); return [ale.x + x * s, ale.y + y * s]; }
 function hitPerson(x, y, s) {
-  for (const [who, p, h] of [['lek', lek, 50], ['a', ale, 54]]) if (Math.abs(x - p.x) < 12 * s && y > p.y - h * s && y < p.y + 6 * s) return who;
+  for (const [who, p, h] of [['lek', lek, 50], ['a', ale, 54], ...villagers.filter((v) => v.scene === scene && !v.sit).map((v) => [v.id, v, VLOOK[v.id].h + 8])]) if (Math.abs(x - p.x) < 12 * s && y > p.y - h * s && y < p.y + 6 * s) return who;
   return null;
 }
 function enter(h) { if (busy) return; lek.path = null; lek.onArrive = null; goRoom(h.id); }
+
+// ══════════════════════════════════════════ the villagers on their feet (05_movement.md §3) ══════════════════════════════════════════
+// Every move is walked, through doors, by the path. Directors spend the day in their own yard doing something in
+// character and go in at 18:00 Copenhagen (the evening brief's time, until step 5 brings the brief); apprentices run
+// errands round the clearing and go home to their bench. Called to a meeting, the directors walk to the
+// Longhouse-sala and sit in their own chair. Words wait for the village round (step 5): for now they nod.
+//
+// Each yard: where the director stands (x, y, facing), what's in the way (foot, blocked on the walk map),
+// the thing drawn there, and the small motion of the work.
+const YARD = {
+  // Thorn tends the forge of the app: an anvil and a little forge; sparks gold and red, the two fires together
+  halohorns: { x: 984, y: 1130, dir: 3, foot: [994, 1112, 1032, 1132],
+    prop(c, t) {
+      c.save(); c.translate(1012, 1128); shadowE(c, 4, 2, 24, 5);
+      box(c, 2, -24, 22, 24, '#4a4440', .3); c.fillStyle = '#1a1210'; c.fillRect(7, -18, 12, 8);
+      c.fillStyle = '#ff8a3a'; c.globalAlpha = .55 + .25 * Math.sin(t * 5); c.fillRect(8, -16, 10, 5); c.globalAlpha = 1;
+      box(c, -14, -8, 10, 8, '#3a2618', .35); box(c, -18, -13, 18, 5, '#6a6e76', .3); c.fillStyle = '#8a8e96'; c.fillRect(-22, -13, 4, 2.5);
+      c.restore();
+    },
+    fx(c, p, t) {
+      const u = (t * 1.1) % 1, up = u < .7 ? u / .7 : 1 - (u - .7) / .3, a = -1.9 + up * 1.5;
+      c.save(); c.translate(6, -24); c.rotate(-a); c.fillStyle = '#4a3626'; c.fillRect(0, -1, 12, 2); box(c, 10, -3.5, 5, 7, '#7a7e86', .3); c.restore();
+      if (u > .96 || u < .05) for (let i = 0; i < 6; i++) { c.fillStyle = i % 2 ? '#e0414f' : '#f6c75a'; c.fillRect(16 + Math.cos(i * 1.7) * 8 * (u < .5 ? u + .05 : 0), -12 - Math.abs(Math.sin(i * 2.3)) * 9 * (u < .5 ? u + .05 : 0) * 8, 1.4, 1.4); }
+    } },
+  // Malee hangs washing on a line by the cottage
+  baby: { x: 412, y: 1046, dir: 1, foot: [370, 1026, 452, 1036],
+    prop(c, t) {
+      for (const x of [376, 446]) { c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(x, 1034, 5, 1.6, 0, 0, 7); c.fill(); box(c, x - 1.5, 1000, 3, 34, '#5a3a24', .4); }
+      c.strokeStyle = '#d6c4aa'; c.lineWidth = .8; c.beginPath(); c.moveTo(376, 1002); c.quadraticCurveTo(411, 1008, 446, 1002); c.stroke();
+      [[384, '#d6c4aa', 10], [398, '#f4b0a0', 8], [424, '#e8dcc0', 12], [437, '#b8706c', 7]].forEach(([x, col, h], i) => { const s = Math.sin(t * 1.4 + i) * 1.2; c.fillStyle = col; c.beginPath(); c.moveTo(x - 4, 1004.5); c.lineTo(x + 4, 1005); c.lineTo(x + 4 + s, 1005 + h); c.lineTo(x - 4 + s, 1004.5 + h); c.fill(); c.fillStyle = 'rgba(0,0,0,.18)'; c.fillRect(x + 1 + s, 1005, 3, h); });
+    },
+    fx(c, p, t) { const u = Math.sin(t * 1.2); c.fillStyle = '#e8dcc0'; c.save(); c.translate(-2, -46 - u * 2); c.rotate(u * .1); c.fillRect(-5, 0, 10, 8); c.restore(); } },
+  // Garr chops wood at a block beside the sauna
+  fitness: { x: 408, y: 794, dir: 3, foot: [414, 782, 440, 798],
+    prop(c) {
+      c.save(); c.translate(428, 796); shadowE(c, 0, 1, 14, 3.5); box(c, -9, -10, 18, 10, '#6a4a30', .3); c.fillStyle = '#a07a50'; c.beginPath(); c.ellipse(0, -10, 9, 2.6, 0, 0, 7); c.fill();
+      for (let i = 0; i < 4; i++) box(c, 14 + (i % 2) * 3, -5 - i * 4.4, 14, 4, i % 2 ? '#7a5232' : '#6a4428', .3);
+      c.restore();
+    },
+    fx(c, p, t) {
+      const u = (t * .8) % 1, up = u < .6 ? u / .6 : Math.max(0, 1 - (u - .6) / .12), a = -1.5 + up * 2.6;
+      c.save(); c.translate(5, -26); c.rotate(-a); c.fillStyle = '#6a4a30'; c.fillRect(0, -1, 18, 2); c.fillStyle = '#9aa0a8'; c.beginPath(); c.moveTo(15, -1); c.lineTo(21, -5); c.lineTo(21, 4); c.lineTo(15, 1); c.fill(); c.restore();
+      if (u > .72 && u < .82) { c.fillStyle = '#c0965e'; for (let i = 0; i < 4; i++) c.fillRect(18 + i * 3, -14 - i * 2 * (u - .72) * 40, 1.6, 1); }
+    } },
+  // Hekka watches the sky, her back to us, now and then a star answers
+  esoteric: { x: 584, y: 532, dir: 1,
+    prop() {},
+    fx(c, p, t) { for (let i = 0; i < 3; i++) { const a = .5 + .5 * Math.sin(t * 1.3 + i * 2.1); c.fillStyle = `rgba(230,226,255,${.6 * a})`; c.fillRect(-10 + i * 10, -66 - i * 5, 1.6, 1.6); } } },
+  // Nokka scribbles, sitting on a crate below the tower
+  hibrations: { x: 992, y: 444, dir: 0, perch: true,
+    prop() {},
+    fx(c, p, t) { c.fillStyle = '#e8dcc0'; c.fillRect(-5, -20, 10, 7); c.strokeStyle = '#ece6da'; c.lineWidth = .8; const w = Math.sin(t * 9) * 2; c.beginPath(); c.moveTo(2 + w, -16); c.lineTo(5 + w, -24); c.stroke(); } },
+  // Rak lounges by the lanterns, on a log beside a post hung with a gold lantern and a red one
+  cupidity: { x: 1416, y: 542, dir: 0, perch: true, foot: [1434, 530, 1446, 540],
+    prop(c, t) {
+      c.save(); c.translate(1440, 538); shadowE(c, 0, 1, 7, 2); box(c, -1.5, -46, 3, 46, '#3a2618', .4); c.fillStyle = '#3a2618'; c.fillRect(-1.5, -46, 16, 2);
+      [['#f6c75a', 4], ['#e0414f', 12]].forEach(([col, x], i) => { const s = Math.sin(t * 1.2 + i) * 1.5; c.strokeStyle = '#2a1a10'; c.lineWidth = .6; c.beginPath(); c.moveTo(x, -44); c.lineTo(x + s, -38); c.stroke(); c.fillStyle = col; c.beginPath(); c.ellipse(x + s, -34, 3, 4, 0, 0, 7); c.fill(); });
+      c.restore();
+    },
+    fx() {} },
+  // Ngoen counts coins at a crate in front of the shop
+  kaching: { x: 1382, y: 790, dir: 0, foot: [1368, 794, 1396, 808],
+    prop(c) {
+      c.save(); c.translate(1382, 806); shadowE(c, 0, 1, 16, 3.5); box(c, -13, -14, 26, 14, '#7a5a3a', .3); c.fillStyle = '#5a3a24'; c.fillRect(-13, -9, 26, 1.2);
+      c.fillStyle = '#e2b655'; for (const [x, n] of [[-7, 4], [-1, 3], [6, 5]]) for (let i = 0; i < n; i++) c.fillRect(x - 2, -15.5 - i * 1.4, 4, 1.1);
+      c.restore();
+    },
+    fx(c, p, t) { const u = (t * .9) % 1; if (u < .5) { const x = lerp(-5, 5, u * 2), y = -26 - Math.sin(u * 2 * Math.PI) * 6; c.fillStyle = '#f2c46d'; c.beginPath(); c.ellipse(x, y, 1.4, 1.4 * Math.abs(Math.cos(u * 18)), 0, 0, 7); c.fill(); } } },
+  // Paa fishes from the bank below the boathouse
+  hobby: { x: 1204, y: 846, dir: 2,
+    prop() {},
+    fx(c, p, t) {
+      const b = Math.sin(t * 1.6) * 1.2;
+      c.strokeStyle = '#7a5a34'; c.lineWidth = 1; c.beginPath(); c.moveTo(-2, -22); c.lineTo(-26, -40); c.stroke();
+      c.strokeStyle = 'rgba(230,230,230,.5)'; c.lineWidth = .4; c.beginPath(); c.moveTo(-26, -40); c.quadraticCurveTo(-34, -22, -38, -10 + b); c.stroke();
+      c.fillStyle = '#e0414f'; c.beginPath(); c.arc(-38, -10 + b, 1.4, 0, 7); c.fill();
+    } },
+};
+// Errands: the yards in front of each door, the jetty bank below the boathouse, the green, the landing at the stepping stones
+const ERRANDS = [...HOUSES.map((h) => ({ x: h.door.x, y: h.door.y + 38 })), { x: 1236, y: 880 }, { x: 900, y: 900 }, { x: 640, y: 640 }, { x: 1160, y: 640 }, { x: 600, y: 900 }, { x: 1200, y: 760 }];
+// The meeting (a test button until step 6): the directors walk to their own chairs in the Longhouse-sala
+let meeting = false;
+
+// Copenhagen time: night runs from 18:00 to 06:00 (?at=… shifts it for checking, and runs on from there)
+const cphFmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Copenhagen', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+function cph() { const p = Object.fromEntries(cphFmt.formatToParts(AT ? new Date(AT.getTime() + T * 1000) : new Date()).map((x) => [x.type, x.value])); const min = +p.hour * 60 + +p.minute; return { min, day: `${p.year}-${p.month}-${p.day}`, eve: (min - 1080 + 1440) % 1440 }; }
+let clock = { min: 0, day: '', eve: 0 };
+const isNight = () => clock.eve < 720;
+
+const villagers = [...VLOOK_IDS].flatMap((house) => ['d', 'a'].map((role) => ({ id: `${house}.${role}`, house, role, scene: house, x: 220, y: 600, dir: 0, dist: 0, moving: false, legs: [], path: null, then: null, sit: null, perch: false, act: false, mode: null, wait: 0, nodT: -9, near: false, greet: null, stuck: 0 })));
+const doorOf = (id) => (id === 'hub' ? HUB : HOUSES.find((h) => h.id === id));
+const objIn = (room, f) => ROOMS[room].objects.find(f);
+function wantMode(v) { if (meeting && v.role === 'd') return 'meet'; if (isNight()) return 'home'; return v.role === 'd' ? 'yard' : 'errand'; }
+// where a mode takes them: [scene, x, y, what to do there]
+function goalOf(v, mode) {
+  if (mode === 'meet') { const o = objIn('hub', (o) => o.kind === 'chair' && o.who === v.house); return ['hub', o.x, o.y + 14, () => sitDown(v, o)]; }
+  if (mode === 'home') { const o = objIn(v.house, (o) => o.kind === (v.role === 'd' ? 'deskSeat' : 'bench')); return [v.house, o.x, o.y + 18, () => sitDown(v, o)]; }
+  if (mode === 'yard') { const Y = YARD[v.house]; return ['world', Y.x, Y.y, () => { v.act = true; v.perch = !!Y.perch; v.dir = Y.dir; }]; }
+  const R = rng(Math.floor(Math.random() * 1e9)), opts = ERRANDS.filter((e) => !v.last || e !== v.last), e = opts[Math.floor(R() * opts.length)];
+  v.last = e; return ['world', e.x + (R() - .5) * 30, e.y + (R() - .5) * 16, () => { v.wait = T + 3 + R() * 7; }];
+}
+function sitDown(v, o) { v.sit = o; v.dir = 0; v.moving = false; }
+function standUp(v) {
+  if (v.sit) { const o = v.sit; v.sit = null; v.x = o.x; v.y = o.y + (o.kind === 'chair' ? 14 : 18); }
+  // never stand up inside something: step out to the nearest open floor
+  const G = gridFor(v.scene); if (!G.walk(v.x, v.y)) { const n = nearestOpen(G, Math.floor(v.x / G.cell), Math.floor(v.y / G.cell)); if (n) { v.x = (n[0] + .5) * G.cell; v.y = (n[1] + .5) * G.cell; } }
+  v.perch = false; v.act = false;
+}
+// Walk there by the path. Between scenes the way always goes through the doors: out over the room's
+// threshold, across the clearing to the other door, and in.
+function travel(v, sc, x, y, then) {
+  standUp(v);
+  v.legs = [];
+  if (v.scene !== sc && v.scene !== 'world') v.legs.push({ x: 220, y: RH - 10, out: true });
+  if (v.scene !== sc && sc !== 'world') { const d = doorOf(sc).door; v.legs.push({ x: d.x, y: d.y, into: sc }); }
+  v.legs.push({ x, y });
+  v.path = null; v.then = then; v.stuck = 0;
+}
+function decide(v) { v.mode = wantMode(v); const [sc, x, y, then] = goalOf(v, v.mode); travel(v, sc, x, y, then); }
+// Placed where they'd be by now, without a walk: only when the village starts, or comes back after a long time away.
+function settle(v) {
+  v.mode = wantMode(v); v.greet = null; standUp(v);
+  const [sc, x, y, then] = goalOf(v, v.mode);
+  v.scene = sc; v.x = x; v.y = y; v.legs = []; v.path = null; v.then = null; v.moving = false; v.dir = 0; then(); v.wait = T + Math.random() * 8;
+}
+function walkOn(v, dt) {
+  const leg = v.legs[0], s = scaleOf(v.scene);
+  if (!v.path) {
+    v.path = findPath(gridFor(v.scene), v.x, v.y, leg.x, leg.y);
+    if (!v.path) { v.legs = []; v.then = null; v.mode = null; v.wait = T + 5; return; } // no way there: wait, then think again
+  }
+  const tgt = v.path[0];
+  if (!tgt || Math.hypot(tgt.x - v.x, tgt.y - v.y) < 3 * s) {
+    if (tgt) v.path.shift();
+    if (v.path.length) return;
+    // a leg done: through the door if it was one
+    v.legs.shift(); v.path = null;
+    if (leg.out) { const d = doorOf(v.scene).door; v.scene = 'world'; v.x = d.x; v.y = d.y + 6; v.dir = 0; }
+    if (leg.into) { v.scene = leg.into; v.x = 220; v.y = RH - 14; v.dir = 1; }
+    if (!v.legs.length) { v.moving = false; const f = v.then; v.then = null; if (f) f(); }
+    return;
+  }
+  let left = 0; for (let i = 0, a = v; i < v.path.length; i++) { left += Math.hypot(v.path[i].x - a.x, v.path[i].y - a.y); a = v.path[i]; }
+  const sp = (left > 520 * s || v.mode === 'meet' && left > 300 * s ? 150 : 64) * s; // far off and wanted, they run
+  const dx = tgt.x - v.x, dy = tgt.y - v.y, d = Math.hypot(dx, dy);
+  moveBy(v, dx / d * sp, dy / d * sp, dt);
+  if (!v.moving) { v.stuck += dt; if (v.stuck > 1.2) { v.stuck = 0; v.path = null; v.tries = (v.tries || 0) + 1; if (v.tries > 4) { v.tries = 0; v.legs = []; v.mode = null; v.wait = T + 2 + Math.random() * 3; } } }
+  else { v.stuck = 0; v.tries = 0; }
+}
+function faceTo(v, x, y) { v.dir = dirOf(x - v.x, y - v.y); }
+function nodOf(v) { const u = (T - v.nodT) / .7; return u > 0 && u < 1 ? Math.sin(u * Math.PI) * 1.4 : 0; }
+// pairs of apprentices who've met today (they don't stop twice for each other)
+function metToday(a, b) { const m = village.met; return !!(m && m.day === clock.day && m.pairs.includes([a.id, b.id].sort().join('|'))); }
+function markMet(a, b) { if (!village.met || village.met.day !== clock.day) village.met = { day: clock.day, pairs: [] }; village.met.pairs.push([a.id, b.id].sort().join('|')); saveVillage(); }
+let clockT = 0, away = 0;
+function updateVillagers(dt) {
+  if ((clockT -= dt) <= 0) { clock = cph(); clockT = 1; }
+  const ls = sceneScale();
+  for (const v of villagers) {
+    // a change of mode (night falls, a meeting is called) interrupts what they're doing
+    if (!v.greet && v.mode !== wantMode(v) && (v.mode !== null || T > v.wait)) decide(v);
+    // Lek passes within a few steps: they turn to look at him and nod. An apprentice on an errand stops a moment.
+    const near = v.scene === scene && !lookout && Math.hypot(v.x - lek.x, v.y - lek.y) < 46 * ls;
+    if (near && !v.near) { v.nodT = T + .15; if (v.mode === 'errand' && v.legs.length) v.hold = T + 1.8; }
+    v.near = near;
+    if (v.greet) {
+      if (T > v.greet.until) { v.greet = null; } else { faceTo(v, v.greet.with.x, v.greet.with.y); v.moving = false; continue; }
+    }
+    if (v.hold > T) { v.moving = false; if (!v.sit) faceTo(v, lek.x, lek.y); continue; }
+    if (v.legs.length) walkOn(v, dt);
+    else { v.moving = false; if (v.mode === 'errand' && T > v.wait) decide(v); if (near && !v.sit && !v.perch) faceTo(v, lek.x, lek.y); else if (!near && v.act) v.dir = YARD[v.house].dir; }
+  }
+  // two apprentices who haven't met today: stop, face each other, nod (their words come with the village round)
+  const free = villagers.filter((v) => v.role === 'a' && v.mode === 'errand' && v.scene === 'world' && !v.greet && v.legs.length);
+  for (let i = 0; i < free.length; i++) for (let j = i + 1; j < free.length; j++) {
+    const a = free[i], b = free[j];
+    if (a.greet || b.greet || Math.hypot(a.x - b.x, a.y - b.y) > 30 || metToday(a, b)) continue;
+    a.greet = { with: b, until: T + 3.2 }; b.greet = { with: a, until: T + 3.2 }; a.nodT = T + .3; b.nodT = T + .5; markMet(a, b);
+  }
+}
+// window lights: a director home at night keeps the lamp lit a while, then the houses dim one by one
+function houseDim(id) {
+  if (!isNight()) return false;
+  const v = villagers.find((x) => x.house === id && x.role === 'd');
+  return !!(v && v.sit && v.scene === id) && clock.eve > 30 + ROOM_ORDER.indexOf(id) * 8;
+}
+// coming back to the app after a while: everyone is where the hours took them
+document.addEventListener('visibilitychange', () => { if (document.hidden) away = Date.now(); else if (away && Date.now() - away > 120000) { clock = cph(); villagers.forEach(settle); } });
 
 // ══════════════════════════════════════════ the character sheets ══════════════════════════════════════════
 const CHAR_PLACEHOLDER = { lek: { name: 'You', title: '', lines: [] }, a: { name: 'Your companion', title: '', lines: [] } };
@@ -2015,7 +2305,7 @@ function resize() {
 let rT; addEventListener('resize', () => { clearTimeout(rT); rT = setTimeout(resize, 120); });
 
 // room camera: the whole room fits the screen, centred
-function roomView() { const z = Math.min(vw / RW, (vh - 20) / RH); return { z, ox: (vw - RW * z) / 2, oy: Math.max(0, (vh - RH * z) / 2 + 10) }; }
+function roomView() { if (picturing) return { z: 2, ox: 0, oy: 0 }; const z = Math.min(vw / RW, (vh - 20) / RH); return { z, ox: (vw - RW * z) / 2, oy: Math.max(0, (vh - RH * z) / 2 + 10) }; }
 
 // ── input: drag to pan, pinch to zoom, tap to enter ──
 const pointers = new Map();
@@ -2025,6 +2315,7 @@ cv.addEventListener('pointerdown', (e) => {
   pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   if (pointers.size === 1) gesture = { moved: false, t0: performance.now(), x0: e.clientX, y0: e.clientY, multi: false, lastX: e.clientX, lastY: e.clientY, lastT: performance.now() };
   else if (gesture) { gesture.multi = true; startPinch(); }
+  if (painting && pointers.size === 1) paintStart(e.clientX, e.clientY); else paintAt = null;
   cam.vx = cam.vy = 0;
 });
 function pinchState() { const [a, b] = [...pointers.values()]; return { dist: Math.hypot(a.x - b.x, a.y - b.y), mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 } }; }
@@ -2034,6 +2325,7 @@ cv.addEventListener('pointermove', (e) => {
   pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   if (!gesture) return;
   if (Math.hypot(e.clientX - gesture.x0, e.clientY - gesture.y0) > 9) gesture.moved = true;
+  if (painting && paintAt && pointers.size === 1) { paintTo(e.clientX, e.clientY); return; }
   if (scene !== 'world' || lookout) return;
   if (pointers.size >= 2) {
     const p = pinchState();
@@ -2056,6 +2348,7 @@ function endPointer(e) {
   if (pointers.size) return;
   const g = gesture; gesture = null;
   if (!g) return;
+  if (painting) { paintAt = null; cam.vx = cam.vy = 0; return; }
   if (e.type === 'pointerup' && !g.moved && !g.multi && performance.now() - g.t0 < 600) { cam.vx = cam.vy = 0; tap(e.clientX, e.clientY); }
   else if (performance.now() - g.lastT > 80) { cam.vx = cam.vy = 0; }
 }
@@ -2097,7 +2390,7 @@ function tap(sx, sy) {
       if (Math.hypot(lek.x - CLIFF.foot.x, lek.y - CLIFF.foot.y) < 30 || !goTo(CLIFF.foot.x, CLIFF.foot.y, climb)) climb();
       return;
     }
-    if (who) { openChar(who); return; }
+    if (who) { meetPerson(who); return; }
     const h = hitHouse(wx, wy);
     if (h) {
       // step 1's tap-to-enter becomes Lek walking there
@@ -2110,7 +2403,7 @@ function tap(sx, sy) {
   }
   const v = roomView(), rx = (sx - v.ox) / v.z, ry = (sy - v.oy) / v.z;
   const who = hitPerson(rx, ry, FS);
-  if (who) { openChar(who); return; }
+  if (who) { meetPerson(who); return; }
   const o = hitObject(sx, sy);
   if (!o) { if (ry > WB && ry < RH) { marker = { x: rx, y: ry, t: T }; goTo(rx, ry); } return; }
   if (o.door) { if (lek.y > RH - 40 || !goTo(220, RH - 6, leaveRoom)) leaveRoom(); return; }
@@ -2125,8 +2418,7 @@ function useObject(o) {
   if (o.act.open) setTimeout(() => openTemple(o.act.open, o.act.title), 140);
   else if (o.act.letters) openSheet();
   else if (o.act.declare) openChar('lek', true, 'declare');
-  else if (o.act.say === 'seat' && VLOOK[scene + '.d']) openChar(scene + '.d');
-  else if (o.act.say === 'bench' && VLOOK[scene + '.a']) openChar(scene + '.a');
+  else if ((o.act.say === 'seat' || o.act.say === 'bench') && sitting(o)) openChar(sitting(o).id);
   else if (o.act.say) say(line(scene, o.act.say), o.label, R.c);
 }
 // Enter or E: go in at a door, use what's within reach, or step out over the threshold
@@ -2193,7 +2485,7 @@ function openTemple(src, title) {
 function closeTempleLayer() { const f = $('templeFrame'); $('temple').hidden = true; if (f) { f.remove(); gatherPractice(); } }
 function openSheet() { history.pushState({ room: scene, layer: 'letters' }, ''); renderLetters(); sync(); $('sheet').classList.add('open'); $('sheet').setAttribute('aria-hidden', 'false'); }
 function closeSheetLayer() { $('sheet').classList.remove('open'); $('sheet').setAttribute('aria-hidden', 'true'); document.activeElement && document.activeElement.blur(); }
-const backOrClose = () => { closeTempleLayer(); closeSheetLayer(); closeCharLayer(); if (history.state && history.state.layer) history.back(); };
+const backOrClose = () => { closeTempleLayer(); closeSheetLayer(); closeCharLayer(); closeSettingsLayer(); if (history.state && history.state.layer) history.back(); };
 $('charClose').onclick = backOrClose;
 $('templeBack').onclick = backOrClose;
 $('sheetClose').onclick = backOrClose;
@@ -2204,6 +2496,7 @@ addEventListener('popstate', (e) => {
   const s = e.state || {};
   if (s.layer !== 'temple') closeTempleLayer();
   if (s.layer !== 'letters') closeSheetLayer();
+  if (s.layer !== 'settings') closeSettingsLayer();
   if (s.layer !== 'char') closeCharLayer(); else if (!charWho) openChar(s.who, false, s.mode);
   if (lookout && !s.lookout) climbDown(false);
   const want = s.room || 'world';
@@ -2224,10 +2517,104 @@ function say(text, title, col) {
 }
 function hideSay() { $('say').classList.remove('on'); }
 
+// Tap a person: Lek walks over to them, then their card opens (talking comes in step 6).
+function meetPerson(who) {
+  const v = villagers.find((x) => x.id === who), s = sceneScale();
+  if (!v || Math.hypot(lek.x - v.x, lek.y - v.y) < 34 * s) { openChar(who); return; }
+  const d = Math.hypot(lek.x - v.x, lek.y - v.y), tx = v.x + (lek.x - v.x) / d * 18 * s, ty = v.y + (lek.y - v.y) / d * 18 * s;
+  if (!goTo(tx, ty, () => { faceTo(lek, v.x, v.y); openChar(who); })) openChar(who);
+  else lek.reach = { p: v, r: 30 * s };
+}
+
+// ══════════════════════════════════════════ the walk map: overlay, painting, a picture to colour in ══════════════════════════════════════════
+// 05_movement.md §1. Settings → the overlay shows every scene's walk grid, green walkable and red blocked.
+// Lek can paint it here, or save a picture, colour it in, and hand it to the PC (village/bridge/maps.js reads it).
+let painting = false, paintAt = null, paintWalk = true, paintWide = true, paintUndo = [], picturing = false;
+const showMap = () => painting || picturing || !!village.settings.showMap;
+function drawMapOverlay(c, G, x0, y0, x1, y1) {
+  const { cell, gc, gr, d } = G, c0 = Math.max(0, Math.floor(x0 / cell)), c1 = Math.min(gc - 1, Math.floor(x1 / cell)), r0 = Math.max(0, Math.floor(y0 / cell)), r1 = Math.min(gr - 1, Math.floor(y1 / cell));
+  for (const [on, col] of [[1, 'rgba(70,220,120,.42)'], [0, 'rgba(235,60,70,.42)']]) {
+    c.fillStyle = col; c.beginPath();
+    for (let r = r0; r <= r1; r++) for (let q = c0; q <= c1; q++) if (d[r * gc + q] === on) c.rect(q * cell, r * cell, cell, cell);
+    c.fill();
+  }
+  // faint cell lines, so a painting finger can see the grain
+  c.strokeStyle = 'rgba(0,0,0,.18)'; c.lineWidth = cell / 16; c.beginPath();
+  for (let q = c0; q <= c1 + 1; q++) { c.moveTo(q * cell, r0 * cell); c.lineTo(q * cell, (r1 + 1) * cell); }
+  for (let r = r0; r <= r1 + 1; r++) { c.moveTo(c0 * cell, r * cell); c.lineTo((c1 + 1) * cell, r * cell); }
+  c.stroke();
+}
+// screen point → the scene's own units
+function scenePoint(sx, sy) { if (scene === 'world') return [sx / cam.z + cam.x, sy / cam.z + cam.y]; const v = roomView(); return [(sx - v.ox) / v.z, (sy - v.oy) / v.z]; }
+function paintCell(x, y) {
+  const G = gridFor(scene), q = Math.floor(x / G.cell), r = Math.floor(y / G.cell), w = paintWide ? 1 : 0;
+  for (let dr = -w; dr <= w; dr++) for (let dq = -w; dq <= w; dq++) { const qq = q + dq, rr = r + dr; if (qq >= 0 && rr >= 0 && qq < G.gc && rr < G.gr) G.d[rr * G.gc + qq] = paintWalk ? 1 : 0; }
+}
+function paintStart(sx, sy) { paintUndo.push(gridFor(scene).d.slice()); if (paintUndo.length > 40) paintUndo.shift(); paintAt = scenePoint(sx, sy); paintCell(...paintAt); }
+function paintTo(sx, sy) {
+  const [x, y] = scenePoint(sx, sy), [px, py] = paintAt, G = gridFor(scene), n = Math.max(1, Math.ceil(Math.hypot(x - px, y - py) / (G.cell / 2)));
+  for (let i = 1; i <= n; i++) paintCell(lerp(px, x, i / n), lerp(py, y, i / n));
+  paintAt = [x, y];
+}
+function setPainting(on) {
+  painting = on; paintUndo = [];
+  $('paint').hidden = !on; $('stick').hidden = on || !TOUCH; $('hud').style.visibility = on ? 'hidden' : '';
+  if (on) { lek.path = null; say(scene === 'world' ? 'Paint with one finger. Two fingers move and zoom.' : 'Paint with one finger.', 'Painting the walk map'); }
+}
+$('pWalk').onclick = () => { paintWalk = true; $('pWalk').classList.add('on'); $('pBlock').classList.remove('on'); };
+$('pBlock').onclick = () => { paintWalk = false; $('pBlock').classList.add('on'); $('pWalk').classList.remove('on'); };
+$('pFine').onclick = () => { paintWide = !paintWide; $('pFine').textContent = paintWide ? 'Wide' : 'Fine'; };
+$('pUndo').onclick = () => { const d = paintUndo.pop(); if (d) gridFor(scene).d.set(d); };
+// Done: keep it on the phone at once, and send it to the PC (content/maps/<scene>.json) on the next sync
+$('pDone').onclick = () => {
+  const G = gridFor(scene), changed = paintUndo.length && paintUndo[0].some((v, i) => v !== G.d[i]);
+  setPainting(false);
+  if (!changed) return;
+  village.maps[scene] = { cell: G.cell, rows: gridRows(G), at: new Date().toISOString() }; saveVillage();
+  const bytes = new Uint8Array(Math.ceil(G.d.length / 8)); G.d.forEach((v, i) => { if (v) bytes[i >> 3] |= 1 << (i & 7); });
+  outbox = outbox.filter((m) => !(m.kind === 'map' && m.to === scene));
+  outbox.push({ id: crypto.randomUUID(), kind: 'map', to: scene, text: JSON.stringify({ cell: G.cell, gc: G.gc, gr: G.gr, bits: btoa(String.fromCharCode(...bytes)) }), at: new Date().toISOString() });
+  save(K.outbox, outbox); sync();
+  say(village.bridge ? 'Saved here. It goes to the PC with the next sync.' : 'Saved on this phone. It goes to the PC once the phone is paired.', 'The walk map');
+};
+// A picture of the scene with its grid over it, in daylight, at a fixed size: one cell is 16 pixels outside and
+// 20 in a room. Colour in what should change, green or red, and hand it to the PC.
+function makePicture() {
+  const G = gridFor(scene), k = scene === 'world' ? 1 : 2, pc = document.createElement('canvas');
+  pc.width = G.gc * G.cell * k; pc.height = G.gr * G.cell * k;
+  const keep = { vw, vh, dpr, cam: { ...cam } };
+  picturing = true; vw = pc.width; vh = pc.height; dpr = 1;
+  try {
+    if (scene === 'world') { cam.x = 0; cam.y = 0; cam.z = 1; renderWorld(pc.getContext('2d'), 0, 0); } else renderRoom(pc.getContext('2d'), 0);
+  } finally { picturing = false; ({ vw, vh, dpr } = keep); Object.assign(cam, keep.cam); }
+  return pc;
+}
+function savePicture() {
+  makePicture().toBlob((b) => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `lysningen-map-${scene}.png`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }, 'image/png');
+}
+
+// ── the settings panel ──
+function renderSettings() {
+  $('showMap').checked = !!village.settings.showMap;
+  const pending = Object.keys(village.maps), here = roomTitle(scene === 'world' ? 'hub' : scene);
+  $('paintMap').textContent = 'Paint this map · ' + (scene === 'world' ? 'the clearing' : here.split(' · ').pop());
+  $('mapNote').textContent = pending.length ? `Painted on this phone, waiting for the PC: ${pending.map((id) => (id === 'world' ? 'the clearing' : roomTitle(id).split(' · ')[0])).join(', ')}.` : '';
+  $('meetBtn').textContent = meeting ? 'End the meeting' : 'Call the directors to the Longhouse-sala';
+}
+function openSettings() { history.pushState({ room: scene, layer: 'settings' }, ''); renderSettings(); $('settings').classList.add('open'); $('settings').setAttribute('aria-hidden', 'false'); }
+function closeSettingsLayer() { $('settings').classList.remove('open'); $('settings').setAttribute('aria-hidden', 'true'); }
+$('gear').onclick = openSettings;
+$('settingsClose').onclick = () => backOrClose();
+$('showMap').onchange = () => { village.settings.showMap = $('showMap').checked; saveVillage(); };
+$('paintMap').onclick = () => { if (lookout) return; backOrClose(); setTimeout(() => setPainting(true), 60); };
+$('mapPicture').onclick = savePicture;
+$('meetBtn').onclick = () => { meeting = !meeting; renderSettings(); say(meeting ? 'The directors are on their way to the Longhouse-sala.' : 'The meeting is over. Back to their day.', 'The meeting'); };
+
 // ══════════════════════════════════════════ simulation & render ══════════════════════════════════════════
 function update(dt) {
   T += dt;
   updatePeople(dt);
+  updateVillagers(dt);
   if (scene === 'world' && !gesture && (cam.vx || cam.vy)) {
     cam.x += cam.vx * dt; cam.y += cam.vy * dt; clampCam();
     const k = Math.pow(.04, dt); cam.vx *= k; cam.vy *= k;
@@ -2240,7 +2627,7 @@ function update(dt) {
 }
 
 function renderWorld(c, n, dusk) {
-  c.setTransform(1, 0, 0, 1, 0, 0); c.fillStyle = '#070918'; c.fillRect(0, 0, cv.width, cv.height);
+  c.setTransform(1, 0, 0, 1, 0, 0); c.fillStyle = '#070918'; c.fillRect(0, 0, c.canvas.width, c.canvas.height);
   if (lookout) {
     // from the cliff the whole clearing fits the width: sky above it, the forest floor below
     const [top] = skyCols(n, dusk), y0 = -cam.y * cam.z * dpr, y1 = (H - cam.y) * cam.z * dpr;
@@ -2296,7 +2683,9 @@ function renderWorld(c, n, dusk) {
   c.fillStyle = '#3d5536'; c.beginPath(); c.ellipse(ISL.x, ISL.y, ISL.rx, ISL.ry, 0, 0, 7); c.fill();
   c.fillStyle = 'rgba(120,150,90,.25)'; c.beginPath(); c.ellipse(ISL.x - 14, ISL.y - 8, ISL.rx * .7, ISL.ry * .5, 0, 0, 7); c.fill();
   // y-sorted
-  const things = HOUSES.map((h) => ({ y: h.y, d: () => { c.save(); c.translate(h.x, h.y); DRAW[h.kind](c, T, n > .25); c.restore(); } }));
+  const things = HOUSES.map((h) => ({ y: h.y, d: () => { c.save(); c.translate(h.x, h.y); DRAW[h.kind](c, T, n > .25 && !houseDim(h.id)); c.restore(); } }));
+  for (const h of HOUSES) { const Y = YARD[h.id]; things.push({ y: Y.foot ? Y.foot[3] : Y.y - 1, d: () => Y.prop(c, T) }); }
+  for (const v of villagers) if (v.scene === 'world' && v.x > vx0 - 40 && v.x < vx1 + 40 && v.y > vy0 - 10 && v.y < vy1 + 70) things.push({ y: v.y, d: () => drawPersonAt(c, v.id, v, 1, T) });
   things.push({ y: HUB.y, d: () => drawLonghouse(c, T, n > .25) });
   things.push({ y: HUB.y + 1, d: () => drawRing(c, n, T) });
   things.push({ y: CLIFF.y, d: () => drawCliff(c, T) });
@@ -2310,7 +2699,7 @@ function renderWorld(c, n, dusk) {
   // light
   c.globalCompositeOperation = 'lighter';
   const L = .25 + .75 * n;
-  for (const h of HOUSES) for (const [dx, dy, r] of LIGHTS[h.kind]) glow(c, h.x + dx, h.y + dy, r, h.kind === 'temple' ? '#ffcf7a' : h.c, .32 * L);
+  for (const h of HOUSES) { const dim = houseDim(h.id) ? .3 : 1; for (const [dx, dy, r] of LIGHTS[h.kind]) glow(c, h.x + dx, h.y + dy, r, h.kind === 'temple' ? '#ffcf7a' : h.c, .32 * L * dim); }
   glow(c, HUB.x, HUB.y - 36, 110, '#ff9a4a', .3 * L + .05); for (let i = 0; i < 6; i++) glow(c, HUB.x - 74 + i * 29.3, HUB.y - 40, 22, '#ffcf7a', .22 * L);
   const hh = HOUSES[0]; glow(c, hh.x - 4, hh.y - 180, 34, '#f6c75a', .45); glow(c, hh.x + 4, hh.y - 180, 34, '#e0414f', .42);
   glow(c, HUB.x - 3, HUB.y - 136, 26, '#f6c75a', .35); glow(c, HUB.x + 3, HUB.y - 136, 26, '#e0414f', .32);
@@ -2328,6 +2717,8 @@ function renderWorld(c, n, dusk) {
   for (const f of fireflies) { const a = (.15 + .85 * n) * (.4 + .6 * Math.max(0, Math.sin(T * 2 + f.p))); glow(c, f.x, f.y, 7, '#e8f59a', .6 * a); }
   if (pressed && pressed.id && T - pressed.t < .5) { const h = pressed.id === 'hub' ? HUB : HOUSES.find((x) => x.id === pressed.id); glow(c, h.x, h.y - 60, 130, h.c, .35 * (1 - (T - pressed.t) / .5)); }
   c.globalCompositeOperation = 'source-over';
+  if (showMap()) drawMapOverlay(c, gridFor('world'), vx0, vy0, vx1, vy1);
+  if (picturing) return;
   // labels in screen space, so they stay readable at any zoom
   c.setTransform(dpr, 0, 0, dpr, 0, 0);
   c.textAlign = 'center';
@@ -2341,7 +2732,7 @@ function renderWorld(c, n, dusk) {
   for (const l of leaves) { l.y += l.vy * DT; l.x += Math.sin(T * l.f + l.p) * 20 * DT + l.vx * DT; l.a += l.va * DT; if (l.y > vh + 10) { l.y = -10; l.x = Math.random() * vw; } c.save(); c.translate(l.x, l.y); c.rotate(l.a); c.fillStyle = l.c; c.globalAlpha = .7 - .35 * n; c.beginPath(); c.ellipse(0, 0, 4, 2.2, 0, 0, 7); c.fill(); c.restore(); }
   c.globalAlpha = 1;
   const vg = c.createRadialGradient(vw / 2, vh / 2, Math.min(vw, vh) * .45, vw / 2, vh / 2, Math.max(vw, vh) * .78); vg.addColorStop(0, 'rgba(5,6,16,0)'); vg.addColorStop(1, 'rgba(5,6,16,.5)'); c.fillStyle = vg; c.fillRect(0, 0, vw, vh);
-  if (!village.settings.seenHint) {
+  if (!village.settings.seenHint && !painting) {
     c.font = '500 13px Inter, system-ui, sans-serif'; const msg = TOUCH ? 'Tap or use the stick to walk · tap a house to go in · tap Lek' : 'Tap or WASD to walk · tap a house to go in · tap Lek';
     const w = Math.min(vw - 32, c.measureText(msg).width + 28), y = vh - Math.max(26, 26) - 18;
     c.fillStyle = 'rgba(14,16,34,.82)'; c.beginPath(); c.roundRect(vw / 2 - w / 2, y - 16, w, 32, 16); c.fill();
@@ -2351,7 +2742,7 @@ function renderWorld(c, n, dusk) {
 
 function renderRoom(c, n) {
   const R = ROOMS[scene], v = roomView();
-  c.setTransform(1, 0, 0, 1, 0, 0); c.fillStyle = '#04050c'; c.fillRect(0, 0, cv.width, cv.height);
+  c.setTransform(1, 0, 0, 1, 0, 0); c.fillStyle = '#04050c'; c.fillRect(0, 0, c.canvas.width, c.canvas.height);
   const s = dpr * v.z; c.setTransform(s, 0, 0, s, v.ox * dpr, v.oy * dpr);
   c.save(); c.beginPath(); c.rect(0, 0, RW, RH); c.clip();
   drawShell(c, R, n, T);
@@ -2360,6 +2751,7 @@ function renderRoom(c, n) {
   // furniture, the threshold and the people, back to front
   const items = R.objects.map((o) => ({ z: o.z, d: () => { c.save(); c.translate(o.x, o.y); c.scale(FS, FS); FURN[o.kind](c, o, R, T, n); c.restore(); } }));
   items.push({ z: 752, d: () => drawThreshold(c, n, T) }, { z: lek.y, d: () => drawPersonAt(c, 'lek', lek, FS, T) }, { z: ale.y, d: () => drawPersonAt(c, 'a', ale, FS, T) });
+  for (const v of villagers) if (v.scene === scene && !v.sit) items.push({ z: v.y, d: () => drawPersonAt(c, v.id, v, FS, T) });
   items.sort((a, b) => a.z - b.z).forEach((it) => it.d());
   // the same light as outside: dim with the sky, lamps glow at night, daylight through the windows
   c.fillStyle = `rgba(8,12,38,${.08 + .42 * n})`; c.fillRect(0, 0, RW, RH);
@@ -2372,7 +2764,9 @@ function renderRoom(c, n) {
   drawMarker(c, FS);
   if (pressed && pressed.o && T - pressed.t < .5) glow(c, pressed.o.x, pressed.o.y - pressed.o.h * FS / 2, Math.max(pressed.o.w, pressed.o.h) * FS * .8, R.c, .35 * (1 - (T - pressed.t) / .5));
   c.globalCompositeOperation = 'source-over';
+  if (showMap()) drawMapOverlay(c, gridFor(scene), 0, 0, RW, RH);
   c.restore();
+  if (picturing) return;
   // labels
   c.setTransform(dpr, 0, 0, dpr, 0, 0); c.textAlign = 'center';
   c.font = '500 10.5px Inter, system-ui, sans-serif';
@@ -2420,6 +2814,7 @@ $('stick').hidden = !TOUCH;
 resize();
 updateSky();
 placeA();
+clock = cph(); villagers.forEach(settle);
 gatherPractice();
 powers();
 history.replaceState(null, '', location.pathname + location.search); // a fresh start is the world
