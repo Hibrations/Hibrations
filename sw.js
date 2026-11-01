@@ -6,7 +6,7 @@
 // It never touches localStorage or IndexedDB — Lek's history lives there.
 //
 // Bump VERSION on every deploy that changes a file below.
-const VERSION = '2026-11-01.5';
+const VERSION = '2026-11-01.6';
 const CACHE = 'halohorns-' + VERSION;
 
 const SHELL = [
@@ -70,7 +70,9 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== location.origin || !url.pathname.startsWith(new URL(self.registration.scope).pathname)) return;
-  e.respondWith(isPage(req, url) ? networkFirst(req) : cacheFirst(req));
+  // the village's generated art (step 6b) changes whenever Lek drops in a new picture, so it's network-first like a page
+  const fresh = isPage(req, url) || url.pathname.includes('/village/art/');
+  e.respondWith(fresh ? networkFirst(req) : cacheFirst(req));
 });
 
 async function networkFirst(req) {

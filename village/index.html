@@ -368,10 +368,32 @@ function pair(link) {
 // On mobile data the background sync runs every few minutes instead of every 30 s; sending or opening still syncs at once.
 function onMobileData() { const c = navigator.connection; return !!(c && c.type === 'cellular'); }
 
+// Step 6b: the PC page. The bridge serves this same file at http://localhost:<port>/Hibrations/village/, and that page
+// pairs itself: the bridge hands its token only to a page it served, on the PC itself. Its storage is its own
+// (another origin), so the practice ledger, the declared tiers and Lek's own chat lines come through the bridge.
+const IS_PC = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) && location.pathname.startsWith('/Hibrations/');
+async function pcPair() {
+  if (!IS_PC) return false;
+  try {
+    const r = await fetch('/pc-pair', { cache: 'no-store' }); if (!r.ok) return false;
+    const j = await r.json(); if (typeof j.token !== 'string' || j.token.length < 32) return false;
+    village.bridge = { url: location.origin, token: j.token, pairedAt: new Date().toISOString(), pc: true }; saveVillage(); return true;
+  } catch { return false; }
+}
+// what the bridge mirrors: temple sessions as the sheet keeps them, and declared tiers (the higher tier stands)
+function mirrorIn(m) {
+  if (!m || !Array.isArray(m.rows)) return;
+  const L = village.sheet.ledger;
+  for (const r of m.rows) if (Array.isArray(r) && typeof r[0] === 'string' && !L[r[0]]) L[r[0]] = [r[1], r[2], r[3], r[4]];
+  for (const [id, x] of Object.entries(m.declared || {})) if (x && (!village.sheet.declared[id] || village.sheet.declared[id].tier < x.tier)) village.sheet.declared[id] = { tier: x.tier, at: x.at };
+  if (Number.isInteger(m.upto)) village.mirrorSeen = m.upto;
+}
+
 let syncing = false;
 let bridgeState = { cls: '', text: 'not paired' };
 async function sync() {
-  if (!village.bridge || syncing) return;
+  if (syncing) return;
+  if (!village.bridge && !(await pcPair())) return;
   if (!navigator.onLine) { bridgeState = { cls: 'warn', text: 'offline — letters wait' }; renderLetters(); return; }
   syncing = true;
   bridgeState = { cls: 'warn', text: 'reaching the PC…' }; renderLetters();
@@ -386,8 +408,9 @@ async function sync() {
       method: 'POST',
       signal: ctrl.signal,
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + village.bridge.token },
-      body: JSON.stringify({ outbox, after: cursor.seq, digest: dg, contentHash: village.content ? village.content.hash : null }),
+      body: JSON.stringify({ outbox, after: cursor.seq, digest: dg, contentHash: village.content ? village.content.hash : null, mirror: village.mirrorSeen || 0 }),
     });
+    if (res.status === 401 && IS_PC) { village.bridge = null; saveVillage(); bridgeState = { cls: 'warn', text: 'pairing with the bridge again…' }; return; }
     if (res.status === 401) { bridgeState = { cls: 'bad', text: 'the PC doesn’t know this phone — pair again' }; return; }
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
@@ -398,6 +421,7 @@ async function sync() {
     for (const e of data.events || []) {
       if (JOB_KINDS.has(e.kind)) applyJob(e);
       else if (e.kind === 'meeting') { if (e.data) village.meet = e.data; }
+      else if (e.kind === 'said') { if (e.who) addTalk(e.who, { id: e.id, at: e.at, me: true, text: e.text }); } // step 6b: Lek's own line, from the other device
       else if (e.who && (e.kind === 'reply' || e.kind === 'thread')) talkIn(e); // step 6: threads live in IndexedDB
       else if (!known.has(e.id)) village.events.push(e);
     }
@@ -406,7 +430,8 @@ async function sync() {
     if (data.push) village.pushKey = data.push;
     cursor = { seq: Math.max(cursor.seq, data.cursor || 0) };
     save(K.cursor, cursor);
-    if (data.content && data.content.hash && data.content.data) { village.content = data.content; mapsArrived(); }
+    if (data.content && data.content.hash && data.content.data) { village.content = data.content; mapsArrived(); syncPeople(true); }
+    if (data.mirror) mirrorIn(data.mirror);
     village.lastSync = new Date().toISOString();
     saveVillage();
     bridgeState = { cls: 'ok', text: 'reached' };
@@ -454,6 +479,7 @@ function renderLetters() {
 $('send').onclick = sendLetter;
 $('syncNow').onclick = sync;
 $('pairBtn').onclick = () => pair($('pairLink').value.trim());
+if (IS_PC) $('pairBox').querySelector('p').textContent = 'This is the PC page. It pairs itself with the bridge as soon as the bridge is running (village.bat).';
 $('unpair').onclick = (e) => {
   e.preventDefault();
   if (!confirm('Unpair this phone from the PC? Letters waiting stay queued.')) return;
@@ -490,7 +516,8 @@ function applyJob(e) {
 function strHash(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); return (h >>> 0).toString(36); }
 function digestOut() {
   const keys = Object.keys(village.sheet.ledger), from = village.ledgerSent || 0, upto = Math.min(keys.length, from + 800);
-  const d = { ledger: keys.slice(from, upto).filter((id) => !id.startsWith('told:')).map((id) => ({ id, row: village.sheet.ledger[id] })), upto };
+  const d = { ledger: keys.slice(from, upto).filter((id) => !id.startsWith('told:')).map((id) => ({ id, row: village.sheet.ledger[id] })), upto, declared: village.sheet.declared };
+  if (IS_PC) return d;
   const P = { hrv: load('portal_hrv_v1', null), schedule: load('portal_flow_schedule_v1', null), plan: load('portal_plan_v1', null), extras: load('portal_flow_extras_v1', null) };
   const h = strHash(JSON.stringify(P));
   if (h !== village.portalSent) Object.assign(d, P, { portalHash: h });
@@ -1211,7 +1238,7 @@ for (const id of ROOM_ORDER) for (const o of ROOMS[id].objects) {
   if (o.z == null) o.z = o.y;
   if (o.kind === 'bench') o.hh = 66;
   // the seat and the bench are labelled with who sits there, once their names arrive from the PC
-  if ((o.kind === 'deskSeat' || o.kind === 'bench') && VLOOK_IDS.has(id)) { const who = id + (o.kind === 'bench' ? '.a' : '.d'), base = o.label; Object.defineProperty(o, 'label', { get: () => { const v = village.content && village.content.data && village.content.data.villagers && village.content.data.villagers[who]; return v ? v.name : base; } }); }
+  if ((o.kind === 'deskSeat' || o.kind === 'bench') && VLOOK_IDS.has(id)) { const who = id + (o.kind === 'bench' ? '.a' : '.d'), base = o.label; Object.defineProperty(o, 'label', { get: () => { const v = village.content && village.content.data && village.content.data.villagers && village.content.data.villagers[who]; return v && !v.retired ? v.name : base; } }); }
 }
 
 // ── furniture ──
@@ -1496,7 +1523,7 @@ function twinLamp(c, t) {
 }
 const FURN = {
   deskSeat: (c, o, R, t) => { const v = sitting(o); deskSeat(c, R.c, t, v && (() => sitter(c, v, 0, -30, t))); },
-  bench: (c, o, R, t) => { const v = sitting(o); bench(c, !!VLOOK[scene + '.a']); if (v) sitter(c, v, -16, -8, t); },
+  bench: (c, o, R, t) => { const v = sitting(o); bench(c, !isRetired(scene + '.a')); if (v) sitter(c, v, -16, -8, t); }, // a retired apprentice's sash waits folded on the bench
   chair: (c, o, R, t) => { const v = sitting(o); chair(c, HOUSES.find((h) => h.id === o.who).c, v && (() => sitter(c, v, 0, -10, t))); },
   headChair: (c, o, R, t) => chair(c, '#f2c46d', lek.sit && (() => { c.save(); c.translate(0, -10 + Math.sin(t * 1.1) * .25); drawLek(c, 0, 1, t, { seated: true, build: lekBuild() }); c.restore(); })), altar: (c, o, R, t) => altar(c, t), mirror: (c, o, R, t) => bronzeMirror(c, t),
   board: (c, o, R) => board(c, R.c), chest: (c) => chest(c), cushion: (c, o, R, t) => cushion(c, t), herbs: (c) => herbs(c), telescope: (c, o, R, t) => telescope(c, t),
@@ -1518,7 +1545,7 @@ function sleepingCat(c, x, y, t) {
 }
 // A villager seated at their place, breathing slowly; they nod when Lek comes near.
 function sitter(c, v, x, y, t) { c.save(); c.translate(x, y + Math.sin(t * 1.3 + x) * .25); drawVillager(c, 0, 1, t, { id: v.id, seated: true, noSeat: true, nod: nodOf(v), scroll: v.role === 'd' && doneHouses.has(v.house) }); c.restore(); }
-const sitting = (o) => villagers.find((v) => v.sit === o && v.scene === scene);
+const sitting = (o) => (refMode ? null : villagers.find((v) => v.sit === o && v.scene === scene));
 // lights inside each room, relative to the object: [dx, dy, radius, colour, strength at night, strength by day]
 const FURN_LIGHT = {
   altar: [[0, -86, 70, '#ffcf7a', .5, .25], [0, -66, 40, '#ff8a5a', .3, .12]], twinLamp: [[0, -12, 34, '#ffcf7a', .45, .15]], hearth: [[0, -24, 150, '#ff9a4a', .5, .3]],
@@ -1846,6 +1873,75 @@ function drawLantern(c, dir, g, side, right, t, lit) {
 }
 const DRAW_PERSON = { lek: drawLek, a: drawAletheia };
 
+// ══════════════════════════════════════════ the generated art (step 6b) ══════════════════════════════════════════
+// Lek makes the 16-bit Thai-Viking images by hand in ChatGPT; the PC's bridge/art.js snaps each one to crisp pixels and
+// lists it in art/art.json. Until an image has arrived, the village draws its own art in its place. Pixel art is drawn
+// unsmoothed, at its own size in game units (px game units per art pixel), so the pixels stay square.
+const ARTI = {}; let artIx = null;
+const art = (id) => ARTI[id] || null, artOf = (id) => (artIx && artIx.assets[id]) || null;
+fetch('art/art.json', { cache: 'no-cache' }).then((r) => (r.ok ? r.json() : null)).then((ix) => {
+  if (!ix || !ix.assets) return; artIx = ix;
+  for (const [id, a] of Object.entries(ix.assets)) { const im = new Image(); im.onload = () => { ARTI[id] = im; }; im.src = `art/${id}.png?h=${a.hash}`; }
+}).catch(() => {});
+function drawArt(c, id, x, y, alpha = 1) {
+  const im = art(id), a = artOf(id); if (!im || !a) return false;
+  const sm = c.imageSmoothingEnabled; c.imageSmoothingEnabled = false; c.globalAlpha = alpha;
+  c.drawImage(im, x, y, a.w * a.px, a.h * a.px); c.globalAlpha = 1; c.imageSmoothingEnabled = sm; return true;
+}
+// a building at its anchor (the origin): the day picture, and the night picture over it as the sky darkens
+function drawSprite(c, base, n) {
+  const d = artOf(base + '-day'); if (!art(base + '-day')) return false;
+  drawArt(c, base + '-day', -d.ax * d.px, -d.ay * d.px);
+  const m = artOf(base + '-night'); if (n > .02 && m && art(base + '-night')) drawArt(c, base + '-night', -m.ax * m.px, -m.ay * m.px, Math.min(1, n));
+  return true;
+}
+// a walking frame from a 12-pose sheet: rows toward, away, left, right; three steps each
+function sheetFrame(c, who, dir, frame) {
+  const id = 'sheet-' + who, im = art(id), a = artOf(id); if (!im || !a || !a.sheet) return false;
+  const S = a.sheet, f = clamp(frame | 0, 0, S.cols - 1), r = clamp(dir | 0, 0, S.rows - 1);
+  const sm = c.imageSmoothingEnabled; c.imageSmoothingEnabled = false;
+  c.drawImage(im, f * S.cw, r * S.ch, S.cw, S.ch, -S.ax * a.px, -S.ay * a.px, S.cw * a.px, S.ch * a.px);
+  c.imageSmoothingEnabled = sm; return true;
+}
+// with a room picture the furniture is in the picture: only who sits on it is still drawn
+const SEAT_AT = { deskSeat: [0, -30], bench: [-16, -8], chair: [0, -10] };
+function seatedOnly(c, o, R, t) {
+  if (o.kind === 'headChair') { if (lek.sit) { c.save(); c.translate(0, -10 + Math.sin(t * 1.1) * .25); drawLek(c, 0, 1, t, { seated: true, build: lekBuild() }); c.restore(); } return; }
+  const at = SEAT_AT[o.kind], v = at && sitting(o); if (v) sitter(c, v, at[0], at[1], t);
+}
+// The layout references Lek uploads to ChatGPT with each prompt: the village's own drawing of that thing, on magenta,
+// at the size ChatGPT makes and in the frame bridge/art.js expects. Saved to village/art/refs/ from the PC.
+let refMode = false;
+function artRef(id) {
+  const k = document.createElement('canvas'), c = k.getContext('2d'), mag = '#ff00ff';
+  const size = (w, h, uw, uh) => { k.width = w; k.height = h; c.fillStyle = mag; c.fillRect(0, 0, w, h); c.setTransform(w / uw, 0, 0, h / uh, 0, 0); };
+  const keep = { scene, sit: lek.sit }; refMode = true; lek.sit = null;
+  try {
+    if (id === 'world') {
+      size(1536, 1024, 1950, 1300); c.translate(75, 0);
+      buildStatic(1); c.drawImage(back, 0, 0, W, H); c.drawImage(front, 0, FRONT_Y, W, H - FRONT_Y);
+      [[892, 874], [908, 852], [893, 830], [907, 808], [896, 788]].forEach(([x, y]) => { c.fillStyle = '#8a8b8f'; c.beginPath(); c.ellipse(x, y, 12, 5, 0, 0, 7); c.fill(); });
+      c.fillStyle = '#3d5536'; c.beginPath(); c.ellipse(ISL.x, ISL.y, ISL.rx, ISL.ry, 0, 0, 7); c.fill();
+    } else if (id.startsWith('house-')) {
+      const h = HOUSES.find((x) => x.id === id.slice(6)); size(1024, 1024, 320, 320); c.translate(160, 270); DRAW[h.kind](c, 0, false);
+    } else if (id === 'longhouse') { size(1024, 1024, 360, 360); c.translate(180 - HUB.x, 290 - HUB.y); drawLonghouse(c, 0, false); }
+    else if (id === 'cliff') { size(1024, 1024, 240, 240); c.translate(120 - CLIFF.x, 200 - CLIFF.y); drawCliff(c, 0); }
+    else if (id.startsWith('room-')) {
+      const rid = id.slice(5), R = ROOMS[rid]; size(1024, 1536, 520, 780); c.translate(40, 0); scene = rid;
+      drawShell(c, R, 0, 0);
+      if (rid === 'baby') { c.save(); c.translate(109, 262); c.scale(1.5, 1.5); sleepingCat(c, 0, 0, 0); c.restore(); }
+      R.lanterns.forEach((x, i) => hangingLantern(c, x, 0, i));
+      [...R.objects].sort((a, b) => a.z - b.z).forEach((o) => { c.save(); c.translate(o.x, o.y); c.scale(FS, FS); FURN[o.kind](c, o, R, 0, 0); c.restore(); });
+      drawThreshold(c, 0, 0);
+    } else if (id.startsWith('sheet-')) {
+      const who = id.slice(6); size(1024, 1536, 192, 288);
+      for (let r = 0; r < 4; r++) for (let f = 0; f < 3; f++) { c.save(); c.translate(f * 64 + 32, r * 72 + 66); DRAW_PERSON[who](c, r, f, 0, who === 'lek' ? { build: lekBuild() } : { lanternLit: true }); c.restore(); }
+    } else return null;
+  } finally { scene = keep.scene; lek.sit = keep.sit; refMode = false; }
+  return k.toDataURL('image/png');
+}
+window.__artRef = artRef;
+
 // ── The villagers (04_directors.md §1): a director and an apprentice per house, keyed '<house>.d' / '<house>.a'.
 // Directors wear their house colour with Nagavar gold; apprentices wear plain undyed wool and the saffron sash
 // knotted at the hip. Names and lines arrive from the PC; the looks are all the engine holds.
@@ -1867,7 +1963,11 @@ const VLOOK = {
   'kaching.a': { h: 38, skin: '#9a6a46', hair: '#1a1210', style: 'short', top: '#5e5444' },
   'hobby.a': { h: 37, skin: '#8a5a3a', hair: '#140f0c', style: 'knot', top: '#6c6250' },
   'baby.a': { h: 38, skin: '#b07a52', hair: '#2a1a12', style: 'tail', top: '#70624e' },
+  // Step 6b: Kham, the technical agent of the Longhouse-sala: brass spectacles, a scroll-case across his back, inky fingers
+  'hub.d': { h: 41, skin: '#9a6a46', hair: '#16100c', style: 'short', top: '#2e3f63', cut: 'tunic', trim: '#e2b655', ink: 1, legs: '#24242c', boots: '#161210', item: 'scrollcase', specs: 1, mouth: 'smile' },
 };
+// Step 6b (Lek, 2026-11-01): the apprentices are retired. The PC sends them as retired, and they leave the map.
+const isRetired = (id) => { const d = village.content && village.content.data && village.content.data.villagers; return !!(d && d[id] && d[id].retired); };
 for (const [id, L] of Object.entries(VLOOK)) if (id.endsWith('.a')) Object.assign(L, { cut: 'tunic', sash: 1, legs: '#3a342c', bind: '#6a5e4a', boots: '#241c14', mouth: 'smile' }, { ...L });
 function drawVillager(c, dir, frame, t, o = {}) {
   const L = VLOOK[o.id], g = pose(dir, frame, L.h), { k, p, side } = g, B = L.build || 1;
@@ -1882,6 +1982,9 @@ function drawVillager(c, dir, frame, t, o = {}) {
   // the Hobby director's rod rides over the shoulder, behind her when she faces you
   const rod = () => { c.strokeStyle = '#7a5a34'; c.lineWidth = .7 * k; c.beginPath(); c.moveTo(-side * 3 * k - (side ? 0 : 3 * k), hip + 4 * k); c.lineTo((side ? -side * 9 : 8) * k, sh - 20 * k); c.stroke(); c.strokeStyle = 'rgba(230,230,230,.5)'; c.lineWidth = .25 * k; c.beginPath(); c.moveTo((side ? -side * 9 : 8) * k, sh - 20 * k); c.lineTo((side ? -side * 10 : 9.5) * k, sh - 6 * k); c.stroke(); };
   if (L.item === 'rod' && dir !== 1) rod();
+  // Kham's scroll-case rides across his back, like the rod
+  const scase = () => { const x0 = side ? -side * 3.4 * k : -4.6 * k, x1 = side ? -side * 1 * k : 5.4 * k; c.strokeStyle = '#6a4424'; c.lineWidth = 2.2 * k; c.lineCap = 'round'; c.beginPath(); c.moveTo(x0, hip + 1 * k); c.lineTo(x1, sh - 2.6 * k); c.stroke(); c.strokeStyle = '#e2b655'; c.lineWidth = .5 * k; c.beginPath(); c.moveTo(x1 - .9 * k, sh - 1.6 * k); c.lineTo(x1 + .9 * k, sh - 3.2 * k); c.stroke(); c.lineCap = 'butt'; };
+  if (L.item === 'scrollcase' && dir !== 1) scase();
   // the Esoteric director's star cloak hangs behind
   const cloak = () => { const w = g.bw + 2 * k, hem = -6 * k; shaded(c, () => { c.moveTo(-g.bw + .5 * k, sh - 1 * k); c.lineTo(g.bw - .5 * k, sh - 1 * k); c.lineTo(w + 1.5 * k, hem); c.lineTo(-w - 1.5 * k, hem); c.closePath(); }, L.cloak, w * .4); c.fillStyle = 'rgba(230,230,255,.7)'; for (let i = 0; i < 9; i++) { const u = (i * .37) % 1, v = (i * .61) % 1; c.fillRect(lerp(-w, w, u), lerp(sh + 2 * k, hem - 1 * k, v), .45 * k, .45 * k); } };
   if (L.cloak && dir !== 1) cloak();
@@ -1921,6 +2024,7 @@ function drawVillager(c, dir, frame, t, o = {}) {
   }
   if (L.satchel) { c.strokeStyle = dk(L.satchel, .2); c.lineWidth = .7 * k; c.beginPath(); c.moveTo(side ? -side * 2 * k : (dir === 0 ? -1 : 1) * g.bw * .8, sh); c.lineTo(side ? side * 1 * k : (dir === 0 ? 1 : -1) * g.bw * .7, hip + 1 * k); c.stroke(); if (dir !== 1) box(c, (side ? -side * 3 : dir === 0 ? 3.6 : -6.6) * k, hip - .5 * k, 3.2 * k, 3 * k, L.satchel, .3); }
   if (L.item === 'rod' && dir === 1) rod();
+  if (L.item === 'scrollcase' && dir === 1) scase();
   // arms; bare arms carry arm-rings or gold bands; the skald's fingers are inky
   const armOpt = { cuff: !L.bare };
   const ringFx = (hand) => { if (!L.rings && !L.bands) return; c.fillStyle = L.rings || L.bands; c.fillRect(hand[0] - 1.3 * k, hand[1] - 3.2 * k, 2.6 * k, .8 * k); };
@@ -1946,6 +2050,7 @@ function drawVillager(c, dir, frame, t, o = {}) {
     c.fillStyle = L.skin; c.beginPath(); c.moveTo(hx + side * hr * .9, hy - .2 * k); c.lineTo(hx + side * (hr + .8 * k), hy + 1.1 * k); c.lineTo(hx + side * hr * .9, hy + 1.6 * k); c.fill();
     c.fillStyle = '#0c0807'; c.fillRect(hx + side * 2.3 * k - .55 * k, hy + .1 * k, 1.1 * k, .55 * k);
   }
+  if (L.specs && dir !== 1) { c.strokeStyle = '#d8b25a'; c.lineWidth = .4 * k; c.beginPath(); if (side) c.arc(hx + side * 2.3 * k, hy + .4 * k, 1.1 * k, 0, 7); else { c.arc(hx - 1.7 * k, hy + .4 * k, 1.1 * k, 0, 7); c.moveTo(hx + 2.8 * k, hy + .4 * k); c.arc(hx + 1.7 * k, hy + .4 * k, 1.1 * k, 0, 7); } c.stroke(); }
   if (L.item === 'quill' && dir !== 1) { c.strokeStyle = '#ece6da'; c.lineWidth = .8 * k; c.beginPath(); const qx = hx + (side ? -side * 1 : 1) * hr * .9; c.moveTo(qx, hy - .4 * k); c.quadraticCurveTo(qx + 1.6 * k, hy - 3.4 * k, qx + 2.4 * k, hy - 5.6 * k); c.stroke(); }
   if (side) { const h = drawArm(c, dir, g, 0, -p, sleeve, L.skin, 3 * B, armOpt); ringFx(h); }
   // a director with finished work for Lek holds the scroll in front (step 5)
@@ -2296,7 +2401,8 @@ function updatePeople(dt) {
 function drawPersonAt(c, who, p, s, t) {
   if (who === 'lek' && lek.sit) return; // drawn in his chair at the head of the table
   c.save(); c.translate(p.x, p.y); if (s !== 1) c.scale(s, s);
-  if (DRAW_PERSON[who]) DRAW_PERSON[who](c, p.dir, frameOf(p), t, who === 'lek' ? { build: lekBuild() } : { lanternLit: SKY.n > .15 });
+  if (DRAW_PERSON[who] && sheetFrame(c, who, p.dir, frameOf(p))) { /* the generated sheet (step 6b) */ }
+  else if (DRAW_PERSON[who]) DRAW_PERSON[who](c, p.dir, frameOf(p), t, who === 'lek' ? { build: lekBuild() } : { lanternLit: SKY.n > .15 });
   else { drawVillager(c, p.dir, frameOf(p), t, { id: who, nod: nodOf(p), seated: !!p.perch, scroll: p.role === 'd' && doneHouses.has(p.house) }); if (p.act && !p.moving) YARD[p.house].fx(c, p, t); }
   c.restore();
   if (p.greet && p.greet.line && T >= p.greet.from && T < p.greet.to) bubble(c, p.x, p.y - (VLOOK[who].h + 6) * s, p.greet.line, s);
@@ -2426,7 +2532,17 @@ function cph() { const p = Object.fromEntries(cphFmt.formatToParts(AT ? new Date
 let clock = { min: 0, day: '', eve: 0 };
 const isNight = () => clock.eve < 720;
 
-const villagers = [...VLOOK_IDS].flatMap((house) => ['d', 'a'].map((role) => ({ id: `${house}.${role}`, house, role, scene: house, x: 220, y: 600, dir: 0, dist: 0, moving: false, legs: [], path: null, then: null, sit: null, perch: false, act: false, mode: null, wait: 0, nodT: -9, near: false, greet: null, stuck: 0 })));
+const person = (id, house, role) => ({ id, house, role, scene: house, x: 220, y: 600, dir: 0, dist: 0, moving: false, legs: [], path: null, then: null, sit: null, perch: false, act: false, mode: null, wait: 0, nodT: -9, near: false, greet: null, stuck: 0 });
+const villagers = [...VLOOK_IDS].flatMap((house) => ['d', 'a'].map((role) => person(`${house}.${role}`, house, role)));
+// Step 6b: retired apprentices leave; Kham ('hub.d', role 'k') moves in once the PC has sent his name
+function syncPeople(placeNew) {
+  for (let i = villagers.length - 1; i >= 0; i--) if (isRetired(villagers[i].id)) villagers.splice(i, 1);
+  const d = village.content && village.content.data && village.content.data.villagers;
+  if (d && d['hub.d'] && !villagers.some((v) => v.id === 'hub.d')) { const v = person('hub.d', 'hub', 'k'); villagers.push(v); if (placeNew) settle(v); }
+}
+syncPeople(false);
+// Kham keeps his place by the letter box in the Longhouse-sala, facing the room
+function khamSpot() { const G = gridFor('hub'); let x = 330, y = 560; if (!G.walk(x, y)) { const n = nearestOpen(G, Math.floor(x / G.cell), Math.floor(y / G.cell)); if (n) { x = (n[0] + .5) * G.cell; y = (n[1] + .5) * G.cell; } } return [x, y]; }
 const doorOf = (id) => (id === 'hub' ? HUB : HOUSES.find((h) => h.id === id));
 const objIn = (room, f) => ROOMS[room].objects.find(f);
 // Step 6: called over by Lek comes first; a meeting brings the directors to their chairs (and the apprentices to
@@ -2434,6 +2550,7 @@ const objIn = (room, f) => ROOMS[room].objects.find(f);
 function wantMode(v) {
   if (v.called) return 'called';
   const mk = meetKind();
+  if (v.role === 'k') return mk === 'green' ? 'green' : 'post';
   if (mk === 'sala' && v.role === 'd') return 'meet';
   if (mk === 'sala' && meetApprentices()) return 'wall';
   if (mk === 'green') return 'green';
@@ -2441,6 +2558,7 @@ function wantMode(v) {
 }
 // where a mode takes them: [scene, x, y, what to do there]
 function goalOf(v, mode) {
+  if (mode === 'post') { const [x, y] = khamSpot(); return ['hub', x, y, () => { v.dir = 0; }]; }
   if (mode === 'meet') { const o = objIn('hub', (o) => o.kind === 'chair' && o.who === v.house); return ['hub', o.x, o.y + 14, () => sitDown(v, o)]; }
   if (mode === 'called') { const [x, y] = calledSpot(v); return [scene, x, y, () => arrived(v)]; }
   if (mode === 'wall') { const [x, y] = wallSpot(v); return ['hub', x, y, () => { v.dir = 0; }]; }
@@ -2553,7 +2671,8 @@ function charText(who) {
 function villagerText(who) {
   const [house, r] = who.split('.'), v = village.content && village.content.data && village.content.data.villagers && village.content.data.villagers[who];
   const houseName = ROOMS[house].title.split(' · ')[0];
-  return { name: (v && v.name) || (r === 'd' ? 'The director' : 'The apprentice'), title: (r === 'd' ? 'Director · ' : 'Apprentice, lærling · ') + houseName, lines: v && v.line ? [v.line] : [] };
+  if (house === 'hub') return { name: (v && v.name) || 'The rune-reader', title: 'The technical agent · ' + houseName, lines: v && v.line ? [v.line] : [] };
+  return { name: (v && v.name) || (r === 'd' ? 'The director' : 'The apprentice'), title: (r === 'd' ? 'Director · ' : 'Apprentice, lærling · ') + houseName + (v && v.retired ? ' · retired for now' : ''), lines: v && v.line ? [v.line] : [] };
 }
 let charWho = null, charMode = null, auraLevel = 0;
 const dayLabel = (ms) => new Date(ms).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
@@ -3125,7 +3244,7 @@ function keepCalled(v) {
 }
 
 // ── the village list: a people button in the HUD (Lek, 2026-11-01). Tap a name to talk, hold it to call them over. ──
-const WHERE = { yard: 'in the yard', errand: 'about the village', home: 'at home', meet: 'in the Longhouse-sala', wall: 'in the Longhouse-sala', green: 'on the green', called: 'coming to you' };
+const WHERE = { post: 'in the Longhouse-sala', yard: 'in the yard', errand: 'about the village', home: 'at home', meet: 'in the Longhouse-sala', wall: 'in the Longhouse-sala', green: 'on the green', called: 'coming to you' };
 function openRoster() { history.pushState({ room: scene, layer: 'roster' }, ''); renderRoster(); $('roster').classList.add('open'); $('roster').setAttribute('aria-hidden', 'false'); }
 function closeRosterLayer() { $('roster').classList.remove('open'); $('roster').setAttribute('aria-hidden', 'true'); }
 function renderRoster() {
@@ -3133,14 +3252,17 @@ function renderRoster() {
   let html = '<section><h3>Gather</h3>';
   if (mk) html += `<p class="muted">${mk === 'green' ? 'Strings on the green: the village has gathered.' : 'A meeting in the Longhouse-sala.'}</p><button class="btn" id="rMeetOpen">Back to the ${mk === 'green' ? 'green' : 'meeting'}</button><button class="btn" id="rMeetEnd">End the ${mk === 'green' ? 'gathering' : 'meeting'}</button>`;
   else {
-    html += `<button class="btn" id="rMeet">Call a meeting in the Longhouse-sala</button><label class="toggle"><input type="checkbox" id="rAppr"${village.settings.meetApprentices ? ' checked' : ''}> Bring the apprentices too (they stand along the walls)</label>`;
+    html += '<button class="btn" id="rMeet">Call a meeting in the Longhouse-sala</button>' + (HOUSE_IDS.some((h) => !isRetired(h + '.a')) ? `<label class="toggle"><input type="checkbox" id="rAppr"${village.settings.meetApprentices ? ' checked' : ''}> Bring the apprentices too (they stand along the walls)</label>` : '');
     html += st >= 1 ? '<button class="btn" id="rGreen">Play Strings on the green</button><p class="muted">The village comes out to listen, and every director says in a line what they’re on.</p>' : '<p class="muted">Strings on the green wakes with the first Strings session.</p>';
   }
   html += '</section><section><h3>Everyone</h3><p class="muted">Tap a name to talk. Hold it to call them over.</p><div class="people">';
   const one = (id, name, sub, col) => `<button class="who" data-who="${id}" style="--c:${col}"><i></i><b>${esc(name)}</b><span>${esc(sub)}</span></button>`;
   html += one('a', talkName('a'), 'at your right shoulder' + (pcAway() && lettersHeld() ? ` · holds ${lettersHeld()} letter${lettersHeld() > 1 ? 's' : ''}` : ''), '#f2c46d');
+  const kham = villagers.find((x) => x.id === 'hub.d');
+  if (kham) html += one('hub.d', charText('hub.d').name, 'technical agent' + (kham.called ? (kham.arrived ? ' · with you' : ' · coming to you') : ' · ' + (WHERE[kham.mode] || 'in the Longhouse-sala')) + (pend.has('hub.d') ? ' · a letter waiting' : ''), ROOMS.hub.c);
   for (const h of HOUSE_IDS) for (const r of ['d', 'a']) {
     const id = `${h}.${r}`, v = villagers.find((x) => x.id === id), t = charText(id);
+    if (r === 'a' && isRetired(id)) continue;
     const where = v ? (v.called ? (v.arrived ? 'with you' : 'coming to you') : WHERE[v.mode] || '') : '';
     html += one(id, t.name, `${r === 'd' ? 'director' : 'apprentice'}, ${houseShort(h)}${where ? ' · ' + where : ''}${pend.has(id) ? ' · a letter waiting' : ''}`, ROOMS[h].c);
   }
@@ -3244,7 +3366,7 @@ function closeMeetLayer() { $('meetP').classList.remove('open'); $('meetP').setA
 function renderMeet() {
   const m = meetNow(); if (!m) { closeMeetLayer(); return; }
   $('meetTitle').textContent = m.kind === 'green' ? 'Strings on the green' : 'The Longhouse-sala';
-  const seats = HOUSE_IDS.map((h) => h + '.d').concat(m.apprentices ? HOUSE_IDS.map((h) => h + '.a') : []);
+  const seats = HOUSE_IDS.map((h) => h + '.d').concat(m.apprentices ? HOUSE_IDS.map((h) => h + '.a').filter((id) => !isRetired(id)) : []);
   if (meetTo !== 'all' && !seats.includes(meetTo)) meetTo = 'all';
   $('meetWho').innerHTML = `<button data-to="all" class="${meetTo === 'all' ? 'on' : ''}">Everyone</button>` + seats.map((id) => `<button data-to="${id}" class="${meetTo === id ? 'on' : ''}" style="--c:${talkColour(id)}">${esc(talkName(id))}</button>`).join('');
   for (const b of $('meetWho').querySelectorAll('button')) b.onclick = () => { meetTo = b.dataset.to; renderMeet(); };
@@ -3313,7 +3435,7 @@ function takeHead() {
 function wallSpot(v) { const i = HOUSE_IDS.indexOf(v.house), G = gridFor('hub'); let x = 96 + i * 36, y = WB + 26; if (!G.walk(x, y)) { const n = nearestOpen(G, Math.floor(x / G.cell), Math.floor(y / G.cell)); if (n) { x = (n[0] + .5) * G.cell; y = (n[1] + .5) * G.cell; } } return [x, y]; }
 // round the green: directors close, apprentices behind them
 function greenSpot(v) {
-  const i = HOUSE_IDS.indexOf(v.house), inner = v.role === 'd', a = Math.PI * (.08 + .84 * (i + (inner ? 0 : .5)) / 8), r = inner ? 46 : 72, G = gridFor('world');
+  const i = v.role === 'k' ? 3.5 : HOUSE_IDS.indexOf(v.house), inner = v.role === 'd', a = Math.PI * (.08 + .84 * (i + (inner ? 0 : .5)) / 8), r = inner ? 46 : 72, G = gridFor('world');
   let x = GREEN.x - Math.cos(a) * r * 1.3, y = GREEN.y + Math.sin(a) * r * .8 + 6;
   if (!G.walk(x, y)) { const n = nearestOpen(G, Math.floor(x / G.cell), Math.floor(y / G.cell)); if (n) { x = (n[0] + .5) * G.cell; y = (n[1] + .5) * G.cell; } }
   return [x, y];
@@ -3415,6 +3537,7 @@ function renderSettings() {
   $('mapNote').textContent = pending.length ? `Painted on this phone, waiting for the PC: ${pending.map((id) => (id === 'world' ? 'the clearing' : roomTitle(id).split(' · ')[0])).join(', ')}.` : '';
   $('buzzOn').textContent = village.settings.buzz ? 'Set up the buzz again' : 'Let the village buzz this phone';
   $('buzzTest').hidden = !village.settings.buzz;
+  if (IS_PC) { $('buzzOn').hidden = $('buzzTest').hidden = true; $('buzzNote').textContent = 'This is the PC page: the phone buzzes, and the watch mirrors it. The PC stays quiet.'; }
 }
 function openSettings() { history.pushState({ room: scene, layer: 'settings' }, ''); renderSettings(); $('settings').classList.add('open'); $('settings').setAttribute('aria-hidden', 'false'); }
 function closeSettingsLayer() { $('settings').classList.remove('open'); $('settings').setAttribute('aria-hidden', 'true'); }
@@ -3476,41 +3599,46 @@ function renderWorld(c, n, dusk) {
     // birds by day
     if (n < .5) { c.strokeStyle = `rgba(30,30,40,${.55 * (1 - n * 2)})`; c.lineWidth = 1.4; for (const b of birds) { const f = Math.sin(T * 6 + b.p) * 3; c.beginPath(); c.moveTo(b.x - 6, b.y - f); c.quadraticCurveTo(b.x - 2, b.y - 2, b.x, b.y); c.quadraticCurveTo(b.x + 2, b.y - 2, b.x + 6, b.y - f); c.stroke(); } }
   }
-  c.drawImage(back, 0, 0, W, H);
+  // step 6b: the clearing's picture, when it has arrived, stands in for the drawn ground, pond, island and front trees
+  const wa = !!art('world-day');
+  if (wa) { drawArt(c, 'world-day', 0, 0); if (n > .02 && art('world-night')) drawArt(c, 'world-night', 0, 0, Math.min(1, n)); }
+  else c.drawImage(back, 0, 0, W, H);
   // pond
   c.save(); c.beginPath(); c.ellipse(POND.x, POND.y, POND.rx, POND.ry, 0, 0, 7); c.clip();
   const pg = c.createLinearGradient(0, POND.y - POND.ry, 0, POND.y + POND.ry);
   pg.addColorStop(0, mix('#1f3a40', '#0b1226', n)); pg.addColorStop(.5, mix('#4d7f8a', '#1a2350', n)); pg.addColorStop(1, mix('#9ec4c8', '#283068', n));
   if (dusk) pg.addColorStop(.85, mix(mix('#9ec4c8', '#283068', n), '#c97a5a', dusk * .5));
-  c.fillStyle = pg; c.fillRect(POND.x - POND.rx, POND.y - POND.ry, POND.rx * 2, POND.ry * 2);
-  c.fillStyle = 'rgba(10,20,20,.35)'; c.fillRect(POND.x - POND.rx, POND.y - POND.ry, POND.rx * 2, 22);
+  if (!wa) { c.fillStyle = pg; c.fillRect(POND.x - POND.rx, POND.y - POND.ry, POND.rx * 2, POND.ry * 2);
+  c.fillStyle = 'rgba(10,20,20,.35)'; c.fillRect(POND.x - POND.rx, POND.y - POND.ry, POND.rx * 2, 22); }
   if (n > .3) for (let i = 0; i < 40; i++) { const st = stars[i * 5]; const x = POND.x - POND.rx + (st.x / W) * POND.rx * 2, y = POND.y - POND.ry + 26 + (st.y / HORIZON) * POND.ry * 1.6; c.fillStyle = `rgba(255,248,230,${(n - .3) * .5 * (.5 + .5 * Math.sin(T * 1.2 + st.p))})`; c.fillRect(x + Math.sin(T + i), y, 1.4, 1); }
   // the Mothership's gold, broken on the water below the island
   for (let i = 0; i < 7; i++) { const y = ISL.y + 62 + i * 9, w = 40 - i * 4 + Math.sin(T * 1.3 + i) * 6; c.fillStyle = `rgba(242,196,109,${(.1 + .12 * n) * (1 - i / 8)})`; c.fillRect(RING.x - w / 2 + Math.sin(T * .9 + i * 2) * 4, y, w, 1.6); }
   c.save(); c.globalCompositeOperation = 'lighter'; glow(c, 1090, POND.y - 60, 34, '#f5ecd8', .06 + .1 * n); c.restore();
   c.strokeStyle = 'rgba(220,235,240,.18)'; c.lineWidth = 1; for (const r of ripples) { c.globalAlpha = 1 - r.r / 26; c.beginPath(); c.ellipse(r.x, r.y, r.r, r.r * .38, 0, 0, 7); c.stroke(); } c.globalAlpha = 1;
-  c.fillStyle = '#2f5034'; [[690, 790], [712, 806], [1080, 690], [748, 676], [1040, 818]].forEach(([x, y]) => { c.beginPath(); c.ellipse(x, y, 9, 4, 0, .3, 6); c.lineTo(x, y); c.fill(); });
-  c.save(); c.translate(1120, 812 + Math.sin(T * 1.1) * 1.5); c.rotate(-.08 + Math.sin(T * .9) * .03); c.fillStyle = '#6a4a2e'; c.beginPath(); c.moveTo(-26, -4); c.quadraticCurveTo(0, 10, 26, -4); c.lineTo(22, -8); c.lineTo(-22, -8); c.fill(); c.fillStyle = '#8a6a44'; c.fillRect(-22, -9, 44, 2); c.restore();
+  if (!wa) { c.fillStyle = '#2f5034'; [[690, 790], [712, 806], [1080, 690], [748, 676], [1040, 818]].forEach(([x, y]) => { c.beginPath(); c.ellipse(x, y, 9, 4, 0, .3, 6); c.lineTo(x, y); c.fill(); }); }
+  if (!wa) { c.save(); c.translate(1120, 812 + Math.sin(T * 1.1) * 1.5); c.rotate(-.08 + Math.sin(T * .9) * .03); c.fillStyle = '#6a4a2e'; c.beginPath(); c.moveTo(-26, -4); c.quadraticCurveTo(0, 10, 26, -4); c.lineTo(22, -8); c.lineTo(-22, -8); c.fill(); c.fillStyle = '#8a6a44'; c.fillRect(-22, -9, 44, 2); c.restore(); }
   c.restore();
   // stepping stones and the island
-  [[892, 874], [908, 852], [893, 830], [907, 808], [896, 788]].forEach(([x, y]) => { c.fillStyle = '#5c5d61'; c.beginPath(); c.ellipse(x, y + 1.5, 13, 6, 0, 0, 7); c.fill(); c.fillStyle = '#8a8b8f'; c.beginPath(); c.ellipse(x, y, 12, 5, 0, 0, 7); c.fill(); });
+  if (!wa) { [[892, 874], [908, 852], [893, 830], [907, 808], [896, 788]].forEach(([x, y]) => { c.fillStyle = '#5c5d61'; c.beginPath(); c.ellipse(x, y + 1.5, 13, 6, 0, 0, 7); c.fill(); c.fillStyle = '#8a8b8f'; c.beginPath(); c.ellipse(x, y, 12, 5, 0, 0, 7); c.fill(); }); }
+  if (!wa) {
   c.fillStyle = '#3c3326'; c.beginPath(); c.ellipse(ISL.x, ISL.y + 6, ISL.rx + 5, ISL.ry + 6, 0, 0, 7); c.fill();
   c.fillStyle = '#3d5536'; c.beginPath(); c.ellipse(ISL.x, ISL.y, ISL.rx, ISL.ry, 0, 0, 7); c.fill();
   c.fillStyle = 'rgba(120,150,90,.25)'; c.beginPath(); c.ellipse(ISL.x - 14, ISL.y - 8, ISL.rx * .7, ISL.ry * .5, 0, 0, 7); c.fill();
+  }
   // y-sorted
-  const things = HOUSES.map((h) => ({ y: h.y, d: () => { c.save(); c.translate(h.x, h.y); DRAW[h.kind](c, T, n > .25 && !houseDim(h.id)); c.restore(); } }));
+  const things = HOUSES.map((h) => ({ y: h.y, d: () => { c.save(); c.translate(h.x, h.y); if (!drawSprite(c, 'house-' + h.id, n)) DRAW[h.kind](c, T, n > .25 && !houseDim(h.id)); c.restore(); } }));
   for (const h of HOUSES) if (doneHouses.has(h.id)) things.push({ y: h.y + 4, d: () => houseLantern(c, h, T) });
   for (const h of HOUSES) { const Y = YARD[h.id]; things.push({ y: Y.foot ? Y.foot[3] : Y.y - 1, d: () => Y.prop(c, T) }); }
   for (const v of villagers) if (v.scene === 'world' && v.x > vx0 - 40 && v.x < vx1 + 40 && v.y > vy0 - 10 && v.y < vy1 + 70) things.push({ y: v.y, d: () => drawPersonAt(c, v.id, v, 1, T) });
-  things.push({ y: HUB.y, d: () => drawLonghouse(c, T, n > .25) });
+  things.push({ y: HUB.y, d: () => { c.save(); c.translate(HUB.x, HUB.y); const got = drawSprite(c, 'longhouse', n); c.restore(); if (!got) drawLonghouse(c, T, n > .25); } });
   things.push({ y: HUB.y + 1, d: () => drawRing(c, n, T) });
-  things.push({ y: CLIFF.y, d: () => drawCliff(c, T) });
+  things.push({ y: CLIFF.y, d: () => { c.save(); c.translate(CLIFF.x, CLIFF.y); const got = drawSprite(c, 'cliff', n); c.restore(); if (!got) drawCliff(c, T); } });
   const py = (p) => (lookout ? CLIFF.y + 1 + (p === lek ? .1 : 0) : p.y);
   things.push({ y: py(lek), d: () => drawPersonAt(c, 'lek', lek, 1, T) }, { y: py(ale), d: () => drawPersonAt(c, 'a', ale, 1, T) });
   things.sort((a, b) => a.y - b.y).forEach((o) => o.d());
-  c.drawImage(front, 0, FRONT_Y, W, H - FRONT_Y);
-  // darkness
-  c.fillStyle = `rgba(8,12,38,${.06 + .5 * n})`; c.fillRect(vx0 - 2, vy0 - 2, vx1 - vx0 + 4, vy1 - vy0 + 4);
+  if (!wa) c.drawImage(front, 0, FRONT_Y, W, H - FRONT_Y);
+  // darkness (lighter over a hand-made night picture, which has its own)
+  c.fillStyle = `rgba(8,12,38,${(.06 + .5 * n) * (art('world-night') ? .4 : 1)})`; c.fillRect(vx0 - 2, vy0 - 2, vx1 - vx0 + 4, vy1 - vy0 + 4);
   if (dusk) { c.fillStyle = `rgba(255,130,70,${.07 * dusk})`; c.fillRect(vx0 - 2, vy0 - 2, vx1 - vx0 + 4, vy1 - vy0 + 4); }
   // light
   c.globalCompositeOperation = 'lighter';
@@ -3564,12 +3692,13 @@ function renderRoom(c, n) {
   c.setTransform(1, 0, 0, 1, 0, 0); c.fillStyle = '#04050c'; c.fillRect(0, 0, c.canvas.width, c.canvas.height);
   const s = dpr * v.z; c.setTransform(s, 0, 0, s, v.ox * dpr, v.oy * dpr);
   c.save(); c.beginPath(); c.rect(0, 0, RW, RH); c.clip();
-  drawShell(c, R, n, T);
-  if (scene === 'baby') { c.save(); c.translate(109, 262); c.scale(1.5, 1.5); sleepingCat(c, 0, 0, T); c.restore(); }
-  const lamps = R.lanterns.map((x, i) => hangingLantern(c, x, T, i));
+  const ra = !!art('room-' + scene); // step 6b: the room's picture, furniture and all, when it has arrived
+  if (ra) drawArt(c, 'room-' + scene, 0, 0); else drawShell(c, R, n, T);
+  if (scene === 'baby' && !ra) { c.save(); c.translate(109, 262); c.scale(1.5, 1.5); sleepingCat(c, 0, 0, T); c.restore(); }
+  const lamps = R.lanterns.map((x, i) => (ra ? [x, 176 + (i % 2) * 18] : hangingLantern(c, x, T, i)));
   // furniture, the threshold and the people, back to front
-  const items = R.objects.map((o) => ({ z: o.z, d: () => { c.save(); c.translate(o.x, o.y); c.scale(FS, FS); FURN[o.kind](c, o, R, T, n); c.restore(); } }));
-  items.push({ z: 752, d: () => drawThreshold(c, n, T) }, { z: lek.y, d: () => drawPersonAt(c, 'lek', lek, FS, T) }, { z: ale.y, d: () => drawPersonAt(c, 'a', ale, FS, T) });
+  const items = R.objects.map((o) => ({ z: o.z, d: () => { c.save(); c.translate(o.x, o.y); c.scale(FS, FS); (ra ? seatedOnly : FURN[o.kind])(c, o, R, T, n); c.restore(); } }));
+  items.push({ z: 752, d: () => { if (!ra) drawThreshold(c, n, T); } }, { z: lek.y, d: () => drawPersonAt(c, 'lek', lek, FS, T) }, { z: ale.y, d: () => drawPersonAt(c, 'a', ale, FS, T) });
   for (const v of villagers) if (v.scene === scene && !v.sit) items.push({ z: v.y, d: () => drawPersonAt(c, v.id, v, FS, T) });
   items.sort((a, b) => a.z - b.z).forEach((it) => it.d());
   drawWords(c, FS);
