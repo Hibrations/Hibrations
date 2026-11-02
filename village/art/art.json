@@ -1,4 +1,85 @@
 {
- "v": 1,
- "assets": {}
+ "v": 12,
+ "assets": {
+  "world-day": {
+   "w": 900,
+   "h": 650,
+   "px": 2,
+   "hash": "37e6eaa223",
+   "x0": 0,
+   "y0": 0
+  },
+  "world-night": {
+   "w": 900,
+   "h": 650,
+   "px": 2,
+   "hash": "c0b03798c4",
+   "x0": 0,
+   "y0": 0
+  },
+  "house-halohorns-day": {
+   "w": 160,
+   "h": 160,
+   "px": 2,
+   "hash": "a5049b7a14",
+   "ax": 80,
+   "ay": 135
+  },
+  "house-halohorns-night": {
+   "w": 160,
+   "h": 160,
+   "px": 2,
+   "hash": "4be907d434",
+   "ax": 80,
+   "ay": 135
+  },
+  "house-esoteric-day": {
+   "w": 160,
+   "h": 160,
+   "px": 2,
+   "hash": "db26c91926",
+   "ax": 80,
+   "ay": 135
+  },
+  "house-cupidity-day": {
+   "w": 160,
+   "h": 160,
+   "px": 2,
+   "hash": "5225163e22",
+   "ax": 80,
+   "ay": 135
+  },
+  "house-fitness-day": {
+   "w": 160,
+   "h": 160,
+   "px": 2,
+   "hash": "dc0f6f0e74",
+   "ax": 80,
+   "ay": 135
+  },
+  "house-hibrations-day": {
+   "w": 160,
+   "h": 160,
+   "px": 2,
+   "hash": "e4ac4bf9ab",
+   "ax": 80,
+   "ay": 135
+  },
+  "house-kaching-day": {
+   "w": 160,
+   "h": 160,
+   "px": 2,
+   "hash": "1e3ab52a21",
+   "ax": 80,
+   "ay": 135
+  },
+  "house-hobby-day": {
+   "w": 160,
+   "h": 160,
+   "px": 2,
+   "hash": "ea9b9dfc2a",
+   "ax": 80,
+   "ay": 135
+  }
+ }
 }
