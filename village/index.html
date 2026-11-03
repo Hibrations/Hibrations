@@ -671,7 +671,7 @@ function boardHtml() {
       ${t.result && !t.error ? `<details${priv ? '' : ''} data-seen="${esc(t.id)}"><summary>${priv ? 'Show (private)' : 'What came back'}${t.file ? ' · saved in ' + esc(t.file.split('/')[0]) : ''}</summary><pre>${esc(t.result)}</pre></details>` : ''}</div>`;
   }).join('')}</section>`;
 }
-const CARD_KIND = { yes: 'Needs your yes', email: 'An email to copy', goal: 'A goal plan', proposal: 'An instruction change', suggestion: 'A suggestion', hire: 'A hire', retire: 'A retirement', install: 'An install, for you to do', plan: 'A Body Temple plan' };
+const CARD_KIND = { yes: 'Needs your yes', email: 'An email to copy', goal: 'A goal plan', proposal: 'An instruction change', suggestion: 'A suggestion', hire: 'A hire', retire: 'A retirement', install: 'An install, for you to do', plan: 'A Body Temple plan', skill: 'A skill to install', moved: 'A file moved aside' };
 // step 7: what a yes card is about, so a spend or a post reads as one
 const YES_TOPIC = { spend: 'A spend: needs your yes', post: 'A post or publication: needs your yes', install: 'An install: needs your yes', instructions: 'An instruction change: needs your yes' };
 const cardKind = (k) => (k.kind === 'yes' && YES_TOPIC[k.topic]) || (k.kind === 'proposal' && k.tamper ? 'An instruction change the bridge stopped' : CARD_KIND[k.kind]) || 'A card';
@@ -685,6 +685,8 @@ function cardsHtml() {
       : k.kind === 'hire' ? `<div class="acts"><button class="btn" data-interview="${esc(k.house)}">Interview</button><button class="btn" data-ans="yes" data-card="${esc(k.id)}">Yes, hire</button><button class="btn" data-ans="no" data-card="${esc(k.id)}">No</button><button class="btn" data-ans="change" data-card="${esc(k.id)}">Change it</button></div>`
       : k.kind === 'install' ? `<div class="acts">${copy}<button class="btn" data-ans="yes" data-card="${esc(k.id)}">Yes, I’ll install it</button><button class="btn" data-ans="no" data-card="${esc(k.id)}">No</button><button class="btn" data-ans="change" data-card="${esc(k.id)}">Change it</button></div>`
       : k.kind === 'email' ? `<div class="acts"><button class="btn" data-copy="${esc(k.id)}">Copy</button><button class="btn" data-ans="yes" data-card="${esc(k.id)}">Got it</button></div>`
+      : k.kind === 'skill' ? `<div class="acts"><button class="btn" data-ans="yes" data-card="${esc(k.id)}">Yes, install it</button><button class="btn" data-ans="no" data-card="${esc(k.id)}">No</button><button class="btn" data-ans="change" data-card="${esc(k.id)}">Change it</button></div>`
+      : k.kind === 'moved' ? `<div class="acts"><button class="btn" data-ans="yes" data-card="${esc(k.id)}">Move it back</button><button class="btn" data-ans="no" data-card="${esc(k.id)}">Leave it there</button></div>`
       : k.kind === 'suggestion' ? `<div class="acts"><button class="btn" data-ans="yes" data-card="${esc(k.id)}">Yes, make it a task</button><button class="btn" data-ans="no" data-card="${esc(k.id)}">Not now</button></div>`
       : `<div class="acts"><button class="btn" data-ans="yes" data-card="${esc(k.id)}">Yes</button><button class="btn" data-ans="no" data-card="${esc(k.id)}">No</button><button class="btn" data-ans="change" data-card="${esc(k.id)}">Change it</button></div>`;
     const body = `<div class="what">${esc(k.what)}</div>${k.why ? `<div class="muted">${esc(k.why)}</div>` : ''}${k.content ? `<pre>${esc(k.content)}</pre>` : ''}`;
