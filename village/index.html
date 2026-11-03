@@ -664,7 +664,8 @@ function boardHtml() {
   const opts = (t) => HOUSE_IDS.map((hid) => `<option value="${hid}"${hid === t.house ? ' selected' : ''}>${esc(dirName(hid))} · ${esc(houseShort(hid))}</option>`).join('');
   return `<section><h3>The board</h3>${ts.map((t) => {
     const waits = (t.waitsOn || []).map((w) => J.tasks[w]).filter((w) => w && w.state !== 'done');
-    const priv = t.house === 'cupidity';
+    // Cupidity is private, not left out (Lek, 2026-11-03): its tasks show like every house's
+    const priv = false;
     return `<div class="task"><b>${priv ? 'A private task' : esc(t.title)}</b><span class="state ${t.state}">${STATE_WORD[t.state] || t.state}</span>
       <div class="meta">${esc(dirName(t.house))} · ${esc(houseShort(t.house))} · ${ago(t.at)}${waits.length ? ' · waiting on ' + waits.map((w) => esc(dirName(w.house))).join(', ') : ''}${t.error ? ' · will try again when the PC restarts' : ''}</div>
       ${['waiting', 'queued'].includes(t.state) && !t.error ? `<select data-move="${esc(t.id)}" aria-label="Move to another house">${opts(t)}</select>` : ''}
@@ -691,7 +692,7 @@ function cardsHtml() {
       : `<div class="acts"><button class="btn" data-ans="yes" data-card="${esc(k.id)}">Yes</button><button class="btn" data-ans="no" data-card="${esc(k.id)}">No</button><button class="btn" data-ans="change" data-card="${esc(k.id)}">Change it</button></div>`;
     const body = `<div class="what">${esc(k.what)}</div>${k.why ? `<div class="muted">${esc(k.why)}</div>` : ''}${k.content ? `<pre>${esc(k.content)}</pre>` : ''}`;
     return `<div class="card${priv ? ' private' : ''}"><div class="meta">${esc(cardKind(k))} · ${esc(k.who)} · ${time(k.at)}</div>
-      ${priv ? `<details><summary>Private · tap to show</summary>${body}</details>` : body}${acts}</div>`;
+      ${body}${acts}</div>`; // no "tap to show" curtain since 2026-11-03 (Lek); Rak's cards keep their red edge
   };
   return `<section>${open.length ? open.map(one).join('') : '<p class="muted">No cards waiting. Anything that needs your yes arrives here and waits until you answer. Cards never expire.</p>'}</section>
     ${past.length ? `<section><h3>Answered</h3>${past.map(one).join('')}</section>` : ''}`;
@@ -2613,10 +2614,11 @@ const person = (id, house, role) => ({ id, house, role, scene: house, x: 220, y:
 const villagers = [...VLOOK_IDS].flatMap((house) => ['d', 'a'].map((role) => person(`${house}.${role}`, house, role)));
 // Step 6b: retired apprentices leave; Kham ('hub.d', role 'k') moves in once the PC has sent his name
 // Step 7: a new hire walks in from the forest edge to their house; a retired apprentice walks out the same way.
-// Cupidity's people never cross the shared map: they simply arrive at, or leave, their house.
+// Cupidity's people cross the shared map like everyone else since 2026-11-03 (Lek; until then they simply arrived
+// at, or left, their house).
 function syncPeople(placeNew) {
   const d = village.content && village.content.data && village.content.data.villagers;
-  const fresh = (id, kind) => { const M = J.moves[id]; return placeNew && M && M.kind === kind && !M.done && Date.now() - Date.parse(M.at) < 6 * 3600e3 && !id.startsWith('cupidity.') ? M : null; };
+  const fresh = (id, kind) => { const M = J.moves[id]; return placeNew && M && M.kind === kind && !M.done && Date.now() - Date.parse(M.at) < 6 * 3600e3 ? M : null; };
   for (let i = villagers.length - 1; i >= 0; i--) {
     const v = villagers[i]; if (!isRetired(v.id) || v.leaving) continue;
     const M = fresh(v.id, 'leave');
