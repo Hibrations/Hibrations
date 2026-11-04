@@ -36,9 +36,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
 #roomName { font: 600 18px/1 var(--serif); letter-spacing: .02em; max-width: 52vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-faint); flex: none; }
 .dot.ok { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+#rest { color: inherit; text-decoration: none; font-size: 12px; }
 .dot.warn { background: var(--gold); }
 .dot.bad { background: var(--red); }
 #hud .sp { flex: 1; }
+@media (max-width: 430px) { #roomName { max-width: 34vw; } } /* step 11: room for the Talks chip on a phone */
 #light { width: 38px; height: 38px; padding: 0; justify-content: center; font-size: 16px; }
 
 #say { position: fixed; left: 50%; bottom: max(22px, env(safe-area-inset-bottom)); transform: translate(-50%, 8px); width: max-content; max-width: calc(100vw - 32px); background: var(--glass2); border: 1px solid var(--line); border-left: 3px solid var(--c, var(--gold)); border-radius: 12px; padding: 10px 14px; font: italic 500 17px/1.35 var(--serif); opacity: 0; transition: opacity .3s, transform .3s; pointer-events: none; z-index: 6; }
@@ -146,7 +148,19 @@ code { font-size: 12.5px; background: rgba(255, 255, 255, .07); border-radius: 4
 .chron { font: italic 400 15.5px/1.45 var(--serif); color: var(--ink-dim); margin: 6px 0; }
 
 /* step 6: talking */
-#chat, #meetP { max-height: 58vh; display: flex; flex-direction: column; }
+/* step 11 (Lek, 2026-11-04): a broader window. The phone: a tall sheet that drags down to half. The PC: a wide panel
+   down the right, full height under the HUD, with the village still walking on the left. */
+#chat, #meetP { height: 90vh; height: 90dvh; max-height: none; display: flex; flex-direction: column; }
+#chat.half, #meetP.half { height: 52vh; height: 52dvh; }
+.grab { flex: none; height: 22px; margin-bottom: -10px; display: flex; justify-content: center; align-items: center; touch-action: none; cursor: grab; }
+.grab::before { content: ''; width: 42px; height: 4px; border-radius: 2px; background: var(--line); }
+@media (min-width: 900px) {
+  #chat, #meetP, #talks { left: auto; right: 0; top: max(60px, calc(env(safe-area-inset-top) + 52px)); bottom: 0; height: auto; max-height: none; width: max(640px, 45vw); max-width: 860px; margin: 0; border-radius: 18px 0 0 0; border: 1px solid var(--line); border-right: 0; border-bottom: 0; transform: translateX(105%); }
+  #chat.half, #meetP.half { height: auto; }
+  #chat.open, #meetP.open, #talks.open { transform: none; }
+  .grab { display: none; }
+  .talk { font-size: 15.5px; }
+}
 #chat header, #meetP header { padding-bottom: 6px; }
 #chat header .ht, #meetP header .ht { flex: 1; min-width: 0; }
 #chat header h2, #meetP header h2 { font-size: 23px; color: var(--accent, var(--gold)); }
@@ -158,18 +172,52 @@ code { font-size: 12.5px; background: rgba(255, 255, 255, .07); border-radius: 4
 .talk.me { margin-left: auto; background: rgba(242,196,109,.13); border: 1px solid rgba(242,196,109,.28); border-bottom-right-radius: 4px; }
 .talk.me.waiting { border-style: dashed; }
 .talk.them { background: rgba(255,255,255,.05); border: 1px solid var(--line); border-left: 2px solid var(--c, var(--accent, var(--ok))); border-bottom-left-radius: 4px; }
-.talk.them b { color: var(--c, var(--gold)); font-weight: 600; margin-right: 4px; }
+.talk.them > b { color: var(--c, var(--gold)); font-weight: 600; margin-right: 4px; }
+.talk.them.md > b { display: block; margin-bottom: 2px; }
 .talk.err { color: var(--ink-dim); }
 .talk.pend { color: var(--ink-dim); font-style: italic; }
 .talk.private::after { content: 'only here'; display: block; margin-top: 4px; font: 500 10px var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--red); }
 .talk.sys { max-width: none; text-align: center; color: var(--ink-dim); font: italic 400 15px/1.4 var(--serif); padding: 4px 8px; }
 .talk .meta { font-size: 11.5px; color: var(--ink-faint); margin-top: 3px; white-space: normal; }
+/* step 11: answers as formatted text, long ones folded, a copy on each, days marked */
+.talk.md { white-space: normal; }
+.talk.md .mdx > :first-child { margin-top: 0; } .talk.md .mdx > :last-child { margin-bottom: 0; }
+.mdx p { margin: 0 0 .6em; } .mdx ul, .mdx ol { margin: 0 0 .6em; padding-left: 1.3em; } .mdx li { margin: .15em 0; }
+.mdx h4 { font: 600 1.08em/1.3 var(--serif); color: var(--c, var(--gold)); margin: .8em 0 .3em; }
+.mdx pre { white-space: pre-wrap; background: rgba(0,0,0,.28); border-radius: 8px; padding: 8px 10px; margin: 0 0 .6em; font-size: 13px; overflow-x: auto; }
+.mdx pre code { background: none; padding: 0; }
+.mdx blockquote { margin: 0 0 .6em; padding-left: 10px; border-left: 2px solid var(--line); color: var(--ink-dim); }
+.mdx hr { border: 0; border-top: 1px solid var(--line); margin: .7em 0; }
+.mdx a { color: var(--gold); }
+.talk.fold .mdx { max-height: 15em; overflow: hidden; -webkit-mask-image: linear-gradient(#000 65%, transparent); mask-image: linear-gradient(#000 65%, transparent); }
+.talk .acts { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+.talk .acts button { background: none; border: 0; padding: 2px 0; font-size: 12px; color: var(--ink-dim); text-decoration: underline; text-underline-offset: 2px; }
+.talk .acts button.more { color: var(--c, var(--gold)); }
+.talk .acts button.callT { color: var(--night); background: var(--gold); text-decoration: none; border-radius: 999px; padding: 4px 11px; font-weight: 500; }
+#meetWho button i { font-style: normal; font-size: 11px; opacity: .75; margin-right: 4px; }
+.talk.day { max-width: none; text-align: center; margin: 14px 0 6px; padding: 0; font: 500 11px var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); }
+.talk.flash { animation: flash 2.4s ease-out; }
+@keyframes flash { 0%, 40% { box-shadow: 0 0 0 2px var(--gold); } 100% { box-shadow: 0 0 0 0 transparent; } }
+.newPill { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(96px + env(safe-area-inset-bottom)); z-index: 2; background: var(--glass2); border: 1px solid var(--c, var(--accent, var(--gold))); color: var(--c, var(--accent, var(--gold))); border-radius: 999px; padding: 7px 16px; font-size: 13.5px; box-shadow: 0 4px 16px rgba(0,0,0,.35); }
+/* step 11: Talks, every thread on this device, and search */
+#talks { max-height: 86vh; }
+.talkSearch { padding: 0 18px 10px; }
+.talkSearch input { padding: 9px 12px; }
+.tks { display: grid; gap: 6px; }
+.tk { display: grid; grid-template-columns: 12px 1fr auto; column-gap: 10px; row-gap: 2px; align-items: center; text-align: left; background: rgba(255,255,255,.03); border: 1px solid var(--line); border-radius: 12px; padding: 9px 12px; }
+.tk i { width: 10px; height: 10px; border-radius: 50%; background: var(--c); grid-row: span 2; }
+.tk b { font: 600 17px/1.15 var(--serif); }
+.tk .when { font-size: 11.5px; color: var(--ink-faint); white-space: nowrap; }
+.tk .last { grid-column: 2 / 4; font-size: 13px; color: var(--ink-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tk.unread { border-color: var(--c); } .tk.unread b::after { content: ' ●'; color: var(--c); font-size: 11px; vertical-align: 3px; }
+.tk em { font-style: normal; font-size: 11px; letter-spacing: .06em; color: var(--gold); margin-left: 6px; }
+.tk mark { background: rgba(242,196,109,.3); color: var(--ink); border-radius: 3px; padding: 0 1px; }
 .dots::after { content: ''; animation: dots 1.4s steps(4) infinite; }
 @keyframes dots { 0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; } }
 .earlier { margin: 6px 0 10px; color: var(--ink-dim); font-size: 13px; }
 .earlier hr { border: 0; border-top: 1px solid var(--line); }
 .composer { display: flex; gap: 8px; align-items: flex-end; padding: 8px 14px calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); }
-.composer textarea { flex: 1; resize: none; padding: 9px 12px; min-height: 42px; max-height: 120px; }
+.composer textarea { flex: 1; resize: none; padding: 9px 12px; min-height: 42px; max-height: 33vh; }
 .composer .btn { margin: 0; padding: 10px 16px; }
 .mic { flex: none; width: 42px; height: 42px; border-radius: 50%; background: transparent; border: 1px solid var(--line); color: var(--ink-dim); font-size: 17px; }
 .mic.hum { border-color: rgba(242,196,109,.45); box-shadow: 0 0 10px rgba(242,196,109,.25); color: var(--gold); }
@@ -198,6 +246,8 @@ code { font-size: 12.5px; background: rgba(255, 255, 255, .07); border-radius: 4
   <div class="chip" id="brand"><span class="dot" id="syncDot"></span><b>Lysningen</b></div>
   <div class="chip" id="roomChip" hidden><span id="roomName"></span></div>
   <span class="sp"></span>
+  <a class="chip" id="rest" href="/safe" target="_blank" rel="noopener" hidden><span class="dot" id="restDot"></span><span id="restText"></span></a>
+  <button class="chip" id="talksBtn" title="Talks: every chat, and search" aria-label="Talks">❝<span class="badge" id="talksBadge" hidden></span></button>
   <button class="chip" id="peopleBtn" title="The village: talk to anyone, call them over, gather" aria-label="The village">⁂</button>
   <button class="chip" id="taskBtn" title="A's scroll: tasks, briefs, cards" aria-label="A's scroll">✎<span class="badge" id="taskBadge" hidden></span></button>
   <button class="chip" id="light" title="Light">◐</button>
@@ -245,18 +295,28 @@ code { font-size: 12.5px; background: rgba(255, 255, 255, .07); border-radius: 4
 </div>
 
 <div id="chat" class="panel" aria-hidden="true">
+  <div class="grab" title="Drag to make it taller or shorter"></div>
   <header><canvas id="chatFace"></canvas><div class="ht"><h2 id="chatName"></h2><div id="chatHouse"></div></div><button id="chatCard" title="Their card">card</button><button id="chatClose" aria-label="Close">×</button></header>
   <div id="chatBody"></div>
+  <button class="newPill" id="chatPill" hidden></button>
   <div class="chatFoot"><a href="#" id="chatNew">New thread</a></div>
   <div class="composer"><textarea id="chatText" rows="1"></textarea><button class="mic" id="chatMic" title="Speak" aria-label="Speak">🎙</button><button class="btn" id="chatSend">Send</button></div>
 </div>
 
 <div id="meetP" class="panel" aria-hidden="true">
+  <div class="grab" title="Drag to make it taller or shorter"></div>
   <header><div class="ht"><h2 id="meetTitle">The Longhouse-sala</h2></div><button id="meetClose" aria-label="Close">×</button></header>
   <div id="meetBody"></div>
+  <button class="newPill" id="meetPill" hidden></button>
   <div class="meetActs"><button class="btn" id="meetAgenda">Agenda</button><button class="btn" id="meetEnd">End the meeting</button></div>
   <div id="meetWho"></div>
   <div class="composer"><textarea id="meetText" rows="1"></textarea><button class="mic" id="meetMic" title="Speak" aria-label="Speak">🎙</button><button class="btn" id="meetSend">Ask</button></div>
+</div>
+
+<div id="talks" class="panel" aria-hidden="true">
+  <header><h2>Talks</h2><button id="talksClose" aria-label="Close">×</button></header>
+  <div class="talkSearch"><input id="talksQ" type="search" placeholder="Search every chat…" autocomplete="off" enterkeyhint="search"></div>
+  <div class="scroll" id="talksBody"></div>
 </div>
 
 <div id="roster" class="panel" aria-hidden="true">
@@ -300,7 +360,7 @@ code { font-size: 12.5px; background: rgba(255, 255, 255, .07); border-radius: 4
 // ══════════════════════════════════════════════════════════════════════════════════════════
 
 // ── Stores (same origin as the temples; the Body Temple backup already includes these) ──
-const K = { village: 'village_v1', outbox: 'village_outbox_v1', cursor: 'village_cursor_v1' };
+const K = { village: 'village_v1', outbox: 'village_outbox_v1', cursor: 'village_cursor_v1', drafts: 'village_drafts_v1', read: 'village_read_v1' };
 function load(key, fallback) {
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch { return fallback; }
 }
@@ -316,6 +376,7 @@ const saveVillage = () => save(K.village, village);
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const time = (iso) => new Date(iso).toLocaleString('en-GB', { weekday: 'short', hour: '2-digit', minute: '2-digit' });
+const SIDE = matchMedia('(min-width: 900px)'); // step 11: wide enough for the chat as a side panel (sideW, near sheetLift)
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, t) => a + (b - a) * t;
 function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
@@ -482,6 +543,20 @@ function renderLetters() {
 $('send').onclick = sendLetter;
 $('syncNow').onclick = sync;
 $('pairBtn').onclick = () => pair($('pairLink').value.trim());
+// The PC page only: is it safe to shut the PC down? (Lek, 2026-11-03.) Green when nobody is mid-job, gold while
+// someone works; the full line is in the tooltip and on /safe. The phone has no PC to shut down, so it never shows.
+if (IS_PC) {
+  const rest = async () => {
+    try {
+      const q = (await (await fetch('/villagers', { cache: 'no-store' })).json()).quiet;
+      if (!q) return;
+      $('rest').hidden = false; $('rest').title = q.line;
+      $('restDot').className = 'dot ' + (q.safe ? 'ok' : 'warn');
+      $('restText').textContent = q.safe ? 'Safe to shut down' : q.working.length ? `${q.working[0].name} working${q.working.length > 1 ? ' +' + (q.working.length - 1) : ''}` : 'About to start';
+    } catch { $('rest').hidden = true; } // the bridge is down: nothing to wait for, and nothing to say
+  };
+  rest(); setInterval(rest, 10000);
+}
 if (IS_PC) $('pairBox').querySelector('p').textContent = 'This is the PC page. It pairs itself with the bridge as soon as the bridge is running (village.bat).';
 $('unpair').onclick = (e) => {
   e.preventDefault();
@@ -605,7 +680,7 @@ function afterJobs() {
   if (briefArrived && J.readBrief !== briefArrived.id && !anyLayerOpen()) openScroll('brief');
   briefArrived = null;
 }
-const anyLayerOpen = () => !$('temple').hidden || !!charWho || !!chatWho || ['sheet', 'settings', 'scrollP', 'roster', 'meetP'].some((id) => $(id).classList.contains('open'));
+const anyLayerOpen = () => !$('temple').hidden || !!charWho || !!chatWho || ['sheet', 'settings', 'scrollP', 'roster', 'meetP', 'talks'].some((id) => $(id).classList.contains('open'));
 const latestBrief = () => J.briefs.slice().sort((a, b) => (a.at < b.at ? 1 : -1))[0] || null;
 
 // A brief is markdown from A; this draws the little of it she uses (headings, bold, italics, lists).
@@ -1305,6 +1380,8 @@ const ROOMS = {
       ...CHAIRS_AT.map(([x, y], i) => ({ kind: 'chair', x, y, who: ['halohorns', 'esoteric', 'hibrations', 'cupidity', 'baby', 'fitness', 'kaching', 'hobby'][i] })),
       { kind: 'hearth', x: 220, y: 590, w: 120, h: 44, label: 'Hearth', act: { declare: true } },
       { kind: 'headChair', x: 394, y: 640, z: 640 }, // step 6: the head of the table, Lek's chair in a meeting
+      { kind: 'aChair', x: 394, y: 712 }, // step 11: A's chair at Lek's side in a meeting
+      { kind: 'chair', x: 340, y: 586, who: 'hub' }, // step 11: Kham's chair, between the letter box and the head
     ] },
 };
 const VLOOK_IDS = new Set(['halohorns', 'esoteric', 'cupidity', 'fitness', 'hibrations', 'kaching', 'hobby', 'baby']); // houses with a director and an apprentice
@@ -1599,7 +1676,8 @@ function twinLamp(c, t) {
 const FURN = {
   deskSeat: (c, o, R, t) => { const v = sitting(o); deskSeat(c, R.c, t, v && (() => sitter(c, v, 0, -30, t))); },
   bench: (c, o, R, t) => { const v = sitting(o); bench(c, !isRetired(scene + '.a')); if (v) sitter(c, v, -16, -8, t); }, // a retired apprentice's sash waits folded on the bench
-  chair: (c, o, R, t) => { const v = sitting(o); chair(c, HOUSES.find((h) => h.id === o.who).c, v && (() => sitter(c, v, 0, -10, t))); },
+  chair: (c, o, R, t) => { const v = sitting(o); chair(c, (ROOMS[o.who] || HOUSES.find((h) => h.id === o.who)).c, v && (() => sitter(c, v, 0, -10, t))); },
+  aChair: (c, o, R, t) => chair(c, '#ffcf7a', aSeated() && (() => { c.save(); c.translate(0, -10 + Math.sin(t * 1.2 + 1) * .25); drawAletheia(c, 0, 1, t, { seated: true, lanternLit: SKY.n > .15 }); c.restore(); })),
   headChair: (c, o, R, t) => chair(c, '#f2c46d', lek.sit && (() => { c.save(); c.translate(0, -10 + Math.sin(t * 1.1) * .25); drawLek(c, 0, 1, t, { seated: true, build: lekBuild() }); c.restore(); })), altar: (c, o, R, t) => altar(c, t), mirror: (c, o, R, t) => bronzeMirror(c, t),
   board: (c, o, R) => board(c, R.c), chest: (c) => chest(c), cushion: (c, o, R, t) => cushion(c, t), herbs: (c) => herbs(c), telescope: (c, o, R, t) => telescope(c, t),
   bowl: (c, o, R, t) => bowl(c, t), curtain: (c, o, R, t) => curtain(c, t), lanternRoom: (c, o, R, t, n) => lanternRoom(c, t, n), rack: (c) => rack(c),
@@ -1982,6 +2060,7 @@ function sheetFrame(c, who, dir, frame) {
 const SEAT_AT = { deskSeat: [0, -30], bench: [-16, -8], chair: [0, -10] };
 function seatedOnly(c, o, R, t) {
   if (o.kind === 'headChair') { if (lek.sit) { c.save(); c.translate(0, -10 + Math.sin(t * 1.1) * .25); drawLek(c, 0, 1, t, { seated: true, build: lekBuild() }); c.restore(); } return; }
+  if (o.kind === 'aChair') return;
   const at = SEAT_AT[o.kind], v = at && sitting(o); if (v) sitter(c, v, at[0], at[1], t);
 }
 // The layout references Lek uploads to ChatGPT with each prompt: the village's own drawing of that thing, on magenta,
@@ -2472,12 +2551,13 @@ function updatePeople(dt) {
   else { ale.moving = false; if (!lek.moving) ale.dir = lek.dir; }
   // the camera follows him outside, until a drag takes it
   if (scene === 'world' && follow && !gesture) {
-    const k = 1 - Math.exp(-dt * 3), cx = lek.x - vw / cam.z / 2, cy = lek.y - 30 - (vh - sheetLift()) / cam.z / 2;
+    const k = 1 - Math.exp(-dt * 3), cx = lek.x - (vw - sideW()) / cam.z / 2, cy = lek.y - 30 - (vh - sheetLift()) / cam.z / 2;
     cam.x += (cx - cam.x) * k; cam.y += (cy - cam.y) * k; clampCam();
   }
 }
 function drawPersonAt(c, who, p, s, t) {
   if (who === 'lek' && lek.sit) return; // drawn in his chair at the head of the table
+  if (who === 'a' && aSeated()) return; // and A in hers beside him
   c.save(); c.translate(p.x, p.y); if (s !== 1) c.scale(s, s);
   if (DRAW_PERSON[who] && sheetFrame(c, who, p.dir, frameOf(p))) { /* the generated sheet (step 6b) */ }
   else if (DRAW_PERSON[who]) DRAW_PERSON[who](c, p.dir, frameOf(p), t, who === 'lek' ? { build: lekBuild() } : { lanternLit: SKY.n > .15 });
@@ -2517,7 +2597,7 @@ function houseLantern(c, h, t) {
 // where A's lantern light is, for the glow pass
 function lanternAt(s) { const k = LOOKS.a.h / 42, [x, y] = lanternPos(ale.dir, k, 0); return [ale.x + x * s, ale.y + y * s]; }
 function hitPerson(x, y, s) {
-  for (const [who, p, h] of [['lek', lek, 50], ['a', ale, 54], ...villagers.filter((v) => v.scene === scene && !v.sit).map((v) => [v.id, v, VLOOK[v.id].h + 8])]) if (Math.abs(x - p.x) < 12 * s && y > p.y - h * s && y < p.y + 6 * s) return who;
+  for (const [who, p, h] of [['lek', lek, 50], ...(aSeated() ? [] : [['a', ale, 54]]), ...villagers.filter((v) => v.scene === scene && !v.sit).map((v) => [v.id, v, VLOOK[v.id].h + 8])]) if (Math.abs(x - p.x) < 12 * s && y > p.y - h * s && y < p.y + 6 * s) return who;
   return null;
 }
 function enter(h) { if (busy) return; lek.path = null; lek.onArrive = null; goRoom(h.id); seeHouse(h.id); }
@@ -2646,9 +2726,9 @@ function wantMode(v) {
   if (v.arriving) return 'arrive';
   if (v.called) return 'called';
   const mk = meetKind();
-  if (v.role === 'k') return mk === 'green' ? 'green' : 'post';
-  if (mk === 'sala' && v.role === 'd') return 'meet';
-  if (mk === 'sala' && meetApprentices()) return 'wall';
+  if (v.role === 'k') return mk === 'green' ? 'green' : mk === 'sala' ? 'meet' : 'post'; // Kham sits at every meeting
+  if (mk === 'sala' && v.role === 'd' && atTable(v.id)) return 'meet';
+  if (mk === 'sala' && meetApprentices() && atTable(v.id)) return 'wall';
   if (mk === 'green') return 'green';
   if (isNight()) return 'home'; return v.role === 'd' ? 'yard' : 'errand';
 }
@@ -2881,7 +2961,7 @@ function zMin() { return Math.max(vw / W, vh / H); }
 function clampCam() {
   if (lookout) { cam.z = Math.min(vw / 1720, vh / (H - 240)); cam.x = (W - vw / cam.z) / 2; cam.y = (H + 200 - vh / cam.z) / 2; return; }
   cam.z = clamp(cam.z, zMin(), 2.4);
-  cam.x = clamp(cam.x, 0, W - vw / cam.z);
+  cam.x = clamp(cam.x, 0, W - (vw - sideW()) / cam.z); // with the PC's side panel open, Lek can come out from under it
   cam.y = clamp(cam.y, 0, H - (vh - sheetLift()) / cam.z); // with a chat open, far enough down that Lek stays above it
 }
 function centreOn(x, y) { cam.x = x - vw / cam.z / 2; cam.y = y - vh / cam.z / 2; clampCam(); }
@@ -2902,7 +2982,8 @@ let rT; addEventListener('resize', () => { clearTimeout(rT); rT = setTimeout(res
 function roomView() {
   if (picturing) return { z: 2, ox: 0, oy: 0 };
   // a chat or the meeting open in a room: the floor fills the space above the sheet, so the people stay in sight
-  const lift = sheetLift();
+  const lift = sheetLift(), side = sideW();
+  if (side) { const z = Math.min((vw - side) / RW, (vh - 20) / RH); return { z, ox: (vw - side - RW * z) / 2, oy: Math.max(0, (vh - RH * z) / 2 + 10) }; }
   if (lift) { const top = WB - 70, z = Math.min(vw / RW, (vh - lift - 16) / (RH - top)); return { z, ox: (vw - RW * z) / 2, oy: Math.max(6, (vh - lift - (RH - top) * z) / 2) - top * z }; }
   const z = Math.min(vw / RW, (vh - 20) / RH); return { z, ox: (vw - RW * z) / 2, oy: Math.max(0, (vh - RH * z) / 2 + 10) };
 }
@@ -3009,7 +3090,7 @@ function tap(sx, sy) {
   if (hitLantern(rx, ry, FS)) { openScroll(); return; }
   // in a meeting, tap a seated director (or their chair) to talk to them alone, in front of the others
   if (scene === 'hub' && meetKind() === 'sala') {
-    for (const o of ROOMS.hub.objects) if (o.kind === 'chair' && Math.abs(rx - o.x) < 24 && ry > o.y - 70 && ry < o.y + 12) { meetTo = o.who + '.d'; openMeet(); return; }
+    for (const o of ROOMS.hub.objects) if (o.kind === 'chair' && Math.abs(rx - o.x) < 24 && ry > o.y - 70 && ry < o.y + 12) { meetPick = [o.who + '.d']; openMeet(); return; }
     if (Math.hypot(rx - HEAD.x, ry - HEAD.y + 20) < 30) { lek.sitTried = false; openMeet(); return; } // his chair: sit again
   }
   const who = hitPerson(rx, ry, FS);
@@ -3098,7 +3179,7 @@ function openTemple(src, title) {
 function closeTempleLayer() { const f = $('templeFrame'); $('temple').hidden = true; if (f) { f.remove(); gatherPractice(); } }
 function openSheet() { history.pushState({ room: scene, layer: 'letters' }, ''); renderLetters(); sync(); $('sheet').classList.add('open'); $('sheet').setAttribute('aria-hidden', 'false'); }
 function closeSheetLayer() { $('sheet').classList.remove('open'); $('sheet').setAttribute('aria-hidden', 'true'); document.activeElement && document.activeElement.blur(); }
-const backOrClose = () => { closeTempleLayer(); closeSheetLayer(); closeCharLayer(); closeSettingsLayer(); closeScrollLayer(); closeChatLayer(); closeRosterLayer(); closeMeetLayer(); if (history.state && history.state.layer) history.back(); };
+const backOrClose = () => { closeTempleLayer(); closeSheetLayer(); closeCharLayer(); closeSettingsLayer(); closeScrollLayer(); closeChatLayer(); closeRosterLayer(); closeMeetLayer(); closeTalksLayer(); if (history.state && history.state.layer) history.back(); };
 $('charClose').onclick = backOrClose;
 $('templeBack').onclick = backOrClose;
 $('sheetClose').onclick = backOrClose;
@@ -3114,6 +3195,7 @@ addEventListener('popstate', (e) => {
   if (s.layer !== 'char') closeCharLayer(); else if (!charWho) openChar(s.who, false, s.mode);
   if (s.layer !== 'chat') closeChatLayer(); else if (!chatWho) openChat(s.who, false);
   if (s.layer !== 'roster') closeRosterLayer();
+  if (s.layer !== 'talks') closeTalksLayer();
   if (s.layer !== 'meet') closeMeetLayer();
   if (lookout && !s.lookout) climbDown(false);
   const want = s.room || 'world';
@@ -3171,6 +3253,7 @@ async function addTalk(who, row) {
   if (rec.threads.some((t) => t.rows.some((r) => r.id === row.id))) return;
   curThread(rec).rows.push(row); putThread(rec);
   if (chatWho === who) renderChat();
+  talkBadge();
 }
 // what arrives from the PC for a thread: answers, and a new thread after the handover note
 function talkIn(e) {
@@ -3178,7 +3261,7 @@ function talkIn(e) {
     threadOf(e.who).then((rec) => {
       if (rec.threads.some((t) => t.id === e.id)) return;
       rec.threads.push({ id: e.id, at: e.at, rows: [{ id: e.id + ':h', at: e.at, sys: true, text: e.text ? `A new thread. ${e.text}` : 'A new thread.' }] });
-      rec.threads = rec.threads.slice(-20); putThread(rec);
+      putThread(rec); // every thread is kept (step 11; step 6 kept only the newest 20)
       if (chatWho === e.who) renderChat();
     });
     return;
@@ -3219,7 +3302,10 @@ function openChat(who, push = true) {
   if (push) history.pushState({ room: scene, layer: 'chat', who }, '');
   $('chat').style.setProperty('--accent', talkColour(who));
   $('chatName').textContent = talkName(who); $('chatHouse').textContent = talkHouse(who); $('chatBody').innerHTML = '';
-  $('chatText').placeholder = who === 'a' ? `Talk with A… or “bring me ${talkName('esoteric.d')}”` : `Talk with ${talkName(who)}…`;
+  $('chatText').placeholder = who === 'a' && innerWidth > 430 ? `Talk with A, or “bring me ${talkName('esoteric.d')}”` : `Talk with ${talkName(who)}…`;
+  $('chatText').value = drafts[who] || ''; grow($('chatText'));
+  chatFresh = { since: readAt[who] || '' }; $('chatPill').hidden = true;
+  $('chat').classList.toggle('half', !!village.settings.chatHalf);
   $('chat').classList.add('open'); $('chat').setAttribute('aria-hidden', 'false');
   micFor($('chatMic'), $('chatText'));
   drawFace($('chatFace'), who);
@@ -3228,7 +3314,7 @@ function openChat(who, push = true) {
 function closeChatLayer(release = true) {
   if (!chatWho) return;
   const v = villagers.find((x) => x.id === chatWho);
-  if (release && v && v.called) v.called.until = T + 60; // a called villager waits a minute, then goes back to their day
+  if (release && v && v.called) { v.called.until = T + 1.5; v.hold = 0; } // a called villager nods and goes back to their day (step 11: no more following)
   chatWho = null; $('chat').classList.remove('open'); $('chat').setAttribute('aria-hidden', 'true');
   document.activeElement && document.activeElement.blur();
 }
@@ -3241,21 +3327,44 @@ async function renderChat() {
     if (r.sys) return `<div class="talk sys">${esc(r.text)}</div>`;
     if (r.me) {
       const meta = out.has(r.id) ? (away || !village.bridge ? (who === 'a' ? 'a letter waiting with A' : `A holds this letter for ${name} until the PC is back`) : 'a letter waiting') : answered.has(r.id) ? '' : `with ${name} at the PC<span class="dots"></span>`;
-      return `<div class="talk me${out.has(r.id) ? ' waiting' : ''}">${esc(r.text)}${meta ? `<div class="meta">${meta}</div>` : ''}</div>`;
+      return `<div class="talk me${out.has(r.id) ? ' waiting' : ''}">${esc(r.text)}<div class="meta">${esc(hhmm(r.at))}${meta ? ' · ' + meta : ''}</div></div>`;
     }
-    return `<div class="talk them${r.error ? ' err' : ''}">${esc(r.text)}<div class="meta">${esc(r.from || name)} · ${esc(time(r.at))}</div></div>`;
+    const tb = who === 'a' && !r.error ? tableOf(r.text) : { text: r.text, seats: [] };
+    const long = isLong(tb.text), fold = long && !expanded.has(r.id);
+    const call = tb.seats.length ? `<button class="callT" data-seats="${esc(tb.seats.join(' '))}">Call ${esc(tb.seats.map(talkName).join(' & '))} to the table</button>` : '';
+    return `<div class="talk them md${r.error ? ' err' : ''}${fold ? ' fold' : ''}"><div class="mdx">${talkMd(tb.text)}</div><div class="meta acts"><span>${esc(r.from || name)} · ${esc(hhmm(r.at))}</span>${fold ? '<button class="more">Read all</button>' : long ? '<button class="less">Fold it</button>' : ''}<button class="copy">Copy</button>${call}</div></div>`;
   };
-  const earlier = rec.threads.slice(0, -1).filter((t) => t.rows.length);
-  let html = earlier.length ? `<details class="earlier"><summary>Earlier thread${earlier.length > 1 ? 's' : ''} (${earlier.length})</summary>${earlier.map((t) => t.rows.map(row).join('')).join('<hr>')}</details>` : '';
-  html += th.rows.map(row).join('') || `<p class="muted">${who === 'a' ? 'A walks at your right shoulder. Ask her anything, or tell her who to fetch.' : `${esc(name)} is listening.`}${village.bridge ? '' : ' Letters reach the PC once the phone is paired, at the letter box in the Longhouse-sala.'}</p>`;
-  if (away && lettersHeld()) html += `<p class="muted">The PC can’t be reached just now. A holds ${lettersHeld()} letter${lettersHeld() > 1 ? 's' : ''} and passes each to its house when it’s back.</p>`;
-  $('chatBody').innerHTML = html;
-  $('chatBody').scrollTop = $('chatBody').scrollHeight;
+  // every thread in one scroll, oldest first, with the days marked (step 11: no folded "Earlier threads" box)
+  const items = []; let day = '';
+  for (const t of rec.threads) for (const r of t.rows) {
+    const d = dayOf(r.at); if (d !== day) { day = d; items.push({ key: 'd:' + d, html: `<div class="talk day">${esc(d)}</div>` }); }
+    items.push({ key: r.id, html: row(r), them: !r.me && !r.sys, me: !!r.me, at: r.at });
+  }
+  if (!th.rows.length) items.push({ key: 'hello', html: `<p class="muted">${who === 'a' ? 'A walks at your right shoulder. Ask her anything, or tell her who to fetch.' : `${esc(name)} is listening.`}${village.bridge ? '' : ' Letters reach the PC once the phone is paired, at the letter box in the Longhouse-sala.'}</p>` });
+  if (away && lettersHeld()) items.push({ key: 'away', html: `<p class="muted">The PC can’t be reached just now. A holds ${lettersHeld()} letter${lettersHeld() > 1 ? 's' : ''} and passes each to its house when it’s back.</p>` });
+  chatRows = new Map(rec.threads.flatMap((t) => t.rows.map((r) => [r.id, r])));
+  const box = $('chatBody'), before = new Set([...box.children].map((el) => el.dataset.k)), atEnd = nearEnd(box), first = !before.size || before.size === 1 && before.has('hello');
+  patch(box, items);
+  const fresh = first ? [] : items.filter((it) => !before.has(it.key));
+  if (chatFresh) {
+    // just opened: at the first answer that came while Lek was away from this chat, or a search hit, else the end
+    const jump = chatFresh.jump, unread = items.find((it) => it.them && chatFresh.since && it.at > chatFresh.since);
+    chatFresh = null;
+    if (jump && box.querySelector(`[data-k="${CSS.escape(jump)}"]`)) { const el = box.querySelector(`[data-k="${CSS.escape(jump)}"]`); toStart(box, el); el.classList.add('flash'); }
+    else if (unread) toStart(box, box.querySelector(`[data-k="${CSS.escape(unread.key)}"]`));
+    else box.scrollTop = box.scrollHeight;
+  } else if (fresh.some((it) => it.me)) box.scrollTop = box.scrollHeight; // Lek's own line: he wants to see it go
+  else if (fresh.some((it) => it.them)) {
+    const it = fresh.find((x) => x.them), el = box.querySelector(`[data-k="${CSS.escape(it.key)}"]`), r = chatRows.get(it.key);
+    if (atEnd) toStart(box, el); // a long answer opens at its first line, a short one at the end
+    else showPill($('chatPill'), `↓ New from ${(r && r.from) || name}`, el);
+  } else if (atEnd && fresh.length) box.scrollTop = box.scrollHeight;
+  if (!document.hidden) markRead(who);
 }
 function sendChat() {
   const who = chatWho, text = $('chatText').value.trim();
   if (!who || !text) return;
-  $('chatText').value = '';
+  $('chatText').value = ''; grow($('chatText')); delete drafts[who]; save(K.drafts, drafts);
   // "Bring me Hekka": A fetches them, read here on the phone so it works offline too
   if (who === 'a') { const v = bringWho(text); if (v) { const id = crypto.randomUUID(); addTalk('a', { id, at: new Date().toISOString(), me: true, text }); callOver(v.id, 'a'); addTalk('a', { id: id + ':a', ref: id, at: new Date().toISOString(), from: talkName('a'), text: `${talkName(v.id)} is on the way.` }); return; } }
   const m = { id: crypto.randomUUID(), kind: 'message', to: who, text, at: new Date().toISOString(), chat: true };
@@ -3290,6 +3399,193 @@ $('chatText').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.s
 $('chatClose').onclick = () => backOrClose();
 $('chatCard').onclick = () => { const who = chatWho; backOrClose(); setTimeout(() => (who === 'a' ? openScroll() : /\.c$/.test(who) ? openScroll('cards') : openChar(who)), 80); };
 $('chatNew').onclick = (e) => { e.preventDefault(); newThread(); };
+
+// ══ step 11, the chat window (Lek, 2026-11-04): it stays where Lek reads, answers read as text, every thread is findable ══
+// brief/step11-chat-revamp-draft1.md has the audit and Lek's choices. Drafts and read marks are this device's only.
+const drafts = load(K.drafts, {});              // who → the line Lek was writing
+const readAt = load(K.read, null) || {};         // who → when Lek last had that chat open
+const expanded = new Set();                     // long answers Lek opened with "Read all"
+let chatFresh = null, chatRows = new Map();
+const hhmm = (iso) => (dayOf(iso) === 'Today' ? new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : time(iso));
+function dayOf(iso) {
+  const d = new Date(iso), t = new Date(); if (isNaN(d)) return '';
+  const k = (x) => x.toDateString(), y = new Date(t); y.setDate(t.getDate() - 1);
+  if (k(d) === k(t)) return 'Today'; if (k(d) === k(y)) return 'Yesterday';
+  return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', ...(d.getFullYear() !== t.getFullYear() ? { year: 'numeric' } : {}) });
+}
+const isLong = (s) => String(s || '').length > 900 || String(s || '').split('\n').length > 14;
+// Markdown, the small part the villagers use: headings, lists, quotes, code, bold, italics, links. Escaped first.
+function talkMd(src) {
+  const inline = (s) => { // code spans are set aside first, so **bold around `a path`** still works
+    const codes = [];
+    return esc(String(s).replace(/`([^`\n]+)`/g, (_, c) => `\u0000${codes.push(c) - 1}\u0000`))
+      .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/__(.+?)__/g, '<b>$1</b>')
+      .replace(/(^|[\s(])\*(?!\s)([^*\n]+?)\*(?=[\s).,;:!?]|$)/g, '$1<i>$2</i>')
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+      .replace(/\u0000(\d+)\u0000/g, (_, i) => `<code>${esc(codes[i])}</code>`);
+  };
+  const lines = String(src || '').replace(/\r/g, '').split('\n'), out = []; let para = [], list = null, code = null;
+  const flush = () => { if (para.length) out.push(`<p>${para.map(inline).join('<br>')}</p>`); para = []; if (list) { out.push(`<${list.t}>${list.items.map((x) => `<li>${inline(x)}</li>`).join('')}</${list.t}>`); list = null; } };
+  for (const l of lines) {
+    if (code) { if (/^\s*```/.test(l)) { out.push(`<pre><code>${esc(code.join('\n'))}</code></pre>`); code = null; } else code.push(l); continue; }
+    if (/^\s*```/.test(l)) { flush(); code = []; continue; }
+    let m;
+    if (!l.trim()) { flush(); continue; }
+    if ((m = /^\s{0,3}#{1,6}\s+(.*)$/.exec(l))) { flush(); out.push(`<h4>${inline(m[1].replace(/\s#+$/, ''))}</h4>`); continue; }
+    if (/^\s*([-*_])(\s*\1){2,}\s*$/.test(l)) { flush(); out.push('<hr>'); continue; }
+    if ((m = /^\s*>\s?(.*)$/.exec(l))) { flush(); out.push(`<blockquote>${inline(m[1])}</blockquote>`); continue; }
+    if ((m = /^\s*(?:([-*•+])|(\d+)[.)])\s+(.*)$/.exec(l))) {
+      const t = m[1] ? 'ul' : 'ol'; if (para.length || (list && list.t !== t)) flush();
+      (list = list || { t, items: [] }).items.push(m[3]); continue;
+    }
+    if (list && /^\s{2,}\S/.test(l)) { list.items[list.items.length - 1] += ' ' + l.trim(); continue; }
+    if (list) flush();
+    para.push(l);
+  }
+  if (code) out.push(`<pre><code>${esc(code.join('\n'))}</code></pre>`);
+  flush(); return out.join('');
+}
+// redraw only what changed, keyed by row: a sync no longer throws away the scroll, a selection or an open answer
+function patch(box, items) {
+  const have = new Map();
+  for (const el of [...box.children]) { if (el.dataset.k && !have.has(el.dataset.k)) have.set(el.dataset.k, el); else if (!el.classList.contains('newPill')) el.remove(); }
+  const make = (it) => { const t = document.createElement('div'); t.innerHTML = it.html; const n = t.firstElementChild || document.createElement('div'); n.dataset.k = it.key; n._h = it.html; return n; };
+  let prev = null;
+  for (const it of items) {
+    let el = have.get(it.key);
+    if (el && el._h !== it.html) { const n = make(it); el.replaceWith(n); el = n; } else if (!el) el = make(it);
+    have.delete(it.key);
+    const want = prev ? prev.nextSibling : box.firstChild;
+    if (el !== want) box.insertBefore(el, want);
+    prev = el;
+  }
+  for (const el of have.values()) el.remove();
+}
+const nearEnd = (box) => box.scrollHeight - box.scrollTop - box.clientHeight < 48;
+// a long answer opens at its first line; a short one just brings the end into view
+function toStart(box, el) {
+  if (!el) { box.scrollTop = box.scrollHeight; return; }
+  const top = el.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop - 10;
+  box.scrollTop = el.offsetHeight > box.clientHeight * .75 ? top : box.scrollHeight;
+}
+function showPill(pill, text, el) {
+  pill.textContent = text; pill.hidden = false;
+  pill.onclick = () => { pill.hidden = true; const box = pill.previousElementSibling; if (el && el.isConnected) toStart(box, el); else box.scrollTop = box.scrollHeight; };
+}
+for (const [box, pill] of [['chatBody', 'chatPill']]) $(box).addEventListener('scroll', () => { if (nearEnd($(box))) $(pill).hidden = true; }, { passive: true });
+// Read all, Fold it, Copy
+$('chatBody').addEventListener('click', (e) => {
+  const b = e.target.closest('button'), el = b && b.closest('[data-k]'); if (!el) return;
+  const k = el.dataset.k;
+  if (b.classList.contains('more')) { expanded.add(k); renderChat(); }
+  else if (b.classList.contains('less')) { expanded.delete(k); renderChat().then(() => { const n = $('chatBody').querySelector(`[data-k="${CSS.escape(k)}"]`); if (n) toStart($('chatBody'), n); }); }
+  else if (b.classList.contains('copy')) { const r = chatRows.get(k); if (r) copyText(tableOf(r.text).text, b); }
+  else if (b.classList.contains('callT')) callTable(b.dataset.seats.split(' '));
+});
+// step 11 (Lek, 2026-11-04): A's "talk to Malee and Ngoen together" becomes one tap. A ends such an answer with
+// <table>["malee","ngoen"]</table>; an older answer that names two to four villagers "together" works too.
+function tableOf(text) {
+  const t = String(text || ''), m = /<table>\s*(\[[\s\S]*?\])\s*<\/table>/i.exec(t);
+  const vs = (village.content && village.content.data && village.content.data.villagers) || {};
+  const keys = Object.keys(vs).filter((k) => /\.(d|a)$/.test(k) && vs[k].name && !isRetired(k));
+  const byName = (n) => keys.find((k) => vs[k].name.toLowerCase() === String(n).toLowerCase().trim());
+  let ids = [];
+  if (m) { try { ids = JSON.parse(m[1]).map(byName).filter(Boolean); } catch {} }
+  else for (const sn of t.split(/(?<=[.!?])\s+|\n+/)) { // the names and "together" in one sentence
+    if (!/\btogether\b|\bboth\b|\bsammen\b|\bjoint\b/i.test(sn)) continue;
+    const got = keys.map((k) => [k, sn.search(new RegExp('\\b' + vs[k].name + '\\b'))]).filter((x) => x[1] >= 0).sort((a, b) => a[1] - b[1]).map((x) => x[0]);
+    if (got.length >= 2 && got.length <= 4) { ids = got; break; }
+  }
+  ids = [...new Set(ids)].slice(0, 4);
+  return { text: m ? t.replace(m[0], '').trimEnd() : t, seats: ids.length >= 2 ? ids : [] };
+}
+function callTable(seats) {
+  backOrClose();
+  setTimeout(() => { if (meetKind()) { meetPick = seats.slice(); openMeet(); } else startMeeting('sala', seats); }, 80);
+}
+function copyText(text, btn) {
+  const done = () => { const was = btn.textContent; btn.textContent = 'Copied'; setTimeout(() => { btn.textContent = was; }, 1400); };
+  const fallback = () => { const t = document.createElement('textarea'); t.value = text; t.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); done(); } catch {} t.remove(); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback); else fallback();
+}
+// the text box grows with what Lek writes, and keeps a half-written line per villager until he sends it
+function grow(ta) { ta.style.height = 'auto'; if (ta.value) ta.style.height = Math.min(ta.scrollHeight + 2, innerHeight * .33) + 'px'; }
+$('chatText').addEventListener('input', () => { grow($('chatText')); if (!chatWho) return; if ($('chatText').value.trim()) drafts[chatWho] = $('chatText').value; else delete drafts[chatWho]; save(K.drafts, drafts); });
+$('meetText').addEventListener('input', () => grow($('meetText')));
+// the phone's sheet: drag the handle down for half, up for tall; a tap swaps them. Remembered on this device.
+for (const id of ['chat', 'meetP']) {
+  const p = $(id), g = p.querySelector('.grab'); let y0 = null;
+  g.addEventListener('pointerdown', (e) => { y0 = e.clientY; try { g.setPointerCapture(e.pointerId); } catch {} });
+  g.addEventListener('pointerup', (e) => {
+    if (y0 === null) return; const dy = e.clientY - y0; y0 = null;
+    const half = Math.abs(dy) < 8 ? !p.classList.contains('half') : dy > 0;
+    village.settings.chatHalf = half; saveVillage();
+    for (const q of ['chat', 'meetP']) $(q).classList.toggle('half', half);
+  });
+}
+// read marks: an answer is new until Lek has that chat open. The first time, everything already here counts as read.
+function markRead(who) {
+  const rec = threads[who]; if (!rec) return;
+  const last = rec.threads.flatMap((t) => t.rows).filter((r) => !r.me && !r.sys).map((r) => r.at).sort().pop();
+  if (last && (!readAt[who] || readAt[who] < last)) { readAt[who] = last; save(K.read, readAt); talkBadge(); }
+}
+const lastThem = (rec) => rec.threads.flatMap((t) => t.rows).filter((r) => !r.me && !r.sys).map((r) => r.at).sort().pop() || '';
+const unreadIn = (who) => { const rec = threads[who]; const l = rec && lastThem(rec); return !!l && (!readAt[who] || readAt[who] < l) && chatWho !== who; };
+function talkBadge() {
+  const n = Object.keys(threads).filter(unreadIn).length, b = $('talksBadge');
+  b.hidden = !n; b.textContent = n;
+  if ($('talks').classList.contains('open')) renderTalks();
+}
+// every villager's record on this device, read once into memory (threadOf reads them one at a time)
+async function loadAllThreads() {
+  const db = await TDB(); if (!db) return;
+  const all = await new Promise((res) => { try { const q = db.transaction('threads').objectStore('threads').getAll(); q.onsuccess = () => res(q.result || []); q.onerror = () => res([]); } catch { res([]); } });
+  for (const rec of all) if (rec && rec.who && !threads[rec.who]) threads[rec.who] = rec;
+  if (load(K.read, null) === null) { for (const rec of all) { const l = lastThem(rec); if (l) readAt[rec.who] = l; } save(K.read, readAt); }
+  talkBadge();
+}
+
+// ── Talks: every thread on this device, newest first, and search across all of them (Lek, 2026-11-04) ──
+function openTalks() {
+  history.pushState({ room: scene, layer: 'talks' }, '');
+  $('talks').classList.add('open'); $('talks').setAttribute('aria-hidden', 'false');
+  renderTalks(); loadAllThreads();
+  if (!TOUCH) setTimeout(() => $('talksQ').focus(), 60);
+}
+function closeTalksLayer() { $('talks').classList.remove('open'); $('talks').setAttribute('aria-hidden', 'true'); }
+const nameOf = (who) => { try { return talkName(who) || who; } catch { return who; } };
+const colourOf = (who) => { try { return talkColour(who); } catch { return '#f2c46d'; } };
+function renderTalks() {
+  const q = $('talksQ').value.trim().toLowerCase(), recs = Object.values(threads).filter((r) => r.threads.some((t) => t.rows.length));
+  let html;
+  if (!q) {
+    const last = (rec) => rec.threads.flatMap((t) => t.rows).filter((r) => !r.sys).pop() || {};
+    recs.sort((a, b) => stamp(last(b).at) - stamp(last(a).at));
+    html = recs.length ? `<div class="tks">${recs.map((rec) => {
+      const l = last(rec), who = rec.who, wait = waitingIn(rec).length;
+      return `<button class="tk${unreadIn(who) ? ' unread' : ''}" data-who="${esc(who)}" style="--c:${colourOf(who)}"><i></i><b>${esc(nameOf(who))}${wait ? '<em>waiting</em>' : ''}</b><span class="when">${l.at ? esc(hhmm(l.at)) : ''}</span><span class="last">${l.me ? 'You: ' : ''}${esc(String(l.text || '').replace(/<table>[\s\S]*?<\/table>/gi, '').replace(/[#*`>]/g, '').replace(/\s+/g, ' ').slice(0, 140))}</span></button>`;
+    }).join('')}</div>` : '<p class="muted">No talks yet. Tap anyone in the village to start one.</p>';
+  } else {
+    const hits = [];
+    for (const rec of recs) for (const t of rec.threads) for (const r of t.rows) if (!r.sys && String(r.text || '').toLowerCase().includes(q)) hits.push({ who: rec.who, r });
+    hits.sort((a, b) => stamp(b.r.at) - stamp(a.r.at));
+    const snip = (s) => { s = String(s).replace(/\s+/g, ' '); const i = s.toLowerCase().indexOf(q), a = Math.max(0, i - 50), part = s.slice(a, i + q.length + 90); const j = part.toLowerCase().indexOf(q);
+      return (a ? '…' : '') + esc(part.slice(0, j)) + '<mark>' + esc(part.slice(j, j + q.length)) + '</mark>' + esc(part.slice(j + q.length)) + (a + part.length < s.length ? '…' : ''); };
+    html = hits.length ? `<p class="muted">${hits.length > 80 ? 'The newest 80 of ' : ''}${hits.length} line${hits.length > 1 ? 's' : ''}</p><div class="tks">${hits.slice(0, 80).map(({ who, r }) =>
+      `<button class="tk" data-who="${esc(who)}" data-k="${esc(r.id)}" style="--c:${colourOf(who)}"><i></i><b>${esc(nameOf(who))}</b><span class="when">${esc(dayOf(r.at))} ${esc(new Date(r.at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }))}</span><span class="last" style="white-space:normal">${r.me ? 'You: ' : ''}${snip(r.text)}</span></button>`).join('')}</div>`
+      : '<p class="muted">Nothing found in the chats on this device.</p>';
+  }
+  $('talksBody').innerHTML = html;
+  for (const b of $('talksBody').querySelectorAll('.tk')) b.onclick = () => {
+    const who = b.dataset.who, k = b.dataset.k;
+    backOrClose();
+    setTimeout(() => { if (k) expanded.add(k); openChat(who); if (k && chatFresh) chatFresh.jump = k; }, 80);
+  };
+}
+$('talksQ').addEventListener('input', () => { clearTimeout(renderTalks.t); renderTalks.t = setTimeout(renderTalks, 120); });
+$('talksBtn').onclick = openTalks;
+$('talksClose').onclick = () => backOrClose();
+loadAllThreads();
 
 // ── the voice: speech-to-text on every chat box, English (Lek, 2026-11-01). The Low Hum only adds a glow. ──
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -3419,7 +3715,8 @@ function drawReach(c, s) {
 
 // ── meetings in the Longhouse-sala, and Strings on the green (07_talking.md §3) ──
 // village.meet is the PC's latest picture of the meeting; village.meetLocal is one started here and not yet confirmed.
-const HEAD = { x: 394, y: 640 }; // the head of the table, where Lek sits; A stands beside him
+const HEAD = { x: 394, y: 640 }; // the head of the table, where Lek sits; A sits beside him (step 11)
+const aSeated = () => lek.sit === HEAD && scene === 'hub';
 const GREEN = { x: 900, y: 900 };
 function meetNow() {
   const m = village.meet, l = village.meetLocal;
@@ -3432,11 +3729,12 @@ function meetSend(op, extra = {}) {
   const item = { id: crypto.randomUUID(), kind: 'meeting', to: 'longhouse', text: JSON.stringify({ op, ...extra }), at: new Date().toISOString() };
   outbox.push(item); save(K.outbox, outbox); sync(); return item;
 }
-function startMeeting(kind) {
-  if (meetKind()) { openMeet(); return; }
-  const it = meetSend('start', { kind, apprentices: kind === 'sala' && !!village.settings.meetApprentices });
-  village.meetLocal = { id: it.id, at: it.at, kind, apprentices: kind === 'sala' && !!village.settings.meetApprentices, rows: [], state: 'open' }; saveVillage();
-  meetTo = 'all';
+function startMeeting(kind, seats) {
+  if (meetKind()) { if (seats) meetPick = seats.slice(); openMeet(); return; }
+  const appr = kind === 'sala' && (!!village.settings.meetApprentices || !!(seats && seats.some((id) => /\.a$/.test(id))));
+  const it = meetSend('start', { kind, apprentices: appr, ...(seats && seats.length ? { with: seats.map(agentIdOf) } : {}) });
+  village.meetLocal = { id: it.id, at: it.at, kind, apprentices: appr, rows: [], state: 'open', ...(seats && seats.length ? { withSeats: seats.filter((x) => x !== 'a') } : {}) }; saveVillage();
+  meetPick = seats ? seats.slice() : []; meetWithSeen = it.id;
   if (kind === 'green') {
     if (scene !== 'world') { say('Strings plays on the green, outside. Walk out and the village gathers round you.', 'Strings'); }
     else goTo(GREEN.x, GREEN.y - 4, () => { lek.dir = 0; });
@@ -3453,32 +3751,69 @@ function endMeeting() {
   lek.sit = null; closeMeetLayer(); if (history.state && history.state.layer === 'meet') history.back();
   say(m.kind === 'green' ? 'The music ends and the village goes back to its day.' : 'The meeting is over. Each director writes down what they took from it.', m.kind === 'green' ? 'Strings' : 'The meeting');
 }
-let meetTo = 'all';
+// step 11 (Lek, 2026-11-04: "pick who ever, in turn"): meetPick is who Lek's next question goes to, in the order
+// he tapped them; empty is everyone. A picked few answer one after the other, each hearing the ones before.
+let meetPick = [], meetWithSeen = null, meetFresh = false, meetRows = new Map();
+// A meeting Lek called a few to has a table of just them; anyone he picks or asks after joins it. A general meeting
+// (no "with") brings every director, as before.
+const meetCame = new Map(); // meeting at → Set of '<house>.<d|a>' picked since
+function tableOf_(m) {
+  const w = m && (m.with ? m.with.map(idOf) : m.withSeats); if (!w) return null;
+  const s = new Set(w.concat([...(meetCame.get(m.at) || [])]));
+  for (const r of m.rows || []) if (r.who === 'lek' && r.to && r.to !== 'all' && r.to !== 'a') for (const x of [].concat(r.to)) s.add(idOf(x));
+  return s;
+}
+function atTable(id) { const t = tableOf_(meetNow()); return !t || t.has(id); }
+function joinTable(ids) { const m = meetNow(); if (!m) return; const s = meetCame.get(m.at) || new Set(); for (const id of ids) s.add(id); meetCame.set(m.at, s); for (const v of villagers) if (ids.includes(v.id)) decide(v); }
+$('meetBody').addEventListener('scroll', () => { if (nearEnd($('meetBody'))) $('meetPill').hidden = true; }, { passive: true });
+$('meetBody').addEventListener('click', (e) => { const b = e.target.closest('button.copy'), el = b && b.closest('[data-k]'), r = el && meetRows.get(el.dataset.k); if (r) copyText(r.text, b); });
 function openMeet() {
   if (!meetNow()) return;
   if (!$('meetP').classList.contains('open')) history.pushState({ room: scene, layer: 'meet' }, '');
   $('meetP').classList.add('open'); $('meetP').setAttribute('aria-hidden', 'false');
+  $('meetP').classList.toggle('half', !!village.settings.chatHalf); meetFresh = true; $('meetPill').hidden = true;
   micFor($('meetMic'), $('meetText'));
   renderMeet(); sync();
+  const on = $('meetWho').querySelector('button.on'); if (on) $('meetWho').scrollLeft = Math.max(0, on.offsetLeft - 14); // a called few can sit off the edge
 }
 function closeMeetLayer() { $('meetP').classList.remove('open'); $('meetP').setAttribute('aria-hidden', 'true'); document.activeElement && document.activeElement.blur(); }
 function renderMeet() {
   const m = meetNow(); if (!m) { closeMeetLayer(); return; }
   $('meetTitle').textContent = m.kind === 'green' ? 'Strings on the green' : 'The Longhouse-sala';
-  const seats = HOUSE_IDS.map((h) => h + '.d').concat(m.apprentices ? HOUSE_IDS.map((h) => h + '.a').filter((id) => !isRetired(id)) : []);
-  if (meetTo !== 'all' && !seats.includes(meetTo)) meetTo = 'all';
-  $('meetWho').innerHTML = `<button data-to="all" class="${meetTo === 'all' ? 'on' : ''}">Everyone</button>` + seats.map((id) => `<button data-to="${id}" class="${meetTo === id ? 'on' : ''}" style="--c:${talkColour(id)}">${esc(talkName(id))}</button>`).join('');
-  for (const b of $('meetWho').querySelectorAll('button')) b.onclick = () => { meetTo = b.dataset.to; renderMeet(); };
-  $('meetText').placeholder = meetTo === 'all' ? (m.kind === 'green' ? 'Ask everyone…' : 'One question to every director…') : `To ${talkName(meetTo)}, in front of the others…`;
+  const seats = ['a'].concat(HOUSE_IDS.map((h) => h + '.d'), villagers.some((v) => v.id === 'hub.d') ? ['hub.d'] : []).concat(m.apprentices ? HOUSE_IDS.map((h) => h + '.a').filter((id) => !isRetired(id)) : []);
+  if (m.with && m.id !== meetWithSeen && m.state === 'open') { meetWithSeen = m.id; if (!meetPick.length) meetPick = m.with.map(idOf); } // called to the table
+  meetPick = meetPick.filter((id) => seats.includes(id));
+  const many = meetPick.length > 1;
+  const table = tableOf_(m);
+  $('meetWho').innerHTML = `<button data-to="all" class="${meetPick.length ? '' : 'on'}">${table ? 'Everyone here' : 'Everyone'}</button>` + seats.map((id) => { const n = meetPick.indexOf(id); return `<button data-to="${id}" class="${n >= 0 ? 'on' : ''}" style="--c:${talkColour(id)}">${many && n >= 0 ? `<i>${n + 1}</i>` : ''}${esc(talkName(id))}</button>`; }).join('');
+  for (const b of $('meetWho').querySelectorAll('button')) b.onclick = () => {
+    const id = b.dataset.to;
+    meetPick = id === 'all' ? [] : meetPick.includes(id) ? meetPick.filter((x) => x !== id) : [...meetPick, id];
+    if (id !== 'all' && meetPick.includes(id)) joinTable([id]); // picking someone calls them to the table
+    renderMeet();
+  };
+  const names = meetPick.map(talkName);
+  $('meetText').placeholder = !meetPick.length ? (m.kind === 'green' ? 'Ask everyone…' : table ? 'One question to everyone at the table…' : 'One question to every director…')
+    : many ? `${names.join(', then ')}…` : `To ${names[0]}, in front of the others…`;
   const waiting = outbox.filter((it) => it.kind === 'meeting').map((it) => { try { return JSON.parse(it.text); } catch { return {}; } }).filter((o) => o.op === 'ask');
-  const rows = (m.rows || []).map((r) => {
-    if (r.who === 'lek') return `<div class="talk me">${esc(r.text)}<div class="meta">to ${r.to === 'all' ? 'everyone' : r.to === 'a' ? 'A' : esc(talkName(r.to.includes('.') ? r.to : idOf(r.to)))}</div></div>`;
+  meetRows = new Map();
+  const rows = (m.rows || []).map((r, i) => {
+    const key = r.id || 'r' + i;
+    if (r.who === 'lek') return { key, me: true, html: `<div class="talk me">${esc(r.text)}<div class="meta">to ${r.to === 'all' ? 'everyone' : r.to === 'a' ? 'A' : Array.isArray(r.to) ? esc(r.to.map((x) => talkName(idOf(x))).join(', then ')) + ', in turn' : esc(talkName(r.to.includes('.') ? r.to : idOf(r.to)))}</div></div>` };
     const id = r.who === 'aletheia' ? 'a' : idOf(r.who), name = r.name || talkName(id);
-    if (r.pending) return `<div class="talk them pend" style="--c:${talkColour(id)}"><b>${esc(name)}</b> is thinking at the PC<span class="dots"></span></div>`;
-    return `<div class="talk them${r.error ? ' err' : ''}${r.private ? ' private' : ''}" style="--c:${talkColour(id)}"><b>${esc(name)}</b> ${esc(r.text)}</div>`;
-  }).concat(waiting.map((o) => `<div class="talk me waiting">${esc(o.q)}<div class="meta">${pcAway() ? 'waits until the PC is back' : 'on its way to the PC'}</div></div>`));
-  $('meetBody').innerHTML = rows.join('') || `<p class="muted">${m.kind === 'green' ? 'They’re gathering. Each director says in a line what they’re on.' : 'Ask everyone one question, tap a name to talk to one of them, or let A walk you through the agenda.'}</p>`;
-  $('meetBody').scrollTop = $('meetBody').scrollHeight;
+    if (r.pending && r.queued) return { key: key + ':q', html: `<div class="talk them pend" style="--c:${talkColour(id)}"><b>${esc(name)}</b> listens, then answers</div>` };
+    if (r.pending) return { key, html: `<div class="talk them pend" style="--c:${talkColour(id)}"><b>${esc(name)}</b> is thinking at the PC<span class="dots"></span></div>` };
+    meetRows.set(key, r);
+    return { key, them: true, html: `<div class="talk them md${r.error ? ' err' : ''}${r.private ? ' private' : ''}" style="--c:${talkColour(id)}"><b>${esc(name)}</b><div class="mdx">${talkMd(r.text)}</div><div class="meta acts"><button class="copy">Copy</button></div></div>` };
+  }).concat(waiting.map((o, i) => ({ key: 'w' + i + ':' + o.q, me: true, html: `<div class="talk me waiting">${esc(o.q)}<div class="meta">${pcAway() ? 'waits until the PC is back' : 'on its way to the PC'}</div></div>` })));
+  if (!rows.length) rows.push({ key: 'hello', html: `<p class="muted">${m.kind === 'green' ? 'They’re gathering. Each director says in a line what they’re on.' : 'Ask everyone one question, tap a name to talk to one of them (or a few, and they answer in turn), or let A walk you through the agenda.'}</p>` });
+  // step 11: like the chat, it follows the end only when Lek is already there
+  const box = $('meetBody'), before = new Set([...box.children].map((el) => el.dataset.k)), atEnd = nearEnd(box);
+  patch(box, rows);
+  const fresh = items => items.filter((it) => !before.has(it.key));
+  if (meetFresh) { meetFresh = false; box.scrollTop = box.scrollHeight; }
+  else if (fresh(rows).some((it) => it.me) || (atEnd && fresh(rows).length)) box.scrollTop = box.scrollHeight;
+  else if (fresh(rows).some((it) => it.them)) showPill($('meetPill'), '↓ New answers', box.querySelector(`[data-k="${CSS.escape(fresh(rows).find((it) => it.them).key)}"]`));
   $('meetAgenda').hidden = m.kind === 'green';
   $('meetEnd').textContent = m.kind === 'green' ? 'End the gathering' : 'End the meeting';
 }
@@ -3491,11 +3826,11 @@ function idOf(agentId) {
 function sendMeet() {
   const q = $('meetText').value.trim(); if (!q || !meetNow()) return;
   $('meetText').value = '';
-  meetSend('ask', { q, to: meetTo === 'all' ? 'all' : agentIdOf(meetTo) });
+  meetSend('ask', { q, to: !meetPick.length ? 'all' : meetPick.length === 1 ? agentIdOf(meetPick[0]) : meetPick.map(agentIdOf) });
   renderMeet();
 }
 // '<house>.<d|a>' → the bridge's agent id, which is the villager's name in lower case (content/directors.json)
-const agentIdOf = (who) => talkName(who).toLowerCase();
+const agentIdOf = (who) => (who === 'a' ? 'aletheia' : talkName(who).toLowerCase());
 $('meetSend').onclick = sendMeet;
 $('meetText').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !TOUCH) { e.preventDefault(); sendMeet(); } });
 $('meetAgenda').onclick = () => { meetSend('agenda'); renderMeet(); };
@@ -3549,7 +3884,9 @@ function drawHeld(c, p, s) {
   c.restore();
 }
 // Lek's chat sheet covers the lower part of the screen: the camera keeps him above it (v1 did this)
-function sheetLift() { for (const id of ['chat', 'meetP']) { const el = $(id); if (el.classList.contains('open')) return el.offsetHeight; } return 0; }
+// step 11: on a wide screen the chat is a side panel instead, and the village keeps the space to its left
+function sideW() { if (!SIDE.matches) return 0; for (const id of ['chat', 'meetP', 'talks']) { const el = $(id); if (el.classList.contains('open')) return el.offsetWidth; } return 0; }
+function sheetLift() { if (SIDE.matches) return 0; for (const id of ['chat', 'meetP']) { const el = $(id); if (el.classList.contains('open')) return el.offsetHeight; } return 0; }
 // waiting on an answer with the panel open: sync every few seconds (Lek, 2026-11-01), only while the PC answers
 let fastAt = 0;
 setInterval(() => {
