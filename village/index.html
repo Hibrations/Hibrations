@@ -360,6 +360,7 @@ code { font-size: 12.5px; background: rgba(255, 255, 255, .07); border-radius: 4
 
 <div id="update">New version — tap to reload</div>
 
+<script src="../temple_link.js"></script>
 <script>
 'use strict';
 // ══════════════════════════════════════════════════════════════════════════════════════════
@@ -485,7 +486,7 @@ async function sync() {
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     const acked = new Set(data.acked || []);
-    for (const id of acked) if (/^garr-/.test(id)) (village.templeSent ||= {})[id] = 1; // step 8: the Garr button's notes the PC has
+    for (const id of acked) if (/^(garr|link)-/.test(id)) (village.templeSent ||= {})[id] = 1; // step 8: the temple buttons' notes the PC has
     outbox = outbox.filter((m) => !acked.has(m.id));
     save(K.outbox, outbox);
     const known = new Set(village.events.map((e) => e.id));
@@ -493,6 +494,7 @@ async function sync() {
       if (JOB_KINDS.has(e.kind)) applyJob(e);
       else if (e.kind === 'meeting') { if (e.data) village.meet = e.data; }
       else if (e.kind === 'bodyPlan') bodyPlanIn(e.data); // step 8: Garr's plan, after Lek's yes
+      else if (e.kind === 'templeOffer') { if (!IS_PC && window.TempleLink) TempleLink.offerIn(e.data); } // step 8, part two: another director's, after his yes
       else if (e.kind === 'said') { if (e.who) addTalk(e.who, { id: e.id, at: e.at, me: true, text: e.text }); } // step 6b: Lek's own line, from the other device
       else if (e.who && (e.kind === 'reply' || e.kind === 'thread')) talkIn(e); // step 6: threads live in IndexedDB
       else if (!known.has(e.id)) village.events.push(e);
@@ -611,9 +613,21 @@ function digestOut() {
   if (h !== village.portalSent) Object.assign(d, P, { portalHash: h });
   const b = bodySnapshot();
   if (b && b.hash !== village.bodySent) Object.assign(d, { body: b.snap, bodyHash: b.hash });
+  // step 8, part two: the other temples, what changed and what fits. The bridge takes 1 MB a sync, so the rest goes next time.
+  if (window.TempleLink) {
+    let room = 600000 - (d.body ? TempleLink.size(d.body) : 0);
+    const sent = village.linkSent || {}, snaps = {}, hashes = {};
+    for (const app of TempleLink.snaps) {
+      const s = TempleLink.snapshot(app); if (!s) continue;
+      const h = strHash(JSON.stringify(s)), n = TempleLink.size(s);
+      if (h === sent[app] || n > room) continue;
+      snaps[app] = s; hashes[app] = h; room -= n;
+    }
+    if (Object.keys(snaps).length) Object.assign(d, { links: snaps, linkHashes: hashes });
+  }
   return d;
 }
-function digestSent(d) { village.ledgerSent = d.upto; if (d.portalHash) village.portalSent = d.portalHash; if (d.bodyHash) village.bodySent = d.bodyHash; }
+function digestSent(d) { village.ledgerSent = d.upto; if (d.portalHash) village.portalSent = d.portalHash; if (d.bodyHash) village.bodySent = d.bodyHash; if (d.linkHashes) village.linkSent = { ...(village.linkSent || {}), ...d.linkHashes }; }
 
 // ══ Step 8: the temple link between Garr and the Body Temple ══
 // The village only reads body_temple_v1. Garr's plans go to the Body Temple through its own inbox (body_inbox_v1),
@@ -662,9 +676,25 @@ function templeOut() {
   const box = load('body_inbox_v1', { items: [] });
   village.bodyReported = village.bodyReported || {};
   for (const x of Array.isArray(box.items) ? box.items : []) {
-    if (!/^landed:/.test(x.status || '') || village.bodyReported[x.id]) continue;
-    outbox.push({ id: 'landed-' + x.id, kind: 'bodyLanded', to: 'A', text: JSON.stringify({ ref: x.id, how: x.status.slice(7), name: x.landedName || '' }), at: new Date().toISOString() });
+    if (!/^(landed:|refused$)/.test(x.status || '') || village.bodyReported[x.id]) continue;
+    outbox.push({ id: 'landed-' + x.id, kind: 'bodyLanded', to: 'A', text: JSON.stringify({ ref: x.id, how: x.status.replace('landed:', ''), name: x.landedName || '' }), at: new Date().toISOString() });
     village.bodyReported[x.id] = true;
+  }
+  // step 8, part two: the same for the other temples
+  if (window.TempleLink) {
+    for (const app of Object.keys(TempleLink.APPS)) {
+      const s = load(TempleLink.storeKey(app), null);
+      for (const a of s && Array.isArray(s.asks) ? s.asks : []) {
+        if (a.answer || a.acked || have.has(a.id) || (village.templeSent || {})[a.id] || Date.now() - Date.parse(a.at) > 7 * 864e5) continue;
+        outbox.push({ id: a.id, kind: 'message', to: TempleLink.APPS[app].house + '.d', text: String(a.text || '').slice(0, 5000), at: a.at, letter: true, temple: { app, ref: a.ref || undefined } });
+      }
+    }
+    const inbox = load(TempleLink.INBOX, { items: [] });
+    for (const x of Array.isArray(inbox.items) ? inbox.items : []) {
+      if (!x || !/^(landed:|refused$)/.test(x.status || '') || village.bodyReported[x.id]) continue;
+      outbox.push({ id: 'landed-' + x.id, kind: 'linkLanded', to: 'A', text: JSON.stringify({ ref: x.id, how: x.status.replace('landed:', ''), name: x.landedName || '' }), at: new Date().toISOString() });
+      village.bodyReported[x.id] = true;
+    }
   }
   save(K.outbox, outbox);
 }
@@ -769,7 +799,7 @@ function trimCardDetails() {
   const past = Object.values(J.cards).filter((k) => k.state !== 'open' && k.more).sort((a, b) => (a.answered < b.answered ? 1 : -1));
   for (const k of past.slice(8)) delete k.more;
 }
-const CARD_KIND = { yes: 'Needs your yes', email: 'An email to copy', goal: 'A goal plan', proposal: 'An instruction change', suggestion: 'A suggestion', hire: 'A hire', retire: 'A retirement', install: 'An install, for you to do', plan: 'A Body Temple plan', skill: 'A skill to install', moved: 'A file moved aside' };
+const CARD_KIND = { yes: 'Needs your yes', email: 'An email to copy', goal: 'A goal plan', proposal: 'An instruction change', suggestion: 'A suggestion', hire: 'A hire', retire: 'A retirement', install: 'An install, for you to do', plan: 'A Body Temple plan', offer: 'A proposal for a temple', skill: 'A skill to install', moved: 'A file moved aside' };
 // step 7: what a yes card is about, so a spend or a post reads as one
 const YES_TOPIC = { spend: 'A spend: needs your yes', post: 'A post or publication: needs your yes', install: 'An install: needs your yes', instructions: 'An instruction change: needs your yes' };
 const cardKind = (k) => (k.kind === 'yes' && YES_TOPIC[k.topic]) || (k.kind === 'proposal' && k.tamper ? 'An instruction change the bridge stopped' : CARD_KIND[k.kind]) || 'A card';
@@ -778,7 +808,10 @@ function cardsHtml() {
   const one = (k) => {
     const priv = k.house === 'cupidity';
     const copy = k.kind === 'install' ? `<button class="btn" data-copy="${esc(k.id)}">Copy the steps</button>` : '';
-    const landed = k.kind === 'plan' && k.state === 'yes' ? (k.landed === 'version' ? ' · in the Body Temple, your old version kept' : k.landed === 'new' ? ` · in the Body Temple as “${esc(k.landedName || k.plan.name)}” (you had changed yours)` : ' · lands when the Body Temple opens on the phone') : '';
+    const inTemple = k.kind === 'offer' && window.TempleLink && TempleLink.has(k.app) ? TempleLink.APPS[k.app].name : 'the temple';
+    const landed = k.landed === 'refused' ? ' · it didn’t hold when it got there, so nothing landed'
+      : k.kind === 'offer' && k.state === 'yes' ? (k.landed === 'version' ? ` · in ${esc(inTemple)}, your old version kept` : k.landed === 'new' ? ` · in ${esc(inTemple)} as “${esc(k.landedName || '')}” (you had changed yours)` : k.landed === 'shelf' ? ` · on the shelf in ${esc(inTemple)}` : ` · lands when ${esc(inTemple)} opens on the phone`)
+      : k.kind === 'plan' && k.state === 'yes' ? (k.landed === 'version' ? ' · in the Body Temple, your old version kept' : k.landed === 'new' ? ` · in the Body Temple as “${esc(k.landedName || k.plan.name)}” (you had changed yours)` : ' · lands when the Body Temple opens on the phone') : '';
     const acts = k.state !== 'open' ? `<div class="meta">${k.state === 'yes' ? 'yes' : 'no'} · ${time(k.answered)}${k.noWhy ? ' · ' + esc(k.noWhy) : ''}${landed}</div>${k.state === 'yes' && copy ? `<div class="acts">${copy}</div>` : ''}`
       : k.kind === 'hire' ? `<div class="acts"><button class="btn" data-interview="${esc(k.house)}">Interview</button><button class="btn" data-ans="yes" data-card="${esc(k.id)}">Yes, hire</button><button class="btn" data-ans="no" data-card="${esc(k.id)}">No</button><button class="btn" data-ans="change" data-card="${esc(k.id)}">Change it</button></div>`
       : k.kind === 'install' ? `<div class="acts">${copy}<button class="btn" data-ans="yes" data-card="${esc(k.id)}">Yes, I’ll install it</button><button class="btn" data-ans="no" data-card="${esc(k.id)}">No</button><button class="btn" data-ans="change" data-card="${esc(k.id)}">Change it</button></div>`
@@ -844,7 +877,7 @@ function wireScroll() {
     const k = J.cards[b.dataset.card], choice = b.dataset.ans;
     // step 7: a no to a hire, a retirement or an install can say why; the one who asked is told
     let why;
-    if (choice === 'no' && ['hire', 'retire', 'install', 'plan'].includes(k.kind)) { why = prompt('No. Want to say why? (optional)', ''); if (why === null) return; }
+    if (choice === 'no' && ['hire', 'retire', 'install', 'plan', 'offer'].includes(k.kind)) { why = prompt('No. Want to say why? (optional)', ''); if (why === null) return; }
     outbox.push({ id: crypto.randomUUID(), kind: 'answer', to: 'A', text: JSON.stringify(why ? { ref: k.id, choice, why } : { ref: k.id, choice }), at: new Date().toISOString() }); save(K.outbox, outbox);
     if (choice !== 'change') { k.state = choice; k.answered = new Date().toISOString(); if (why) k.noWhy = why; }
     saveVillage(); sync();

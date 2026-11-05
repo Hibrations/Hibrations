@@ -210,6 +210,7 @@ body {
 .toast.show { opacity: 1; }
 </style>
 <link href="fonts/fonts.css" rel="stylesheet">
+<script src="temple_link.js" data-app="hibrations"></script>
 </head>
 <body>
 <div class="wrap" id="main">
@@ -534,6 +535,23 @@ body {
     bodyT.addEventListener('input', function () { p.body = bodyT.value; touch(p); });
     d.appendChild(bodyT);
 
+    // the temple link (Lysningen step 8): why this version, its earlier versions, and the button
+    if (p.by && p.linkWhy) d.appendChild(el('div', 'hint', esc(p.by) + ': ' + esc(p.linkWhy)));
+    if (window.TempleLink) d.appendChild(TempleLink.linkTo({ kind: 'piece', id: p.id, name: (p.title || 'this piece').slice(0, 80) }));
+    (p.versions || []).slice().reverse().forEach(function (v, ri) {
+      var idx = p.versions.length - 1 - ri;
+      var row = el('div', 'hint', (v.by && v.by !== 'Lek' ? esc(v.by) + '’s' : 'your') + ' version · ' + esc((v.at || '').slice(0, 10)) + ' ');
+      var sw = el('button', 'detail-back', 'switch back');
+      sw.addEventListener('click', function () {
+        var now = { title: p.title || '', body: p.body || '', by: p.by || 'Lek', at: new Date().toISOString() };
+        p.title = v.title || ''; p.body = v.body || ''; p.by = v.was || undefined; p.linkWhy = undefined;
+        p.versions = p.versions.filter(function (_, i) { return i !== idx; }).concat(now).slice(-20);
+        touch(p); toast('switched back'); openDetail(p.id);
+      });
+      row.appendChild(sw);
+      d.appendChild(row);
+    });
+
     // stage
     d.appendChild(el('div', 'field-label', 'stage'));
     var stageWrap = el('div', 'stage-pills');
@@ -644,6 +662,43 @@ body {
     try { window.parent.postMessage('close-temple', '*'); } catch (e) {}
     try { window.location.href = 'index.html'; } catch (e) {}
   });
+
+  // Lands a proposal the director's card got a yes for: a new version with the old one kept, or a separate piece if Lek
+  // changed his since the director looked. Read-merge-write, never on an empty or broken store, never twice. It never
+  // moves a piece's stage: only Lek ships.
+  window.templeLinkHost = {
+    busy: function () { return !!editingId; },
+    refresh: function () { render(); },
+    land: function (x) {
+      var raw = localStorage.getItem(KEY);
+      if (!raw) return 'wait';
+      var fresh; try { fresh = JSON.parse(raw); } catch (e) { return 'wait'; }
+      if (!fresh || !Array.isArray(fresh.pieces)) return 'wait';
+      if (x.kind !== 'piece') return null;
+      fresh.linkLanded = fresh.linkLanded || {};
+      if (fresh.linkLanded[x.id]) return { how: fresh.linkLanded[x.id], name: '' };
+      var s = function (v, n) { return typeof v === 'string' ? v.trim().slice(0, n) : ''; };
+      var it = x.item || {}, body = s(it.body, 12000), title = s(it.title, 160);
+      if (!body) return null;
+      var by = s(x.by, 30) || 'Nokka', now = new Date().toISOString(), why = s(x.why, 500), cur = null, out;
+      for (var i = 0; i < fresh.pieces.length; i++) if (fresh.pieces[i].id === x.targetId) cur = fresh.pieces[i];
+      if (cur && x.base && TempleLink.pieceHash(cur) === x.base) {
+        cur.versions = (cur.versions || []).concat({ title: cur.title || '', body: cur.body || '', by: cur.by || 'Lek', was: cur.by || undefined, at: now }).slice(-20);
+        cur.title = title; cur.body = body; cur.by = by; cur.linkWhy = why; cur.updatedAt = Date.now();
+        out = { how: 'version', name: title || 'a piece' };
+      } else {
+        var nm = cur && title === (cur.title || '') ? (title ? title + ' · ' + by : by + '’s version') : title;
+        fresh.pieces.unshift({ id: uid(), title: nm, body: body, stage: 'seed', tags: [], chakras: [], track: { song: '', artist: '' }, medium: '', createdAt: Date.now(), updatedAt: Date.now(), shippedAt: null, by: by, linkWhy: why });
+        out = { how: 'new', name: nm || 'a piece' };
+      }
+      fresh.linkLanded[x.id] = out.how;
+      state = fresh; save();
+      toast('from ' + by + ': on the desk');
+      return out;
+    }
+  };
+  // another window wrote the store (this temple open twice): follow it, never overwrite it
+  window.addEventListener('storage', function (e) { if (e.key === KEY && e.newValue && !editingId) { state = load(); render(); } });
 
   setNorthstar();
   render();

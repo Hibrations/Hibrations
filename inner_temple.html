@@ -358,6 +358,7 @@ main { padding: 0 22px; }
 .modal-close { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elev); display: flex; align-items: center; justify-content: center; color: var(--ink-dim); }
 </style>
 <link href="fonts/fonts.css" rel="stylesheet">
+<script src="temple_link.js" data-app="inner"></script>
 </head>
 <body>
 
@@ -1943,8 +1944,92 @@ function renderPracticeRow(p) {
   start.addEventListener('click', () => startSession(p.id));
   actions.appendChild(start);
   row.appendChild(actions);
-  return row;
+  // the temple link (Lysningen step 8): Hekka's reason for a version, its earlier versions, the button
+  const wrap = document.createElement('div');
+  wrap.appendChild(row);
+  const extra = document.createElement('div');
+  extra.className = 'link-row';
+  if (p.by && p.linkWhy) extra.appendChild(el('div', 'link-why', p.by + ': ' + p.linkWhy));
+  const links = document.createElement('div');
+  links.className = 'link-links';
+  if (window.TempleLink) links.appendChild(TempleLink.linkTo({ kind: 'practice', id: p.id, name: p.name }));
+  if (p.history && p.history.length) {
+    const v = el('button', 'link-btn', 'earlier versions (' + p.history.length + ')');
+    v.addEventListener('click', () => { const open = extra.querySelector('.link-versions'); if (open) open.remove(); else extra.appendChild(renderPracticeVersions(p)); });
+    links.appendChild(v);
+  }
+  extra.appendChild(links);
+  wrap.appendChild(extra);
+  return wrap;
 }
+function renderPracticeVersions(p) {
+  const box = el('div', 'link-versions');
+  p.history.slice().reverse().forEach((h, ri) => {
+    const idx = p.history.length - 1 - ri;
+    const row = el('div', 'link-version');
+    row.appendChild(el('span', '', (h.by && h.by !== 'Lek' ? h.by + '’s' : 'your') + ' version · ' + (h.at ? h.at.slice(0, 10) : '') + ' · ' + ((h.practice && h.practice.steps) || []).length + ' steps'));
+    const b = el('button', 'link-btn', 'switch back');
+    b.addEventListener('click', () => switchPracticeVersion(p.id, idx));
+    row.appendChild(b);
+    box.appendChild(row);
+  });
+  return box;
+}
+// switch back to an earlier version; the one it was becomes history too, so nothing is lost
+function switchPracticeVersion(id, idx) {
+  const p = getPractice(id); if (!p || !p.history || !p.history[idx]) return;
+  const now = JSON.parse(JSON.stringify(p)); delete now.history;
+  const back = p.history[idx].practice;
+  const hist = p.history.filter((_, i) => i !== idx).concat({ at: new Date().toISOString(), by: p.by || 'Lek', practice: now }).slice(-20);
+  Object.keys(p).forEach(k => delete p[k]);
+  Object.assign(p, JSON.parse(JSON.stringify(back)), { id, history: hist });
+  saveState(); toast('switched back'); render();
+}
+// Lands a proposal the director's card got a yes for: a new version with the old one kept, or a separate practice if
+// Lek changed his since the director looked. Read-merge-write, never on an empty or broken store, never twice.
+window.templeLinkHost = {
+  busy: () => !!editingPractice || !!activeSession,
+  refresh: () => render(),
+  land(x) {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return 'wait';
+    try { JSON.parse(raw); } catch (e) { return 'wait'; }
+    if (x.kind !== 'practice') return null;
+    const fresh = loadState();
+    fresh.linkLanded = fresh.linkLanded || {};
+    if (fresh.linkLanded[x.id]) return { how: fresh.linkLanded[x.id], name: '' };
+    const s = (v, n) => (typeof v === 'string' ? v.trim().slice(0, n) : '');
+    const it = x.item || {}, name = s(it.name, 60);
+    if (!name || !Array.isArray(it.steps)) return null;
+    const libs = new Set(fresh.library.map(e => e.id));
+    const steps = it.steps.slice(0, 20).map((st, i) => {
+      if (!st || typeof st !== 'object' || !s(st.name, 80)) return null;
+      const d = Math.round(Number(st.duration));
+      return { id: uid('s'), libraryId: libs.has(st.libraryId) ? st.libraryId : undefined, letter: s(st.letter, 3) || String.fromCharCode(65 + i), name: s(st.name, 80), duration: Number.isFinite(d) ? Math.min(7200, Math.max(0, d)) : 60, cues: s(st.cues, 300) };
+    }).filter(Boolean);
+    if (!steps.length) return null;
+    const plan = { name, subtitle: s(it.subtitle, 160), duration: s(it.duration, 30), intro: s(it.intro, 500), closing: s(it.closing, 300), steps };
+    const by = s(x.by, 30) || 'Hekka', now = new Date().toISOString(), why = s(x.why, 500);
+    const cur = typeof x.targetId === 'string' ? fresh.practices.find(p => p.id === x.targetId) : null;
+    let out;
+    if (cur && x.base && TempleLink.practiceHash(cur) === x.base) {
+      const old = JSON.parse(JSON.stringify(cur)); delete old.history;
+      cur.history = (cur.history || []).concat({ at: now, by: cur.by || 'Lek', practice: old }).slice(-20);
+      Object.assign(cur, plan, { by, linkWhy: why, versionAt: now });
+      out = { how: 'version', name: cur.name };
+    } else {
+      const nm = cur && name === cur.name ? name + ' · ' + by : name;
+      fresh.practices.push(Object.assign({ id: uid('practice'), type: cur ? cur.type : 'custom' }, plan, { name: nm, by, linkWhy: why, versionAt: now }));
+      out = { how: 'new', name: nm };
+    }
+    fresh.linkLanded[x.id] = out.how;
+    state = fresh; saveState();
+    toast('from ' + by + ': in your practices');
+    return out;
+  },
+};
+// another window wrote the store (this temple open twice): follow it, never overwrite it
+window.addEventListener('storage', (e) => { if (e.key === STORAGE_KEY && e.newValue && !editingPractice && !activeSession) { state = loadState(); render(); } });
 
 function duplicatePractice(id) {
   const p = getPractice(id);
@@ -2205,6 +2290,13 @@ checkPortalAutoStart();
 </script>
 
 <style>
+/* the temple link (Lysningen step 8) */
+.link-row{padding:0 4px 8px;font-size:12px;}
+.link-why{color:var(--ink-dim,#a79f90);font-style:italic;line-height:1.45;}
+.link-links{display:flex;gap:14px;flex-wrap:wrap;}
+.link-btn{background:none;border:none;padding:4px 0;color:inherit;opacity:.8;font-size:12px;cursor:pointer;}
+.link-versions{margin-top:4px;border-left:2px solid var(--border,#333);padding-left:10px;}
+.link-version{display:flex;justify-content:space-between;align-items:center;gap:10px;opacity:.85;}
 /* ── Codex × Pleroma skin (R56) ── */
 body{font-family:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;}.step-name{font-family:'Cormorant Garamond',serif;font-weight:500;}.eyebrow,.section-eyebrow{letter-spacing:0.24em;}
 </style>
