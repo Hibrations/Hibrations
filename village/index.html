@@ -135,6 +135,10 @@ code { font-size: 12.5px; background: rgba(255, 255, 255, .07); border-radius: 4
 .card pre { white-space: pre-wrap; font: 13.5px/1.45 var(--sans); background: rgba(0,0,0,.25); border-radius: 8px; padding: 8px 10px; margin: 8px 0 0; max-height: 40vh; overflow: auto; }
 .card .acts { display: flex; gap: 8px; flex-wrap: wrap; }
 .card .acts .btn { margin-top: 10px; padding: 7px 14px; }
+.card .moreBtn { background: none; border: 0; padding: 8px 0 2px; color: var(--gold); font: inherit; font-size: 14px; cursor: pointer; display: block; min-height: 32px; }
+.card .moreBox { border-top: 1px solid var(--line); margin-top: 6px; padding-top: 6px; font-size: 14px; line-height: 1.45; overflow-wrap: anywhere; }
+.card .moreBox h4 { margin: 10px 0 2px; font: 600 12px/1.3 var(--sans); color: var(--ink-faint); }
+.card .moreBox h4:first-child { margin-top: 2px; }
 .task { padding: 8px 0; border-top: 1px solid var(--line); }
 .task:first-child { border-top: 0; }
 .task b { font-weight: 500; }
@@ -194,6 +198,9 @@ code { font-size: 12.5px; background: rgba(255, 255, 255, .07); border-radius: 4
 .talk .acts button { background: none; border: 0; padding: 2px 0; font-size: 12px; color: var(--ink-dim); text-decoration: underline; text-underline-offset: 2px; }
 .talk .acts button.more { color: var(--c, var(--gold)); }
 .talk .acts button.callT { color: var(--night); background: var(--gold); text-decoration: none; border-radius: 999px; padding: 4px 11px; font-weight: 500; }
+#meetOrder { display: flex; gap: 6px; align-items: center; padding: 0 14px 8px; font-size: 12px; color: var(--ink-faint); }
+#meetOrder button { background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 4px 11px; min-height: 28px; font-size: 12px; color: var(--ink-dim); }
+#meetOrder button.on { color: var(--night); background: var(--gold); border-color: transparent; font-weight: 500; }
 #meetWho button i { font-style: normal; font-size: 11px; opacity: .75; margin-right: 4px; }
 .talk.day { max-width: none; text-align: center; margin: 14px 0 6px; padding: 0; font: 500 11px var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); }
 .talk.flash { animation: flash 2.4s ease-out; }
@@ -310,6 +317,7 @@ code { font-size: 12.5px; background: rgba(255, 255, 255, .07); border-radius: 4
   <button class="newPill" id="meetPill" hidden></button>
   <div class="meetActs"><button class="btn" id="meetAgenda">Agenda</button><button class="btn" id="meetEnd">End the meeting</button></div>
   <div id="meetWho"></div>
+  <div id="meetOrder" hidden></div>
   <div class="composer"><textarea id="meetText" rows="1"></textarea><button class="mic" id="meetMic" title="Speak" aria-label="Speak">🎙</button><button class="btn" id="meetSend">Ask</button></div>
 </div>
 
@@ -583,7 +591,7 @@ function applyJob(e) {
   const d = e.data; if (!d || !d.id) return;
   if (e.kind === 'task') J.tasks[d.id] = d;
   else if (e.kind === 'goal') J.goals[d.id] = d;
-  else if (e.kind === 'card') J.cards[d.id] = d;
+  else if (e.kind === 'card') { J.cards[d.id] = d; if (d.state !== 'open') trimCardDetails(); }
   else if (e.kind === 'brief') { J.briefs = J.briefs.filter((b) => b.id !== d.id).concat(d).slice(-14); briefArrived = d; }
   else if (e.kind === 'chronicle') { if (!J.chronicle.some((c) => c.id === d.id)) J.chronicle = J.chronicle.concat(d).slice(-100); }
   else if (e.kind === 'round') J.round = d;
@@ -747,6 +755,20 @@ function boardHtml() {
       ${t.result && !t.error ? `<details${priv ? '' : ''} data-seen="${esc(t.id)}"><summary>${priv ? 'Show (private)' : 'What came back'}${t.file ? ' · saved in ' + esc(t.file.split('/')[0]) : ''}</summary><pre>${esc(t.result)}</pre></details>` : ''}</div>`;
   }).join('')}</section>`;
 }
+// step 12: the details a card carries, read here on the phone with no run. Open while the scroll redraws on a sync.
+const cardMoreOpen = new Set();
+function moreHtml(k) {
+  const m = k.more || {}, part = (title, html) => (html ? `<h4>${title}</h4>${html}` : '');
+  return part('Why', m.reason ? `<div class="mdx">${talkMd(m.reason)}</div>` : '')
+    + part('What was asked', m.asked ? `<div class="mdx">${talkMd(m.asked)}</div>` : '')
+    + part(`${esc(k.who)}’s whole answer`, m.answer ? `<div class="mdx">${talkMd(m.answer)}</div>` : '')
+    + part('Saved in', m.file ? `<div>${esc(m.file)}</div>` : '');
+}
+// answered cards past the ones the scroll still shows let their details go, so the phone's storage doesn't fill up
+function trimCardDetails() {
+  const past = Object.values(J.cards).filter((k) => k.state !== 'open' && k.more).sort((a, b) => (a.answered < b.answered ? 1 : -1));
+  for (const k of past.slice(8)) delete k.more;
+}
 const CARD_KIND = { yes: 'Needs your yes', email: 'An email to copy', goal: 'A goal plan', proposal: 'An instruction change', suggestion: 'A suggestion', hire: 'A hire', retire: 'A retirement', install: 'An install, for you to do', plan: 'A Body Temple plan', skill: 'A skill to install', moved: 'A file moved aside' };
 // step 7: what a yes card is about, so a spend or a post reads as one
 const YES_TOPIC = { spend: 'A spend: needs your yes', post: 'A post or publication: needs your yes', install: 'An install: needs your yes', instructions: 'An instruction change: needs your yes' };
@@ -765,7 +787,9 @@ function cardsHtml() {
       : k.kind === 'moved' ? `<div class="acts"><button class="btn" data-ans="yes" data-card="${esc(k.id)}">Move it back</button><button class="btn" data-ans="no" data-card="${esc(k.id)}">Leave it there</button></div>`
       : k.kind === 'suggestion' ? `<div class="acts"><button class="btn" data-ans="yes" data-card="${esc(k.id)}">Yes, make it a task</button><button class="btn" data-ans="no" data-card="${esc(k.id)}">Not now</button></div>`
       : `<div class="acts"><button class="btn" data-ans="yes" data-card="${esc(k.id)}">Yes</button><button class="btn" data-ans="no" data-card="${esc(k.id)}">No</button><button class="btn" data-ans="change" data-card="${esc(k.id)}">Change it</button></div>`;
-    const body = `<div class="what">${esc(k.what)}</div>${k.why ? `<div class="muted">${esc(k.why)}</div>` : ''}${k.content ? `<pre>${esc(k.content)}</pre>` : ''}`;
+    const more = moreHtml(k), isOpen = cardMoreOpen.has(k.id);
+    const details = more ? `<button class="moreBtn" data-more="${esc(k.id)}" aria-expanded="${isOpen}">${isOpen ? 'Fewer details' : 'More details'}</button><div class="moreBox"${isOpen ? '' : ' hidden'}>${more}</div>` : '';
+    const body = `<div class="what">${esc(k.what)}</div>${k.why ? `<div class="muted">${esc(k.why)}</div>` : ''}${k.content ? `<pre>${esc(k.content)}</pre>` : ''}${details}`;
     return `<div class="card${priv ? ' private' : ''}"><div class="meta">${esc(cardKind(k))} · ${esc(k.who)} · ${time(k.at)}</div>
       ${body}${acts}</div>`; // no "tap to show" curtain since 2026-11-03 (Lek); Rak's cards keep their red edge
   };
@@ -809,6 +833,11 @@ function wireScroll() {
     J.tasks[s.dataset.move].house = s.value; saveVillage(); sync();
   };
   for (const d of B.querySelectorAll('[data-seen]')) d.ontoggle = () => { if (d.open) { J.seen[d.dataset.seen] = true; afterJobs(); } };
+  for (const b of B.querySelectorAll('[data-more]')) b.onclick = () => {
+    const open = !cardMoreOpen.has(b.dataset.more);
+    if (open) cardMoreOpen.add(b.dataset.more); else cardMoreOpen.delete(b.dataset.more);
+    b.nextElementSibling.hidden = !open; b.textContent = open ? 'Fewer details' : 'More details'; b.setAttribute('aria-expanded', open);
+  };
   for (const b of B.querySelectorAll('[data-copy]')) b.onclick = () => { const k = J.cards[b.dataset.copy]; navigator.clipboard.writeText(k.content).then(() => { b.textContent = 'Copied'; }, () => { b.textContent = 'Couldn’t copy'; }); };
   for (const b of B.querySelectorAll('[data-interview]')) b.onclick = () => { const h = b.dataset.interview; backOrClose(); setTimeout(() => openChat(h + '.c'), 80); };
   for (const b of B.querySelectorAll('[data-ans]')) b.onclick = () => {
@@ -3753,6 +3782,7 @@ function endMeeting() {
 }
 // step 11 (Lek, 2026-11-04: "pick who ever, in turn"): meetPick is who Lek's next question goes to, in the order
 // he tapped them; empty is everyone. A picked few answer one after the other, each hearing the ones before.
+let meetFollow = null; // a question with no names: null follows the last round (a follow-up after "everyone"), true or false is Lek's tap
 let meetPick = [], meetWithSeen = null, meetFresh = false, meetRows = new Map();
 // A meeting Lek called a few to has a table of just them; anyone he picks or asks after joins it. A general meeting
 // (no "with") brings every director, as before.
@@ -3760,7 +3790,7 @@ const meetCame = new Map(); // meeting at → Set of '<house>.<d|a>' picked sinc
 function tableOf_(m) {
   const w = m && (m.with ? m.with.map(idOf) : m.withSeats); if (!w) return null;
   const s = new Set(w.concat([...(meetCame.get(m.at) || [])]));
-  for (const r of m.rows || []) if (r.who === 'lek' && r.to && r.to !== 'all' && r.to !== 'a') for (const x of [].concat(r.to)) s.add(idOf(x));
+  for (const r of m.rows || []) if (r.who === 'lek' && r.to && r.to !== 'all' && r.to !== 'a' && r.to !== 'follow') for (const x of [].concat(r.to)) s.add(idOf(x));
   return s;
 }
 function atTable(id) { const t = tableOf_(meetNow()); return !t || t.has(id); }
@@ -3783,23 +3813,31 @@ function renderMeet() {
   const seats = ['a'].concat(HOUSE_IDS.map((h) => h + '.d'), villagers.some((v) => v.id === 'hub.d') ? ['hub.d'] : []).concat(m.apprentices ? HOUSE_IDS.map((h) => h + '.a').filter((id) => !isRetired(id)) : []);
   if (m.with && m.id !== meetWithSeen && m.state === 'open') { meetWithSeen = m.id; if (!meetPick.length) meetPick = m.with.map(idOf); } // called to the table
   meetPick = meetPick.filter((id) => seats.includes(id));
-  const many = meetPick.length > 1;
+  const many = meetPick.length > 1, mine = !!village.settings.meetMyOrder;
   const table = tableOf_(m);
-  $('meetWho').innerHTML = `<button data-to="all" class="${meetPick.length ? '' : 'on'}">${table ? 'Everyone here' : 'Everyone'}</button>` + seats.map((id) => { const n = meetPick.indexOf(id); return `<button data-to="${id}" class="${n >= 0 ? 'on' : ''}" style="--c:${talkColour(id)}">${many && n >= 0 ? `<i>${n + 1}</i>` : ''}${esc(talkName(id))}</button>`; }).join('');
+  const lastLek = [...(m.rows || [])].reverse().find((r) => r.who === 'lek');
+  const follow = !meetPick.length && !!lastLek && (meetFollow === null ? lastLek.to === 'all' && m.kind !== 'green' : meetFollow);
+  $('meetWho').innerHTML = `<button data-to="all" class="${meetPick.length || follow ? '' : 'on'}">${table ? 'Everyone here' : 'Everyone'}</button>`
+    + (lastLek ? `<button data-to="follow" class="${follow ? 'on' : ''}">Follow-up</button>` : '') + seats.map((id) => { const n = meetPick.indexOf(id); return `<button data-to="${id}" class="${n >= 0 ? 'on' : ''}" style="--c:${talkColour(id)}">${many && mine && n >= 0 ? `<i>${n + 1}</i>` : ''}${esc(talkName(id))}</button>`; }).join('');
   for (const b of $('meetWho').querySelectorAll('button')) b.onclick = () => {
     const id = b.dataset.to;
-    meetPick = id === 'all' ? [] : meetPick.includes(id) ? meetPick.filter((x) => x !== id) : [...meetPick, id];
-    if (id !== 'all' && meetPick.includes(id)) joinTable([id]); // picking someone calls them to the table
+    if (id === 'follow' || id === 'all') meetFollow = id === 'follow';
+    meetPick = id === 'all' || id === 'follow' ? [] : meetPick.includes(id) ? meetPick.filter((x) => x !== id) : [...meetPick, id];
+    if (id !== 'all' && id !== 'follow' && meetPick.includes(id)) joinTable([id]); // picking someone calls them to the table
     renderMeet();
   };
+  // step 12: who speaks first, the table's call or Lek's (the numbers on the names are his order)
+  $('meetOrder').hidden = !many;
+  $('meetOrder').innerHTML = many ? `Order<button data-order="best" class="${mine ? '' : 'on'}">Best fit</button><button data-order="mine" class="${mine ? 'on' : ''}">As I tapped</button>` : '';
+  for (const b of $('meetOrder').querySelectorAll('button')) b.onclick = () => { village.settings.meetMyOrder = b.dataset.order === 'mine'; saveVillage(); renderMeet(); };
   const names = meetPick.map(talkName);
-  $('meetText').placeholder = !meetPick.length ? (m.kind === 'green' ? 'Ask everyone…' : table ? 'One question to everyone at the table…' : 'One question to every director…')
-    : many ? `${names.join(', then ')}…` : `To ${names[0]}, in front of the others…`;
+  $('meetText').placeholder = follow ? 'A follow-up…' : !meetPick.length ? (m.kind === 'green' ? 'Ask everyone…' : table ? 'One question to everyone at the table…' : 'One question to every director…')
+    : many && mine ? `${names.join(', then ')}…` : many ? `${names.join(', ')}, best order…` : `To ${names[0]}, in front of the others…`;
   const waiting = outbox.filter((it) => it.kind === 'meeting').map((it) => { try { return JSON.parse(it.text); } catch { return {}; } }).filter((o) => o.op === 'ask');
   meetRows = new Map();
   const rows = (m.rows || []).map((r, i) => {
     const key = r.id || 'r' + i;
-    if (r.who === 'lek') return { key, me: true, html: `<div class="talk me">${esc(r.text)}<div class="meta">to ${r.to === 'all' ? 'everyone' : r.to === 'a' ? 'A' : Array.isArray(r.to) ? esc(r.to.map((x) => talkName(idOf(x))).join(', then ')) + ', in turn' : esc(talkName(r.to.includes('.') ? r.to : idOf(r.to)))}</div></div>` };
+    if (r.who === 'lek') return { key, me: true, html: `<div class="talk me">${esc(r.text)}<div class="meta">to ${r.to === 'all' ? 'everyone' : r.to === 'follow' ? 'the table, choosing who it matters to' : r.to === 'a' ? 'A' : Array.isArray(r.to) ? esc(r.to.map((x) => talkName(idOf(x))).join(', then ')) + ', in turn' + (r.orderWhy ? ` · ${esc(r.orderWhy)}` : '') : esc(talkName(r.to.includes('.') ? r.to : idOf(r.to)))}</div></div>` };
     const id = r.who === 'aletheia' ? 'a' : idOf(r.who), name = r.name || talkName(id);
     if (r.pending && r.queued) return { key: key + ':q', html: `<div class="talk them pend" style="--c:${talkColour(id)}"><b>${esc(name)}</b> listens, then answers</div>` };
     if (r.pending) return { key, html: `<div class="talk them pend" style="--c:${talkColour(id)}"><b>${esc(name)}</b> is thinking at the PC<span class="dots"></span></div>` };
@@ -3826,7 +3864,9 @@ function idOf(agentId) {
 function sendMeet() {
   const q = $('meetText').value.trim(); if (!q || !meetNow()) return;
   $('meetText').value = '';
-  meetSend('ask', { q, to: !meetPick.length ? 'all' : meetPick.length === 1 ? agentIdOf(meetPick[0]) : meetPick.map(agentIdOf) });
+  const follow = $('meetWho').querySelector('[data-to="follow"].on');
+  meetSend('ask', { q, to: follow ? 'follow' : !meetPick.length ? 'all' : meetPick.length === 1 ? agentIdOf(meetPick[0]) : meetPick.map(agentIdOf), ...(meetPick.length > 1 && village.settings.meetMyOrder ? { keepOrder: true } : {}) });
+  meetFollow = null;
   renderMeet();
 }
 // '<house>.<d|a>' → the bridge's agent id, which is the villager's name in lower case (content/directors.json)
