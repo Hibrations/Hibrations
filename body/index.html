@@ -2077,6 +2077,48 @@ async function copyBackupText() {
   markBackedUp();
 }
 
+// Body-only export (Lek, 2026-11-05). Just this temple's own stores, for handing its data on. It is not a backup:
+// the full file below is what saves the other temples, so this never marks the device as backed up.
+const BODY_KEYS = [STORAGE_KEY, 'body_inbox_v1', 'body_garr_v1'];
+
+function collectBodyOnly() {
+  const keys = {};
+  BODY_KEYS.forEach(k => { const v = localStorage.getItem(k); if (v !== null) keys[k] = v; });
+  return {
+    format: BACKUP_FORMAT, version: 1,
+    exportedAt: new Date().toISOString(),
+    origin: (window.location && window.location.origin) || '',
+    app: 'body temple', scope: 'body',
+    summary: backupSummary(keys),
+    keys: keys
+  };
+}
+
+async function saveBodyOnlyFile() {
+  const text = JSON.stringify(collectBodyOnly(), null, 2);
+  const name = 'body-temple-only-' + fuelToday() + '.json';
+  try {
+    const file = new File([text], name, { type: 'application/json' });
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: 'Body Temple only' });
+      toast('body temple shared');
+      return;
+    }
+  } catch (e) {
+    if (e && e.name === 'AbortError') return;
+  }
+  try {
+    const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+    const a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => { try { URL.revokeObjectURL(url); } catch (e) {} }, 4000);
+    toast('body temple saved');
+    return;
+  } catch (e) {}
+  toast('could not save a file');
+}
+
 function parseBackup(text) {
   const raw = JSON.parse(text);
   if (raw && raw.format === BACKUP_FORMAT && raw.keys) {
@@ -2172,6 +2214,10 @@ function openDataModal() {
     +   '<button class="btn-primary" id="bk-save">save backup file</button>'
     +   '<button class="btn-secondary" id="bk-copy">copy as text</button>'
     + '</div>'
+    + '<div class="data-actions">'
+    +   '<button class="btn-secondary" id="bk-body">save body temple only</button>'
+    + '</div>'
+    + '<div class="subtle" style="margin-top:8px; line-height:1.5;">just this temple\'s own data. not a backup: only the full file saves your other temples.</div>'
     + '<div class="data-divider"></div>'
     + '<div class="data-actions">'
     +   '<button class="btn-secondary" id="bk-file">restore from file</button>'
@@ -2184,6 +2230,7 @@ function openDataModal() {
   document.getElementById('modal-close-btn').onclick = closeModal;
   document.getElementById('bk-save').onclick = saveBackupFile;
   document.getElementById('bk-copy').onclick = copyBackupText;
+  document.getElementById('bk-body').onclick = saveBodyOnlyFile;
   if (canUndo) document.getElementById('bk-undo').onclick = undoRestore;
 
   const input = document.getElementById('bk-input');
