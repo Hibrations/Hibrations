@@ -4580,8 +4580,12 @@ function openGarrModal(ref) {
   document.getElementById('modal-close-btn').onclick = closeModal;
   document.getElementById('garr-send').onclick = () => {
     const text = document.getElementById('garr-text').value.trim(); if (!text) return;
+    if (text.length > 5000) { // the bridge drops a longer one (validItem), so the box refuses it and keeps the words
+      document.getElementById('garr-hint').textContent = 'Too long to send: ' + (text.length - 5000).toLocaleString('en-GB') + ' characters over. A note holds 5,000. Your words stay here.';
+      return;
+    }
     const g = garrLoad();
-    g.asks.push({ id: uid('garr') + Math.random().toString(36).slice(2, 6), text: text.slice(0, 4000), at: new Date().toISOString(), ref: ref || undefined });
+    g.asks.push({ id: uid('garr') + Math.random().toString(36).slice(2, 6), text, at: new Date().toISOString(), ref: ref || undefined });
     g.asks = g.asks.slice(-60); garrSave(g);
     closeModal(); toast('to Garr'); render(); garrSync();
   };

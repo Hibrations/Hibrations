@@ -163,10 +163,11 @@
       paint();
     } catch (e) { /* the PC isn't reachable: the note waits */ } finally { clearTimeout(t); busy = false; }
   }
+  const NOTE_MAX = 5000; // the bridge drops a longer one (validItem), so the box refuses it and keeps the words
   function send(text, ref) {
-    text = String(text || '').trim(); if (!text) return false;
+    text = String(text || '').trim(); if (!text || text.length > NOTE_MAX) return false;
     const s = loadStore();
-    s.asks.push({ id: rid(), text: text.slice(0, 4000), at: new Date().toISOString(), ref: ref || undefined });
+    s.asks.push({ id: rid(), text, at: new Date().toISOString(), ref: ref || undefined });
     s.asks = s.asks.slice(-60);
     if (!saveStore(s)) return false;
     syncAsks();
@@ -189,7 +190,10 @@
     const row = el('div', 'tl-row');
     row.appendChild(el('div', 'tl-hint', bridge() ? 'The answer comes back here and in the village.' : 'The village isn’t paired with the PC yet. The note waits here and goes when it is.'));
     const go = el('button', 'tl-send', 'send');
-    go.addEventListener('click', () => { if (send(ta.value, openRef)) { ta.value = ''; openRef = null; paint(); } });
+    const hint = row.firstChild, usual = hint.textContent;
+    const fits = () => { const over = ta.value.trim().length - NOTE_MAX; hint.textContent = over > 0 ? `Too long to send: ${over.toLocaleString('en-GB')} characters over. A note holds ${NOTE_MAX.toLocaleString('en-GB')}. Your words stay here.` : usual; hint.style.color = over > 0 ? '#e8c37e' : ''; return over <= 0; };
+    ta.addEventListener('input', fits); fits();
+    go.addEventListener('click', () => { if (fits() && send(ta.value, openRef)) { ta.value = ''; openRef = null; paint(); } });
     row.appendChild(go); root.appendChild(row);
 
     const here = st.shelf.filter((i) => !i.away), away = st.shelf.filter((i) => i.away);

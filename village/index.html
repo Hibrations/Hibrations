@@ -112,6 +112,9 @@ textarea:focus, input:focus { outline: none; border-color: rgba(242, 196, 109, .
 .muted { color: var(--ink-dim); font-size: 13px; }
 .letter { border-left: 2px solid var(--line); padding: 6px 0 6px 12px; margin: 10px 0; }
 .letter.waiting { border-color: var(--gold); }
+.overLine { color: var(--gold); font-size: 13px; line-height: 1.4; margin: 6px 0; }
+.overLine[hidden] { display: none; }
+#chat .overLine, #meetP .overLine { padding: 0 14px; }
 .letter.reply { border-color: var(--ok); }
 .letter.mine { border-color: var(--line); color: var(--ink-faint); }
 .letter .meta { color: var(--ink-faint); font-size: 12px; }
@@ -289,6 +292,7 @@ code { font-size: 12.5px; background: rgba(255, 255, 255, .07); border-radius: 4
     <section id="letterBox" hidden>
       <h3>Send a letter</h3>
       <textarea id="text" rows="3" placeholder="A letter for the village…"></textarea>
+      <p class="overLine" id="textOver" role="alert" hidden></p>
       <button class="btn" id="send">Send</button>
       <div id="letters"></div>
     </section>
@@ -307,6 +311,7 @@ code { font-size: 12.5px; background: rgba(255, 255, 255, .07); border-radius: 4
   <div id="chatBody"></div>
   <button class="newPill" id="chatPill" hidden></button>
   <div class="chatFoot"><a href="#" id="chatNew">New thread</a></div>
+  <p class="overLine" id="chatOver" role="alert" hidden></p>
   <div class="composer"><textarea id="chatText" rows="1"></textarea><button class="mic" id="chatMic" title="Speak" aria-label="Speak">🎙</button><button class="btn" id="chatSend">Send</button></div>
 </div>
 
@@ -318,6 +323,7 @@ code { font-size: 12.5px; background: rgba(255, 255, 255, .07); border-radius: 4
   <div class="meetActs"><button class="btn" id="meetAgenda">Agenda</button><button class="btn" id="meetEnd">End the meeting</button></div>
   <div id="meetWho"></div>
   <div id="meetOrder" hidden></div>
+  <p class="overLine" id="meetOver" role="alert" hidden></p>
   <div class="composer"><textarea id="meetText" rows="1"></textarea><button class="mic" id="meetMic" title="Speak" aria-label="Speak">🎙</button><button class="btn" id="meetSend">Ask</button></div>
 </div>
 
@@ -381,6 +387,14 @@ village.settings = village.settings || {};
 let outbox = load(K.outbox, []);
 let cursor = load(K.cursor, { seq: 0 });
 const saveVillage = () => save(K.village, village);
+// The bridge drops a line over 5,000 characters and sends no ack (validItem in bridge/server.js), so it would wait in the
+// outbox for ever. So the box refuses it first: nothing goes, the words stay, and a line under the box says how far over it is.
+const LINE_MAX = 5000;
+function lineFits(len, hint) {
+  const over = len - LINE_MAX, n = (x) => x.toLocaleString('en-GB');
+  if (hint) { hint.hidden = over <= 0; hint.textContent = over > 0 ? `Too long to send: ${n(over)} characters over. A line holds ${n(LINE_MAX)}. Your words stay here.` : ''; }
+  return over <= 0;
+}
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -523,7 +537,7 @@ async function sync() {
 }
 function sendLetter() {
   const text = $('text').value.trim();
-  if (!text) return;
+  if (!text || !lineFits(text.length, $('textOver'))) return;
   outbox.push({ id: crypto.randomUUID(), kind: 'message', to: 'village', text, at: new Date().toISOString() });
   save(K.outbox, outbox);
   $('text').value = '';
@@ -551,6 +565,7 @@ function renderLetters() {
   if ($('capGo')) $('capGo').onclick = () => { village.goSeq = capAt; saveVillage(); outbox.push({ id: crypto.randomUUID(), kind: 'go', to: 'village', text: 'go', at: new Date().toISOString() }); save(K.outbox, outbox); renderLetters(); sync(); };
 }
 $('send').onclick = sendLetter;
+$('text').addEventListener('input', () => lineFits($('text').value.trim().length, $('textOver')));
 $('syncNow').onclick = sync;
 $('pairBtn').onclick = () => pair($('pairLink').value.trim());
 // The PC page only: is it safe to shut the PC down? (Lek, 2026-11-03.) Green when nobody is mid-job, gold while
@@ -768,6 +783,7 @@ function writeHtml(kind) {
   const waiting = outbox.filter((m) => m.kind === kind).map((m) => `<div class="letter waiting"><div class="meta">waiting for the PC · ${time(m.at)}</div>${esc(m.text)}</div>`).join('');
   return `<section><h3>${kind === 'task' ? 'A task for the village' : 'A goal'}</h3>
     <textarea id="tText" rows="3" placeholder="${kind === 'task' ? 'Anything you want done. A finds the house for it.' : 'Bigger than a task, e.g. have the barsel plan and budget ready by December.'}">${esc(village.jobs.draft && village.jobs.draft.kind === kind ? village.jobs.draft.text : '')}</textarea>
+    <p class="overLine" id="tOver" role="alert" hidden></p>
     <button class="btn" id="tSend" data-kind="${kind}">${kind === 'task' ? 'Give it to A' : 'Ask A to plan it'}</button>
     ${kind === 'goal' ? '<p class="muted">A splits it into tasks across the houses, with a target date. Her plan comes back as a card for your yes.</p>' : ''}${waiting}</section>`;
 }
@@ -847,9 +863,9 @@ function chronicleHtml() {
 }
 function wireScroll() {
   const B = $('scrollBody');
-  if ($('tText')) $('tText').oninput = () => { village.jobs.draft = { kind: $('tSend').dataset.kind, text: $('tText').value }; saveVillage(); };
+  if ($('tText')) { lineFits($('tText').value.trim().length, $('tOver')); $('tText').oninput = () => { lineFits($('tText').value.trim().length, $('tOver')); village.jobs.draft = { kind: $('tSend').dataset.kind, text: $('tText').value }; saveVillage(); }; }
   if ($('tSend')) $('tSend').onclick = () => {
-    const text = $('tText').value.trim(); if (!text) return;
+    const text = $('tText').value.trim(); if (!text || !lineFits(text.length, $('tOver'))) return;
     outbox.push({ id: crypto.randomUUID(), kind: $('tSend').dataset.kind, to: 'A', text, at: new Date().toISOString() }); save(K.outbox, outbox);
     village.jobs.draft = null; saveVillage(); renderScroll(); sync();
   };
@@ -877,7 +893,10 @@ function wireScroll() {
     const k = J.cards[b.dataset.card], choice = b.dataset.ans;
     // step 7: a no to a hire, a retirement or an install can say why; the one who asked is told
     let why;
-    if (choice === 'no' && ['hire', 'retire', 'install', 'plan', 'offer'].includes(k.kind)) { why = prompt('No. Want to say why? (optional)', ''); if (why === null) return; }
+    if (choice === 'no' && ['hire', 'retire', 'install', 'plan', 'offer'].includes(k.kind)) {
+      why = prompt('No. Want to say why? (optional)', ''); if (why === null) return;
+      while (!lineFits(JSON.stringify({ ref: k.id, choice, why }).length)) { why = prompt(`Too long to send. A line holds ${LINE_MAX.toLocaleString('en-GB')} characters. Shorten it, or cancel.`, why); if (why === null) return; }
+    }
     outbox.push({ id: crypto.randomUUID(), kind: 'answer', to: 'A', text: JSON.stringify(why ? { ref: k.id, choice, why } : { ref: k.id, choice }), at: new Date().toISOString() }); save(K.outbox, outbox);
     if (choice !== 'change') { k.state = choice; k.answered = new Date().toISOString(); if (why) k.noWhy = why; }
     saveVillage(); sync();
@@ -3365,7 +3384,7 @@ function openChat(who, push = true) {
   $('chat').style.setProperty('--accent', talkColour(who));
   $('chatName').textContent = talkName(who); $('chatHouse').textContent = talkHouse(who); $('chatBody').innerHTML = '';
   $('chatText').placeholder = who === 'a' && innerWidth > 430 ? `Talk with A, or “bring me ${talkName('esoteric.d')}”` : `Talk with ${talkName(who)}…`;
-  $('chatText').value = drafts[who] || ''; grow($('chatText'));
+  $('chatText').value = drafts[who] || ''; grow($('chatText')); lineFits($('chatText').value.trim().length, $('chatOver'));
   chatFresh = { since: readAt[who] || '' }; $('chatPill').hidden = true;
   $('chat').classList.toggle('half', !!village.settings.chatHalf);
   $('chat').classList.add('open'); $('chat').setAttribute('aria-hidden', 'false');
@@ -3388,7 +3407,7 @@ async function renderChat() {
   const row = (r) => {
     if (r.sys) return `<div class="talk sys">${esc(r.text)}</div>`;
     if (r.me) {
-      const meta = out.has(r.id) ? (away || !village.bridge ? (who === 'a' ? 'a letter waiting with A' : `A holds this letter for ${name} until the PC is back`) : 'a letter waiting') : answered.has(r.id) ? '' : `with ${name} at the PC<span class="dots"></span>`;
+      const meta = (village.longBack || {})[r.id] ? 'too long to send · back in the box below' : out.has(r.id) ? (away || !village.bridge ? (who === 'a' ? 'a letter waiting with A' : `A holds this letter for ${name} until the PC is back`) : 'a letter waiting') : answered.has(r.id) ? '' : `with ${name} at the PC<span class="dots"></span>`;
       return `<div class="talk me${out.has(r.id) ? ' waiting' : ''}">${esc(r.text)}<div class="meta">${esc(hhmm(r.at))}${meta ? ' · ' + meta : ''}</div></div>`;
     }
     const tb = who === 'a' && !r.error ? tableOf(r.text) : { text: r.text, seats: [] };
@@ -3425,7 +3444,7 @@ async function renderChat() {
 }
 function sendChat() {
   const who = chatWho, text = $('chatText').value.trim();
-  if (!who || !text) return;
+  if (!who || !text || !lineFits(text.length, $('chatOver'))) return;
   $('chatText').value = ''; grow($('chatText')); delete drafts[who]; save(K.drafts, drafts);
   // "Bring me Hekka": A fetches them, read here on the phone so it works offline too
   if (who === 'a') { const v = bringWho(text); if (v) { const id = crypto.randomUUID(); addTalk('a', { id, at: new Date().toISOString(), me: true, text }); callOver(v.id, 'a'); addTalk('a', { id: id + ':a', ref: id, at: new Date().toISOString(), from: talkName('a'), text: `${talkName(v.id)} is on the way.` }); return; } }
@@ -3434,6 +3453,23 @@ function sendChat() {
   outbox.push(m); save(K.outbox, outbox);
   addTalk(who, { id: m.id, at: m.at, me: true, text });
   sync();
+}
+// A line from before the boxes refused: the bridge will never take it, so it comes out of the outbox and back into a chat box,
+// whole, with a row in that thread saying so. A chat line goes back to its own chat, anything else to A's.
+function longLinesBack() {
+  const stuck = outbox.filter((m) => ['message', 'task', 'goal', 'meeting', 'answer'].includes(m.kind) && typeof m.text === 'string' && m.text.length > LINE_MAX);
+  if (!stuck.length) return;
+  outbox = outbox.filter((m) => !stuck.includes(m));
+  for (const m of stuck) {
+    let text = m.text;
+    if (m.kind === 'meeting' || m.kind === 'answer') try { const o = JSON.parse(m.text); text = o.q || o.why || text; } catch {}
+    const who = m.kind === 'message' && m.chat && m.to ? m.to : 'a', chars = text.length.toLocaleString('en-GB');
+    drafts[who] = drafts[who] ? text + '\n\n' + drafts[who] : text;
+    (village.longBack ||= {})[m.id] = 1;
+    addTalk(who, { id: crypto.randomUUID(), at: new Date().toISOString(), sys: true, text: `A line of ${chars} characters was too long to reach the PC. A line holds ${LINE_MAX.toLocaleString('en-GB')}. Nothing was lost: it’s back in the box below.` });
+    say(`A line of ${chars} characters couldn’t reach the PC. It’s back in your chat box with ${who === 'a' ? 'A' : talkName(who)}.`, 'Too long to send');
+  }
+  save(K.outbox, outbox); save(K.drafts, drafts); saveVillage();
 }
 function bringWho(text) {
   const m = /^\s*(?:please\s+)?(?:bring|fetch|get|call)\s+(?:me\s+)?(.+?)[\s.!?]*$/i.exec(text); if (!m) return null;
@@ -3572,7 +3608,7 @@ function copyText(text, btn) {
 }
 // the text box grows with what Lek writes, and keeps a half-written line per villager until he sends it
 function grow(ta) { ta.style.height = 'auto'; if (ta.value) ta.style.height = Math.min(ta.scrollHeight + 2, innerHeight * .33) + 'px'; }
-$('chatText').addEventListener('input', () => { grow($('chatText')); if (!chatWho) return; if ($('chatText').value.trim()) drafts[chatWho] = $('chatText').value; else delete drafts[chatWho]; save(K.drafts, drafts); });
+$('chatText').addEventListener('input', () => { grow($('chatText')); lineFits($('chatText').value.trim().length, $('chatOver')); if (!chatWho) return; if ($('chatText').value.trim()) drafts[chatWho] = $('chatText').value; else delete drafts[chatWho]; save(K.drafts, drafts); });
 $('meetText').addEventListener('input', () => grow($('meetText')));
 // the phone's sheet: drag the handle down for half, up for tall; a tap swaps them. Remembered on this device.
 for (const id of ['chat', 'meetP']) {
@@ -3894,17 +3930,24 @@ function idOf(agentId) {
   if (d) for (const [k, v] of Object.entries(d)) if (v.name && v.name.toLowerCase() === String(agentId).toLowerCase()) return k;
   return 'a';
 }
+function meetAsk(q) {
+  const follow = $('meetWho').querySelector('[data-to="follow"].on');
+  return { q, to: follow ? 'follow' : !meetPick.length ? 'all' : meetPick.length === 1 ? agentIdOf(meetPick[0]) : meetPick.map(agentIdOf), ...(meetPick.length > 1 && village.settings.meetMyOrder ? { keepOrder: true } : {}) };
+}
+const meetLen = (ask) => JSON.stringify({ op: 'ask', ...ask }).length;
 function sendMeet() {
   const q = $('meetText').value.trim(); if (!q || !meetNow()) return;
+  const ask = meetAsk(q);
+  if (!lineFits(meetLen(ask), $('meetOver'))) return;
   $('meetText').value = '';
-  const follow = $('meetWho').querySelector('[data-to="follow"].on');
-  meetSend('ask', { q, to: follow ? 'follow' : !meetPick.length ? 'all' : meetPick.length === 1 ? agentIdOf(meetPick[0]) : meetPick.map(agentIdOf), ...(meetPick.length > 1 && village.settings.meetMyOrder ? { keepOrder: true } : {}) });
+  meetSend('ask', ask);
   meetFollow = null;
   renderMeet();
 }
 // '<house>.<d|a>' → the bridge's agent id, which is the villager's name in lower case (content/directors.json)
 const agentIdOf = (who) => (who === 'a' ? 'aletheia' : talkName(who).toLowerCase());
 $('meetSend').onclick = sendMeet;
+$('meetText').addEventListener('input', () => { const q = $('meetText').value.trim(); lineFits(q ? meetLen(meetAsk(q)) : 0, $('meetOver')); });
 $('meetText').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !TOUCH) { e.preventDefault(); sendMeet(); } });
 $('meetAgenda').onclick = () => { meetSend('agenda'); renderMeet(); };
 $('meetEnd').onclick = () => { if (confirm('End it here? Each director who spoke writes down what they took.')) endMeeting(); };
@@ -4290,6 +4333,7 @@ if (location.hash.startsWith('#pair=')) {
   if (pair(link)) { showScene('hub'); history.pushState({ room: 'hub' }, ''); openSheet(); }
   else renderLetters();
 } else {
+  longLinesBack();
   renderLetters();
   sync();
 }
