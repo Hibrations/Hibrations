@@ -1149,6 +1149,15 @@ button.hm-read { display: block; width: 100%; min-height: 48px; text-align: left
 .moon-swap-btn { min-height: 44px; padding: 0 14px; font-size: 12px; text-transform: none; letter-spacing: 0; }
 
 :root[data-night] .hm-orbit, :root[data-night] button.hm-star.hm-lit { animation: none; }
+
+/* step 11: baby season on home. One thing on top, the three lines, the next offer; the rest is one tap away. */
+.hm-one { cursor: pointer; }
+.hm-one b { display: block; font-size: 30px; font-weight: 500; line-height: 1.12; color: var(--ink); margin: 4px 0 6px; overflow-wrap: anywhere; }
+.hm-one p { font-size: 14px; line-height: 1.45; color: var(--ink); }
+.hm-one .ts-link { margin: 4px 0 -8px; text-align: left; }
+button.hm-foldbtn { display: grid; width: 100%; min-height: 48px; margin: 4px 0 14px; }
+.view.hm-baby:not(.hm-open) .portal-toggle { display: none; }
+.hm-offer[hidden], .hm-arc[hidden], .hm-cap[hidden], .hm-sug[hidden] { display: none; }
 @media (prefers-reduced-motion: reduce) { .hm-orbit, button.hm-star.hm-lit { animation: none; } }
 </style>
 
@@ -1266,7 +1275,7 @@ const Shell = {
   current: 'portal',
   // Portal remake, step 4. A page that wears the new frame carries its own header and back button, so the Portal's
   // old bar is not drawn over it. Today that is Mirror alone; add a page here in the step that migrates it.
-  NEW_FRAME: ['mirror.html', 'strings.html', 'vocal.html', 'healing_temple.html', 'hibrations.html', 'kaching.html', 'baby.html', 'breath_temple.html', 'observatory/index.html', 'inner_temple.html', 'beast_temple.html'],   // step 8: the small temples; step 9: the mid temples
+  NEW_FRAME: ['mirror.html', 'strings.html', 'vocal.html', 'healing_temple.html', 'hibrations.html', 'kaching.html', 'baby.html', 'breath_temple.html', 'observatory/index.html', 'inner_temple.html', 'beast_temple.html', 'body/index.html'],   // step 8: the small temples; step 9: the mid temples; step 10: Body
   DOORS: ['portal', 'body', 'inner', 'breath', 'beast', 'magnetic', 'hibrations', 'strings', 'grimoire', 'vocal', 'mirror', 'observatory', 'kaching', 'baby', 'village'],
   goTo(app) {
     if (app === 'healing') app = 'grimoire';
@@ -3756,39 +3765,96 @@ const Portal = (function() {
     return wrap;
   }
 
+  // Step 11 · baby season and the short night (portal_remake/BUILD_PLAN.md, step 11). The switch is the shell's
+  // (portal_modes_v1, in Settings); this page only reads it. With it on, home is: one thing on top (tonight's line of
+  // the board, or the next date), the three lines, the next offer with its yes and not now, and everything else one
+  // tap away. Whether the folds are open is not remembered. Nothing here counts anything.
+  let babyRest = false, babyToday = false;
+  function buildOne(now, ts) {
+    const t = ts.babyTop(now), card = el('section', 'ts-card ts-today hm-one');
+    card.id = 'home-one'; card.dataset.temple = 'baby'; card.dataset.kind = t.kind;
+    card.appendChild(el('div', 'ts-eyebrow', t.eyebrow));
+    card.appendChild(el('b', 'ts-serif', t.head));
+    if (t.text) card.appendChild(el('p', '', t.text));
+    const go = el('button', 'ts-link', 'The board'); go.type = 'button'; go.id = 'home-one-open';
+    card.appendChild(go);
+    card.addEventListener('click', () => Shell.goTo('baby'));
+    return card;
+  }
+  // In baby season the Today card shows one offer: the next one not yet answered, from this part of the day on.
+  function foldToday(card, offers, shelf, now) {
+    const open = offers.filter(o => shelf.later.indexOf(o.key) < 0), rank = { morning: 0, daytime: 1, evening: 2 };
+    const h = now.getHours(), nowRank = h < 11 ? 0 : h < 17 ? 1 : 2, free = open.filter(o => !offerTaken(o, shelf));
+    const pick = free.find(o => (rank[o.part] === undefined ? 1 : rank[o.part]) >= nowRank) || free[0] || open[0] || null;
+    let hid = false;
+    card.querySelectorAll('.hm-offer').forEach(w => { if (!pick || w.dataset.offer !== pick.key) { w.hidden = true; hid = true; } });
+    card.querySelectorAll('.hm-arc, .hm-cap, .hm-sug, .ts-card > .ts-link').forEach(n => { n.hidden = true; });
+    const more = el('button', 'ts-link', hid ? 'The rest of today' : 'Today, on the arc'); more.type = 'button'; more.id = 'home-today-more';
+    more.addEventListener('click', () => { babyToday = true; render(); });
+    card.appendChild(more);
+  }
   function renderHome(view, now, day, train) {
+    const ts = shellOf(), baby = !!(ts && ts.modes && ts.modes().baby), sleepSays = ts && ts.sleepLine ? ts.sleepLine('portal') : null;
     const offers = buildOffers(day, train), shelf = shelfFor(offers);
+    // the calmer version first: in baby season, and after a short night, an offer he has not sized reads as its minimum
+    if (baby || sleepSays) offers.forEach(o => { if (!o.size) o.size = 'min'; });
     homeDay = dailyTodayKey();
-    view.appendChild(buildDayCard(now, offers, shelf));
+    if (baby) {
+      view.classList.add('hm-baby'); if (babyRest) view.classList.add('hm-open');
+      view.appendChild(buildOne(now, ts));
+      view.appendChild(ts.minimumCard((k) => { if (k === 'sleep') render(); }));
+    }
+    if (sleepSays) { const sl = el('p', 'ts-sleepline', sleepSays); sl.id = 'home-sleepline'; view.appendChild(sl); }
+    const dayCard = buildDayCard(now, offers, shelf);
+    view.appendChild(dayCard);
+    let rest = view;
+    if (baby) {
+      if (babyToday) {
+        const less = el('button', 'ts-link', 'Only the next one'); less.type = 'button'; less.id = 'home-today-less';
+        less.addEventListener('click', () => { babyToday = false; render(); });
+        dayCard.appendChild(less);
+      } else foldToday(dayCard, offers, shelf, now);
+      const fold = el('button', 'ts-btn hm-foldbtn', babyRest ? 'Fold it away' : 'Everything else'); fold.type = 'button'; fold.id = 'home-fold';
+      fold.setAttribute('aria-expanded', babyRest ? 'true' : 'false'); fold.setAttribute('aria-controls', 'home-rest');
+      fold.addEventListener('click', () => { babyRest = !babyRest; render(); });
+      view.appendChild(fold);
+      rest = el('div'); rest.id = 'home-rest'; rest.hidden = !babyRest;
+      view.appendChild(rest);
+    }
     const lit = new Set(offers.filter(o => o.star && shelf.later.indexOf(o.key) < 0 && !offerTaken(o, shelf)).map(o => o.star));
-    view.appendChild(buildTemples(now, lit));
-    const read = buildMoonRead(now); if (read) view.appendChild(read);
-    view.appendChild(el('div', 'ts-sec', 'What was there'));
-    view.appendChild(buildRadar());
-    renderNextPractice(view);
-    renderHrv(view);
+    rest.appendChild(buildTemples(now, lit));
+    const read = buildMoonRead(now); if (read) rest.appendChild(read);
+    rest.appendChild(el('div', 'ts-sec', 'What was there'));
+    rest.appendChild(buildRadar());
+    renderNextPractice(rest);
+    renderHrv(rest);
 
     // ── EMPTY SLOT, step 6 (the village wiring): the village pulse. Who is working, who answered, cards waiting.
     //    It needs the bridge's /portal route. Nothing is drawn and nothing is invented until that exists. ──
     const pulse = el('div'); pulse.id = 'slot-village-pulse'; pulse.dataset.slot = 'village-pulse'; pulse.dataset.step = '6'; pulse.hidden = true;
-    view.appendChild(pulse);
+    rest.appendChild(pulse);
     // ── Step 5 (the directors in the app), filled by director.js (TempleDirector.fillHome): A's card with her brief,
     //    her chat and the council; then the houses' state lines, which sit behind the one switch in Settings below. ──
     const brief = el('div'); brief.id = 'slot-a-brief'; brief.dataset.slot = 'a-brief'; brief.dataset.step = '5'; brief.hidden = true;
-    view.appendChild(brief);
+    rest.appendChild(brief);
     const houseLines = el('div'); houseLines.id = 'slot-house-lines'; houseLines.dataset.slot = 'house-lines'; houseLines.dataset.step = '5'; houseLines.hidden = true;
-    view.appendChild(houseLines);
+    rest.appendChild(houseLines);
 
-    view.appendChild(el('div', 'ts-sec', 'Sleep on it'));
-    view.appendChild(buildShelf(offers, shelf));
-    view.appendChild(el('div', 'ts-sec', 'Quick capture'));
-    view.appendChild(buildCapture());
-    view.appendChild(buildBackup());
+    rest.appendChild(el('div', 'ts-sec', 'Sleep on it'));
+    rest.appendChild(buildShelf(offers, shelf));
+    rest.appendChild(el('div', 'ts-sec', 'Quick capture'));
+    rest.appendChild(buildCapture());
+    rest.appendChild(buildBackup());
     const mir = el('button', 'ts-link', 'The week, looked at'); mir.type = 'button';
     mir.addEventListener('click', () => Shell.goTo('mirror'));
-    view.appendChild(mir);
+    rest.appendChild(mir);
     const setSlot = el('div'); setSlot.id = 'slot-settings'; setSlot.dataset.slot = 'settings'; setSlot.dataset.step = '5'; setSlot.hidden = true;
-    view.appendChild(setSlot);
+    rest.appendChild(setSlot);
+    if (ts && ts.openSettings) {                                       // step 11: night, one hand, type, baby season
+      const md = el('button', 'ts-link', 'Night, one hand, type, baby season'); md.type = 'button'; md.id = 'home-modes';
+      md.addEventListener('click', () => ts.openSettings());
+      rest.appendChild(md);
+    }
   }
 
   // Once a minute: the clock in the ring and the sun on the arc move on; at midnight the day is drawn afresh.
@@ -3811,6 +3877,7 @@ const Portal = (function() {
     render();
   }
   window.addEventListener('temple-plan', homeRedraw);
+  window.addEventListener('temple-modes', homeRedraw);                 // step 11: a switch in Settings, or one of the three lines
   window.addEventListener('storage', (e) => { if (e.key === 'portal_plan_v1' || e.key === 'portal_dayplan_v1' || e.key === 'portal_shelf_v1') homeRedraw(); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) homeTick(); });
 

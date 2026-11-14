@@ -250,3 +250,46 @@ button.ts-staterow:last-child{border-bottom:none}
 :root[data-night] .ts-face{box-shadow:0 0 0 3px rgba(13,12,18,.6)}
 :root[data-night] button.ts-back{background:rgba(13,12,18,.55)}
 @media (prefers-reduced-motion:reduce){[class^="ts-"],[class*=" ts-"]{animation:none !important;transition:none !important}}
+
+/* ---------- step 11: the modes (shell.js sets data-baby, data-night, data-onehand, data-large on <html>) ---------- */
+/* Type. Every size on a page is written in px, so the one type token is a scale, applied to each thing the page draws.
+   Large type is 1.12, the night skin 1.06, both together 1.19. The sky and anything holding another page are left
+   alone (a page inside a frame scales itself). */
+:root{--ts-large:1;--ts-nighttype:1;--ts-type:calc(var(--ts-large)*var(--ts-nighttype));--ts-top:0px;--ts-sheet:88dvh}
+:root[data-large]{--ts-large:1.12}
+:root[data-night]{--ts-nighttype:1.06}
+html:is([data-large],[data-night]) body[data-temple]>*:not(canvas):not(.ts-grain):not(script):not(style):not(:has(iframe)){zoom:var(--ts-type)}
+html:is([data-large],[data-night],[data-onehand]) .ts-sheet{max-height:calc(var(--ts-sheet)/var(--ts-type))}
+html:is([data-large],[data-night],[data-onehand]) .ts-dsheet{height:calc(var(--ts-sheet)/var(--ts-type))}
+
+/* One hand. The page starts a third of the way down, so the first screen's taps are in the lower two thirds; the sky
+   fills the room above. Back is mirrored in the bar; sheets stay low enough that their close is in reach. */
+:root[data-onehand]{--ts-top:33vh;--ts-top:33dvh;--ts-skyh:calc(290px + 33vh);--ts-sheet:64dvh}
+:root[data-onehand] body[data-temple]{padding-top:var(--ts-top)}
+:root[data-onehand] body[data-temple] .modal{max-height:calc(64vh/var(--ts-type))}
+.ts-bar button.ts-barback[hidden]{display:none}
+
+/* Night. Nothing moves for longer than 200 ms; the one thing let through is the breath pacer, which is the practice. */
+:root[data-night] body[data-temple] *:not(.br-disc),:root[data-night] body[data-temple] *::before,:root[data-night] body[data-temple] *::after{animation-duration:.2s !important;animation-delay:0s !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;transition-delay:0s !important;scroll-behavior:auto !important}
+@media (prefers-reduced-motion:reduce){body[data-temple] *,body[data-temple] *::before,body[data-temple] *::after{animation-duration:.01ms !important;animation-delay:0s !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;scroll-behavior:auto !important}}
+
+/* Settings */
+.ts-set{padding:12px 0;border-bottom:1px solid var(--leaf2)}
+.ts-set .ts-setrow b{display:block;font-weight:500;font-size:15px;color:var(--ink)}
+.ts-set .ts-setrow small{display:block;font-size:13px;line-height:1.4;color:var(--muted);margin-top:2px}
+.ts-nightset{margin-top:10px}
+.ts-nightset button{flex:1}
+button.ts-btn.ts-on{border-color:var(--t-text);background:var(--t-faint)}
+
+/* Baby season: the three lines, the minimum read first, and the sleep line */
+.ts-min3 .ts-minrow{display:flex;align-items:center;gap:8px;min-height:56px;padding:6px 0;border-top:1px solid var(--leaf2)}
+.ts-min3 .ts-eyebrow{margin-bottom:8px}
+.ts-minrow>span{flex:1;min-width:0;font-size:15px;color:var(--ink)}
+.ts-minrow .ts-btn{min-width:72px;padding:0 8px}
+.ts-card p.ts-minfoot{font-size:12px;margin-top:8px}
+html[data-baby] .ts-minfull .ts-minpart{color:var(--ink)}
+html[data-baby] .ts-minfull:not(.ts-showfull) .ts-fullpart{display:none}
+p.ts-sleepline{font-size:14px;line-height:1.45;color:var(--ink);margin:0 0 12px;padding:10px 12px;border:1px solid var(--leaf2);border-radius:12px;background:var(--card)}
+:where(.ts-barback,.ts-minrow button,.ts-set button):focus-visible{outline:2px solid var(--t-text);outline-offset:2px}
+/* a hidden link or button is hidden (their display rules above would otherwise show them) */
+button.ts-link[hidden],a.ts-link[hidden],button.ts-btn[hidden],a.ts-btn[hidden]{display:none}

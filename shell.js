@@ -2,7 +2,22 @@
 //
 // A page opts in with <body data-temple="mirror">, temple.css, and this file in the <head> (no defer, so the night skin
 // is set before the first paint; pages in a subfolder load ../shell.js). The page keeps its own script, ids, data and
-// stores. This file reads and writes no store, and sends nothing anywhere.
+// stores. This file sends nothing anywhere. Since step 11 it keeps one store of its own, portal_modes_v1 (below), and
+// reads three it never writes: body_watch_v1 and body_extras_v1 (hours slept, as Body Temple reads them) and
+// baby_board_v1 (tonight's line of the board).
+//
+// Step 11 · the modes. One store, written only by a tap in the Settings sheet or on the three lines:
+//   portal_modes_v1 { v:1, baby:false, night:'auto'|'on'|'off', oneHand:false, largeType:false,
+//                     nightFrom:21, nightTo:6,                       optional; the hours "auto" uses
+//                     day:{ date:'YYYY-MM-DD', sleep:'yes'|'no', block:'yes'|'no', ate:'yes'|'no' } }
+//   · baby season  <html data-baby>     never set by the app itself and never by a date. Home shows one thing and the
+//                                       three lines; a Today card with a minimum shows the minimum first.
+//   · night skin   <html data-night>    by the clock (21:00 to 06:00), or always, or never. Darker, a size larger, the
+//                                       sky a still picture, nothing moving longer than 200 ms, and no sound.
+//   · one hand     <html data-onehand>  the page starts a third of the way down, back is mirrored in the bar, sheets stay low.
+//   · large type   <html data-large>    --ts-type, the one scale every size on the page is drawn at.
+//   `day` is the three lines of the minimum (did you sleep, did she get her block, did anyone eat). They are today's
+//   only: a new day starts blank, yesterday's are dropped, and nothing ever adds them up.
 //
 // What it adds:
 //   · the header: back, the temple's name, its director's face, one guide line. A <header class="ts-head"> already
@@ -16,7 +31,7 @@
 //   · moving sideways: TempleShell.go('body'). Standalone it is a plain link. Embedded it posts
 //     {action:'goto', app:'body'} to the parent; a parent that handles it answers {action:'goto-ack'}. Today's Portal
 //     does not yet (step 4), so with no answer in 250 ms the frame opens the page itself.
-//   · the night skin by the clock (never by a tap): <html data-night> from 21:00 to 06:00.
+//   · the night skin: <html data-night> from 21:00 to 06:00 by the clock, or by the override in Settings (step 11).
 (function () {
   'use strict';
   if (window.TempleShell) return;
@@ -54,14 +69,193 @@
 
   // ── before the first paint: where am I, when am I ──
   html.setAttribute(EMBEDDED ? 'data-embedded' : 'data-standalone', '');
-  const isNight = (d) => { const h = (d || new Date()).getHours(); return h >= NIGHT_FROM || h < NIGHT_TO; };
-  function setNight() {
-    const n = isNight();
-    if (n !== html.hasAttribute('data-night')) { html.toggleAttribute('data-night', n); if (window.TempleSky) window.TempleSky.redraw(); }
+
+  // ── step 11: the modes (the store is described at the top of this file) ──
+  const MODES = 'portal_modes_v1';
+  let booted = false;                                                    // true once the page's frame is built
+  const readJSON = (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } };
+  const isObj = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+  const hourOr = (v, d) => (typeof v === 'number' && v >= 0 && v < 24 ? Math.floor(v) : d);
+  const localDay = (d) => { d = d || new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  function modes() {
+    const o = readJSON(MODES), m = isObj(o) ? o : {};
+    return { v: 1, baby: m.baby === true, night: m.night === 'on' || m.night === 'off' ? m.night : 'auto', oneHand: m.oneHand === true, largeType: m.largeType === true,
+      nightFrom: hourOr(m.nightFrom, NIGHT_FROM), nightTo: hourOr(m.nightTo, NIGHT_TO), day: isObj(m.day) && m.day.date === localDay() ? m.day : null };
   }
-  setNight();
-  setInterval(setNight, 60000);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) setNight(); });
+  function writeModes(m) {
+    const out = { v: 1, baby: m.baby, night: m.night, oneHand: m.oneHand, largeType: m.largeType };
+    if (m.nightFrom !== NIGHT_FROM || m.nightTo !== NIGHT_TO) { out.nightFrom = m.nightFrom; out.nightTo = m.nightTo; }
+    if (m.day && Object.keys(m.day).length > 1) out.day = m.day;       // only today's, and only when something was tapped
+    try { localStorage.setItem(MODES, JSON.stringify(out)); } catch (e) { return false; }
+    return true;
+  }
+  const SWITCHES = { baby: 1, oneHand: 1, largeType: 1 };
+  function setMode(key, value) {
+    const m = modes();
+    if (SWITCHES[key]) m[key] = value === true;
+    else if (key === 'night') m.night = value === 'on' || value === 'off' ? value : 'auto';
+    else return false;
+    writeModes(m); applyModes(); announce();
+    return true;
+  }
+  // the three lines. v: 'yes' | 'no' | null (a second tap on the same answer takes it back)
+  function minimum() { const d = modes().day; return d ? { sleep: d.sleep || null, block: d.block || null, ate: d.ate || null } : { sleep: null, block: null, ate: null }; }
+  function setMinimum(key, v) {
+    if (['sleep', 'block', 'ate'].indexOf(key) < 0) return false;
+    const m = modes(), d = m.day || { date: localDay() };
+    if (v === 'yes' || v === 'no') d[key] = v; else delete d[key];
+    m.day = d; writeModes(m); announce();
+    return true;
+  }
+  const announce = () => { try { window.dispatchEvent(new CustomEvent('temple-modes')); } catch (e) {} };
+
+  // night: by the override first, then by the clock
+  const isNight = (d) => {
+    const m = modes();
+    if (m.night === 'on') return true;
+    if (m.night === 'off') return false;
+    const h = (d || new Date()).getHours();
+    return m.nightFrom > m.nightTo ? (h >= m.nightFrom || h < m.nightTo) : (h >= m.nightFrom && h < m.nightTo);
+  };
+  function applyModes() {
+    const m = modes(), n = isNight(), was = html.hasAttribute('data-night');
+    html.toggleAttribute('data-night', n);
+    html.toggleAttribute('data-baby', m.baby);
+    html.toggleAttribute('data-onehand', m.oneHand);
+    html.toggleAttribute('data-large', m.largeType);
+    if (n !== was && window.TempleSky) window.TempleSky.redraw();
+    const meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.content = n ? '#0D0C12' : '#15131B';
+    if (booted) { seasonCards(); placeSleepLine(); syncBack(); paintSettings(); }
+  }
+  applyModes();                                                          // before the first paint
+  setInterval(applyModes, 60000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) applyModes(); });
+  // a switch tapped in another page of the house (the Portal over a temple, or the other way round) lands here too
+  window.addEventListener('storage', (e) => { if (e.key === MODES || e.key === null) { applyModes(); announce(); } });
+
+  // Quiet hours are quiet. While the night skin is on, nothing a page plays reaches the speaker: no bell, no tick,
+  // no spoken cue, no buzz. Asked at the moment of playing, so it follows the skin and its override.
+  (function quiet() {
+    const on = () => html.hasAttribute('data-night');
+    try {
+      const AN = window.AudioNode && window.AudioNode.prototype;
+      if (AN && AN.connect) { const connect = AN.connect; AN.connect = function (dest) { if (on() && dest && this.context && dest === this.context.destination) return dest; return connect.apply(this, arguments); }; }
+    } catch (e) {}
+    try { const ME = window.HTMLMediaElement && window.HTMLMediaElement.prototype; if (ME && ME.play) { const play = ME.play; ME.play = function () { if (on()) this.muted = true; return play.apply(this, arguments); }; } } catch (e) {}
+    try { const ss = window.speechSynthesis; if (ss && ss.speak) { const speak = ss.speak.bind(ss); ss.speak = function (u) { if (on()) return; return speak(u); }; } } catch (e) {}
+    try { if (navigator.vibrate) { const vib = navigator.vibrate.bind(navigator); navigator.vibrate = function (p) { if (on()) return false; return vib(p); }; } } catch (e) {}
+  })();
+
+  // ── step 11: sleep sets the day. The same reading Body Temple makes: the watch when it wrote last night, otherwise
+  // the number he typed there. Where neither exists, the first of the three lines stands in. One line, never a score. ──
+  function sleep() {
+    const day = localDay(), w = readJSON('body_watch_v1'), x = readJSON('body_extras_v1');
+    let h = null, from = null;
+    const wd = w && Array.isArray(w.days) ? w.days.filter((d) => d && d.day === day)[0] : null;
+    if (wd && typeof wd.sleep === 'number' && wd.sleep > 0) { h = wd.sleep; from = 'watch'; }
+    else if (isObj(x) && isObj(x.sleep) && typeof x.sleep[day] === 'number' && x.sleep[day] > 0) { h = x.sleep[day]; from = 'typed'; }
+    const tap = minimum().sleep;
+    return { h: h, from: from, tap: tap, short: h != null ? h < 6 : tap === 'no' };
+  }
+  const SLEEP_SAYS = {
+    portal: 'The minimum of each comes first today. The full ones are still yours.',
+    beast: 'The five-minute door comes first today. The charged ones keep for a longer night.',
+    body: 'The lighter version comes first today. The full session is still yours.',
+  };
+  function sleepLine(key) {
+    const s = sleep(); if (!s.short) return null;
+    const lead = s.h != null ? 'Slept ' + (Math.round(s.h * 10) / 10) + ' h' + (s.from === 'watch' ? ', from the watch' : '') + '.' : 'A short night.';
+    return lead + ' ' + (SLEEP_SAYS[key || KEY] || SLEEP_SAYS.portal);
+  }
+  // drawn by this file on Beast; home and Body place the same line themselves, inside their own Today
+  function placeSleepLine() {
+    if (KEY !== 'beast') return;
+    const body = document.querySelector('.ts-body'); if (!body) return;
+    let p = document.getElementById('ts-sleepline');
+    const txt = sleepLine(KEY);
+    if (!txt) { if (p) p.remove(); return; }
+    if (!p) { p = el('p', 'ts-sleepline'); p.id = 'ts-sleepline'; body.insertBefore(p, body.firstChild); }
+    p.textContent = txt;
+  }
+
+  // ── step 11: baby season ──
+  // The dates of the Baby page's strip, kept here so home and the Baby page read one list.
+  // SOURCE: Baby/barsel/barsel_timeline.md (Malee, 2026-11-01, updated 2026-11-04), copied on 2026-11-14. The seven dates
+  // are the ones Malee's board lists for the strip (night_shift_board.md §5), in the timeline's own words. The file wins:
+  // if it changes, change these. "until" is the last day a line is still the next one; the two "about" lines have no day
+  // in the file, so they stand until their month is over. Left out, as on Malee's strip: the dagpenge application day
+  // (8 weeks after the first leave day, which moves) and 5 Jan 2036.
+  const BABY_DATES = [
+    { until: '2026-12-08', when: 'by 8 Dec 2026', what: 'Employer must know about the 2 weeks. Already planned at work: only check it is written down and that the 2 weeks are the standard barsel weeks.' },
+    { until: '2027-01-04', when: '4 Jan 2027', what: 'Lek’s planned leave start, a day before the due date. If the baby comes early or late, ask work whether the plan bends.' },
+    { until: '2027-01-05', when: '5 Jan 2027', what: 'Due date, a Tuesday.' },
+    { until: '2027-03-16', when: '16 Mar 2027', what: 'The 2 weeks must be used by this date (the first 10 weeks).' },
+    { until: '2027-05-31', when: 'about May 2027', what: 'Notice for the second leave, about 8 weeks before it starts. The exact date once Lek knows the start.' },
+    { until: '2027-07-31', when: 'about July 2027', what: 'Second leave, when Patrick is about 6 months and his mum starts work. It needs the weeks left over and an agreement with work.' },
+    { until: '2028-01-05', when: '5 Jan 2028', what: 'All 9 earmarked weeks used (the child turns 1).' },
+  ];
+  function nextDate(d) { const t = localDay(d); for (const x of BABY_DATES) if (x.until >= t) return x; return null; }
+  // The one thing on top of home: tonight's line of the board when something is written for tonight, otherwise the
+  // next date. Before 06:00 "tonight" is still the night that began yesterday evening. Only the grid's rows are read;
+  // her six lines never leave the Baby page.
+  function babyTop(now) {
+    now = now || new Date();
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (now.getHours() < 6 ? 1 : 0)), ix = (d.getDay() + 6) % 7;
+    const mon = localDay(new Date(d.getFullYear(), d.getMonth(), d.getDate() - ix));
+    const b = readJSON('baby_board_v1'), w = isObj(b) && isObj(b.weeks) && isObj(b.weeks[mon]) ? b.weeks[mon] : {};
+    const cell = (r) => (Array.isArray(w[r]) && typeof w[r][ix] === 'string' ? w[r][ix].trim() : '');
+    const parts = [['up', 'Up tonight'], ['mum', 'Her block'], ['swap', 'Swap']].filter((r) => cell(r[0])).map((r) => r[1] + ': ' + cell(r[0]));
+    if (parts.length) return { kind: 'board', eyebrow: 'tonight, from the board', head: parts[0], text: parts.slice(1).join(' · ') };
+    const n = nextDate(now);
+    return n ? { kind: 'date', eyebrow: 'the next date', head: n.when, text: n.what } : { kind: 'none', eyebrow: 'the board', head: 'Nothing is written for tonight', text: '' };
+  }
+  // The three lines, as a card. Each is two optional taps; a tap on the lit one takes it back. Nothing is summed.
+  const LINES = [['sleep', 'Did you sleep?', 'Yes', 'Not really'], ['block', 'Did she get her block?', 'Yes', 'Not yet'], ['ate', 'Did anyone eat?', 'Yes', 'Not yet']];
+  function minimumCard(onChange) {
+    const card = el('section', 'ts-card ts-min3'); card.dataset.min3 = '';
+    card.appendChild(el('div', 'ts-eyebrow', 'the minimum · three lines'));
+    const paint = () => {
+      const cur = minimum();
+      card.querySelectorAll('.ts-minrow').forEach((r) => r.remove());
+      const foot = card.querySelector('.ts-minfoot');
+      LINES.forEach(([k, q, yes, no]) => {
+        const row = el('div', 'ts-minrow'); row.dataset.line = k;
+        row.appendChild(el('span', '', q));
+        [['yes', yes], ['no', no]].forEach(([v, t]) => {
+          const b = el('button', 'ts-btn' + (cur[k] === v ? ' ts-on' : ''), t); b.type = 'button'; b.dataset.answer = v;
+          b.setAttribute('aria-pressed', cur[k] === v ? 'true' : 'false'); b.setAttribute('aria-label', q + ' ' + t);
+          b.addEventListener('click', () => { setMinimum(k, cur[k] === v ? null : v); paint(); if (onChange) onChange(k); });
+          row.appendChild(b);
+        });
+        card.insertBefore(row, foot);
+      });
+    };
+    card.appendChild(el('p', 'ts-minfoot', 'Optional. Kept for today only, and never added up.'));
+    paint();
+    return card;
+  }
+  // A Today card that names a minimum and a full: in baby season the minimum is what is read first, and the full one
+  // is a step behind (the card's own link where it has one, otherwise one small link that shows its line).
+  function seasonCards() {
+    const baby = html.hasAttribute('data-baby');
+    document.querySelectorAll('.ts-minfull').forEach((mf) => {
+      if (!mf.dataset.split) {
+        const bs = mf.querySelectorAll(':scope > b');
+        if (bs.length !== 2) { mf.dataset.split = 'no'; return; }
+        const a = el('span', 'ts-minpart'), b = el('span', 'ts-fullpart');
+        let to = a; Array.from(mf.childNodes).forEach((n) => { if (n === bs[1]) to = b; if (n.nodeName !== 'BR') to.appendChild(n); else n.remove(); });
+        mf.appendChild(a); mf.appendChild(document.createTextNode(' ')); mf.appendChild(b); mf.dataset.split = 'yes';
+      }
+      if (mf.dataset.split !== 'yes') return;
+      const card = mf.closest('.ts-card'); let link = mf.parentNode.querySelector(':scope > .ts-fullshow');
+      if (baby && !link && card && !card.querySelector('.ts-link')) {
+        link = el('button', 'ts-link ts-fullshow', 'The full version'); link.type = 'button';
+        link.addEventListener('click', () => { mf.classList.add('ts-showfull'); link.hidden = true; });
+        mf.parentNode.appendChild(link);
+      }
+      if (!baby) { mf.classList.remove('ts-showfull'); if (link && link.classList.contains('ts-fullshow')) link.remove(); }
+    });
+  }
 
   // which page holds this one, if any: the Portal, the village, or something else (Body's own surface overlay)
   function host() {
@@ -212,6 +406,9 @@
         tiles.appendChild(b);
       }
       bodyEl.appendChild(tiles);
+      const st = el('button', 'ts-link', 'Settings: night, one hand, type, baby season'); st.type = 'button'; st.dataset.open = 'settings';
+      st.addEventListener('click', () => { closeSheet(); openSettings(); });
+      bodyEl.appendChild(st);
       sheet.appendChild(head); sheet.appendChild(bodyEl);
       document.body.appendChild(scrim); document.body.appendChild(sheet);
     }
@@ -221,13 +418,76 @@
     const x = sheet.querySelector('.ts-x'); if (x) x.focus({ preventScroll: true });
   }
   function closeSheet() {
+    if (setSheet && !setSheet.hidden) { setSheet.hidden = true; setScrim.hidden = true; html.style.overflow = ''; }
     if (!sheet || sheet.hidden) return;
     sheet.hidden = true; scrim.hidden = true; html.style.overflow = '';
     if (lastFocus && lastFocus.focus) { try { lastFocus.focus({ preventScroll: true }); } catch (e) {} }
   }
+
+  // ── step 11: the Settings sheet. Four things, each said plainly; a tap is the only thing that changes one. ──
+  let setSheet = null, setScrim = null;
+  function paintSettings() {
+    if (!setSheet) return;
+    const m = modes(), box = setSheet.querySelector('.ts-sheet-body'), stamp = JSON.stringify([m.baby, m.night, m.oneHand, m.largeType, m.nightFrom, m.nightTo]);
+    if (box.dataset.stamp === stamp) return;                             // nothing changed: leave the sheet, and his focus, alone
+    box.dataset.stamp = stamp; box.textContent = '';
+    const block = (title, say) => { const c = el('div', 'ts-set'); const t = el('div', 'ts-setrow'); const tx = el('span'); tx.appendChild(el('b', '', title)); tx.appendChild(el('small', '', say)); t.appendChild(tx); c.appendChild(t); box.appendChild(c); return t; };
+    const sw = (key, title, say) => {
+      const row = block(title, say), b = el('button', 'ts-btn' + (m[key] ? ' ts-on' : ''), m[key] ? 'On' : 'Off'); b.type = 'button'; b.dataset.mode = key;
+      b.setAttribute('role', 'switch'); b.setAttribute('aria-checked', m[key] ? 'true' : 'false'); b.setAttribute('aria-label', title);
+      b.addEventListener('click', () => { setMode(key, !modes()[key]); const again = setSheet.querySelector('[data-mode="' + key + '"]'); if (again) again.focus({ preventScroll: true }); });
+      row.appendChild(b);
+    };
+    sw('baby', 'Baby season', 'Home shows one thing on top and the three lines. A temple with a short road offers it first. Only this switch turns it on or off, never the app and never a date.');
+    const hh = (h) => String(h).padStart(2, '0') + ':00';
+    const nrow = block('Night skin', 'Darker, a size larger, still and silent. By the clock it is ' + hh(m.nightFrom) + ' to ' + hh(m.nightTo) + '. Always is for a night shift; never leaves the day skin on.').parentNode;
+    const pills = el('div', 'ts-pills ts-nightset'); pills.setAttribute('role', 'group'); pills.setAttribute('aria-label', 'Night skin');
+    [['auto', 'By the clock'], ['on', 'Always'], ['off', 'Never']].forEach(([v, t]) => {
+      const b = el('button', m.night === v ? 'ts-on' : '', t); b.type = 'button'; b.dataset.nightSet = v; b.setAttribute('aria-pressed', m.night === v ? 'true' : 'false');
+      b.addEventListener('click', () => { setMode('night', v); const again = setSheet.querySelector('[data-night-set="' + v + '"]'); if (again) again.focus({ preventScroll: true }); });
+      pills.appendChild(b);
+    });
+    nrow.appendChild(pills);
+    sw('oneHand', 'One hand', 'The page starts a third of the way down, back sits in the bar, and sheets stay low.');
+    sw('largeType', 'Large type', 'Everything a size larger.');
+    box.appendChild(el('p', 'ts-quiet', 'These are kept on this phone. Nothing here is counted, and nothing is sent.'));
+  }
+  function openSettings() {
+    if (!KEY) return;
+    if (!setSheet) {
+      setScrim = el('div', 'ts-scrim'); setScrim.hidden = true; setScrim.addEventListener('click', closeSheet);
+      setSheet = el('div', 'ts-sheet ts-setsheet'); setSheet.hidden = true; setSheet.setAttribute('role', 'dialog'); setSheet.setAttribute('aria-modal', 'true'); setSheet.setAttribute('aria-label', 'Settings');
+      const head = el('div', 'ts-sheet-head'), nm = el('div');
+      nm.appendChild(el('b', '', 'Settings')); nm.appendChild(el('span', '', 'how the house is lit'));
+      const x = el('button', 'ts-x'); x.type = 'button'; x.setAttribute('aria-label', 'Close'); x.appendChild(sig('x', 20)); x.addEventListener('click', closeSheet);
+      head.appendChild(nm); head.appendChild(x);
+      setSheet.appendChild(head); setSheet.appendChild(el('div', 'ts-sheet-body'));
+      document.body.appendChild(setScrim); document.body.appendChild(setSheet);
+    }
+    paintSettings();
+    lastFocus = document.activeElement;
+    setScrim.hidden = false; setSheet.hidden = false; html.style.overflow = 'hidden';
+    const x = setSheet.querySelector('.ts-x'); if (x) x.focus({ preventScroll: true });
+  }
+  // one hand: the bar's back shows only while the header's own back does (Body's doors, opened alone, have none)
+  // It is the header's back, mirrored where the thumb is: it presses the real one, so it means what that means. Out of
+  // one-hand mode it is not in the bar at all.
+  function syncBack() {
+    const nav = document.querySelector('nav.ts-bar'); if (!nav) return;
+    const b = document.querySelector('.ts-head .ts-back');
+    let mb = nav.querySelector('.ts-barback'), shown = false;
+    if (b && html.hasAttribute('data-onehand')) { const cs = getComputedStyle(b); shown = !b.hidden && cs.display !== 'none' && cs.visibility !== 'hidden'; }
+    if (shown && !mb) {
+      mb = el('button', 'ts-barback'); mb.type = 'button'; mb.dataset.mirror = 'back';
+      mb.appendChild(sig('back', 22)); mb.appendChild(document.createTextNode('Back'));
+      mb.addEventListener('click', () => { const real = document.querySelector('.ts-head .ts-back'); if (real) real.click(); });
+      nav.insertBefore(mb, nav.firstChild);
+    } else if (!shown && mb) mb.remove();
+  }
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
 
-  const api = window.TempleShell = { ROOT, EMBEDDED, TEMPLES, DIRECTORS, GRID, host, go, back, openTemples, closeSheet, openDirector, sig, face, isNight, temple: null };
+  const api = window.TempleShell = { ROOT, EMBEDDED, TEMPLES, DIRECTORS, GRID, host, go, back, openTemples, closeSheet, openDirector, sig, face, isNight, temple: null,
+    MODES, modes, setMode, openSettings, minimum, setMinimum, minimumCard, sleep, sleepLine, babyTop, babyDates: BABY_DATES, nextDate, localDay, refreshModes: applyModes };
 
   function boot() {
     KEY = document.body && document.body.dataset.temple;
@@ -243,6 +503,9 @@
       if ((f === 'appblock.js' && window.TempleAppBlock) || (f === 'talk.js' && window.TempleTalk) || (f === 'dayplan.js' && window.TemplePlan)) continue;
       const s = el('script'); s.src = ROOT + f; s.async = false; document.head.appendChild(s);
     }
+    booted = true; applyModes();                                         // step 11: the minimum first, the sleep line, the bar's back
+    { const b = document.querySelector('.ts-head .ts-back'); if (b && window.MutationObserver) new MutationObserver(syncBack).observe(b, { attributes: true }); }
+    document.addEventListener('click', () => setTimeout(syncBack, 0));
     html.setAttribute('data-shell', 'ready');
     // offline: one service worker for the whole site, at the apps/ root. It never touches localStorage.
     if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register(ROOT + 'sw.js').catch(() => {});

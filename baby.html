@@ -37,6 +37,11 @@ textarea.bb-ta.bb-has, input.bb-in.bb-has { border-style: solid; border-color: v
 .bb-money .ts-row { min-height: 48px; }
 .bb-money .ts-row span { font-size: 15px; font-variant-numeric: tabular-nums; color: var(--ink); white-space: nowrap; }
 .ts-card > p + p { margin-top: 6px; }
+/* step 11: in baby season the page opens on the next date and the three lines; her chair is still first on the board */
+#bb-full { display: grid; width: 100%; min-height: 48px; margin: 0 0 12px; }
+#bb-full[hidden], #bb-min[hidden] { display: none; }
+html[data-baby] body:not(.bb-open) main > section:not(#bb-date) { display: none; }
+html[data-baby] body:not(.bb-open) #bb-date .bb-src { display: none; }   /* the source note is on the full board; the minimum stays short */
 </style>
 <script src="shell.js"></script>
 <script src="leave_sums.js"></script>
@@ -57,6 +62,10 @@ textarea.bb-ta.bb-has, input.bb-in.bb-has { border-style: solid; border-color: v
     <p id="bb-date-what"></p>
     <p class="bb-src">Copied from Baby/barsel/barsel_timeline.md as it stood on 14 Nov 2026; the file wins. Most dates count from the real birth day and move if the baby comes early or late. Check borger.dk before acting on any of them.</p>
   </section>
+
+  <!-- step 11, baby season: the minimum is three lines, and the board is one step behind them. Filled by the script. -->
+  <div id="bb-min" hidden></div>
+  <button class="ts-btn" id="bb-full" type="button" hidden aria-expanded="false">The full board</button>
 
   <!-- 1. the chair for Patrick's mum, written first -->
   <section class="ts-card bb-lines" id="bb-mum">
@@ -133,15 +142,8 @@ textarea.bb-ta.bb-has, input.bb-in.bb-has { border-style: solid; border-color: v
   // if it changes, change these. "until" is the last day a line is still the next one; the two "about" lines have no day
   // in the file, so they stand until their month is over. Left out, as on Malee's strip: the dagpenge application day
   // (8 weeks after the first leave day, which moves) and 5 Jan 2036.
-  var DATES = [
-    { until: '2026-12-08', when: 'by 8 Dec 2026', what: 'Employer must know about the 2 weeks. Already planned at work: only check it is written down and that the 2 weeks are the standard barsel weeks.' },
-    { until: '2027-01-04', when: '4 Jan 2027', what: 'Lek’s planned leave start, a day before the due date. If the baby comes early or late, ask work whether the plan bends.' },
-    { until: '2027-01-05', when: '5 Jan 2027', what: 'Due date, a Tuesday.' },
-    { until: '2027-03-16', when: '16 Mar 2027', what: 'The 2 weeks must be used by this date (the first 10 weeks).' },
-    { until: '2027-05-31', when: 'about May 2027', what: 'Notice for the second leave, about 8 weeks before it starts. The exact date once Lek knows the start.' },
-    { until: '2027-07-31', when: 'about July 2027', what: 'Second leave, when Patrick is about 6 months and his mum starts work. It needs the weeks left over and an agreement with work.' },
-    { until: '2028-01-05', when: '5 Jan 2028', what: 'All 9 earmarked weeks used (the child turns 1).' }
-  ];
+  // step 11: the list itself now lives in shell.js (TempleShell.babyDates), so home's top line reads the same one.
+  var DATES = (window.TempleShell && TempleShell.babyDates) || [];
   function iso(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
   function paintDate() {
     var today = iso(new Date()), next = null;
@@ -229,7 +231,19 @@ textarea.bb-ta.bb-has, input.bb-in.bb-has { border-style: solid; border-color: v
   window.addEventListener('storage', function (e) { if (e.key === 'kaching_leave_v1') paintMoney(); });
   document.addEventListener('visibilitychange', function () { if (!document.hidden) { paintMoney(); paintDate(); } });
 
-  paintDate(); paintMum(); paintWeek(); paintMoney();
+  // ---------- step 11: baby season. Minimum: the three lines. Full: the board, one tap behind, her chair first. ----------
+  function paintSeason() {
+    var ts = window.TempleShell, on = !!(ts && ts.modes && ts.modes().baby), box = $('bb-min'), full = $('bb-full');
+    box.hidden = !on; full.hidden = !on;
+    if (!on) { document.body.classList.remove('bb-open'); box.textContent = ''; return; }
+    if (!box.firstChild) box.appendChild(ts.minimumCard());
+    var open = document.body.classList.contains('bb-open');
+    full.textContent = open ? 'Only the three lines' : 'The full board'; full.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+  $('bb-full').addEventListener('click', function () { document.body.classList.toggle('bb-open'); paintSeason(); });
+  window.addEventListener('temple-modes', function () { var a = document.activeElement; if (!a || !$('bb-min').contains(a)) { $('bb-min').textContent = ''; } paintSeason(); });
+
+  paintDate(); paintMum(); paintWeek(); paintMoney(); paintSeason();
 })();
 </script>
 </body>
