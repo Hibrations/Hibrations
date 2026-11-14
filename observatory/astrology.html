@@ -6,18 +6,17 @@
 <meta name="theme-color" content="#0d0b1f">
 <title>Astrolabe</title>
 <style>
-:root{
-  --bg:#0d0b1f; --bg2:#151130; --card:#1b1740; --line:#2c2657;
-  --gold:#e8c37e; --gold2:#f4dca6; --violet:#b79cff; --ink:#ece9ff; --dim:#9a93c4;
-  --fire:#ff8a6b; --earth:#8fce9b; --air:#8fc7ff; --water:#b79cff;
-  --hard:#ff7d8a; --soft:#8fce9b; --blend:#e8c37e;
+/* Portal remake, step 9: the colours, header, sky and bottom bar come from ../temple.css and ../shell.js.
+   The page's old colour names are kept as aliases of the shared tokens, so its own script and classes work unchanged. */
+body[data-temple]{
+  --bg2:var(--bg); --gold:var(--t2-text); --gold2:var(--ink); --violet:var(--t-text); --dim:var(--muted);
+  --fire:#E0A07A; --earth:#8FCE9B; --air:#8FC7FF; --water:#B79CFF;
+  --hard:#C9A0DC; --soft:#8FCE9B; --blend:#D4A64A;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#1a1540,#0d0b1f 60%);color:var(--ink);
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;min-height:100%}
 body{padding-bottom:80px}
-header{position:sticky;top:0;z-index:20;background:linear-gradient(#0d0b1fee,#0d0b1fcc);backdrop-filter:blur(8px);
-  border-bottom:1px solid var(--line);padding:14px 16px 10px}
 .brand{display:flex;align-items:center;gap:9px;font-weight:600;letter-spacing:.5px}
 .brand .m{color:var(--gold);font-size:20px}
 .brand small{color:var(--dim);font-weight:400;letter-spacing:.3px}
@@ -96,22 +95,95 @@ svg text{font-family:"Segoe UI Symbol","Apple Symbols",sans-serif}
 .hsel button{flex:1;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px;color:var(--dim);font-size:12.5px}
 .hsel button.on{color:var(--gold);border-color:#e8c37e77}
 .empty{text-align:center;color:var(--dim);padding:40px 20px;line-height:1.6}
+
+/* step 9 · the page's own classes, fitted to the frame. The page's three tabs were a fixed bar at the bottom, where the
+   house's bar is now; they are a pill row under the header (Thorn's F4.4). */
+body[data-temple] *{text-transform:none !important}
+#tl-btn{display:none !important}   /* the director is in the header and the bar now (director.js) */
+main.ts-body{max-width:none;margin:0}
+.who{margin:0 0 10px}
+.who select,.mini{min-height:44px;border-color:var(--leaf2);font-size:16px}
+.mini{color:var(--ink);font-size:14px}
+.tabbar{position:static;background:none;border:none;-webkit-backdrop-filter:none;backdrop-filter:none;gap:6px;margin:0 0 6px}
+.tabbar button{flex-direction:row;justify-content:center;gap:6px;min-height:44px;padding:0 6px;font-size:13px;border:1px solid var(--leaf2);border-radius:12px;color:var(--muted)}
+.tabbar button .ic{font-size:14px}
+.tabbar button.on{color:var(--ink);border-color:var(--t-text);background:var(--t-faint)}
+h2{font-size:12px;letter-spacing:.04em;color:var(--muted);font-weight:400;margin:20px 2px 8px}
+.card{border-color:var(--leaf2);border-radius:18px}
+.person{min-height:44px}
+.person .orb,.wk .wg{color:var(--t-text)}
+.person .orb{background:var(--bg)}
+.person .sub,.wk .ws,.pos,.plc .d,.field label,.asp .an{font-size:13px}
+.plc .h .rx{font-size:12px}
+.addbtn,.ghost,.hsel button,.chip{min-height:44px;color:var(--ink)}
+.addbtn{background:none;border-color:var(--leaf);font-weight:500}
+.primary{min-height:48px;background:var(--t-btn);color:var(--on-btn);font-weight:500;letter-spacing:0}
+.del{color:var(--muted);min-height:44px;text-decoration:underline}
+.field input,.field select,.search{min-height:44px;font-size:16px;border-color:var(--leaf2)}
+.chk{min-height:44px}
+.chk input{min-height:0}
+.hsel button,.chip{font-size:13px;border-color:var(--leaf2)}
+.hsel button.on,.chip.on{color:var(--ink);border-color:var(--t-text);background:var(--t-faint)}
+.wk{min-height:48px}
+.wheelwrap svg{max-width:100%;height:auto}
+.legend{font-size:12px}
+.scrim{z-index:890}
+.drawer{z-index:895;background:var(--card);border-top-color:var(--leaf);max-width:640px}
+.drawer .dg{color:var(--t-text)}
+.drawer h3{font-family:"Cormorant Garamond",Georgia,serif;font-weight:600;font-size:25px}
+.drawer .dsub{font-size:13px;letter-spacing:.04em}
+.drawer p{color:var(--ink)}
+.empty{font-size:14px}
+
+/* today's sky over the stored chart */
+#ob-sky[hidden],#ob-week[hidden]{display:none}
+#ob-wheel svg{display:block;width:100%;max-width:300px;height:auto;margin:6px auto 0}
+.ob-key{display:flex;justify-content:center;gap:16px;font-size:12px;color:var(--muted);margin-top:6px}
+.ob-key i{font-style:normal}
+.ob-list{margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;font-size:13px;color:var(--muted)}
+.ob-list b{font-weight:400;color:var(--ink)}
+.ob-moons{display:flex;gap:4px;margin-top:10px}
+.ob-moons div{flex:1;text-align:center;border:1px solid var(--leaf2);border-radius:10px;padding:6px 0;font-size:12px;color:var(--muted)}
+.ob-moons div b{display:block;font:500 19px "Segoe UI Symbol","Apple Symbols",sans-serif;color:var(--t-text)}
+.ob-moons div.ob-now{border-color:var(--t-text);background:var(--t-faint);color:var(--ink)}
 </style>
+<link href="../fonts/fonts.css" rel="stylesheet">
+<link href="../temple.css" rel="stylesheet">
+<script src="../shell.js"></script>
 <script src="../temple_link.js" data-app="observatory"></script>
 </head>
-<body>
-<header>
-  <div class="brand"><span class="m">☉</span> ASTROLABE <small>· natal charts</small></div>
-  <div class="who">
-    <select id="whoSel"></select>
-    <button class="mini" id="toRoster">People</button>
+<body data-temple="observatory">
+<header class="ts-head">
+  <div class="ts-hrow">
+    <div class="ts-tt"><b>Astrolabe</b><span>natal charts · today’s sky</span></div>
   </div>
+  <p class="ts-guide">Where the sky was, and where it is. Read, not prescribed.</p>
 </header>
 
-<main>
+<main class="ts-body">
+  <div class="who">
+    <select id="whoSel" aria-label="Whose chart"></select>
+    <button class="mini" id="toRoster">People</button>
+  </div>
+  <nav class="tabbar" aria-label="Astrolabe">
+    <button data-tab="chart" class="on"><span class="ic">◉</span>Chart</button>
+    <button data-tab="roster"><span class="ic">☺</span>People</button>
+    <button data-tab="wiki"><span class="ic">✶</span>Wiki</button>
+  </nav>
   <!-- CHART TAB -->
   <section id="tab-chart">
     <div id="chartBody"></div>
+    <section class="ts-card" id="ob-sky" hidden>
+      <div class="ts-eyebrow">today’s sky over this chart</div>
+      <div id="ob-wheel"></div>
+      <div class="ob-key"><i style="color:var(--t-text)">● today</i><i style="color:var(--t2-text)">● at birth</i></div>
+      <div class="ob-list" id="ob-list"></div>
+      <p class="ts-src" style="margin-top:12px"><span class="ts-srcmark">tradition</span>Astrology is a language for reading. No predictive validity is shown. Read, not prescribed.</p>
+    </section>
+    <section class="ts-card" id="ob-week" hidden>
+      <div class="ts-eyebrow">the moon’s sign, this week</div>
+      <div class="ob-moons" id="ob-moons"></div>
+    </section>
   </section>
 
   <!-- ROSTER TAB -->
@@ -162,12 +234,6 @@ svg text{font-family:"Segoe UI Symbol","Apple Symbols",sans-serif}
     <div id="wkList"></div>
   </section>
 </main>
-
-<nav class="tabbar">
-  <button data-tab="chart" class="on"><span class="ic">◉</span>Chart</button>
-  <button data-tab="roster"><span class="ic">☺</span>People</button>
-  <button data-tab="wiki"><span class="ic">✶</span>Wiki</button>
-</nav>
 
 <div class="scrim" id="scrim"></div>
 <div class="drawer" id="drawer"><div class="grip"></div><div id="drawerBody"></div></div>
@@ -635,6 +701,69 @@ document.getElementById("scrim").onclick=closeDrawer;
 seedIfEmpty();
 currentId=people[0]?people[0].id:null;
 fillCities();fillWho();showTab("chart");
+</script>
+
+<script>
+// Portal remake, step 9 · beside the page's own script (unchanged above). astro_people_v1 is never written here.
+//   Today's sky over the stored chart (plan §2): the page already computes positions (computeChart), so today's are
+//   the same arithmetic at this moment. No ephemeris was written. The wheel turns the way the page's own wheel does
+//   (Ascendant at the left); with no birth time it starts at 0° Aries. It shows where things are and says nothing
+//   about what they mean: no transit is worded as a verdict.
+//   The moon's sign for seven days, from the same arithmetic at noon.
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var KEYS = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'];
+  function jdOf(d) { return toJD(d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate(), d.getUTCHours() + d.getUTCMinutes() / 60); }
+  function ring(c, r, tierStep, colour, size, asc) {
+    var items = KEYS.map(function (k) { return { k: k, lon: rev(c[k]) }; }).sort(function (a, b) { return a.lon - b.lon; }), last = -99, tier = 0, s = '';
+    items.forEach(function (it) {
+      if (Math.abs(it.lon - last) < 10) tier = (tier + 1) % 2; else tier = 0;
+      last = it.lon;
+      var a = (180 + (it.lon - asc)) * Math.PI / 180, rr = r - tier * tierStep;
+      s += '<text x="' + (150 + rr * Math.cos(a)).toFixed(1) + '" y="' + (150 - rr * Math.sin(a) + size * 0.36).toFixed(1) + '" fill="' + colour + '" font-size="' + size + '" text-anchor="middle">' + BODIES[it.k].g + '</text>';
+    });
+    return s;
+  }
+  function draw() {
+    var p = null;
+    try { p = people.find(function (x) { return x.id === currentId; }); } catch (e) {}
+    var on = !!p && !$('tab-chart').classList.contains('hidden');
+    $('ob-sky').hidden = !on; $('ob-week').hidden = !on;
+    if (!on) return;
+    var natal = chartFor(p).c, now = new Date(), today = computeChart(jdOf(now), +p.lat || 0, +p.lon || 0);
+    var asc = p.timeKnown ? natal.ASC : 0, s = '<svg viewBox="0 0 300 300" role="img" aria-label="Today’s planets on the outer ring, the birth chart on the inner ring">', i;
+    [142, 118, 84, 50].forEach(function (r) { s += '<circle cx="150" cy="150" r="' + r + '" fill="none" stroke="var(--leaf)" stroke-width="1"/>'; });
+    for (i = 0; i < 12; i++) {
+      var a = (180 + (i * 30 - asc)) * Math.PI / 180, g = (180 + (i * 30 + 15 - asc)) * Math.PI / 180;
+      s += '<line x1="' + (150 + 118 * Math.cos(a)).toFixed(1) + '" y1="' + (150 - 118 * Math.sin(a)).toFixed(1) + '" x2="' + (150 + 142 * Math.cos(a)).toFixed(1) + '" y2="' + (150 - 142 * Math.sin(a)).toFixed(1) + '" stroke="var(--leaf)" stroke-width="1"/>';
+      s += '<text x="' + (150 + 130 * Math.cos(g)).toFixed(1) + '" y="' + (150 - 130 * Math.sin(g) + 5).toFixed(1) + '" fill="var(--muted)" font-size="13" text-anchor="middle">' + SIGNS[i].g + '</text>';
+    }
+    s += ring(today, 106, 15, 'var(--t-text)', 15, asc) + ring(natal, 72, 14, 'var(--t2-text)', 13, asc) + '</svg>';
+    $('ob-wheel').innerHTML = s;
+    var list = $('ob-list'); list.textContent = '';
+    KEYS.forEach(function (k) {
+      var pos = fmtPos(today[k]), d = document.createElement('div'), b = document.createElement('b');
+      b.textContent = BODIES[k].g + ' ' + k; d.appendChild(b); d.appendChild(document.createTextNode(' ' + pos.deg + '° ' + pos.sign)); list.appendChild(d);
+    });
+    var box = $('ob-moons'); box.textContent = '';
+    for (i = 0; i < 7; i++) {
+      var day = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i, 12), m = fmtPos(computeChart(jdOf(day), 0, 0).Moon);
+      var cell = document.createElement('div'), gl = document.createElement('b');
+      gl.textContent = m.glyph; gl.title = m.sign; cell.appendChild(gl);
+      cell.appendChild(document.createTextNode(i === 0 ? 'today' : day.toLocaleDateString(undefined, { weekday: 'short' })));
+      cell.setAttribute('aria-label', (i === 0 ? 'today' : day.toLocaleDateString(undefined, { weekday: 'long' })) + ': moon in ' + m.sign);
+      if (i === 0) cell.className = 'ob-now';
+      box.appendChild(cell);
+    }
+  }
+  function safe() { try { draw(); } catch (e) { $('ob-sky').hidden = true; $('ob-week').hidden = true; } }
+  safe();
+  try {
+    new MutationObserver(safe).observe($('chartBody'), { childList: true });
+    new MutationObserver(safe).observe($('tab-chart'), { attributes: true, attributeFilter: ['class'] });
+  } catch (e) {}
+})();
 </script>
 </body>
 </html>

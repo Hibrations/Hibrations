@@ -6,10 +6,10 @@
 <meta name="theme-color" content="#0d0b1f">
 <title>The Observatory</title>
 <style>
-:root{
-  --bg:#0d0b1f; --bg2:#151130; --card:#1b1740; --line:#2c2657;
-  --gold:#e8c37e; --gold2:#f4dca6; --violet:#b79cff; --violet2:#cbb8ff;
-  --ink:#ece9ff; --dim:#9a93c4;
+/* Portal remake, step 9: the colours, header, sky and bottom bar come from ../temple.css and ../shell.js.
+   The page's old colour names are kept as aliases of the shared tokens. */
+body[data-temple]{
+  --bg2:var(--card); --gold:var(--t2-text); --gold2:var(--ink); --violet:var(--t-text); --violet2:var(--t-text); --dim:var(--muted);
   --r:18px;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -60,35 +60,54 @@ main{max-width:560px;margin:0 auto;padding:0 18px}
   padding:8px 15px;font:inherit;font-size:13px;cursor:pointer}
 #frame-title{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--dim)}
 #frame{flex:1;width:100%;border:0}
+
+/* step 9 · the page's own classes, fitted to the frame */
+body[data-temple] *{text-transform:none !important}
+#tl-btn{display:none !important}   /* the director is in the header and the bar now (director.js) */
+.hero{text-align:left;padding:0 2px 4px}
+.meta{margin-top:0;font-family:"Cormorant Garamond",Georgia,serif;font-size:25px;color:var(--ink)}
+.moon{margin-top:8px;border-color:var(--leaf2);min-height:32px}
+.moon.lit{color:var(--ink);border-color:var(--leaf)}
+.moon .g{display:none}   /* the frame's sky band draws the real moon; no emoji beside it */
+.lead{text-align:left;font-family:"Cormorant Garamond",Georgia,serif;font-size:17px;line-height:1.4;color:var(--ink);margin:18px 2px 18px}
+.jump{min-height:92px;background:linear-gradient(160deg,var(--t-faint),var(--card) 62%);border-color:var(--leaf2);font:inherit}
+.jump .orb{font-family:"Cormorant Garamond",Georgia,serif;font-size:28px;background:var(--bg);border-color:var(--leaf);color:var(--t-text)}
+.jump.gold,.jump.violet{border-color:var(--leaf2)}
+.jump.gold .orb,.jump.violet .orb{color:var(--t-text);box-shadow:none}
+.jump .nm{font-family:"Cormorant Garamond",Georgia,serif;font-weight:500;font-size:23px}
+.jump .ds{font-size:13px}
+.foot{font-size:13px;letter-spacing:0;opacity:1;margin-top:26px;font-style:italic}
+#frame-top{display:none}   /* one header, not two: the surface inside wears the frame and brings its own back */
+#frame-overlay{background:var(--bg)}
 </style>
+<link href="../fonts/fonts.css" rel="stylesheet">
+<link href="../temple.css" rel="stylesheet">
+<script src="../shell.js"></script>
 <script src="../temple_link.js" data-app="observatory"></script>
 </head>
-<body>
-<main>
+<body data-temple="observatory" data-guide="The night sky, read and not ruled.">
+<main class="ts-body">
   <div class="hero">
-    <div class="mark">✶ ☾ ✶</div>
-    <div class="title">THE OBSERVATORY</div>
-    <div class="sub">sky &amp; symbol</div>
     <div class="meta" id="date"></div>
-    <div class="moon" id="moon"><span class="g" id="moon-g">🌑</span><span id="moon-n">—</span></div>
+    <div class="moon" id="moon"><span class="g" id="moon-g" aria-hidden="true"></span><span id="moon-n">—</span></div>
   </div>
 
-  <div class="lead">Two ways of reading the same night. The chart maps where the sky was; the cards ask what it means now.</div>
+  <div class="lead">Two ways of reading the same night. The chart maps where the sky was; the cards ask what it means now. Read, not prescribed.</div>
 
   <div class="cards">
     <button class="jump gold" data-app="astrology.html" data-title="Astrolabe">
-      <div class="orb">🌌</div>
-      <div><div class="nm">Astrolabe</div><div class="ds">natal charts · transits · the wiki</div></div>
+      <div class="orb" aria-hidden="true">☉</div>
+      <div><div class="nm">Astrolabe</div><div class="ds">natal charts · today’s sky · the wiki</div></div>
       <div class="arw">›</div>
     </button>
     <button class="jump violet" data-app="tarot.html" data-title="Tarot">
-      <div class="orb">🔮</div>
+      <div class="orb" aria-hidden="true">✦</div>
       <div><div class="nm">Tarot</div><div class="ds">draw · deck · Card XIV</div></div>
       <div class="arw">›</div>
     </button>
   </div>
 
-  <div class="foot">read the sky, then read yourself 🌌</div>
+  <div class="foot">The sky is there if you want it.</div>
 </main>
 
 <div id="frame-overlay" hidden>
@@ -147,6 +166,32 @@ window.addEventListener('message', e=>{
 // C2 (2026-11-14): this app switches on the site's offline cache itself, so it works offline even on a phone where the
 // village was never opened. The one sw.js at the apps/ root; scope and caching are unchanged.
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('../sw.js').catch(function () {});
+</script>
+
+<script>
+// Portal remake, step 9 · beside the page's own script (unchanged above).
+// A surface open inside this page (Astrolabe, Tarot) wears the frame too, so its bottom bar and Temples sheet ask to
+// move sideways with {action:'goto', app}. This page is the one that hears it. Inside the Portal it passes the ask up
+// and passes the Portal's answer back down; opened alone it answers itself and goes there.
+(function () {
+  'use strict';
+  var frame = document.getElementById('frame'), EMBEDDED = window.parent !== window;
+  window.addEventListener('message', function (e) {
+    var d = e.data;
+    if (!d || typeof d !== 'object') return;
+    if (d.action === 'goto' && e.source === frame.contentWindow && typeof d.app === 'string') {
+      if (EMBEDDED) { try { window.parent.postMessage({ action: 'goto', app: d.app }, '*'); } catch (err) {} return; }
+      try { e.source.postMessage({ action: 'goto-ack' }, '*'); } catch (err) {}
+      var key = d.app === 'grimoire' ? 'healing' : d.app;
+      if (window.TempleShell && TempleShell.TEMPLES[key]) {
+        if (key === 'observatory') { if (typeof closeSurface === 'function') closeSurface(); }
+        else TempleShell.go(key);
+      }
+    } else if (d.action === 'goto-ack' && EMBEDDED && e.source === window.parent) {
+      try { frame.contentWindow.postMessage({ action: 'goto-ack' }, '*'); } catch (err) {}
+    }
+  });
+})();
 </script>
 </body>
 </html>

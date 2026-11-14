@@ -5,22 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Breath &amp; Energy Temple</title>
 <style>
-:root {
-  --bg: #08090a;
-  --bg-elev: #0f1214;
-  --bg-card: #13171a;
-  --border: #21282c;
-  --border-soft: #181d20;
-  --ink: #e1e6e8;
-  --ink-dim: #8a9499;
-  --ink-faint: #545d61;
-  --crimson: #5d93a6;
-  --crimson-dim: #3d6675;
-  --bronze: #a8895a;
-  --bronze-dim: #7a6440;
-  --r-sm: 8px;
-  --r-md: 14px;
-  --r-lg: 20px;
+/* Portal remake, step 9: the colours, header, sky and bottom bar come from temple.css and shell.js.
+   The page's old colour names are kept as aliases of the shared tokens, so its own script and classes work unchanged. */
+body[data-temple] {
+  --bg-elev: var(--card); --bg-card: var(--card); --border: var(--leaf); --border-soft: var(--leaf2);
+  --ink-dim: var(--muted); --ink-faint: var(--muted);
+  --crimson: var(--t-text); --crimson-dim: var(--t-dim); --bronze: var(--t2-text); --bronze-dim: var(--t-dim);
+  --r-sm: 10px; --r-md: 14px; --r-lg: 18px;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html, body {
@@ -250,21 +241,53 @@ main { padding: 22px; }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
 <link href="fonts/fonts.css" rel="stylesheet">
+<link href="temple.css" rel="stylesheet">
+<script src="shell.js"></script>
+<script src="charts.js"></script>
 <script src="temple_link.js" data-app="breath"></script>
 </head>
-<body>
+<body data-temple="breath">
 
-<header class="shell-header">
-  <button class="back-btn" id="back-btn">← portal</button>
-  <div class="shell-title">breath &amp; energy</div>
+<header class="ts-head">
+  <div class="ts-hrow">
+    <button class="ts-back" id="back-btn" type="button" aria-label="Back">←</button>
+    <div class="ts-tt"><b>Breath Temple</b><span>breath and energy</span></div>
+  </div>
+  <p class="ts-guide">Air, and the space between breaths.</p>
 </header>
+<div class="ts-body">
+  <section class="ts-card ts-today" id="br-slow">
+    <div class="ts-eyebrow">if you want to slow down</div>
+    <h2 id="br-slow-h">A slower breath is here</h2>
+    <p id="br-slow-p">In for five, out for five, through the nose. No clock and no sound. It ends when you say so.</p>
+    <p class="br-src"><span class="ts-srcmark">narrower</span>Slow breathing shifts breath rate and heart-rate variability. Not sleep, focus or stamina. Lehrer &amp; Gevirtz 2014.</p>
+    <div class="ts-pair" id="br-slow-pair"><button class="ts-yes" id="br-slow-yes" type="button">Yes</button><button class="ts-later" id="br-slow-later" type="button">Not now</button></div>
+    <div class="ts-pair" id="br-slow-after" hidden><button class="ts-yes" id="br-slow-mark" type="button">Mark it</button><button class="ts-later" id="br-slow-leave" type="button">Leave it unmarked</button></div>
+  </section>
 
-<div class="tab-bar">
-  <button class="tab-btn active" data-tab="library">library</button>
-  <button class="tab-btn" data-tab="history">history</button>
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="library">library</button>
+    <button class="tab-btn" data-tab="history">history</button>
+  </div>
+
+  <main id="mount"></main>
+
+  <section class="ts-card" id="br-year" hidden>
+    <div class="ts-eyebrow">a year, as it was</div>
+    <div id="br-ribbon" class="ts-chart" style="margin-top:10px"></div>
+    <p style="margin-top:8px">Lit in the weeks a practice was marked here. It shows what is there, nothing else.</p>
+  </section>
+  <section class="ts-card" id="br-trail" hidden>
+    <div class="ts-eyebrow">what moved, in your words</div>
+    <div id="br-lines"></div>
+  </section>
 </div>
 
-<main id="mount"></main>
+<div id="br-pacer" hidden role="dialog" aria-modal="true" aria-label="A slower breath">
+  <div class="br-disc" id="br-disc" aria-hidden="true"></div>
+  <div class="br-word" id="br-word" aria-live="polite">in</div>
+  <button class="br-enough" id="br-enough" type="button">That is enough</button>
+</div>
 
 <div id="timer-overlay">
   <div class="timer-label" id="timer-label"></div>
@@ -1054,8 +1077,186 @@ checkPortalAutoStart();
 </script>
 
 <style>
-/* ── Codex × Pleroma skin ── */
-body{font-family:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;}.practice-name{font-family:'Cormorant Garamond',serif;font-weight:500;}.eyebrow,.section-eyebrow{letter-spacing:0.24em;}
+/* Portal remake, step 9 · the page's own classes, fitted to the frame. No capitals by styling, nothing under 12 px,
+   nothing tappable under 44 px, no count on a door, no number on a practice. */
+body[data-temple] * { text-transform: none !important; }
+#tl-btn { display: none !important; }   /* the director is in the header and the bar now (director.js) */
+main#mount { padding: 0; }
+.tab-bar { padding: 0; border-bottom: none; margin: 4px 0 16px; }
+.tab-btn { min-height: 44px; font-size: 13px; letter-spacing: 0; color: var(--muted); border: 1px solid var(--leaf2); border-radius: 12px; }
+.tab-btn.active { color: var(--ink); border-color: var(--t-text); background: var(--t-faint); }
+.declaration { font-size: 14px; }
+.anchor-banner { background: linear-gradient(180deg, var(--t-faint), var(--card) 78%); border-color: var(--t-dim); }
+.anchor-banner .ab-eyebrow, .section-eyebrow { font-size: 12px; letter-spacing: .04em; }
+.section-eyebrow { color: var(--muted); }
+.cat-header { min-height: 52px; }
+.cat-label { font-size: 19px; }
+.cat-count, .practice-num { display: none; }
+.practice-name { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 500; font-size: 19px; }
+.practice-stack-chip, .history-stack .practice-stack-chip { font-size: 12px; letter-spacing: 0; padding: 1px 9px; color: var(--muted) !important; background: none !important; border: 1px solid var(--leaf2); font-weight: 400; }
+.practice-meta, .history-date { font-size: 12px; }
+.practice-toggle { color: var(--muted); }
+.detail-section h4, .detail-watch strong { font-size: 12px; letter-spacing: .04em; }
+.detail-section li::before { font-size: 12px; }
+.detail-watch { background: var(--t-faint); }
+.btn-begin { background: var(--t-btn); color: var(--on-btn); min-height: 48px; }
+.btn-begin:active { background: var(--t-btn); opacity: .85; }
+.btn-log { min-height: 48px; }
+#timer-overlay { z-index: 850; background: var(--bg); }
+.timer-label { font-size: 13px; letter-spacing: .04em; }
+.timer-display { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 500; }
+.timer-controls { flex-wrap: wrap; justify-content: center; }
+.timer-btn { min-height: 48px; font-size: 14px; letter-spacing: 0; border-radius: 14px; padding: 0 16px; }
+#toast { bottom: calc(var(--ts-bar) + 24px + env(safe-area-inset-bottom, 0px)); z-index: 880; }
+textarea { font-size: 16px; }
+
+/* the slow-down cue: Breath's pale blue is the colour for anything that asks him to slow down (Hekka) */
+.br-src { font-size: 13px !important; line-height: 1.5; margin-top: 10px !important; }
+.br-src .ts-srcmark { margin: 0 8px 0 0; }
+#br-slow-pair[hidden], #br-slow-after[hidden], #br-year[hidden], #br-trail[hidden], #br-pacer[hidden] { display: none; }
+#br-pacer { position: fixed; inset: 0; z-index: 860; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; padding: 24px; }
+.br-disc { width: 190px; height: 190px; border-radius: 50%; background: radial-gradient(circle at 50% 45%, #EAF2F7 0%, #8FB8D6 46%, rgba(143,184,214,.16) 72%, transparent 74%); transform: scale(.56); opacity: .72; transition: transform 5s ease-in-out, opacity 5s ease-in-out; }
+.br-disc.br-in { transform: scale(1); opacity: 1; }
+.br-word { font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-size: 25px; color: #8FB8D6; min-height: 32px; }
+.br-enough { min-height: 48px; padding: 0 20px; border-radius: 14px; border: 1px solid var(--leaf); color: var(--ink); font-size: 14px; }
+@media (prefers-reduced-motion: reduce) { .br-disc { transition: none; transform: scale(.8) !important; opacity: .9 !important; } }
+
+/* source marks from Hekka's breath ledger */
+.br-marks { margin-top: 14px; }
+button.br-mark { display: inline-flex; align-items: center; min-height: 44px; padding: 0; margin-right: 8px; }
+button.br-mark span { font-size: 12px; color: var(--t2-text); border: 1px solid var(--leaf); border-radius: 99px; padding: 2px 10px; }
+.br-line { font-size: 13px; color: var(--muted); line-height: 1.5; margin: 0 0 6px; }
+.br-line[hidden] { display: none; }
+.br-felt { font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-size: 17px; line-height: 1.35; color: var(--ink); margin-top: 10px; }
+.br-felt small { display: block; font: 12px Inter, system-ui, sans-serif; font-style: normal; color: var(--muted); margin-top: 1px; }
 </style>
+
+<script>
+// Portal remake, step 9 · beside the page's own script (unchanged above). breath_temple_v1 is read here and written
+// only through the page's own logSessionDirect(), so a row has the shape it always had.
+//   the slow-down cue: a pale-blue disc that swells for five and settles for five. No clock, no sound, no count.
+//     It ends when he says so; marking it afterwards is one optional tap (it marks Coherent Breathing).
+//     "Not now" sets it down on home's sleep-on-it shelf (portal_shelf_v1.items, step 4's contract) if that store exists.
+//   source marks: on the practices whose claim is in Hekka's breath ledger. The words are her ledger's rows as gathered
+//     in Esoteric/village/hekka/knowledge/sources.md (B1 to B11, C8). A practice with no row carries no mark.
+//     The mouth-tape line is shown open: it is the one real-safety line on the page, said plainly and not in red.
+//   graphs (plan §2): the year as 52 soft cells, and the notes he kept as a trail. Drawn only when something is stored.
+//   words: the script's "the 24 practices" heading loses its count; the empty history says nothing about absence.
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); }, WEEK = 7 * 86400000;
+  function read(k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
+  function sessions() { var s = read('breath_temple_v1', {}).sessions; return Array.isArray(s) ? s : []; }
+
+  // ---- the slow-down cue ----
+  var beat = null, breathingIn = false;
+  function step() {
+    breathingIn = !breathingIn;
+    $('br-disc').classList.toggle('br-in', breathingIn);
+    $('br-word').textContent = breathingIn ? 'in' : 'out';
+  }
+  function openPacer() {
+    $('br-pacer').hidden = false; breathingIn = false;
+    $('br-disc').classList.remove('br-in');
+    setTimeout(step, 60); beat = setInterval(step, 5000);
+    $('br-enough').focus({ preventScroll: true });
+  }
+  function closePacer() {
+    if (beat) { clearInterval(beat); beat = null; }
+    $('br-pacer').hidden = true;
+    $('br-slow-h').textContent = 'Thank you';
+    $('br-slow-p').textContent = 'Marking it is yours to choose. It lands in the history as Coherent Breathing.';
+    $('br-slow-pair').hidden = true; $('br-slow-after').hidden = false;
+  }
+  function rest(line) {
+    $('br-slow-h').textContent = 'A slower breath is here';
+    $('br-slow-p').textContent = line || 'In for five, out for five, through the nose. No clock and no sound. It ends when you say so.';
+    $('br-slow-after').hidden = true; $('br-slow-pair').hidden = false;
+  }
+  $('br-slow-yes').addEventListener('click', openPacer);
+  $('br-enough').addEventListener('click', closePacer);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('br-pacer').hidden) closePacer(); });
+  $('br-slow-mark').addEventListener('click', function () {
+    try { if (typeof logSessionDirect === 'function') logSessionDirect('coherent_breath'); } catch (e) {}
+    rest(); graphs();
+  });
+  $('br-slow-leave').addEventListener('click', function () { rest(); });
+  $('br-slow-later').addEventListener('click', function () {
+    $('br-slow').hidden = true;
+    try {   // home's shelf, only if home has made it: { key, name, when, temple, practiceId, star }
+      var o = read('portal_shelf_v1', null);
+      if (o && typeof o === 'object' && Array.isArray(o.items) && !o.items.some(function (x) { return x && x.key === 'breath:slow'; })) {
+        o.items.push({ key: 'breath:slow', name: 'A slower breath', when: '', temple: 'breath', practiceId: 'coherent_breath', star: 'breath' });
+        localStorage.setItem('portal_shelf_v1', JSON.stringify(o));
+      }
+    } catch (e) {}
+  });
+
+  // ---- source marks ----
+  var ROWS = {
+    B1: ['narrower', 'Slow breathing near 5 to 6 a minute: breath rate and heart-rate variability, range 4.5 to 6.5. Not sleep, focus or stamina. Lehrer & Gevirtz 2014.'],
+    B2: ['narrower', 'Adrenaline up and inflammation blunted in 12 trained men; cold was part of it. Kox et al. 2014.'],
+    B3: ['doubtful', 'Tummo as the slower heat that comes after Wim Hof: the monks used forceful breath plus visualisation; the order is a teaching habit. Kozhevnikov et al. 2013.'],
+    B4: ['narrower', 'Kapalabhati is listed among the six cleansings; “breath of fire” is probably a separate practice. Hatha Yoga Pradipika, verse unconfirmed.'],
+    B5: ['doubtful', 'Humming and toning “raise vagal tone”: nasal nitric oxide rises about fifteen-fold; say it slows the breath and steadies HRV. Weitzberg & Lundberg 2002.'],
+    B6: ['doubtful', 'Mouth-tape at night: no good evidence of benefit, and a choking risk with a blocked nose. PLOS ONE 2025 review.'],
+    B7: ['doubtful', 'Erotic openness as a ventral-vagal state: polyvagal anatomy is contested. Fine as a felt-sense map. Grossman 2023.'],
+    B10: ['doubtful', 'Reich’s armour is a concept from 1922 to 1933; no measured entity. A felt-sense map of where tension sits.'],
+    B11: ['tradition', 'Daoist inner-alchemy lineage: the three treasures, the dantians, the orbit. A lineage and a felt-sense map; no circuit has been measured.'],
+    C8: ['unchecked', 'The Ankh circuit as an Egyptian technique is unchecked. Treat it as a modern practice named after a symbol.']
+  };
+  var MARKS = {
+    daily_anchor: ['B11', 'B1'], coherent_breath: ['B1', 'B6'], wim_hof: ['B2'], tummo: ['B3'], kapalabhati: ['B4'],
+    toning_bija: ['B5', 'B7'], pelvic_breath: ['B10'], earth_rooting: ['B11'], square_breath: ['B11'], sun_moon_breath: ['B11'],
+    nature_charging: ['B11'], dantian_sealing: ['B11'], sexual_drawing: ['B11'], orbit_arousal: ['B11'], hands_online: ['B11'], ankh_breath: ['C8', 'B11']
+  };
+  var OPEN = { B6: 1 };
+  function marks() {
+    var cards = document.querySelectorAll('#mount .practice-card.open');
+    for (var i = 0; i < cards.length; i++) {
+      var det = cards[i].querySelector('.practice-detail'), ids = MARKS[cards[i].getAttribute('data-practice')];
+      if (!det || !ids || det.querySelector('.br-marks')) continue;
+      var box = document.createElement('div'); box.className = 'br-marks';
+      ids.forEach(function (id) {
+        var row = ROWS[id], b = document.createElement('button'), s = document.createElement('span'), p = document.createElement('p');
+        b.type = 'button'; b.className = 'br-mark'; s.textContent = row[0]; b.appendChild(s);
+        p.className = 'br-line'; p.textContent = row[1] + ' From Hekka’s ledger.'; p.hidden = !OPEN[id];
+        b.setAttribute('aria-expanded', p.hidden ? 'false' : 'true');
+        b.addEventListener('click', function () { p.hidden = !p.hidden; b.setAttribute('aria-expanded', p.hidden ? 'false' : 'true'); });
+        box.appendChild(b); box.appendChild(p);
+      });
+      var acts = det.querySelector('.detail-actions');
+      det.insertBefore(box, acts);
+    }
+  }
+
+  // ---- words ----
+  function words() {
+    var m = $('mount'), e = m.querySelectorAll('.section-eyebrow'), i;
+    for (i = 0; i < e.length; i++) if (/^the \d+ practices/.test(e[i].textContent)) e[i].textContent = 'the practices';
+    var h = m.querySelector('.history-empty');
+    if (h && /nothing logged yet/.test(h.textContent)) h.textContent = 'Nothing marked here yet.';
+  }
+
+  // ---- the year and the trail ----
+  function graphs() {
+    var s = sessions(), now = Date.now(), cells = [], any = false, i;
+    for (i = 0; i < 52; i++) cells.push(0);
+    s.forEach(function (x) { var k = 51 - Math.floor((now - Date.parse(x.at)) / WEEK); if (k >= 0 && k < 52) { cells[k]++; any = true; } });
+    $('br-year').hidden = !any || !window.Charts;
+    if (!$('br-year').hidden) Charts.mount($('br-ribbon'), 'ribbon', cells.map(function (n) { return n >= 4 ? 3 : n >= 2 ? 2 : n; }), { labels: ['a year ago', 'now'], label: 'A year, lit in the weeks a practice was marked' });
+    var l = s.filter(function (x) { return x && x.notes; }).slice(0, 6), box = $('br-lines');
+    $('br-trail').hidden = !l.length; box.textContent = '';
+    l.forEach(function (x) {
+      var d = document.createElement('div'), sm = document.createElement('small');
+      d.className = 'br-felt'; d.textContent = x.notes; sm.textContent = x.name; d.appendChild(sm); box.appendChild(d);
+    });
+  }
+
+  function pass() { words(); marks(); graphs(); }
+  pass();
+  try { new MutationObserver(pass).observe($('mount'), { childList: true }); } catch (e) {}
+})();
+</script>
 </body>
 </html>

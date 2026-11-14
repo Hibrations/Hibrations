@@ -5,29 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Lover Temple</title>
 <style>
-:root {
-  --bg: #0a0908;
-  --bg-elev: #14110f;
-  --bg-card: #1a1614;
-  --border: #2a2420;
-  --border-soft: #1f1a17;
-  --ink: #e8e1d4;
-  --ink-dim: #9a8f80;
-  --ink-faint: #5e554a;
-  --crimson: #9a4435;
-  --crimson-dim: #6e2d22;
-  --bronze: #a87b50;
-  --bronze-dim: #7a5a3b;
-  --emerald: #3d7d63;
-  --breath: #8fb8c7;
-  --energy: #b08fc7;
-  --field: #c89060;
-  --healing: #6ba879;
-  --primal: #c78f8f;
-  --body: #3d7d63;
-  --r-sm: 8px;
-  --r-md: 14px;
-  --r-lg: 20px;
+/* Portal remake, step 9: the colours, header, sky and bottom bar come from temple.css and shell.js.
+   The page's old colour names are kept as aliases of the shared tokens, so its own script and classes work unchanged.
+   This is the one house where red is at home: the fire's red is on lines and words, the ember on what you tap. */
+body[data-temple] {
+  --bg-elev: var(--card); --bg-card: var(--card); --border: var(--leaf); --border-soft: var(--leaf2);
+  --ink-dim: var(--muted); --ink-faint: var(--muted);
+  --crimson: var(--t-text); --crimson-dim: var(--t-dim); --bronze: var(--t2-text); --bronze-dim: var(--t-dim);
+  --emerald: #6BA879; --breath: #8FB8C7; --energy: #B08FC7; --field: #C89060; --healing: #6BA879; --primal: #C78F8F; --body: #6BA879;
+  --r-sm: 10px; --r-md: 14px; --r-lg: 18px;
+  --pool: #2E4A52; --pool-ink: #F0E4D2;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html, body {
@@ -252,21 +239,118 @@ main { padding: 22px; }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
 <link href="fonts/fonts.css" rel="stylesheet">
+<link href="temple.css" rel="stylesheet">
+<script src="shell.js"></script>
+<script src="charts.js"></script>
 <script src="temple_link.js" data-app="beast"></script>
 </head>
-<body>
+<body data-temple="beast">
 
-<header class="shell-header">
-  <button class="back-btn" id="back-btn">← portal</button>
-  <div class="shell-title">lover temple</div>
+<header class="ts-head">
+  <div class="ts-hrow">
+    <button class="ts-back" id="back-btn" type="button" aria-label="Back">←</button>
+    <div class="ts-tt"><b>Beast Temple</b><span>the temple of the complete lover</span></div>
+  </div>
+  <p class="ts-guide">The fire is lit if you want it.</p>
 </header>
+<div class="ts-body">
+  <section class="ts-card ts-today" id="be-five">
+    <div class="ts-eyebrow">the five-minute door</div>
+    <h2>Rooting, then the Seal</h2>
+    <p>Earth first, then store it low. Five minutes, standing where you are. It ends at the Pool.</p>
+    <div class="ts-minfull"><b>Minimum</b> three stairs down and the seal, about five minutes. <b>Full</b> Earth Rooting as the library holds it, ten to twenty, closed with Dantian Sealing.</div>
+    <div class="ts-pair"><button class="ts-yes" id="be-five-yes" type="button">Five minutes</button><button class="ts-later" id="be-five-later" type="button">Not now</button></div>
+    <button class="ts-link" id="be-five-full" type="button">The full version</button>
+  </section>
+  <div class="be-doors">
+    <button class="be-door" id="be-hot-open" type="button"><b>Hot right now</b><span>when it shows up uninvited</span></button>
+    <button class="be-door" id="be-rub-open" type="button"><b>The massage alcove</b><span>solo, or with her yes</span></button>
+  </div>
 
-<div class="tab-bar">
-  <button class="tab-btn active" data-tab="library">library</button>
-  <button class="tab-btn" data-tab="history">history</button>
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="library">library</button>
+    <button class="tab-btn" data-tab="history">history</button>
+  </div>
+
+  <main id="mount"></main>
+
+  <section class="ts-card" id="be-year" hidden>
+    <div class="ts-eyebrow">a year, as it was · this phone only</div>
+    <div id="be-ribbon" class="ts-chart" style="margin-top:10px"></div>
+    <p style="margin-top:8px">Lit in the weeks a practice was marked here. It shows what is there, nothing else.</p>
+  </section>
+  <section class="ts-card" id="be-trail" hidden>
+    <div class="ts-eyebrow">what moved, in your words</div>
+    <div id="be-lines"></div>
+  </section>
+  <button class="ts-link" id="be-magnetic" type="button">The Magnetic Temple, the older cut</button>
 </div>
 
-<main id="mount"></main>
+<!-- the five-minute door: three stairs down, the seal, and always the Pool -->
+<div class="be-full" id="be-walk" hidden role="dialog" aria-modal="true" aria-label="The five-minute door">
+  <div class="be-stage" id="be-stage">
+    <div class="be-eyebrow" id="be-walk-eyebrow"></div>
+    <p class="be-big" id="be-walk-line"></p>
+    <p class="be-small" id="be-walk-sub"></p>
+  </div>
+  <div class="be-pool" id="be-pool" hidden>
+    <div class="be-eyebrow">the Cool Pool</div>
+    <p class="be-big">Belly warm and heavy, or head buzzy?</p>
+    <div class="be-pair" id="be-pool-ask"><button type="button" id="be-pool-warm">Warm and heavy</button><button type="button" id="be-pool-buzzy">Head buzzy</button></div>
+    <p class="be-small" id="be-pool-say" hidden></p>
+    <div id="be-pool-end" hidden>
+      <label class="be-felt" for="be-pool-felt">One line on how it sat, if you want.
+        <input id="be-pool-felt" type="text" maxlength="200" autocomplete="off"></label>
+      <div class="be-pair"><button type="button" class="be-yes" id="be-pool-mark">Mark it</button><button type="button" id="be-pool-leave">Leave it unmarked</button></div>
+    </div>
+  </div>
+  <div class="be-pair be-foot" id="be-walk-foot"><button type="button" class="be-yes" id="be-walk-next">Next stair</button><button type="button" id="be-walk-out">Step out</button></div>
+</div>
+
+<!-- hot right now -->
+<div class="be-full be-scroll" id="be-hot" hidden role="dialog" aria-modal="true" aria-label="Hot right now">
+  <div class="be-sheet">
+    <div class="be-eyebrow">hot right now</div>
+    <p class="be-big">Heat that arrives uninvited is fuel. Nothing here is a problem.</p>
+    <div class="be-block">
+      <b>Five minutes</b>
+      <p>Try this: feet down, breath long. Notice where it lives: the cock, the belly, the chest, the throat. Nothing to act on, nothing to push away. Let the picture go, keep the heat, and let it drop to the belly.</p>
+      <p class="be-small">Afterwards, notice: did the heat go to the belly, or up into the head? Head means the picture got grabbed; let it dissolve.</p>
+    </div>
+    <div class="be-row"><div><b>Lust Meditation</b><span>When it came by itself and you want to stay inside it: sit with the raw arousal as a sensation, and run the orbit through it.</span></div><button type="button" data-open="lust_meditation">Open</button></div>
+    <div class="be-row"><div><b>Sexual Visualization</b><span>When you want to light it on purpose: the image is the match, then it is let go and the current stays.</span><span class="be-mark"><i>narrower</i> Imagined touch recruits part of the touch map, not all of it. The effect is on the one who imagines.</span></div><button type="button" data-open="sexual_visualization">Open</button></div>
+    <div class="be-row"><div><b>Sexual Transmutation</b><span>When something is waiting on the desk: have the canvas open first, run the orbit through the heat, then pour it into that one thing. The in-body road is the Inner Furnace.</span></div><button type="button" data-open="jing_shen_furnace">Open the Furnace</button></div>
+    <p class="be-small">These are for earlier in the day. Before bed the door is Rooting and the Seal: earth only, nothing lit.</p>
+    <div class="be-pair be-foot"><button type="button" id="be-hot-close">Close</button></div>
+  </div>
+</div>
+
+<!-- the massage alcove -->
+<div class="be-full be-scroll" id="be-rub" hidden role="dialog" aria-modal="true" aria-label="The massage alcove">
+  <div class="be-sheet">
+    <div class="be-eyebrow">the massage alcove</div>
+    <p class="be-big">It simmers, like tea. The order is the practice.</p>
+    <div class="be-seg" role="tablist"><button type="button" role="tab" id="be-rub-solo" aria-selected="true">Solo</button><button type="button" role="tab" id="be-rub-with" aria-selected="false">Partnered</button></div>
+    <div id="be-rub-solo-pane">
+      <div class="be-block"><b>Minimum · about five minutes</b><p>Hands on chest and belly, four in and six out. Feather strokes over the arms and the belly. A palm low on the belly, then on the heart. Still.</p></div>
+      <div class="be-block"><b>Full · about twenty minutes</b><p>A warm room, warm oil, a towel. The five steps on your own body: wake the skin, then low to high: root, sacral, hip crease, heart, throat, crown. Then the long sweep of the whole body. Then stillness, hands on heart and belly.</p></div>
+    </div>
+    <div id="be-rub-with-pane" hidden>
+      <div class="be-block be-first"><b>Before anything</b><p>It starts with her yes. And with a word, agreed before the oil is warm, that means slower or stop. Either of you can say it, and it is obeyed at once. Simmering is never pressure toward more.</p></div>
+      <div class="be-block"><b>Minimum · about eight minutes</b><p>Ask once at the start: what feels good today? Breathe together, four in and six out. One slow sweep of her back and her feet. Forehead to forehead.</p></div>
+      <div class="be-block"><b>Full · forty-five minutes or more</b><p>All five steps: the room, the skin, the seven points from root to crown, the sweep, the stillness. Her pace sets the speed. One question each, before and after. It ends still.</p></div>
+    </div>
+    <div class="be-block">
+      <b>What holds in every version</b>
+      <p>Warm the room, breathe, wake the skin, then the body low to high, then the sweep, then stillness. Stay away from the genitals at first and keep it simmering. Feather strokes over the whole body, not only the hot zones: it teaches attention.</p>
+      <p class="be-small">Scented oils are pleasant, and that is enough. Diluted in a carrier, off the lips and the genitals, a skin test first, and ask her.</p>
+      <p class="be-small"><span class="be-mark"><i>tradition</i> Seven points that hold and route arousal are a map, not a finding. Touch, warm oil, slow breath and attention are real. You may notice warmth and tingling; try it and see where you feel it. Waves without climax are something people report from slow practice, never something a body owes.</span></p>
+      <p class="be-small">A quiet-evening practice. On a short night, the minimum.</p>
+    </div>
+    <div class="be-row"><div><b>Tantric Massage</b><span>The whole sequence, as the library holds it.</span></div><button type="button" data-open="tantric_massage">Open</button></div>
+    <div class="be-pair be-foot"><button type="button" id="be-rub-close">Close</button></div>
+  </div>
+</div>
 
 <div id="timer-overlay">
   <div class="timer-label" id="timer-label"></div>
@@ -1808,8 +1892,208 @@ checkPortalAutoStart();
 </script>
 
 <style>
-/* ── Codex × Pleroma skin (R56) ── */
-body{font-family:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;}.practice-name{font-family:'Cormorant Garamond',serif;font-weight:500;}.eyebrow,.section-eyebrow{letter-spacing:0.24em;}
+/* Portal remake, step 9 · the page's own classes, fitted to the frame. No capitals by styling, nothing under 12 px,
+   nothing tappable under 44 px. Names only: no count on a door and no number on a practice. */
+body[data-temple] * { text-transform: none !important; }
+#tl-btn { display: none !important; }   /* the director is in the header and the bar now (director.js) */
+main#mount { padding: 0; }
+.tab-bar { padding: 0; border-bottom: none; margin: 4px 0 16px; }
+.tab-btn { min-height: 44px; font-size: 13px; letter-spacing: 0; color: var(--muted); border: 1px solid var(--leaf2); border-radius: 12px; }
+.tab-btn.active { color: var(--ink); border-color: var(--t-text); background: var(--t-faint); }
+.declaration { font-size: 14px; }
+.section-eyebrow { font-size: 12px; letter-spacing: .04em; color: var(--muted); }
+.layer-name { font-size: 25px; }
+.layer-sub { font-size: 13px; }
+.cat-header { min-height: 52px; }
+.cat-label { font-size: 19px; }
+.cat-count, .practice-num { display: none; }
+.practice-name { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 500; font-size: 19px; }
+.practice-stack-chip, .history-stack .practice-stack-chip { font-size: 12px; letter-spacing: 0; padding: 1px 9px; color: var(--muted) !important; background: none !important; border: 1px solid var(--leaf2); font-weight: 400; }
+.practice-meta, .history-date { font-size: 12px; }
+.practice-toggle { color: var(--muted); }
+.detail-section h4, .detail-watch strong { font-size: 12px; letter-spacing: .04em; }
+.detail-section li::before { font-size: 12px; }
+.detail-watch { background: var(--t-faint); }
+.btn-begin { background: var(--t-btn); color: var(--on-btn); min-height: 48px; }
+.btn-begin:active { background: var(--t-btn); opacity: .85; }
+.btn-log { min-height: 48px; }
+#timer-overlay { z-index: 850; background: var(--bg); }
+.timer-label { font-size: 13px; letter-spacing: .04em; }
+.timer-display { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 500; }
+.timer-controls { flex-wrap: wrap; justify-content: center; }
+.timer-btn { min-height: 48px; font-size: 14px; letter-spacing: 0; border-radius: 14px; padding: 0 16px; }
+#toast { bottom: calc(var(--ts-bar) + 24px + env(safe-area-inset-bottom, 0px)); z-index: 880; }
+textarea { font-size: 16px; }
+
+/* step 9: the doors on the first screen */
+#be-five[hidden], #be-year[hidden], #be-trail[hidden], .be-full[hidden], .be-pool[hidden], #be-pool-ask[hidden], #be-pool-say[hidden], #be-pool-end[hidden], #be-walk-foot[hidden], .be-stage[hidden], #be-rub-solo-pane[hidden], #be-rub-with-pane[hidden] { display: none; }
+#be-five .ts-link { margin-top: 6px; }
+.be-doors { display: flex; gap: 8px; margin-bottom: 14px; }
+button.be-door { flex: 1; min-height: 64px; padding: 10px 12px; text-align: left; border: 1px solid var(--leaf2); border-radius: 16px; background: linear-gradient(160deg, var(--t-faint), var(--card) 62%); }
+.be-door b { display: block; font: 500 19px/1.15 'Cormorant Garamond', Georgia, serif; color: var(--ink); }
+.be-door span { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+.be-full { position: fixed; inset: 0; z-index: 860; background: var(--bg); color: var(--ink); display: flex; flex-direction: column; justify-content: center; padding: 24px 20px calc(24px + env(safe-area-inset-bottom, 0px)); }
+.be-full.be-scroll { justify-content: flex-start; overflow-y: auto; padding-top: calc(28px + env(safe-area-inset-top, 0px)); }
+.be-sheet { max-width: 600px; width: 100%; margin: 0 auto; }
+.be-stage, .be-pool { max-width: 520px; width: 100%; margin: 0 auto; }
+.be-eyebrow { font-size: 12px; letter-spacing: .04em; color: var(--t2-text); }
+.be-big { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 27px; line-height: 1.2; color: var(--ink); margin: 6px 0 10px; }
+.be-small { font-size: 13px; line-height: 1.55; color: var(--muted); margin-top: 8px; }
+.be-pair { display: flex; gap: 8px; margin-top: 18px; }
+.be-pair button, .be-row button, .be-seg button { flex: 1; min-height: 48px; padding: 0 12px; border-radius: 14px; border: 1px solid var(--leaf); color: var(--ink); font-size: 14px; }
+.be-pair button.be-yes { flex: 1.5; border-color: var(--t-btn); background: var(--t-btn); color: var(--on-btn); font-weight: 500; }
+.be-foot { max-width: 520px; width: 100%; margin: 26px auto 0; }
+.be-pool { background: var(--pool); color: var(--pool-ink); border-radius: 18px; padding: 20px 18px; }   /* the one cool note in the house: closing is something you see */
+.be-pool .be-eyebrow, .be-pool .be-big, .be-pool .be-small, .be-pool .be-felt { color: var(--pool-ink); }
+.be-pool .be-pair button { border-color: rgba(240,228,210,.45); color: var(--pool-ink); }
+.be-pool .be-pair button.be-yes { background: var(--pool-ink); border-color: var(--pool-ink); color: #1C2E33; }
+.be-felt { display: block; font-size: 13px; margin-top: 14px; }
+.be-felt input { display: block; width: 100%; min-height: 44px; margin-top: 6px; padding: 0 12px; border-radius: 12px; border: 1px solid rgba(240,228,210,.35); background: rgba(0,0,0,.22); color: var(--pool-ink); font: inherit; font-size: 16px; }
+.be-block { border: 1px solid var(--leaf2); border-radius: 16px; background: var(--card); padding: 14px 16px; margin-top: 12px; font-size: 14px; line-height: 1.55; color: var(--ink); }
+.be-block.be-first { border-color: var(--t-text); }
+.be-block b { display: block; font-weight: 500; font-size: 12px; letter-spacing: .04em; color: var(--t2-text); margin-bottom: 4px; }
+.be-row { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--leaf2); }
+.be-row > div { flex: 1; min-width: 0; }
+.be-row b { display: block; font: 500 21px/1.15 'Cormorant Garamond', Georgia, serif; color: var(--ink); }
+.be-row span { display: block; font-size: 13px; line-height: 1.5; color: var(--muted); margin-top: 3px; }
+.be-row button { flex: none; }
+.be-mark i { font-style: normal; font-size: 12px; color: var(--t2-text); border: 1px solid var(--leaf); border-radius: 99px; padding: 1px 9px; margin-right: 6px; }
+.be-seg { display: flex; gap: 6px; margin-top: 10px; }
+.be-seg button { min-height: 44px; border-color: var(--leaf2); color: var(--muted); font-size: 13px; }
+.be-seg button[aria-selected="true"] { border-color: var(--t-text); color: var(--ink); background: var(--t-faint); }
+.be-poolstrip { background: var(--pool); color: var(--pool-ink); border-radius: 14px; padding: 12px 14px; margin: 0 0 14px; text-align: left; font-size: 13px; line-height: 1.55; }
+.be-poolstrip b { display: block; font: 500 19px/1.2 'Cormorant Garamond', Georgia, serif; margin-bottom: 4px; }
+.be-felt2 { font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-size: 17px; line-height: 1.35; color: var(--ink); margin-top: 10px; }
+.be-felt2 small { display: block; font: 12px Inter, system-ui, sans-serif; font-style: normal; color: var(--muted); margin-top: 1px; }
 </style>
+
+<script>
+// Portal remake, step 9 · beside the page's own script (unchanged above). Rak's house: whole inside, thin outside.
+// beast_temple_v1 is read here and written only through the page's own saveSession(), so a row has the shape it
+// always had. Nothing on this page goes to home's shelf, to a notification, or anywhere off the phone.
+//   the five-minute door (Rak's first ask): on the first screen, Rooting and the Seal as three stairs down and a
+//     seal, in the words of the page's own two practice cards. The full version is one step behind it: the Earth
+//     Rooting card in the library. No clock, no count.
+//   the Pool: the fixed ending. The door always ends there ("belly warm and heavy, or head buzzy?"), and the page's
+//     own end-of-practice card gets the same cool strip above its notes.
+//   hot right now: a door to Lust Meditation, Sexual Visualization and Sexual Transmutation, one line each on when.
+//     The page has no card named Sexual Transmutation; the door says it in Rak's words and opens the Inner Furnace.
+//   the massage alcove: solo and partnered, minimum and full. Partnered starts with her yes and a stop-or-slower word.
+//   names only: the count in "the 74 practices" goes; the numbers and counts are hidden in the page's styles.
+//   the Magnetic Temple is still there, one quiet door at the bottom. Its store is not read here.
+// Copy says imagine, notice, try. Nothing here promises anything about another person.
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); }, WEEK = 7 * 86400000;
+  function read(k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
+  function sessions() { var s = read('beast_temple_v1', {}).sessions; return Array.isArray(s) ? s : []; }
+  function practice(id) { try { return PRACTICES.find(function (p) { return p.id === id; }); } catch (e) { return null; } }
+  function openCard(id) {
+    ['be-walk', 'be-hot', 'be-rub'].forEach(function (x) { $(x).hidden = true; });
+    try {
+      if (!practice(id)) return;
+      if (currentTab !== 'library') { var t = document.querySelector('.tab-btn[data-tab="library"]'); if (t) t.click(); }
+      openCardId = id; expandCatFor(id); render();
+      var c = document.querySelector('[data-practice="' + id + '"]'); if (c) c.scrollIntoView({ block: 'start' });
+    } catch (e) {}
+  }
+  [].forEach.call(document.querySelectorAll('[data-open]'), function (b) { b.addEventListener('click', function () { openCard(b.getAttribute('data-open')); }); });
+
+  // ---- the five-minute door ----
+  var STAIRS = [
+    ['the first stair', 'Feet down. Knees soft. Breath long.', 'Standing where you are. Barefoot if the floor allows it.'],
+    ['the second stair', 'Roots from the soles and the perineum, down into bedrock.', 'Through the floor and the soil. Let them go further than the ground.'],
+    ['the third stair', 'Breathing in, warm dark-red earth rises into the legs, the pelvis, the belly.', 'Breathing out, tension and scattered charge drain back down the roots. A few breaths of this.'],
+    ['the seal', 'Gather it below the navel, the size of an orange. Palms over the lower belly.', 'On each breath out it spirals inward and down. Wrap it in a shell of light and stand still with it.']
+  ], at = 0, felt = '';
+  function stair() {
+    var s = STAIRS[at];
+    $('be-walk-eyebrow').textContent = s[0]; $('be-walk-line').textContent = s[1]; $('be-walk-sub').textContent = s[2];
+    $('be-walk-next').textContent = at === STAIRS.length - 1 ? 'To the Pool' : at === STAIRS.length - 2 ? 'The seal' : 'Next stair';
+  }
+  function pool() {   // the fixed ending: stepping out early comes here too
+    $('be-stage').hidden = true; $('be-walk-foot').hidden = true; $('be-pool').hidden = false;
+    $('be-pool-ask').hidden = false; $('be-pool-say').hidden = true; $('be-pool-end').hidden = true; $('be-pool-felt').value = ''; felt = '';
+    $('be-pool-warm').focus({ preventScroll: true });
+  }
+  function answer(which) {
+    felt = which;
+    $('be-pool-say').textContent = which === 'warm'
+      ? 'Good. Stay one breath longer with the weight of it, then walk on.'
+      : 'It sat too high. Drop it to the lower belly, palms there, feet on the floor. Walking barefoot and dense food help it down.';
+    $('be-pool-ask').hidden = true; $('be-pool-say').hidden = false; $('be-pool-end').hidden = false;
+  }
+  function shut() { $('be-walk').hidden = true; }
+  $('be-five-yes').addEventListener('click', function () {
+    at = 0; stair(); $('be-pool').hidden = true; $('be-stage').hidden = false; $('be-walk-foot').hidden = false; $('be-walk').hidden = false;
+    $('be-walk-next').focus({ preventScroll: true });
+  });
+  $('be-walk-next').addEventListener('click', function () { if (at < STAIRS.length - 1) { at++; stair(); } else pool(); });
+  $('be-walk-out').addEventListener('click', pool);
+  $('be-pool-warm').addEventListener('click', function () { answer('warm'); });
+  $('be-pool-buzzy').addEventListener('click', function () { answer('buzzy'); });
+  $('be-pool-mark').addEventListener('click', function () {
+    var p = practice('earth_rooting'), line = $('be-pool-felt').value.trim().slice(0, 200);
+    var notes = 'the five-minute door · ' + (felt === 'warm' ? 'warm and heavy' : 'head buzzy') + (line ? ' · ' + line : '');
+    try { if (p && typeof saveSession === 'function') { saveSession(p, notes); render(); } } catch (e) {}
+    shut(); graphs();
+  });
+  $('be-pool-leave').addEventListener('click', shut);
+  $('be-five-later').addEventListener('click', function () { $('be-five').hidden = true; });
+  $('be-five-full').addEventListener('click', function () { openCard('earth_rooting'); });
+
+  // ---- the two alcoves ----
+  $('be-hot-open').addEventListener('click', function () { $('be-hot').hidden = false; $('be-hot').scrollTop = 0; });
+  $('be-hot-close').addEventListener('click', function () { $('be-hot').hidden = true; });
+  $('be-rub-open').addEventListener('click', function () { $('be-rub').hidden = false; $('be-rub').scrollTop = 0; });
+  $('be-rub-close').addEventListener('click', function () { $('be-rub').hidden = true; });
+  function seg(solo) {
+    $('be-rub-solo').setAttribute('aria-selected', solo ? 'true' : 'false'); $('be-rub-with').setAttribute('aria-selected', solo ? 'false' : 'true');
+    $('be-rub-solo-pane').hidden = !solo; $('be-rub-with-pane').hidden = solo;
+  }
+  $('be-rub-solo').addEventListener('click', function () { seg(true); });
+  $('be-rub-with').addEventListener('click', function () { seg(false); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    if (!$('be-hot').hidden) $('be-hot').hidden = true; else if (!$('be-rub').hidden) $('be-rub').hidden = true; else if (!$('be-walk').hidden && $('be-pool').hidden) pool();
+  });
+  $('be-magnetic').addEventListener('click', function () { if (window.TempleShell) TempleShell.go('magnetic'); else location.href = 'magnetic_temple.html'; });
+
+  // ---- words, and the Pool on the page's own ending ----
+  function words() {
+    var m = $('mount'), e = m.querySelectorAll('.section-eyebrow'), i;
+    for (i = 0; i < e.length; i++) if (/^the \d+ practices/.test(e[i].textContent)) e[i].textContent = 'the practices · four layers';
+    var h = m.querySelector('.history-empty');
+    if (h && /nothing logged yet/.test(h.textContent)) h.textContent = 'Nothing marked here yet.';
+    var cc = m.querySelector('.complete-card');
+    if (cc && !cc.querySelector('.be-poolstrip')) {
+      var s = document.createElement('div'), b = document.createElement('b');
+      s.className = 'be-poolstrip'; b.textContent = 'The Cool Pool'; s.appendChild(b);
+      s.appendChild(document.createTextNode('Belly warm and heavy, or head buzzy? Warm and heavy: stay a breath longer with it. Buzzy: it sat too high, so drop it to the lower belly, palms there, feet on the floor.'));
+      cc.insertBefore(s, cc.firstChild);
+    }
+  }
+
+  // ---- the year and the trail: on this phone only ----
+  function graphs() {
+    var s = sessions(), now = Date.now(), cells = [], any = false, i;
+    for (i = 0; i < 52; i++) cells.push(0);
+    s.forEach(function (x) { var k = 51 - Math.floor((now - Date.parse(x.at)) / WEEK); if (k >= 0 && k < 52) { cells[k]++; any = true; } });
+    $('be-year').hidden = !any || !window.Charts;
+    if (!$('be-year').hidden) Charts.mount($('be-ribbon'), 'ribbon', cells.map(function (n) { return n >= 4 ? 3 : n >= 2 ? 2 : n; }), { labels: ['a year ago', 'now'], label: 'A year, lit in the weeks a practice was marked' });
+    var l = s.filter(function (x) { return x && x.notes; }).slice(0, 6), box = $('be-lines');
+    $('be-trail').hidden = !l.length; box.textContent = '';
+    l.forEach(function (x) {
+      var d = document.createElement('div'), sm = document.createElement('small');
+      d.className = 'be-felt2'; d.textContent = x.notes; sm.textContent = x.name; d.appendChild(sm); box.appendChild(d);
+    });
+  }
+
+  var busy = false;
+  function pass() { if (busy) return; busy = true; try { words(); graphs(); } finally { busy = false; } }
+  pass();
+  try { new MutationObserver(pass).observe($('mount'), { childList: true, subtree: true }); } catch (e) {}
+})();
+</script>
 </body>
 </html>

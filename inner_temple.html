@@ -11,28 +11,15 @@
 <link rel="apple-touch-icon" href="icon.svg">
 <title>Inner Temple</title>
 <style>
-:root {
-  --bg: #0a0908;
-  --bg-elev: #14110f;
-  --bg-card: #1a1614;
-  --border: #2a2420;
-  --border-soft: #1f1a17;
-  --ink: #e8e1d4;
-  --ink-dim: #9a8f80;
-  --ink-faint: #5e554a;
-  --gold: #c89060;
-  --gold-dim: #8a6543;
-  --crimson: #9a4435;
-  --crimson-dim: #6e2d22;
-  --emerald: #3d7d63;
-  --breath: #8fb8c7;
-  --meditation: #b08fc7;
-  --movement: #6ba879;
-  --vocal: #c78f8f;
-  --ritual: #c89060;
-  --r-sm: 8px;
-  --r-md: 14px;
-  --r-lg: 20px;
+/* Portal remake, step 9: the colours, header, sky and bottom bar come from temple.css and shell.js.
+   The page's old colour names are kept as aliases of the shared tokens, so its own script and classes work unchanged.
+   --crimson was a warning red (the last seconds of a timer, the delete button); it is the temple's violet now. */
+body[data-temple] {
+  --bg-elev: var(--card); --bg-card: var(--card); --border: var(--leaf); --border-soft: var(--leaf2);
+  --ink-dim: var(--muted); --ink-faint: var(--muted);
+  --gold: var(--t-text); --gold-dim: var(--t-dim); --crimson: var(--t2-text); --crimson-dim: var(--t-dim);
+  --emerald: #6BA879; --breath: #8FB8C7; --meditation: #B08FC7; --movement: #6BA879; --vocal: #C78F8F; --ritual: #D4A24C;
+  --r-sm: 10px; --r-md: 14px; --r-lg: 18px;
   --shadow: 0 1px 0 rgba(255,255,255,0.02), 0 8px 24px rgba(0,0,0,0.4);
 }
 
@@ -358,19 +345,70 @@ main { padding: 0 22px; }
 .modal-close { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elev); display: flex; align-items: center; justify-content: center; color: var(--ink-dim); }
 </style>
 <link href="fonts/fonts.css" rel="stylesheet">
+<link href="temple.css" rel="stylesheet">
+<script src="shell.js"></script>
+<script src="charts.js"></script>
 <script src="temple_link.js" data-app="inner"></script>
 </head>
-<body>
+<body data-temple="inner">
 
-<header class="app-header">
-  <button class="app-back" id="app-back" onclick="if(window.parent!==window){window.parent.postMessage('close-temple','*');}else{var b=window.location.href.split('/').slice(0,-1).join('/');window.location.assign(b+'/index.html');}">← portal</button>
-  <div class="app-titleblock">
-    <div class="app-title">inner temple</div>
-    <div class="app-date" id="header-date"></div>
+<header class="ts-head">
+  <div class="ts-hrow">
+  <button class="app-back" id="app-back" onclick="if(window.parent!==window){window.parent.postMessage('close-temple','*');}else{var b=window.location.href.split('/').slice(0,-1).join('/');window.location.assign(b+'/index.html');}">←</button>
+    <div class="ts-tt"><b>Inner Temple</b><span id="header-date"></span></div>
   </div>
+  <p class="ts-guide">The altar is open.</p>
 </header>
 
-<main id="app"></main>
+<div class="ts-body">
+  <section class="ts-card ts-today" id="in-eve" hidden>
+    <div class="ts-eyebrow">this evening, if you want it</div>
+    <h2>One calm act, then the phone away</h2>
+    <p>The Evening Wind-Down, ending on a low hum. It is one thing, not a list.</p>
+    <div class="ts-minfull"><b>Minimum</b> the breath and the body scan, about five minutes. <b>Full</b> all of it, about fifteen.</div>
+    <div class="ts-pair"><button class="ts-yes" id="in-eve-yes" type="button">Yes</button><button class="ts-later" id="in-eve-later" type="button">Not now</button></div>
+  </section>
+
+  <nav class="tab-bar" aria-label="Inner Temple">
+    <button class="tab-btn active" data-view="home">today</button>
+    <button class="tab-btn" data-view="library">library</button>
+    <button class="tab-btn" data-view="practices">practices</button>
+    <button class="tab-btn" data-view="history">history</button>
+  </nav>
+
+  <main id="app"></main>
+
+  <section class="ts-card" id="in-egg-card" hidden>
+    <div class="ts-eyebrow">a practice of imagery</div>
+    <h2>The protective egg</h2>
+    <p id="in-egg-p">An egg of light around you, about two feet out. Breathing in, it grows a little; breathing out, it settles closer. About ten minutes, or less. You choose its colour.</p>
+    <p class="ts-src"><span class="ts-srcmark">tradition</span>A healer’s working model (Simon Heather). An imagery practice, which is the true thing to say about it. A first mark, still to be checked by Hekka.</p>
+    <div class="ts-pair" id="in-egg-pair"><button class="ts-yes" id="in-egg-yes" type="button">Open it</button></div>
+    <div id="in-egg-after" hidden>
+      <label class="ts-felt" for="in-egg-felt">One line on how it felt, if you want.
+        <input id="in-egg-felt" type="text" maxlength="200" autocomplete="off"></label>
+      <div class="ts-pair"><button class="ts-yes" id="in-egg-mark" type="button">Mark it</button><button class="ts-later" id="in-egg-leave" type="button">Leave it unmarked</button></div>
+    </div>
+  </section>
+  <section class="ts-card" id="in-year" hidden>
+    <div class="ts-eyebrow">a year, as it was</div>
+    <div id="in-ribbon" class="ts-chart" style="margin-top:10px"></div>
+    <p style="margin-top:8px">Lit in the weeks a practice was kept here. It shows what is there, nothing else.</p>
+  </section>
+  <section class="ts-card" id="in-trail" hidden>
+    <div class="ts-eyebrow">what moved, in your words</div>
+    <div id="in-lines"></div>
+  </section>
+</div>
+
+<div id="in-egg" hidden role="dialog" aria-modal="true" aria-label="The protective egg">
+  <svg viewBox="0 0 200 260" aria-hidden="true"><defs><radialGradient id="in-egg-g" cx="50%" cy="46%" r="60%"><stop offset="0" stop-color="#fff" stop-opacity=".0"/><stop offset=".62" id="in-egg-s1" stop-color="#D4A24C" stop-opacity=".16"/><stop offset=".9" id="in-egg-s2" stop-color="#D4A24C" stop-opacity=".62"/><stop offset="1" id="in-egg-s3" stop-color="#D4A24C" stop-opacity="0"/></radialGradient></defs>
+    <ellipse id="in-egg-shape" cx="100" cy="130" rx="78" ry="112" fill="url(#in-egg-g)"/>
+    <circle cx="100" cy="96" r="9" fill="none" stroke="var(--muted)" stroke-width="1.2"/><path d="M100 105v46M82 122h36M100 151l-14 34M100 151l14 34" fill="none" stroke="var(--muted)" stroke-width="1.2" stroke-linecap="round"/></svg>
+  <p class="in-egg-say">Your colour. There is no correct one; find yours by trying.</p>
+  <div class="in-sw" id="in-sw" role="radiogroup" aria-label="The egg’s colour"></div>
+  <button class="in-enough" id="in-egg-enough" type="button">That is enough</button>
+</div>
 
 <div id="timer-overlay">
   <div>
@@ -384,13 +422,6 @@ main { padding: 0 22px; }
 
 <div id="toast"></div>
 <div id="modal-overlay" class="modal-overlay"><div class="modal" id="modal"></div></div>
-
-<nav class="tab-bar">
-  <button class="tab-btn active" data-view="home">today</button>
-  <button class="tab-btn" data-view="library">library</button>
-  <button class="tab-btn" data-view="practices">practices</button>
-  <button class="tab-btn" data-view="history">history</button>
-</nav>
 
 <script>
 // ============================================================
@@ -2297,8 +2328,172 @@ checkPortalAutoStart();
 .link-btn{background:none;border:none;padding:4px 0;color:inherit;opacity:.8;font-size:12px;cursor:pointer;}
 .link-versions{margin-top:4px;border-left:2px solid var(--border,#333);padding-left:10px;}
 .link-version{display:flex;justify-content:space-between;align-items:center;gap:10px;opacity:.85;}
-/* ── Codex × Pleroma skin (R56) ── */
-body{font-family:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;}.step-name{font-family:'Cormorant Garamond',serif;font-weight:500;}.eyebrow,.section-eyebrow{letter-spacing:0.24em;}
+/* Portal remake, step 9 · the page's own classes, fitted to the frame. No capitals by styling, nothing under 12 px,
+   nothing tappable under 44 px, and no line that reads as a score: "0/6" in a session and "4/6 steps" in the history are gone. */
+body[data-temple] * { text-transform: none !important; }
+#tl-btn { display: none !important; }   /* the director is in the header and the bar now (director.js) */
+.session-progress, .history-stats { display: none; }
+.app-back { padding: 0; letter-spacing: 0; }
+main#app { padding: 0; }
+.view { padding-top: 4px; padding-bottom: 12px; }
+nav.tab-bar { position: static; display: flex; gap: 6px; background: none; -webkit-backdrop-filter: none; backdrop-filter: none; border-top: none; padding: 0; margin: 4px 0 16px; z-index: auto; }
+.tab-btn { min-height: 44px; padding: 0 4px; font-size: 13px; letter-spacing: 0; color: var(--muted); border: 1px solid var(--leaf2); border-radius: 12px; }
+.tab-btn.active { color: var(--ink); border-color: var(--t-text); background: var(--t-faint); }
+.today-eyebrow, .section-header, .step-letter, .step-notes-prompt, .form-label, .timer-label, .editor-label, .editor-link-info, .lib-card-meta, .detail-section h3, .lib-cat-tag { font-size: 12px; letter-spacing: .04em; }
+.today-card { background: linear-gradient(180deg, var(--t-faint), var(--card) 78%); border-color: var(--t-dim); padding: 18px 16px; }
+.today-card::before { display: none; }
+.today-name, .session-title, .quick-card-name, .step-name, .history-name { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 500; }
+.today-name { font-size: 25px; }
+.quick-card-name { font-size: 19px; }
+.quick-card { min-height: 60px; }
+.btn-primary { min-height: 48px; background: var(--t-btn); color: var(--on-btn); letter-spacing: 0; }
+.btn-primary:active { background: var(--t-btn); opacity: .85; }
+.step-action-btn, .lib-filter-pill { min-height: 44px; font-size: 13px; letter-spacing: 0; }
+.timer-stop { min-height: 44px; font-size: 13px; letter-spacing: 0; padding: 0 8px; }
+#timer-overlay { bottom: calc(var(--ts-bar) + 24px + env(safe-area-inset-bottom, 0px)); z-index: 850; border-color: var(--t-dim); max-width: 94vw; }
+#toast { bottom: calc(var(--ts-bar) + 24px + env(safe-area-inset-bottom, 0px)); z-index: 880; }
+.modal-overlay { z-index: 890; }
+.modal-close { width: 44px; height: 44px; }
+input, textarea, select { font-size: 16px; }
+
+/* step 9: the evening slot, the protective egg, the optional lines in the Wind-Down, the year */
+nav.tab-bar[hidden], #in-eve[hidden], #in-egg-card[hidden], #in-egg-after[hidden], #in-egg-pair[hidden], #in-year[hidden], #in-trail[hidden], #in-egg[hidden] { display: none; }
+#in-egg { position: fixed; inset: 0; z-index: 860; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 20px 16px; }
+#in-egg svg { width: min(52vw, 210px); height: auto; overflow: visible; }
+#in-egg-shape { transform-origin: 100px 130px; animation: in-egg-breath 11s ease-in-out infinite; }
+@keyframes in-egg-breath { 0%, 100% { transform: scale(.9); } 50% { transform: scale(1.04); } }
+@media (prefers-reduced-motion: reduce) { #in-egg-shape { animation: none; } }
+.in-egg-say { font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-size: 17px; color: var(--ink); text-align: center; max-width: 300px; }
+.in-sw { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; max-width: 330px; }
+.in-sw button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; width: 72px; min-height: 60px; border: 1px solid var(--leaf2); border-radius: 12px; font-size: 12px; color: var(--muted); }
+.in-sw button i { width: 22px; height: 22px; border-radius: 50%; display: block; }
+.in-sw button[aria-checked="true"] { border-color: var(--ink); color: var(--ink); background: var(--card); }
+.in-enough { min-height: 48px; padding: 0 20px; border-radius: 14px; border: 1px solid var(--leaf); color: var(--ink); font-size: 14px; }
+.in-opt { margin: 14px 0; padding: 14px 16px; border: 1px dashed var(--leaf); border-radius: 14px; font-size: 14px; line-height: 1.55; color: var(--muted); }
+.in-opt b { display: block; font-weight: 500; font-size: 12px; letter-spacing: .04em; color: var(--t2-text); margin-bottom: 4px; }
+.in-opt p + p { margin-top: 8px; }
+.in-felt { font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-size: 17px; line-height: 1.35; color: var(--ink); margin-top: 10px; }
+.in-felt small { display: block; font: 12px Inter, system-ui, sans-serif; font-style: normal; color: var(--muted); margin-top: 1px; }
 </style>
+
+<script>
+// Portal remake, step 9 · beside the page's own script (unchanged above). inner_temple_v1 is read here and never
+// written: nothing below adds to the stored library, practices, schedule or sessions. What this script keeps is in a
+// new sibling store, inner_extras_v1 { egg: { colour }, marks: [{ at, colour, text }], eveLater: 'YYYY-MM-DD' }.
+//   the evening slot (Hekka): one calm act offered from 18:00, by the clock. Yes opens the page's own evening
+//     practice through its own startSession(). Not now sets it down for the evening, and on home's shelf if home made one.
+//   two optional lines inside the Evening Wind-Down, shown while that session is open, between its steps and its
+//     closing: a low hum, and cutting cords (Hekka: "an optional line inside it, not a second act"). They are not
+//     steps, so nothing counts them and no stored plan is altered.
+//   the protective egg (Hekka's exercises table), with a colour picker: his own choice, not a prescription.
+//     Marking it is one optional tap with one optional felt line.
+//   graphs (plan §2): the year as 52 soft cells, the session notes as a trail. Drawn only when something is stored.
+(function () {
+  'use strict';
+  var X = 'inner_extras_v1', WEEK = 7 * 86400000;
+  var $ = function (id) { return document.getElementById(id); };
+  function read(k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
+  function extras() { var o = read(X, {}); if (!o || typeof o !== 'object' || Array.isArray(o)) o = {}; if (!Array.isArray(o.marks)) o.marks = []; if (!o.egg || typeof o.egg !== 'object') o.egg = {}; return o; }
+  function keep(o) { try { localStorage.setItem(X, JSON.stringify(o)); } catch (e) {} }
+  function sessions() { var s = read('inner_temple_v1', {}).sessions; return Array.isArray(s) ? s : []; }
+  function day() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function where() { try { return (typeof activeSession !== 'undefined' && activeSession && !activeSession.__paused) ? 'session' : currentView; } catch (e) { return 'home'; } }
+  function evening() { var h = new Date().getHours(); return h >= 18 || h < 3; }
+  function eveId() { try { var id = state.schedule && state.schedule.evening; if (id && getPractice(id)) return id; } catch (e) {} return 'evening_winddown'; }
+
+  // ---- the evening slot ----
+  $('in-eve-yes').addEventListener('click', function () { try { startSession(eveId()); } catch (e) {} });
+  $('in-eve-later').addEventListener('click', function () {
+    var o = extras(); o.eveLater = day(); keep(o); show();
+    try {   // home's shelf, only if home has made it: { key, name, when, temple, practiceId, star }
+      var s = read('portal_shelf_v1', null);
+      if (s && typeof s === 'object' && Array.isArray(s.items) && !s.items.some(function (x) { return x && x.key === 'inner:evening'; })) {
+        s.items.push({ key: 'inner:evening', name: 'The calm evening act', when: 'evening', temple: 'inner', practiceId: eveId(), star: 'inner' });
+        localStorage.setItem('portal_shelf_v1', JSON.stringify(s));
+      }
+    } catch (e) {}
+  });
+
+  // ---- the optional lines inside the Wind-Down ----
+  function optional() {
+    var id = null; try { id = activeSession && activeSession.practiceId; } catch (e) {}
+    var app = $('app');
+    if (id !== eveId() || app.querySelector('.in-opt')) return;
+    var before = app.querySelector('.closing-block') || app.querySelector('.session-complete');
+    if (!before) return;
+    var box = document.createElement('div'); box.className = 'in-opt';
+    var b = document.createElement('b'); b.textContent = 'optional, to end on'; box.appendChild(b);
+    [
+      'A low hum for a few breaths, lips closed. Soft and warm, never loud. It slows the breath (narrower: Weitzberg & Lundberg 2002).',
+      'Cutting cords, about two minutes: picture the day’s threads to other people loosening and falling away, one breath each. Nothing you want to keep is cut. Imagery, and a tradition.'
+    ].forEach(function (t) { var p = document.createElement('p'); p.textContent = t; box.appendChild(p); });
+    before.parentNode.insertBefore(box, before);
+  }
+
+  // ---- the protective egg ----
+  var SW = [['gold', '#D4A24C'], ['white', '#EAF2F7'], ['blue', '#8FB8D6'], ['rose', '#D79BB8'], ['violet', '#8E7CC3'], ['sage', '#7FA68A'], ['ember', '#E0833A'], ['silver', '#B8C0D0']];
+  function paint(hex) {
+    ['in-egg-s1', 'in-egg-s2', 'in-egg-s3'].forEach(function (id) { $(id).setAttribute('stop-color', hex); });
+    var bs = $('in-sw').querySelectorAll('button');
+    for (var i = 0; i < bs.length; i++) bs[i].setAttribute('aria-checked', bs[i].dataset.hex === hex ? 'true' : 'false');
+  }
+  SW.forEach(function (s) {
+    var b = document.createElement('button'), i = document.createElement('i');
+    b.type = 'button'; b.setAttribute('role', 'radio'); b.dataset.hex = s[1]; i.style.background = s[1];
+    b.appendChild(i); b.appendChild(document.createTextNode(s[0]));
+    b.addEventListener('click', function () { var o = extras(); o.egg.colour = s[1]; keep(o); paint(s[1]); });
+    $('in-sw').appendChild(b);
+  });
+  function colour() { var c = extras().egg.colour; return SW.some(function (s) { return s[1] === c; }) ? c : SW[0][1]; }
+  $('in-egg-yes').addEventListener('click', function () { paint(colour()); $('in-egg').hidden = false; $('in-egg-enough').focus({ preventScroll: true }); });
+  function closeEgg() {
+    $('in-egg').hidden = true; $('in-egg-pair').hidden = true; $('in-egg-after').hidden = false; $('in-egg-felt').value = '';
+    $('in-egg-p').textContent = 'Thank you. Marking it is yours to choose.';
+  }
+  function restEgg() {
+    $('in-egg-after').hidden = true; $('in-egg-pair').hidden = false;
+    $('in-egg-p').textContent = 'An egg of light around you, about two feet out. Breathing in, it grows a little; breathing out, it settles closer. About ten minutes, or less. You choose its colour.';
+  }
+  $('in-egg-enough').addEventListener('click', closeEgg);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('in-egg').hidden) closeEgg(); });
+  $('in-egg-mark').addEventListener('click', function () {
+    var o = extras(); o.marks.unshift({ at: Date.now(), colour: colour(), text: $('in-egg-felt').value.trim().slice(0, 200) });
+    if (o.marks.length > 200) o.marks.length = 200;
+    keep(o); restEgg(); graphs();
+  });
+  $('in-egg-leave').addEventListener('click', restEgg);
+
+  // ---- the year and the trail ----
+  function graphs() {
+    var w = where(), on = w === 'home' || w === 'history', now = Date.now(), cells = [], any = false, i;
+    for (i = 0; i < 52; i++) cells.push(0);
+    function lit(t) { var k = 51 - Math.floor((now - t) / WEEK); if (k >= 0 && k < 52) { cells[k]++; any = true; } }
+    var s = sessions(), m = extras().marks;
+    s.forEach(function (x) { var t = Date.parse(x && x.date); if (!isNaN(t)) lit(t); });
+    m.forEach(function (x) { if (x && +x.at) lit(+x.at); });
+    $('in-year').hidden = !on || !any || !window.Charts;
+    if (!$('in-year').hidden) Charts.mount($('in-ribbon'), 'ribbon', cells.map(function (n) { return n >= 4 ? 3 : n >= 2 ? 2 : n; }), { labels: ['a year ago', 'now'], label: 'A year, lit in the weeks a practice was kept' });
+    var l = [];
+    s.forEach(function (x) { if (x && x.finalNotes) l.push({ t: Date.parse(x.date) || 0, text: x.finalNotes, name: x.practiceName }); });
+    m.forEach(function (x) { if (x && x.text) l.push({ t: +x.at || 0, text: x.text, name: 'The protective egg' }); });
+    l.sort(function (a, b) { return b.t - a.t; }); l = l.slice(0, 6);
+    var box = $('in-lines'); $('in-trail').hidden = !on || !l.length; box.textContent = '';
+    l.forEach(function (x) {
+      var d = document.createElement('div'), sm = document.createElement('small');
+      d.className = 'in-felt'; d.textContent = x.text; sm.textContent = x.name; d.appendChild(sm); box.appendChild(d);
+    });
+  }
+
+  function show() {
+    var w = where();
+    $('in-eve').hidden = !(w === 'home' && evening() && extras().eveLater !== day());
+    $('in-egg-card').hidden = w !== 'home';
+    document.querySelector('nav.tab-bar').hidden = w === 'session';
+  }
+  function pass() { show(); optional(); graphs(); }
+  pass();
+  try { new MutationObserver(pass).observe($('app'), { childList: true }); } catch (e) {}
+})();
+</script>
 </body>
 </html>
