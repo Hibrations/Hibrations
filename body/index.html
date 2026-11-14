@@ -11,30 +11,16 @@
 <link rel="apple-touch-icon" href="icon.svg">
 <title>Body Temple</title>
 <style>
-:root {
-  --bg: #0a0908;
-  --bg-elev: #14110f;
-  --bg-card: #1a1614;
+/* Portal remake, step 10: the colours, header, sky and bottom bar come from ../temple.css and ../shell.js.
+   The page's old colour names are kept as aliases of the shared tokens, so its own script and classes work unchanged.
+   The six movement-pattern colours are kept. Nothing here is red. */
+body[data-temple] {
+  --bg-elev: var(--card); --bg-card: var(--card); --border: var(--leaf); --border-soft: var(--leaf2);
+  --ink-dim: var(--muted); --ink-faint: var(--muted);
+  --emerald: var(--t-text); --emerald-dim: var(--t-dim); --crimson: var(--t2-text); --crimson-dim: var(--t-dim); --warning: #D4A64A;
   --voice: #6fa8d8;
-  --border: #2a2420;
-  --border-soft: #1f1a17;
-  --ink: #e8e1d4;
-  --ink-dim: #9a8f80;
-  --ink-faint: #5e554a;
-  --emerald: #3d7d63;
-  --emerald-dim: #2a5847;
-  --crimson: #9a4435;
-  --crimson-dim: #6e2d22;
-  --warning: #c89060;
-  --pull: #7d8fc7;
-  --push: #c78f8f;
-  --hinge: #a89b6b;
-  --squat: #6ba879;
-  --core: #b08fc7;
-  --mobility: #8fb8c7;
-  --r-sm: 8px;
-  --r-md: 14px;
-  --r-lg: 20px;
+  --pull: #7d8fc7; --push: #c78f8f; --hinge: #a89b6b; --squat: #6ba879; --core: #b08fc7; --mobility: #8fb8c7;
+  --r-sm: 10px; --r-md: 14px; --r-lg: 18px;
   --shadow: 0 1px 0 rgba(255,255,255,0.02), 0 8px 24px rgba(0,0,0,0.4);
 }
 
@@ -892,18 +878,30 @@ main { padding: 0 22px; }
 }
 </style>
 <link href="../fonts/fonts.css" rel="stylesheet">
+<link href="../temple.css" rel="stylesheet">
+<script src="../shell.js"></script>
+<script src="../charts.js"></script>
 </head>
-<body>
+<body data-temple="body">
 
-<header class="app-header">
-  <button class="app-back" id="app-back" onclick="appBack()">← portal</button>
-  <div class="app-titleblock">
-    <div class="app-title">body temple</div>
-    <div class="app-date" id="header-date"></div>
+<header class="ts-head">
+  <div class="ts-hrow">
+    <button class="app-back" id="app-back" onclick="appBack()">←</button>
+    <div class="ts-tt"><b class="app-title">Body Temple</b><span id="header-date"></span></div>
   </div>
+  <p class="ts-guide" id="bx-guide">Hours slept first, then the session.</p>
 </header>
 
-<main id="app"></main>
+<div class="ts-body">
+  <nav class="tab-bar" aria-label="Body Temple">
+    <button class="tab-btn active" data-view="home">today</button>
+    <button class="tab-btn" data-view="library">library</button>
+    <button class="tab-btn" data-view="plans">plans</button>
+    <button class="tab-btn" data-view="history">history</button>
+  </nav>
+
+  <main id="app"></main>
+</div>
 
 <div id="timer-overlay">
   <div>
@@ -956,13 +954,6 @@ main { padding: 0 22px; }
 .data-paste { width:100%; min-height:120px; background:var(--bg); color:var(--ink); border:1px solid var(--border);
   border-radius:var(--r-sm); padding:10px; font-family:ui-monospace,Menlo,monospace; font-size:11px; margin-bottom:10px; }
 </style>
-
-<nav class="tab-bar">
-  <button class="tab-btn active" data-view="home">today</button>
-  <button class="tab-btn" data-view="library">library</button>
-  <button class="tab-btn" data-view="plans">plans</button>
-  <button class="tab-btn" data-view="history">history</button>
-</nav>
 
 <script>
 // ============================================================
@@ -2079,7 +2070,30 @@ async function copyBackupText() {
 
 // Body-only export (Lek, 2026-11-05). Just this temple's own stores, for handing its data on. It is not a backup:
 // the full file below is what saves the other temples, so this never marks the device as backed up.
-const BODY_KEYS = [STORAGE_KEY, 'body_inbox_v1', 'body_garr_v1'];
+const WEIGH_KEY = 'body_weigh_v1';
+const BODY_KEYS = [STORAGE_KEY, 'body_inbox_v1', 'body_garr_v1', WEIGH_KEY];
+
+// Weigh-in (Lek's yes, 2026-11-05): one dated kg per day, kept in its own key so the sessions store is never touched.
+// No streaks, no "missing weeks": a gap is just a gap.
+function readWeighIns() {
+  try {
+    const w = JSON.parse(localStorage.getItem(WEIGH_KEY) || 'null');
+    return (w && Array.isArray(w.entries)) ? w.entries.filter(e => e && /^\d{4}-\d{2}-\d{2}$/.test(e.date) && typeof e.kg === 'number') : [];
+  } catch (e) { return []; }
+}
+
+function saveWeighIn(kg) {
+  const v = Math.round(parseFloat(String(kg).replace(',', '.')) * 10) / 10;
+  if (!(v >= 20 && v <= 300)) { toast('kg between 20 and 300'); return false; }
+  const date = fuelToday();
+  const entries = readWeighIns().filter(e => e.date !== date);   // same day overwrites
+  entries.push({ date, kg: v });
+  entries.sort((a, b) => (a.date < b.date ? -1 : 1));
+  try { localStorage.setItem(WEIGH_KEY, JSON.stringify({ entries })); }
+  catch (e) { toast('could not save — storage full?'); return false; }
+  toast('weighed in · ' + v + ' kg');
+  return true;
+}
 
 function collectBodyOnly() {
   const keys = {};
@@ -2202,6 +2216,7 @@ function openDataModal() {
   const s = snap.summary;
   const last = lastBackupLabel();
   const canUndo = !!localStorage.getItem(PRE_RESTORE_KEY);
+  const wAll = readWeighIns(); const wLast = wAll.length ? wAll[wAll.length - 1] : null;
   const modal = document.getElementById('modal');
   modal.innerHTML =
       '<div class="modal-header">'
@@ -2211,6 +2226,12 @@ function openDataModal() {
     + '<div class="subtle" style="margin-bottom:14px; line-height:1.5;">'
     +   'everything logged here lives only on this device — nothing syncs. a backup is the only copy that survives a cleared cache or a new phone.'
     + '</div>'
+    + '<div class="data-actions" style="align-items:center;">'
+    +   '<input type="number" inputmode="decimal" step="0.1" id="bw-kg" placeholder="weigh-in, kg"'
+    +     (wLast ? ' value="' + escapeHtml(String(wLast.kg)) + '"' : '') + ' style="flex:1; min-width:0; padding:10px; font-size:16px;">'
+    +   '<button class="btn-secondary" id="bw-save">save</button>'
+    + '</div>'
+    + '<div class="subtle" style="margin:4px 0 14px;">' + (wLast ? 'last: ' + escapeHtml(String(wLast.kg)) + ' kg, ' + escapeHtml(wLast.date) : 'no weigh-in yet') + '</div>'
     + '<div class="data-stats">'
     +   '<div><span class="data-num">' + s.sessions + '</span> sessions'
     +     (s.firstSession ? ' · ' + escapeHtml(s.firstSession) + ' → ' + escapeHtml(s.lastSession) : '') + '</div>'
@@ -2241,6 +2262,9 @@ function openDataModal() {
   document.getElementById('bk-save').onclick = saveBackupFile;
   document.getElementById('bk-copy').onclick = copyBackupText;
   document.getElementById('bk-body').onclick = saveBodyOnlyFile;
+  const bwSave = () => { if (saveWeighIn(document.getElementById('bw-kg').value)) openDataModal(); };
+  document.getElementById('bw-save').onclick = bwSave;
+  document.getElementById('bw-kg').onkeydown = ev => { if (ev.key === 'Enter') bwSave(); };
   if (canUndo) document.getElementById('bk-undo').onclick = undoRestore;
 
   const input = document.getElementById('bk-input');
@@ -2394,13 +2418,14 @@ function syncChrome() {
   const back = document.getElementById('app-back');
   const title = document.querySelector('.app-title');
   if (!back || !title) return;
+  // step 10: the frame (shell.js) draws the arrow; here only its meaning and the title change
   if (mode === 'hub') {
-    back.textContent = '← portal';
+    back.setAttribute('aria-label', 'Back to the Portal');
     back.style.visibility = EMBEDDED ? 'visible' : 'hidden';
-    title.textContent = 'body temple';
+    title.textContent = 'Body Temple';
   }
-  else if (mode === 'fuel') { back.textContent = '← doors'; back.style.visibility = 'visible'; title.textContent = 'fuel'; }
-  else { back.textContent = '← doors'; back.style.visibility = 'visible'; title.textContent = 'training'; }
+  else if (mode === 'fuel') { back.setAttribute('aria-label', 'Back to the three doors'); back.style.visibility = 'visible'; title.textContent = 'Fuel'; }
+  else { back.setAttribute('aria-label', 'Back to the three doors'); back.style.visibility = 'visible'; title.textContent = 'Training'; }
 }
 
 // ============================================================
@@ -3201,7 +3226,7 @@ function findLastSessionExercise(name) {
   if (!name || !state.sessions) return null;
   for (let i = 0; i < state.sessions.length; i++) {
     const s = state.sessions[i];
-    if (!s.exercises) continue;
+    if (!s.exercises || s.deload) continue;   // step 10: a deload session is passed over
     const ex = s.exercises.find(e => e.name === name);
     if (ex) return { exercise: ex, sessionDate: s.date };
   }
@@ -3213,7 +3238,7 @@ function findRecentSessionsForExercise(name, max) {
   if (!name || !state.sessions) return out;
   for (let i = 0; i < state.sessions.length && out.length < max; i++) {
     const s = state.sessions[i];
-    if (!s.exercises) continue;
+    if (!s.exercises || s.deload) continue;   // step 10: a deload session is passed over
     const ex = s.exercises.find(e => e.name === name);
     if (ex) out.push({ exercise: ex, sessionDate: s.date });
   }
@@ -3303,14 +3328,14 @@ function progressiveOverloadFor(name) {
 // Returns the highest detected weight (in kg, normalised across units) found in
 // any prior session for this exercise. excludeSessionId lets the just-saved
 // session skip itself when checking whether IT set a new PR.
-function findPriorMaxWeight(name, excludeSessionId) {
+function findPriorMaxWeight(name, excludeSessionId, bw) {
   if (!name || !state.sessions) return null;
   let maxKg = null;
   for (const s of state.sessions) {
     if (excludeSessionId && s.id === excludeSessionId) continue;
     if (!s.exercises) continue;
     const ex = s.exercises.find(e => e.name === name);
-    if (!ex) continue;
+    if (!ex || !!ex.bw !== !!bw) continue;   // step 10: added load is compared with added load, a total with a total
     const w = getWeightFor(ex);
     if (!w) continue;
     if (maxKg === null || w.kg > maxKg) maxKg = w.kg;
@@ -3327,10 +3352,10 @@ function detectPRsInSession(session) {
   session.exercises.forEach(ex => {
     const w = getWeightFor(ex);
     if (!w) return;
-    const priorKg = findPriorMaxWeight(ex.name, session.id);
+    const priorKg = findPriorMaxWeight(ex.name, session.id, ex.bw);
     if (priorKg === null) return; // no prior baseline yet — not a PR
     if (w.kg > priorKg + 0.01) {
-      prs.push({ name: ex.name, value: w.value, unit: w.unit });
+      prs.push({ name: ex.name + (ex.bw ? ', added load' : ''), value: w.value, unit: w.unit });
     }
   });
   return prs;
@@ -3346,10 +3371,11 @@ function getAllTimePRs() {
     for (const ex of s.exercises) {
       const w = getWeightFor(ex);
       if (!w) continue;
-      const existing = byExercise[ex.name];
+      const key = ex.name + (ex.bw ? ', added load' : '');   // step 10: a bodyweight movement's added load has its own line
+      const existing = byExercise[key];
       if (!existing || w.kg > existing.valueKg) {
-        byExercise[ex.name] = {
-          name: ex.name,
+        byExercise[key] = {
+          name: key,
           value: w.value,
           unit: w.unit,
           valueKg: w.kg,
@@ -3406,7 +3432,7 @@ function renderPRsPanel() {
 
   const wrap = document.createElement('div');
   wrap.className = 'prs-panel';
-  wrap.appendChild(el('div', 'today-eyebrow', '🏆 personal records'));
+  wrap.appendChild(el('div', 'today-eyebrow', 'top sets, as logged'));
 
   const list = document.createElement('div');
   list.className = 'prs-list';
@@ -3653,10 +3679,20 @@ function closeSession() {
       libraryId: e.libraryId,
       done: e.done,
       notes: e.notes,
-      weight: typeof e.weight === 'number' && e.weight > 0 ? e.weight : undefined
+      weight: typeof e.weight === 'number' && e.weight > 0 ? e.weight : undefined,
+      // step 10 — added optional fields, on new entries only; an entry without them reads as before.
+      // sets and reps are what was done, typed beside the note. bw marks a bodyweight movement, where weight is
+      // the load added on top (so a pull-up reads "bodyweight + 10 kg", never a misleading total).
+      sets: Number.isInteger(e.doneSets) && e.doneSets > 0 ? e.doneSets : undefined,
+      reps: typeof e.doneReps === 'string' && e.doneReps.trim() ? e.doneReps.trim().slice(0, 24) : undefined,
+      bw: e.bw === true ? true : undefined,
+      added: e.added === true ? true : undefined
     })),
-    finalNotes: activeSession.finalNotes
+    finalNotes: activeSession.finalNotes,
+    light: activeSession.light === true ? true : undefined,
+    deload: activeSession.deload === true ? true : undefined
   };
+  try { localStorage.removeItem('body_session_v1'); } catch (e) {}
   state.sessions.unshift(newSession);
   saveState();
   justClosed = { kind: 'session', id: newSession.id, name: (newSession.planName || 'session') + ', ' + newSession.date };
@@ -3666,7 +3702,7 @@ function closeSession() {
   const prs = detectPRsInSession(newSession);
   if (prs.length > 0) {
     const msg = prs.map(p => p.name + ' · ' + p.value + p.unit).join(' · ');
-    toast('🏆 PR! ' + msg);
+    toast('a new top set · ' + msg);
   } else {
     toast('session kept');
   }
@@ -4111,12 +4147,13 @@ function renderHistory() {
     const card = el('div', 'today-card');
     card.style.marginBottom = '12px';
     card.appendChild(el('div', 'today-name', s.planName || s.name || 'session'));
-    card.appendChild(el('div', 'today-sub', s.date ? formatDate(s.date) : ''));
+    card.appendChild(el('div', 'today-sub', (s.date ? formatDate(s.date) : '') + (s.deload ? ' · deload' : s.light ? ' · the lighter version' : '')));
     const done = (s.exercises || []).filter(e => e.done);
     done.forEach(e => {
       const parts = [e.name];
       if (e.sets) parts.push(e.sets + '×' + (e.reps || ''));
-      if (e.weight > 0) parts.push(formatKg(e.weight));
+      if (e.bw) parts.push('bodyweight' + (e.weight > 0 ? ' + ' + formatKg(e.weight) : ''));
+      else if (e.weight > 0) parts.push(formatKg(e.weight));
       const row = el('div', 'subtle', parts.join(' · '));
       row.style.fontSize = '13px';
       row.style.marginTop = '4px';
@@ -4752,6 +4789,683 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;}
 // C2 (2026-11-14): this app switches on the site's offline cache itself, so it works offline even on a phone where the
 // village was never opened. The one sw.js at the apps/ root; scope and caching are unchanged.
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('../sw.js').catch(function () {});
+</script>
+
+<style>
+/* Portal remake, step 10 · the page's own classes, fitted to the frame (temple.css, shell.js).
+   No capitals by styling, nothing under 12 px, nothing tappable under 44 px, no count that reads as a score
+   ("2/5" in a session is gone), and no red anywhere: the old --crimson is the temple's birch cream now. */
+body[data-temple] * { text-transform: none !important; }
+html, body[data-temple] { font-size: 15px; }
+.app-back { padding: 0; letter-spacing: 0; }
+.ts-tt .app-title { font-size: 23px; font-weight: 600; letter-spacing: 0; color: var(--ink); }
+#app-back[style*="hidden"] { display: none; }            /* opened alone, the three doors are the root: no back, and no gap where it was */
+main#app { padding: 0; }
+.view { padding-top: 4px; padding-bottom: 12px; }
+.session-progress { display: none; }
+
+/* the page's own tabs: a sticky pill row under the header (Thorn's F4.4). The house's bar is at the bottom. */
+nav.tab-bar { position: sticky; top: 0; z-index: 40; display: flex; gap: 6px; justify-content: stretch; margin: 0 -4px 12px; padding: 8px 4px;
+  background: none; border-top: none; border-bottom: 1px solid transparent; -webkit-backdrop-filter: none; backdrop-filter: none; left: auto; right: auto; bottom: auto; }
+nav.tab-bar.bx-stuck { background: var(--bg); border-bottom-color: var(--leaf2); }   /* a ground under the pills only once the page has scrolled beneath them */
+#bx-sentinel { height: 1px; margin-bottom: -1px; }
+.tab-btn { flex: 1; min-height: 44px; padding: 0 4px; font-size: 13px; letter-spacing: 0; color: var(--muted); border: 1px solid var(--leaf2); border-radius: 12px; }
+.tab-btn.active, .tab-bar.fuel-bar .tab-btn.active { color: var(--ink); border-color: var(--t-text); background: var(--t-faint); }
+
+/* type: 12 px or more */
+.alt-flow-letter, .data-paste, .detail-section h3, .editor-ex-link-info, .editor-label, .ex-action-btn, .ex-last-session, .ex-last-session .ex-last-eyebrow,
+.ex-letter, .ex-notes-prompt, .ex-progress-nudge, .ex-weight-label, .form-label, .garr-wait, .lib-card-muscles, .lib-filter-pill, .lib-mech-tag, .nh-date,
+.prs-date, .section-header, .target-lbl, .timer-label, .timer-stop, .today-eyebrow, .section-eyebrow, .subtle, .today-card div[style*="font-size:10px"] {
+  font-size: 12px !important; letter-spacing: .04em !important; }
+.editor-ex-grid input::placeholder { font-size: 12px; }
+.today-eyebrow, .section-eyebrow, .section-header { color: var(--t2-text); }
+
+/* taps: 44 px or more */
+body[data-temple] #app button, body[data-temple] .modal button, .timer-stop { min-height: 44px; }
+.ex-action-btn, .lib-filter-pill, .garr-link, .icon-btn { min-height: 44px; padding-left: 12px; padding-right: 12px; }
+.garr-link { color: var(--t-text); }
+.ex-check { flex: 0 0 44px; width: 44px; height: 44px; margin-top: 0; }
+.ex-weight-btn, .step-btn, .modal-close, .food-row-x { min-width: 44px; min-height: 44px; }
+.ex-weight-value { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; white-space: nowrap; color: var(--t-text); }
+.ex-weight-input { color: var(--ink); border-color: var(--t-text); }
+.ex-weight { flex-wrap: nowrap; max-width: 100%; }
+.ex-weight-value.empty { padding: 0; }                          /* the page's .empty carries a block's padding */
+.ex-weight-label { white-space: nowrap; }
+.ex-weight.bx-bwpill { flex-wrap: wrap; row-gap: 2px; border-radius: 22px; padding-top: 8px; }   /* "bodyweight +" on its own line: the pill is too narrow for it at 375 px */
+.ex-weight.bx-bwpill .ex-weight-label { flex-basis: 100%; }
+.bx-done input::placeholder { color: var(--muted); opacity: .5; }   /* the plan's numbers, as a hint: not yet what was done */
+.warmup-block summary, .cooldown-block summary { letter-spacing: .04em; min-height: 44px; display: flex; align-items: center; justify-content: space-between; }
+input, textarea, select { font-size: 16px; min-height: 44px; }
+input[type="checkbox"] { min-height: 0; width: 22px; height: 22px; }
+button.subtle { min-height: 44px; }
+
+/* the cards, in the frame's hand */
+.today-card { background: linear-gradient(180deg, var(--t-faint), var(--card) 78%); border-color: var(--t-dim); padding: 18px 16px; }
+.today-card::before, .today-card.alt-mode::before, .today-card.zen::before { display: none; }
+.today-name, .session-title, .alt-view-name, .hub-eyebrow, .door-name, .hist-date { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 500; }
+.today-name { font-size: 25px; }
+.btn-primary { min-height: 48px; background: var(--t-btn); color: var(--on-btn); letter-spacing: 0; }
+.btn-primary:active { background: var(--t-btn); opacity: .85; }
+.btn-secondary { min-height: 48px; letter-spacing: 0; }
+.btn-danger, .btn-danger:active { color: var(--ink); border-color: var(--leaf); background: none; }   /* a destructive button asks before it acts; it does not shout */
+.food-row-x:active { color: var(--ink); }
+.ex-check.checked { background: var(--t-btn); border-color: var(--t-btn); }
+.ex-weight-btn:active { border-color: var(--t-text); color: var(--t-text); }
+.prs-weight { color: var(--t-text); }
+.exercise-card.done { opacity: .6; }
+.hub-door { background: linear-gradient(160deg, var(--t-faint), var(--card) 62%); border-color: var(--leaf2); padding: 20px 18px; }
+.door-training::before, .door-fuel::before, .door-voice::before { width: 2px; }
+.door-training::before { background: var(--t); }
+.door-glyph { font-size: 0; height: 30px; color: var(--t-text); margin-bottom: 6px; }
+.door-fuel .door-glyph { color: var(--fuel); }
+.door-voice .door-glyph { color: var(--voice); }
+.hub-eyebrow { display: none; }                               /* the header says where this is */
+.hub-sub { margin: 2px 0 16px; text-align: left; font-size: 13px; }
+.hub-data { min-height: 44px; font-size: 13px; letter-spacing: 0; }
+
+/* overlays sit above the house's bar (800) and below its sheet (900) */
+#timer-overlay { bottom: calc(var(--ts-bar) + 24px + env(safe-area-inset-bottom, 0px)); z-index: 850; border-color: var(--t-dim); max-width: 94vw; }
+#toast { bottom: calc(var(--ts-bar) + 24px + env(safe-area-inset-bottom, 0px)); z-index: 880; max-width: 92vw; text-align: center; }
+.modal-overlay { z-index: 890; }
+.modal { background: var(--card); max-width: 640px; padding-left: 16px; padding-right: 16px; }
+#surface-topbar { display: none; }                            /* a surface opened here wears the frame too: one header, and its own back closes it */
+
+/* ── step 10: what is new on the page (all bx-) ── */
+.bx-card { position: relative; background: var(--card); border: 1px solid var(--leaf2); border-radius: 18px; padding: 14px 16px; margin: 0 0 12px; }
+.bx-card[hidden], .bx-row[hidden], .bx-note[hidden] { display: none; }
+.bx-eyebrow { font-size: 12px; letter-spacing: .04em; color: var(--t2-text); }
+.bx-big { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 34px; line-height: 1.05; font-weight: 500; color: var(--ink); margin-top: 2px; }
+.bx-big small { font-size: 16px; color: var(--muted); font-weight: 500; }
+.bx-say { font-size: 13px; line-height: 1.45; color: var(--muted); margin-top: 6px; }
+.bx-say b { font-weight: 500; color: var(--ink); }
+.bx-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.bx-row input { flex: 1; min-width: 0; }
+.bx-row .btn-secondary, .bx-row .btn-primary { width: auto; flex: none; padding: 0 16px; margin: 0; }
+.bx-pair { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+.bx-pair .btn-primary, .bx-pair .btn-secondary { width: 100%; margin: 0; }
+button.bx-link { display: block; min-height: 44px; margin: 4px auto 0; padding: 0 6px; font-size: 13px; color: var(--muted); text-decoration: underline; text-decoration-color: var(--t2-text); text-underline-offset: 4px; }
+.bx-toggles { display: flex; gap: 8px; margin-top: 10px; }
+button.bx-toggle { flex: 1; min-height: 44px; border: 1px solid var(--leaf2); border-radius: 12px; font-size: 13px; color: var(--muted); padding: 0 8px; }
+button.bx-toggle[aria-pressed="true"] { border-color: var(--t2-text); color: var(--ink); background: var(--t-faint); }
+.bx-in { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.bx-in span { font-size: 12px; color: var(--muted); border: 1px solid var(--leaf2); border-radius: 99px; padding: 3px 10px; }
+.bx-in span.bx-lit { color: var(--ink); border-color: var(--t2-text); }
+/* in a session */
+.bx-note { font-size: 13px; line-height: 1.45; color: var(--muted); border: 1px dashed var(--leaf); border-radius: 14px; padding: 10px 12px; margin: 0 0 12px; }
+.bx-done { display: flex; align-items: flex-end; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.bx-done label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; letter-spacing: .04em; color: var(--muted); }
+.bx-done input { width: 76px; padding: 8px 10px; text-align: center; font-variant-numeric: tabular-nums; }
+.bx-done input.bx-reps { width: 104px; }
+button.bx-bw { min-height: 44px; border: 1px solid var(--leaf2); border-radius: 12px; font-size: 13px; color: var(--muted); padding: 0 12px; }
+button.bx-bw[aria-pressed="true"] { border-color: var(--t2-text); color: var(--ink); background: var(--t-faint); }
+.bx-easy .ex-progress-nudge { display: none; }                /* a lighter or deload session asks for nothing more */
+.bx-add { margin: 4px 0 16px; }
+.bx-add .btn-secondary { width: 100%; }
+.bx-out { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); margin-top: 6px; }
+.bx-out span { flex: 1; min-width: 0; }
+/* graphs */
+.bx-graph + .bx-graph { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--leaf2); }
+.bx-gname { font-size: 14px; color: var(--ink); margin-bottom: 4px; }
+.bx-cf { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.bx-cf > span { flex: 1; font-size: 12px; line-height: 1.4; color: var(--muted); }
+button.bx-sw { flex: none; min-height: 44px; padding: 0 4px; font-size: 13px; color: var(--t-text); text-decoration: underline; text-decoration-color: var(--leaf); text-underline-offset: 4px; }
+.bx-rings { display: flex; gap: 14px; align-items: center; justify-content: space-around; }
+.bx-rings > div { text-align: center; font-size: 12px; color: var(--muted); }
+.bx-rings svg { display: block; margin: 0 auto 2px; }
+.bx-target input { width: 110px; flex: none; text-align: center; }
+</style>
+<script>
+// Portal remake, step 10 · beside the page's own script (above; changed only in the few named places listed in
+// portal_remake/tools/step10/apply_body.py). Everything here is an addition, and every addition is wrapped so that a
+// fault in it leaves the page as it was: the doors, the session, the log, backup and restore do not depend on this script.
+//
+// body_temple_v1 is written here in one way only: a rest day, as one more row in sessions[], in the shape the page
+// already uses for "log as done" ({ id, date, planId, planName, type: 'altmode', exercises: [], finalNotes }) plus rest: true.
+// Nothing stored is renamed, reshaped or migrated. What is new lives in three sibling stores:
+//   body_extras_v1   { sleep: { 'YYYY-MM-DD': hours typed }, deloadWeek: 'YYYY-MM-DD' (that week's Monday), three: bool,
+//                      bw: { <library id>: bool }, graphs: { <graph>: { record, target, targetKg } } }
+//   body_watch_v1    { at, upto, days: [{ day, sleep, steps, rest }] }   the watch summary, as the PC's /portal route sends it
+//   body_session_v1  { at, session }   the session that is open now, so a reload or "exit" does not lose it
+//
+//   sleep first (Garr): the three doors and Today open on hours slept. From the watch when it wrote last night, otherwise
+//     one optional typed number, otherwise only the empty field. Under six hours the lighter version is offered first.
+//   in a session: add an exercise (the library, or a new custom one through the page's own modal), take one out and put
+//     it back, sets and reps done as two fields beside the note, and a bodyweight switch so the load reads "bodyweight + 10 kg".
+//   a rest day is a log. A deload week and three days a week are two switches; nothing counts and nothing decays.
+//   graphs (plan §2), drawn with ../charts.js only where there is something to draw: top sets, weight, the weeks, sleep,
+//     HRV, and in Fuel two rings and fourteen days. Calm by default; a record or a target is a switch per graph, off until asked for.
+(function () {
+  'use strict';
+  if (typeof render !== 'function' || typeof renderHome !== 'function' || typeof el !== 'function') return;
+  var X = 'body_extras_v1', WATCH = 'body_watch_v1', RUN = 'body_session_v1', DAY = 86400000;
+  var BW_IDS = ['pullup', 'weighted_pullup', 'inverted_row', 'dips', 'pushup', 'pike_pushup', 'hanging_leg_raise', 'pistol_squat', 'l_sit'];
+  var $ = function (id) { return document.getElementById(id); };
+  var isObj = function (v) { return !!v && typeof v === 'object' && !Array.isArray(v); };
+  var warn = function (where, e) { try { console.warn('body extras · ' + where, e); } catch (x) {} };
+  var num = function (h) { return (Math.round(h * 10) / 10).toString(); };
+  var noon = function (iso) { return new Date(iso + 'T12:00:00'); };
+  var short = function (iso) { try { return noon(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }); } catch (e) { return iso; } };
+
+  // ── the sibling store ──
+  function extras() { var o = readJSON(X); if (!isObj(o)) o = {}; ['sleep', 'graphs', 'bw'].forEach(function (k) { if (!isObj(o[k])) o[k] = {}; }); return o; }
+  function change(fn) { var o = extras(); fn(o); try { localStorage.setItem(X, JSON.stringify(o)); } catch (e) { toast('could not save — storage full?'); } }
+  function rerender() { var y = window.scrollY; render(); window.scrollTo(0, y); }
+  function quietRender() {                                        // new data came in: redraw, unless he is typing or a sheet is open
+    var a = document.activeElement;
+    if (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return;
+    if ($('modal-overlay').classList.contains('open') || !$('surface-overlay').hidden) return;
+    rerender();
+  }
+
+  // step 11: a switch in Settings (baby season) or the first of the three lines changes which version comes first
+  window.addEventListener('temple-modes', function () { try { if (!activeSession) quietRender(); } catch (e) {} });
+
+  // ── sleep ──
+  function watchDays() { var w = readJSON(WATCH); return w && Array.isArray(w.days) ? w.days.filter(function (d) { return d && /^\d{4}-\d{2}-\d{2}$/.test(d.day); }) : []; }
+  function sleepOn(day) {
+    var wd = watchDays().filter(function (d) { return d.day === day; })[0];
+    if (wd && typeof wd.sleep === 'number' && wd.sleep > 0) return { h: wd.sleep, from: 'watch' };
+    var t = extras().sleep[day];
+    return typeof t === 'number' && t > 0 ? { h: t, from: 'typed' } : null;
+  }
+  function typeSleep(v) {
+    var h = Math.round(parseFloat(String(v).replace(',', '.')) * 10) / 10;
+    if (!(h > 0 && h <= 16)) { toast('hours, between 0 and 16'); return false; }
+    change(function (o) { o.sleep[fuelToday()] = h; Object.keys(o.sleep).sort().slice(0, -120).forEach(function (k) { delete o.sleep[k]; }); });
+    return true;
+  }
+  var sleepEdit = false;
+  function sleepCard() {
+    var s = sleepOn(fuelToday()), card = el('div', 'bx-card'); card.id = 'bx-sleep';
+    card.appendChild(el('div', 'bx-eyebrow', 'hours slept'));
+    if (s && !sleepEdit) {
+      var big = el('div', 'bx-big', num(s.h) + ' '); big.appendChild(el('small', '', 'h')); card.appendChild(big);
+      card.appendChild(el('div', 'bx-say', (s.from === 'watch' ? 'from the watch.' : 'typed by you.') + (s.h < 6 ? ' a short night: the lighter version is offered first, and the full one is still yours to pick.' : '')));
+      if (s.from === 'typed') { var ch = el('button', 'bx-link', 'change it'); ch.type = 'button'; ch.addEventListener('click', function () { sleepEdit = true; rerender(); }); card.appendChild(ch); }
+      return card;
+    }
+    var row = el('div', 'bx-row'), inp = el('input'), b = el('button', 'btn-secondary', 'keep');
+    inp.type = 'number'; inp.inputMode = 'decimal'; inp.step = '0.1'; inp.id = 'bx-sleep-h'; inp.placeholder = 'last night, in hours'; inp.setAttribute('aria-label', 'hours slept last night');
+    if (s) inp.value = s.h;
+    b.type = 'button'; b.id = 'bx-sleep-keep';
+    var go = function () { if (!String(inp.value).trim()) return; if (typeSleep(inp.value)) { sleepEdit = false; rerender(); } };
+    b.addEventListener('click', go); inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') go(); });
+    row.appendChild(inp); row.appendChild(b); card.appendChild(row);
+    return card;
+  }
+
+  // ── the week: deload, three days, rest ──
+  function monday(d) { var x = new Date(d || Date.now()); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; }
+  var weekKey = function () { return fuelToday(monday()); };
+  var deloadOn = function () { return extras().deloadWeek === weekKey(); };
+  var threeOn = function () { return extras().three === true; };
+  function threeIds() { var pref = ['pull', 'push', 'legs'].filter(function (id) { return !!getPlan(id); }); return pref.length === 3 ? pref : (state.plans || []).slice(0, 3).map(function (p) { return p.id; }); }
+  function weekTraining() { var m = monday(); return (state.sessions || []).filter(function (s) { return s.type === 'training' && s.date && noon(s.date) >= m; }).map(function (s) { return s.planId; }); }
+  function longGap() {
+    var last = (state.sessions || []).map(function (s) { return s.date; }).filter(Boolean).sort().pop();
+    return !!last && Date.now() - noon(last).getTime() >= 7 * DAY;
+  }
+  var restToday = function () { return (state.sessions || []).some(function (s) { return s.rest && s.date === TODAY(); }); };
+  function logRest() {
+    if (restToday()) return;
+    state.sessions.unshift({ id: uid('s'), date: TODAY(), planId: 'rest', planName: 'Rest day', type: 'altmode', exercises: [], finalNotes: '', rest: true });
+    saveState(); toast('rest, kept'); rerender();
+  }
+
+  // ── beginning a session, full or eased ──
+  function begin(planId, flavour) {
+    startSession(planId);
+    var s = activeSession; if (!s) return;
+    if (flavour === 'light') {                                   // the first three movements, one set fewer; the rest wait under "taken out"
+      s.light = true; s.removed = s.exercises.slice(3); s.exercises = s.exercises.slice(0, 3);
+      s.exercises.forEach(function (e) { if (typeof e.sets === 'number' && e.sets > 2) e.sets -= 1; });
+    } else if (flavour === 'deload') {                           // Garr, 8 Nov: half sets, about 60% loads, no grinding
+      s.deload = true;
+      s.exercises.forEach(function (e) { if (typeof e.sets === 'number') e.sets = Math.max(1, Math.ceil(e.sets / 2)); if (e.weight > 0) e.weight = Math.round(e.weight * 0.6 * 2) / 2; });
+    }
+    if (flavour) render();
+  }
+
+  // ── the open session survives a reload ──
+  function saveRun() { try { if (activeSession) localStorage.setItem(RUN, JSON.stringify({ at: new Date().toISOString(), session: activeSession })); } catch (e) {} }
+  function readRun() { var r = readJSON(RUN); return r && isObj(r.session) && Array.isArray(r.session.exercises) && typeof r.session.planName === 'string' ? r : null; }
+  function dropRun() { try { localStorage.removeItem(RUN); } catch (e) {} }
+  var runTimer = null;
+  document.addEventListener('input', function () { if (!activeSession) return; clearTimeout(runTimer); runTimer = setTimeout(saveRun, 500); });
+  window.addEventListener('pagehide', saveRun);
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') saveRun(); });
+
+  // ── Today ──
+  function offerButtons(card, plan) {
+    Array.prototype.forEach.call(card.querySelectorAll('button, .bx-pair, .bx-say:not(.bx-why)'), function (b) { b.remove(); });
+    var short6 = (function () { var s = sleepOn(fuelToday()); return !!s && s.h < 6; })(), gap = longGap(), dl = deloadOn();
+    // step 11: the shell's reading of the same night (it adds the first of the three lines when no hours are known), and baby season
+    var TS = window.TempleShell, season = !!(TS && TS.modes && TS.modes().baby);
+    try { if (!short6 && TS && TS.sleep && TS.sleep().short) short6 = true; } catch (e) {}
+    var pair = el('div', 'bx-pair');
+    var mk = function (cls, label, flavour) { var b = el('button', cls, label); b.type = 'button'; b.dataset.begin = flavour || 'full'; b.addEventListener('click', function () { begin(plan.id, flavour); }); return b; };
+    if (dl) {
+      card.appendChild(el('div', 'bx-say', 'a deload week: half the sets, about 60% of the load, nothing ground out.'));
+      pair.appendChild(mk('btn-primary', 'begin, deload', 'deload')); pair.appendChild(mk('btn-secondary', 'the full session'));
+    } else if (short6 || gap || season) {
+      card.appendChild(el('div', 'bx-say', (gap ? 'it has been a while. start light. ' : '') + (season && !short6 && !gap ? 'baby season: the lighter version comes first, and the full session is still yours. ' : '') + 'the lighter version: the first three movements, one set fewer, last time’s load.'));
+      pair.appendChild(mk('btn-primary', 'the lighter version', 'light')); pair.appendChild(mk('btn-secondary', 'the full session'));
+    } else {
+      pair.appendChild(mk('btn-primary', 'begin session')); pair.appendChild(mk('btn-secondary', 'a lighter version', 'light'));
+    }
+    card.appendChild(pair);
+  }
+  function decorateHome(wrap) {
+    var eyebrow = wrap.querySelector('.today-eyebrow'), card = wrap.querySelector('.today-card'), hatch = wrap.querySelector('.escape-hatch');
+    if (!eyebrow || !card) return;
+    wrap.insertBefore(sleepCard(), eyebrow);
+
+    var run = !activeSession && readRun();
+    if (run) {
+      var open = el('div', 'bx-card'); open.id = 'bx-open';
+      open.appendChild(el('div', 'bx-eyebrow', 'still open'));
+      open.appendChild(el('div', 'bx-say', run.session.planName + ', from ' + (run.session.date === TODAY() ? 'earlier today' : short(run.session.date)) + '. nothing was lost.'));
+      var pr = el('div', 'bx-pair'), cont = el('button', 'btn-primary', 'go on with it'), drop = el('button', 'btn-secondary', 'let it go');
+      cont.type = drop.type = 'button'; cont.id = 'bx-open-go'; drop.id = 'bx-open-drop';
+      cont.addEventListener('click', function () { var s = run.session; delete s.__paused; activeSession = s; render(); });
+      drop.addEventListener('click', function () { if (confirm('Let this open session go? What was marked in it is not kept.')) { dropRun(); rerender(); } });
+      pr.appendChild(cont); pr.appendChild(drop); open.appendChild(pr);
+      wrap.insertBefore(open, eyebrow);
+    }
+
+    var plan = getPlan(state.schedule[todayDayName()]), offer = plan, three = null;
+    if (threeOn()) {
+      var ids = threeIds(), done = weekTraining(), left = ids.filter(function (id) { return done.indexOf(id) < 0; });
+      three = { ids: ids, done: done };
+      if (plan && (ids.indexOf(plan.id) < 0 || done.indexOf(plan.id) >= 0)) offer = left.length ? getPlan(left[0]) : null;
+    }
+    if (plan && offer !== plan) {
+      card.classList.remove('alt-mode', 'zen');
+      if (offer) {
+        card.innerHTML = '';
+        card.appendChild(el('div', 'today-name', offer.name));
+        card.appendChild(el('div', 'today-sub', offer.subtitle || ''));
+        var meta = el('div', 'today-meta'); meta.appendChild(el('span', '', offer.exercises.length + ' movements')); meta.appendChild(el('span', '', offer.duration || '')); card.appendChild(meta);
+        card.appendChild(el('div', 'bx-say bx-why', 'three days this week, and this one is still open. the schedule’s own plan for today is ' + plan.name + '; it is in plans if you want it.'));
+      } else {
+        card.innerHTML = '';
+        card.appendChild(el('div', 'today-name', 'the week’s three are in'));
+        card.appendChild(el('div', 'today-sub', 'rest counts as much as the work did. a walk or a quiet day is open below.'));
+      }
+    }
+    if (offer) offerButtons(card, offer);
+
+    if (hatch) {
+      var rb = el('button', 'btn-secondary', restToday() ? 'rest is kept for today' : 'today is a rest day');
+      rb.type = 'button'; rb.id = 'bx-rest'; rb.style.marginTop = '8px'; rb.disabled = restToday();
+      rb.addEventListener('click', logRest);
+      hatch.appendChild(rb);
+
+      var wk = el('div', 'bx-card'); wk.id = 'bx-week'; wk.style.marginTop = '20px';
+      wk.appendChild(el('div', 'bx-eyebrow', 'this week'));
+      var tg = el('div', 'bx-toggles');
+      var tog = function (id, label, on, flip) { var b = el('button', 'bx-toggle', label); b.type = 'button'; b.id = id; b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.addEventListener('click', function () { change(flip); rerender(); }); return b; };
+      tg.appendChild(tog('bx-deload', 'a deload week', deloadOn(), function (o) { if (o.deloadWeek === weekKey()) delete o.deloadWeek; else o.deloadWeek = weekKey(); }));
+      tg.appendChild(tog('bx-three', 'three days a week', threeOn(), function (o) { if (o.three) delete o.three; else o.three = true; }));
+      wk.appendChild(tg);
+      if (deloadOn()) wk.appendChild(el('div', 'bx-say', 'deload: half the sets, about 60% of the load. it ends by itself when the week does.'));
+      if (three) {
+        var marks = el('div', 'bx-in');
+        three.ids.forEach(function (id) { var p = getPlan(id); if (p) marks.appendChild(el('span', three.done.indexOf(id) >= 0 ? 'bx-lit' : '', p.name)); });
+        wk.appendChild(marks);
+        wk.appendChild(el('div', 'bx-say', 'three sessions make the week whole; lit where one is in. the weekly schedule in plans is left as you set it, and the Portal’s home still reads it.'));
+      }
+      hatch.insertAdjacentElement('afterend', wk);
+    }
+  }
+
+  // ── in a session ──
+  function bwKey(ex) { return ex.libraryId || ('name:' + String(ex.name || '').trim().toLowerCase()); }
+  function isBW(ex) {
+    var o = extras().bw, k = bwKey(ex);
+    if (typeof o[k] === 'boolean') return o[k];
+    return BW_IDS.indexOf(ex.libraryId) >= 0 || /\b(pull-?ups?|chin-?ups?|dips?|push-?ups?)\b/i.test(ex.name || '');
+  }
+  function lastAdded(name) {                                     // the load added on top, last time this was logged as bodyweight
+    var ss = state.sessions || [];
+    for (var i = 0; i < ss.length; i++) {
+      if (!ss[i].exercises || ss[i].deload) continue;
+      var e = ss[i].exercises.filter(function (x) { return x.name === name; })[0];
+      if (e && e.bw) return e.weight > 0 ? e.weight : 0;
+    }
+    return 0;
+  }
+  function beforeCard(ex) {
+    if (typeof ex.bw !== 'boolean') ex.bw = isBW(ex);
+    if (typeof ex.weight === 'number') return;
+    if (ex.bw) ex.weight = lastAdded(ex.name);                   // never the old total: 78 kg on a pull-up was the body itself
+    else { var last = findLastSessionExercise(ex.name); if (last && last.exercise.bw) ex.weight = 0; }
+  }
+  function decorateCard(card, ex, idx) {
+    var weight = card.querySelector('.ex-weight'), actions = card.querySelector('.ex-actions');
+    if (!weight) return;
+    if (ex.bw) {
+      var l = weight.querySelector('.ex-weight-label'); if (l) l.textContent = 'bodyweight +';
+      weight.classList.add('bx-bwpill');
+      // "try 79kg?" worked out from an old total would be a number about the body, not the load: it is left out until two added loads are logged
+      var last = findLastSessionExercise(ex.name), nudge = card.querySelector('.ex-progress-nudge');
+      if (nudge && !(last && last.exercise.bw)) nudge.remove();
+    }
+    var row = el('div', 'bx-done');
+    var field = function (label, cls, value, placeholder, onInput) {
+      var lab = el('label', '', label), inp = el('input', cls);
+      inp.type = 'text'; inp.inputMode = 'numeric'; inp.autocomplete = 'off'; inp.maxLength = 24; inp.placeholder = placeholder; inp.value = value == null ? '' : value;
+      inp.addEventListener('input', function () { onInput(inp.value); });
+      lab.appendChild(inp); return lab;
+    };
+    row.appendChild(field('sets done', 'bx-sets', ex.doneSets, String(ex.sets == null ? '' : ex.sets), function (v) { var n = parseInt(v, 10); ex.doneSets = n > 0 && n <= 30 ? n : undefined; }));
+    row.appendChild(field('reps done', 'bx-reps', ex.doneReps, String(ex.reps == null ? '' : ex.reps), function (v) { ex.doneReps = v.trim() ? v.trim().slice(0, 24) : undefined; }));
+    var bw = el('button', 'bx-bw', 'bodyweight'); bw.type = 'button'; bw.setAttribute('aria-pressed', ex.bw ? 'true' : 'false');
+    bw.addEventListener('click', function () {
+      ex.bw = !ex.bw;
+      change(function (o) { o.bw[bwKey(ex)] = ex.bw; });
+      ex.weight = ex.bw ? lastAdded(ex.name) : undefined;        // undefined: the page fills in last time's load itself
+      rerender();
+    });
+    row.appendChild(bw);
+    weight.insertAdjacentElement('afterend', row);
+    if (actions) {
+      var out = el('button', 'ex-action-btn bx-takeout', 'take out'); out.type = 'button';
+      out.addEventListener('click', function () {
+        var s = activeSession, i = s.exercises.indexOf(ex); if (i < 0) return;
+        s.exercises.splice(i, 1); (s.removed = s.removed || []).push(ex);
+        rerender(); toast(ex.name + ' is out of this session');
+      });
+      actions.appendChild(out);
+    }
+  }
+  function planRowFor(libId) {
+    var hit = null;
+    (state.plans || []).some(function (p) { return (p.exercises || []).some(function (e) { if (e.libraryId === libId) { hit = e; return true; } return false; }); });
+    return hit;
+  }
+  function addToSession(lib) {
+    if (!activeSession || !lib) return;
+    var from = planRowFor(lib.id);
+    activeSession.exercises.push({ id: uid('ex'), libraryId: lib.id, name: lib.name, letter: '', alt: '', sets: from ? from.sets : 3, reps: from ? from.reps : '8–12', rest: from ? from.rest : 90,
+      cues: from ? from.cues : '', done: false, notes: '', notesOpen: false, formOpen: false, added: true });
+    closeModal(); rerender(); toast(lib.name + ' is in this session');
+  }
+  function openAdd() {
+    var modal = $('modal'), have = activeSession.exercises.map(function (e) { return e.libraryId; });
+    modal.innerHTML = '<div class="modal-header"><div class="modal-title">add an exercise</div><button class="modal-close" id="modal-close-btn">×</button></div>'
+      + '<div class="subtle" style="margin-bottom:14px; line-height:1.5;">it joins this session only. the plan stays as it is.</div>'
+      + '<div class="library-search-wrap"><input id="bx-add-search" placeholder="search…"></div>'
+      + '<div class="lib-grid" id="bx-add-grid"></div>'
+      + '<div class="editor-actions"><button class="btn-secondary" id="bx-add-new">one that is not in the library</button></div>';
+    $('modal-overlay').classList.add('open');
+    $('modal-close-btn').onclick = closeModal;
+    var fill = function (q) {
+      var grid = $('bx-add-grid'); grid.innerHTML = '';
+      q = (q || '').toLowerCase().trim();
+      (state.library || []).forEach(function (c) {
+        if (have.indexOf(c.id) >= 0) return;
+        if (q && (c.name + ' ' + (c.primary || []).join(' ') + ' ' + (c.mechanic || '')).toLowerCase().indexOf(q) < 0) return;
+        var b = el('button', 'lib-card'); b.type = 'button'; b.dataset.lib = c.id;
+        b.appendChild(el('span', 'lib-mech-tag lib-mech-' + c.mechanic, c.mechanic || ''));
+        var info = el('div', 'lib-card-info'); info.appendChild(el('div', 'lib-card-name', c.name)); info.appendChild(el('div', 'lib-card-muscles', (c.primary || []).join(', ')));
+        b.appendChild(info);
+        b.addEventListener('click', function () { addToSession(c); });
+        grid.appendChild(b);
+      });
+    };
+    $('bx-add-search').addEventListener('input', function (e) { fill(e.target.value); });
+    $('bx-add-new').onclick = function () {
+      openCustomExerciseModal();                                 // the Library's own modal; when it has added to the library, the new one joins the session
+      var save = $('modal-save'), own = save && save.onclick;
+      if (!own) return;
+      save.onclick = function () { var n = state.library.length; own.call(save); if (state.library.length > n) addToSession(state.library[state.library.length - 1]); };
+    };
+    fill('');
+  }
+  function decorateSession(wrap) {
+    var s = activeSession; if (!s) return;
+    if (s.light || s.deload) {
+      wrap.classList.add('bx-easy');
+      var sub = wrap.querySelector('.session-sub');
+      var note = el('div', 'bx-note', s.deload ? 'deload: half the sets, about 60% of the load. nothing ground out.' : 'the lighter version: the first three, one set fewer, last time’s load. the rest can come back in below.');
+      if (sub) sub.insertAdjacentElement('afterend', note);
+    }
+    var cards = wrap.querySelectorAll('.exercise-card'), anchor = cards.length ? cards[cards.length - 1] : (wrap.querySelector('.warmup-block') || wrap.querySelector('.session-sub'));
+    var box = el('div', 'bx-add'), add = el('button', 'btn-secondary', '+ add an exercise'); add.type = 'button'; add.id = 'bx-add-btn';
+    add.addEventListener('click', openAdd); box.appendChild(add);
+    (s.removed || []).forEach(function (e) {
+      var r = el('div', 'bx-out'); r.appendChild(el('span', '', 'taken out: ' + e.name));
+      var b = el('button', 'garr-link bx-back', 'put it back'); b.type = 'button';
+      b.addEventListener('click', function () { var i = s.removed.indexOf(e); if (i < 0) return; s.removed.splice(i, 1); s.exercises.push(e); rerender(); });
+      r.appendChild(b); box.appendChild(r);
+    });
+    if (anchor) anchor.insertAdjacentElement('afterend', box);
+  }
+
+  // ── graphs ──
+  var C = window.Charts;
+  function gopt(id) { return extras().graphs[id] || {}; }
+  function sw(id, key, showText, hideText) {
+    var on = !!gopt(id)[key], b = el('button', 'bx-sw', on ? hideText : showText);
+    b.type = 'button'; b.dataset.sw = id + '.' + key; b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    b.addEventListener('click', function () { change(function (o) { var g = isObj(o.graphs[id]) ? o.graphs[id] : {}; g[key] = !on; o.graphs[id] = g; }); rerender(); });
+    return b;
+  }
+  function graph(id, name, svg, caption, button) {
+    var g = el('div', 'bx-graph'); g.dataset.graph = id;
+    if (name) g.appendChild(el('div', 'bx-gname', name));
+    var c = el('div', 'ts-chart'); c.innerHTML = svg; g.appendChild(c);
+    var f = el('div', 'bx-cf'); f.appendChild(el('span', '', caption || '')); if (button) f.appendChild(button); g.appendChild(f);
+    return g;
+  }
+  var FAMILIES = [
+    { id: 'bench', name: 'bench press', is: function (e) { return e.libraryId === 'bench_press' || /bench press/i.test(e.name || ''); } },
+    { id: 'pull', name: 'pull-up', is: function (e) { return e.libraryId === 'pullup' || e.libraryId === 'weighted_pullup' || /\b(pull-?ups?|chin-?ups?)\b/i.test(e.name || ''); } },
+    { id: 'squat', name: 'squat', is: function (e) { return e.libraryId === 'back_squat' || /back squat/i.test(e.name || ''); } },
+  ];
+  function series(is) {                                          // the top set of each session, oldest first
+    var plain = [], added = [];
+    (state.sessions || []).slice().reverse().forEach(function (s) {
+      var p = null, a = null;
+      (s.exercises || []).forEach(function (e) {
+        if (!is(e)) return;
+        if (e.bw) { if (e.done || e.weight > 0) a = Math.max(a == null ? 0 : a, e.weight > 0 ? e.weight : 0); return; }
+        var w = getWeightFor(e); if (w) p = Math.max(p == null ? 0 : p, Math.round(w.kg * 10) / 10);
+      });
+      if (p != null && s.date) plain.push({ date: s.date, kg: p });
+      if (a != null && s.date) added.push({ date: s.date, kg: a });
+    });
+    return added.length ? { pts: added.slice(-16), added: true } : { pts: plain.slice(-16), added: false };
+  }
+  function topSets() {
+    var fams = FAMILIES.map(function (f) { return { id: f.id, name: f.name, s: series(f.is) }; }).filter(function (f) { return f.s.pts.length; });
+    if (!fams.length) {                                          // none of the three is in the log: the three lifts that are there most
+      var count = {};
+      (state.sessions || []).forEach(function (s) { (s.exercises || []).forEach(function (e) { if (e.name && getWeightFor(e)) count[e.name] = (count[e.name] || 0) + 1; }); });
+      fams = Object.keys(count).sort(function (a, b) { return count[b] - count[a]; }).slice(0, 3).map(function (n) { return { id: 'lift:' + n, name: n.toLowerCase(), s: series(function (e) { return e.name === n; }) }; }).filter(function (f) { return f.s.pts.length; });
+    }
+    return fams;
+  }
+  function weeks12() {
+    var m0 = monday(), out = [], labels = [];
+    for (var i = 11; i >= 0; i--) {
+      var from = new Date(m0); from.setDate(m0.getDate() - i * 7); var to = new Date(from); to.setDate(from.getDate() + 7);
+      var n = 0, any = false;
+      (state.sessions || []).forEach(function (s) { if (!s.date) return; var d = noon(s.date); if (d < from || d >= to) return; any = true; n += (s.exercises || []).filter(function (e) { return e.done; }).length; });
+      out.push(n); labels.push(i % 4 === 3 || i === 0 ? short(fuelToday(from)) : '');
+      void any;
+    }
+    return { d: out, labels: labels };
+  }
+  function nights14() {
+    var out = [], now = new Date();
+    for (var i = 13; i >= 0; i--) { var d = new Date(now); d.setDate(now.getDate() - i); var s = sleepOn(fuelToday(d)); out.push(s ? s.h : null); }
+    return out;
+  }
+  function graphsCard() {
+    if (!C) return null;
+    var card = el('div', 'bx-card'); card.id = 'bx-graphs';
+    card.appendChild(el('div', 'bx-eyebrow', 'what is there'));
+    var n = 0, addG = function (g) { card.appendChild(g); n++; };
+
+    topSets().forEach(function (f) {
+      var id = 'top-' + f.id, p = f.s.pts, o = gopt(id);
+      addG(graph(id, f.name + (f.s.added ? ', load added to bodyweight' : ', top set'),
+        C.line(p.map(function (x) { return x.kg; }), { h: 118, unit: ' kg', from: short(p[0].date), to: short(p[p.length - 1].date), record: !!o.record, label: f.name + ', the top set of each session' }),
+        f.s.added ? 'the load on top of your own weight, session by session.' : 'the heaviest set of each session, as logged.', sw(id, 'record', 'show the record', 'hide the record')));
+    });
+
+    var weigh = readWeighIns().slice(-30);
+    if (weigh.length) {
+      var wo = gopt('weight'), tk = wo.target && typeof wo.targetKg === 'number' ? wo.targetKg : undefined;
+      var wg = graph('weight', 'weight', C.line(weigh.map(function (x) { return x.kg; }), { h: 118, unit: ' kg', from: short(weigh[0].date), to: short(weigh[weigh.length - 1].date), target: tk, label: 'weight, from the weigh-ins' }),
+        'from the weigh-ins. a gap is just a gap.', sw('weight', 'target', 'show a target', 'hide the target'));
+      if (wo.target) {
+        var tr = el('div', 'bx-row bx-target'), ti = el('input'), tb = el('button', 'btn-secondary', 'keep');
+        ti.type = 'number'; ti.inputMode = 'decimal'; ti.step = '0.1'; ti.id = 'bx-target-kg'; ti.placeholder = 'kg'; ti.setAttribute('aria-label', 'target weight, kg'); if (typeof wo.targetKg === 'number') ti.value = wo.targetKg;
+        tb.type = 'button';
+        tb.addEventListener('click', function () { var v = Math.round(parseFloat(String(ti.value).replace(',', '.')) * 10) / 10; change(function (x) { var g = isObj(x.graphs.weight) ? x.graphs.weight : {}; if (v >= 20 && v <= 300) g.targetKg = v; else delete g.targetKg; x.graphs.weight = g; }); rerender(); });
+        tr.appendChild(el('span', 'bx-say', 'a line at')); tr.appendChild(ti); tr.appendChild(tb); wg.appendChild(tr);
+      }
+      addG(wg);
+    }
+    var wi = el('button', 'bx-link', weigh.length ? 'weigh in' : 'a weigh-in, if you want one'); wi.type = 'button'; wi.id = 'bx-weigh'; wi.addEventListener('click', openDataModal);
+
+    if ((state.sessions || []).length) {
+      var wk = weeks12();
+      addG(graph('weeks', 'the weeks', C.bars(wk.d, { labels: wk.labels, record: !!gopt('weeks').record, label: 'movements marked done, twelve weeks' }),
+        'movements marked done, week by week. a quiet week is drawn in the same hand.', sw('weeks', 'record', 'show the fullest week', 'hide the number')));
+    }
+    var nights = nights14();
+    if (nights.some(function (v) { return v != null; })) {
+      var six = !!gopt('sleep').target;
+      addG(graph('sleep', 'sleep, fourteen nights',
+        six ? C.bars(nights, { h: 96, target: 6, labels: nights.map(function () { return ''; }), label: 'hours slept, fourteen nights, with a line at six' })
+            : C.ribbon(nights.map(function (h) { return h == null ? 0 : h >= 7 ? 3 : h >= 6 ? 2 : 1; }), { cols: 14, gap: 3, labels: ['two weeks ago', 'last night'], label: 'hours slept, fourteen nights' }),
+        'lit by the hours, from the watch where it wrote and typed where you did.', sw('sleep', 'target', 'show six hours as a line', 'back to the ribbon')));
+    }
+    var hrv = readJSON('portal_hrv_v1'), hv = hrv && Array.isArray(hrv.entries) ? hrv.entries.filter(function (e) { return e && typeof e.hrv === 'number' && e.date; }).sort(function (a, b) { return a.date < b.date ? -1 : 1; }).slice(-30) : [];
+    if (hv.length >= 2) addG(graph('hrv', 'HRV, mornings', C.spark(hv.map(function (e) { return e.hrv; }), { w: 311, h: 48, record: !!gopt('hrv').record, label: 'morning HRV, as typed on the Portal' }),
+      short(hv[0].date) + ' to ' + short(hv[hv.length - 1].date) + ', as typed on the Portal’s morning check.', sw('hrv', 'record', 'mark the highest', 'unmark it')));
+
+    card.appendChild(wi);
+    if (!n) card.appendChild(el('div', 'bx-say', 'nothing to draw yet. the pictures come by themselves once something is logged.'));
+    return card;
+  }
+  function fuelRings() {
+    if (!C) return null;
+    var tot = dayTotals(state.fuel.log[fuelToday()] || []), tgt = state.fuel.targets || {};
+    var card = el('div', 'bx-card'); card.id = 'bx-rings';
+    var two = el('div', 'bx-rings');
+    var ring = function (val, target, sub, word) { var d = el('div', 'ts-chart'); d.innerHTML = C.ring(target > 0 ? val / target : 0, { size: 104, label: String(r0(val)), sub: sub, aria: word + ' today: ' + r0(val) + ' of ' + r0(target) }); d.appendChild(document.createTextNode(word)); return d; };
+    two.appendChild(ring(tot.kcal, tgt.calories, 'kcal', 'energy')); two.appendChild(ring(tot.p, tgt.protein, 'g', 'protein'));
+    card.appendChild(two);
+    return card;
+  }
+  function fuelBars() {
+    if (!C) return null;
+    var d = [], labels = [], now = new Date(), any = false;
+    for (var i = 13; i >= 0; i--) { var x = new Date(now); x.setDate(now.getDate() - i); var items = state.fuel.log[fuelToday(x)] || []; if (items.length) { any = true; d.push(r0(dayTotals(items).kcal)); } else d.push(null); labels.push(i % 2 ? '' : String(x.getDate())); }
+    if (!any) return null;
+    var on = !!gopt('fuel').target, card = el('div', 'bx-card'); card.id = 'bx-fuel14';
+    card.appendChild(graph('fuel', 'fourteen days', C.bars(d, { labels: labels, target: on ? state.fuel.targets.calories : undefined, label: 'energy logged, fourteen days' }),
+      'energy logged each day. a day with nothing written is a quiet line, not a zero.', sw('fuel', 'target', 'show the target', 'hide the target')));
+    return card;
+  }
+
+  // ── the wrappers: the page's own functions run first and are decorated, never replaced ──
+  function wrapFn(name, after, before) {
+    var own = window[name];
+    if (typeof own !== 'function') return;
+    window[name] = function () {
+      if (before) try { before.apply(this, arguments); } catch (e) { warn(name, e); }
+      var out = own.apply(this, arguments);
+      try { after.apply(this, [out].concat(Array.prototype.slice.call(arguments))); } catch (e) { warn(name, e); }
+      return out;
+    };
+  }
+  var GUIDE = { hub: 'Hours slept first, then the session.', training: 'Begin where the body is.', fuel: 'What feeds it, written down plainly.' };
+  wrapFn('render', function () {
+    saveRun();
+    var g = $('bx-guide'); if (g) g.textContent = GUIDE[mode] || GUIDE.hub;
+  });
+  wrapFn('renderHome', function (wrap) { decorateHome(wrap); });
+  wrapFn('renderSession', function (wrap) { decorateSession(wrap); });
+  wrapFn('renderExerciseCard', function (card, ex, idx) { decorateCard(card, ex, idx); }, function (ex) { beforeCard(ex); });
+  wrapFn('renderHistory', function (wrap) { var g = graphsCard(); if (g) wrap.insertBefore(g, wrap.children[1] || null); });
+  wrapFn('renderFuelToday', function (wrap) { var r = fuelRings(), s = wrap.querySelector('.fuel-summary'); if (r && s) wrap.insertBefore(r, s); });
+  wrapFn('renderFuelHistory', function (wrap) { var b = fuelBars(); if (b) wrap.insertBefore(b, wrap.children[1] || null); });
+  wrapFn('renderHub', function (wrap) {
+    var doors = wrap.querySelector('.hub-doors'); if (doors) wrap.insertBefore(sleepCard(), doors);
+    var s = sleepOn(fuelToday()), door = wrap.querySelector('.door-training');
+    if (s && door) { var line = el('div', 'door-stat', 'slept ' + num(s.h) + ' h' + (s.from === 'watch' ? ', from the watch' : '') + (s.h < 6 ? ' · the lighter version comes first' : '')); line.id = 'bx-door-sleep'; line.style.color = 'var(--t2-text)'; door.appendChild(line); }
+    // the fuel door said "0 / 2600 kcal today", which reads as a score owed; it says what is written, or nothing
+    var stat = wrap.querySelector('.door-fuel .door-stat');
+    if (stat) { var kcal = r0(dayTotals(state.fuel.log[fuelToday()] || []).kcal); if (kcal > 0) stat.textContent = kcal + ' kcal written today'; else stat.remove(); }
+    // drawn sigils in the frame's hand, where the doors had system emoji
+    var TS = window.TempleShell, glyph = function (cls, node) { var g = wrap.querySelector(cls + ' .door-glyph'); if (g && node) { g.textContent = ''; g.appendChild(node); } };
+    if (TS && TS.sig) { glyph('.door-training', TS.sig('body', 30)); glyph('.door-voice', TS.sig('vocal', 30)); }
+    var bowl = document.createElement('div');
+    bowl.innerHTML = '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11.5h17a8.5 8.5 0 0 1-17 0z"/><path d="M9 20.5h6"/><path d="M9.5 8c0-1.2 1-1.4 1-2.6M13.5 8c0-1.2 1-1.4 1-2.6"/></svg>';
+    glyph('.door-fuel', bowl.firstChild);
+  });
+
+  // ── the watch summary: one read of the PC's /portal route with the village's pairing. It sends nothing of his. ──
+  var watchBusy = false;
+  function watchSync() {
+    var br = villageBridge(); if (!br || watchBusy || !navigator.onLine) return;
+    var had = readJSON(WATCH);
+    if (had && had.at && Date.now() - Date.parse(had.at) < 30 * 60000) return;
+    watchBusy = true;
+    var ctrl = new AbortController(), t = setTimeout(function () { ctrl.abort(); }, 10000);
+    fetch(br.url + '/portal', { method: 'POST', signal: ctrl.signal, headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + br.token }, body: '{}' })
+      .then(function (res) { return res.ok ? res.json() : null; })
+      .then(function (j) {
+        if (!j) return;
+        var w = isObj(j.watch) && Array.isArray(j.watch.days) ? j.watch : null;
+        var clean = function (v) { return typeof v === 'number' && isFinite(v) ? v : null; };
+        var days = w ? w.days.filter(function (d) { return d && /^\d{4}-\d{2}-\d{2}$/.test(d.day); }).slice(-21).map(function (d) { return { day: d.day, sleep: clean(d.sleep), steps: clean(d.steps), rest: clean(d.rest) }; }) : (had && Array.isArray(had.days) ? had.days : []);
+        var before = JSON.stringify(had && had.days || []);
+        try { localStorage.setItem(WATCH, JSON.stringify({ at: new Date().toISOString(), upto: w ? String(w.upto || '').slice(0, 10) : (had && had.upto) || null, days: days })); } catch (e) {}
+        if (JSON.stringify(days) !== before && !activeSession) quietRender();
+      })
+      .catch(function () { /* the PC is not reachable: the typed number is the fallback */ })
+      .then(function () { clearTimeout(t); watchBusy = false; });
+  }
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') watchSync(); });
+
+  // ── a surface open in this page (the Vocal Temple) wears the frame too: pass its sideways moves on ──
+  window.addEventListener('message', function (e) {
+    var d = e.data, frame = $('surface-frame');
+    if (!d || typeof d !== 'object' || !frame) return;
+    if (d.action === 'goto' && e.source === frame.contentWindow && typeof d.app === 'string') {
+      if (EMBEDDED) { try { window.parent.postMessage({ action: 'goto', app: d.app }, '*'); } catch (err) {} return; }
+      try { e.source.postMessage({ action: 'goto-ack' }, '*'); } catch (err) {}
+      var key = d.app === 'grimoire' ? 'healing' : d.app;
+      if (key === 'body') closeSurface();
+      else if (window.TempleShell && TempleShell.TEMPLES[key]) TempleShell.go(key);
+    } else if (d.action === 'goto-ack' && EMBEDDED && e.source === window.parent) {
+      try { frame.contentWindow.postMessage({ action: 'goto-ack' }, '*'); } catch (err) {}
+    }
+  });
+
+  // ── boot ──
+  // Inside the Portal the temple's header is the only one. The Portal hides its old bar over the pages named in its
+  // Shell.NEW_FRAME; body/index.html is not in that list yet (step 10 was not to touch index.html), so until it is,
+  // this page hides the bar itself. The Portal sets it again for whatever it opens next.
+  if (EMBEDDED) try { if (window.TempleShell && TempleShell.host() === 'portal') { var old = window.parent.document.getElementById('temple-topbar'); if (old) old.hidden = true; } } catch (e) {}
+  try {                                                           // the pill row gets a ground only while it is stuck to the top
+    var bar = document.querySelector('nav.tab-bar'), mark = el('div'); mark.id = 'bx-sentinel';
+    bar.parentNode.insertBefore(mark, bar);
+    if ('IntersectionObserver' in window) new IntersectionObserver(function (en) { bar.classList.toggle('bx-stuck', !en[0].isIntersecting && en[0].boundingClientRect.top < 0); }).observe(mark);
+    else bar.classList.add('bx-stuck');
+  } catch (e) {}
+  try { $('header-date').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }); } catch (e) {}   // the frame's pages say the date the same way
+  render();
+  if (location.hash === '#backup') try { openDataModal(); } catch (e) {}   // a door straight to backup & restore, for home's backup line
+  watchSync();
+})();
 </script>
 </body>
 </html>
