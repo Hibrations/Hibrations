@@ -10,14 +10,18 @@
 <link rel="icon" type="image/svg+xml" href="icon.svg">
 <link rel="apple-touch-icon" href="icon.svg">
 <title>Daily Practice</title>
+<!-- Portal remake, step 4: home wears the shared frame (temple.css, shell.js, sky.js, charts.js). -->
+<link href="fonts/fonts.css" rel="stylesheet">
+<link href="temple.css" rel="stylesheet">
+<script src="sky.js"></script>
+<script src="charts.js"></script>
+<script src="shell.js"></script>
 <style>
 :root {
-  --bg: #0a0908;
   --bg-elev: #14110f;
   --bg-card: #1a1614;
   --border: #2a2420;
   --border-soft: #1f1a17;
-  --ink: #e8e1d4;
   --ink-dim: #9a8f80;
   --ink-faint: #5e554a;
   --emerald: #3d7d63;
@@ -942,16 +946,22 @@ nav.tab-bar {
   .portal-moon { gap: 9px; }
 </style>
 </head>
-<body>
+<body data-temple="portal">
+<!-- the living sky (sky.js). Mounted by this page so the moon can sit larger and lower than on a temple page. -->
+<canvas class="ts-sky" data-moon-r="25" data-moon-x="58" data-moon-y="118"></canvas><div class="ts-grain"></div>
 
 <div id="portal-shell">
-  <header class="shell-header">
-    <div class="shell-titleblock">
-      <div class="shell-title" id="shell-title">portal · daily practice</div>
-      <div class="shell-date" id="shell-date"></div>
+  <header class="ts-head hm-head">
+    <div class="ts-hrow">
+      <div class="ts-tt"><b id="shell-title">Portal</b><span>the crossroads</span></div>
+      <!-- EMPTY SLOT, step 5/6: the bridge light (PC reachable, asleep, unpaired). Nothing is shown until the bridge is wired. -->
+      <span id="slot-bridge-light" data-slot="bridge-light" data-step="6" hidden></span>
     </div>
+    <div class="hm-date ts-serif" id="home-date"></div>
+    <div class="hm-day ts-serif" id="shell-date"></div>
+    <p class="ts-guide">Every road starts under the moon. None of them is due.</p>
   </header>
-  <main id="app-mount"></main>
+  <main id="app-mount" class="ts-body"></main>
   <div id="toast"></div>
 </div>
 
@@ -1033,6 +1043,94 @@ nav.tab-bar {
   flex: 1; width: 100%; border: 0; background: var(--bg);
   display: block;
 }
+</style>
+
+<style id="home-remake">
+/* Portal remake, step 4 (portal_remake/BUILD_PLAN.md): home wears the shared frame (temple.css, shell.js, sky.js,
+   charts.js). The base, the header, the sky and the bottom bar come from there. This block does three things:
+   1. hands the old pages' colour names to the night base, so schedule, history, the pickers and the timer follow it;
+   2. styles what only home has (hm-): the date, the day arc and its offers, the constellation, the small lines;
+   3. lets the Portal's old bar over a temple be switched off for a page that carries the new header. */
+:root {
+  --bg-elev: var(--card); --bg-card: var(--card); --border: var(--line); --border-soft: var(--line);
+  --ink-dim: var(--muted); --ink-faint: var(--muted); --gold: var(--t2-text); --gold-dim: #8a6f3a;
+}
+body[data-temple="portal"] { --ts-skyh: 330px; }
+body[data-temple="portal"] #back-btn[data-shell="made"] { display: none; }   /* home is the root: nothing to go back to */
+#temple-topbar[hidden] { display: none; }
+#toast { z-index: 1200; bottom: calc(var(--ts-bar) + env(safe-area-inset-bottom, 0px) + 22px); letter-spacing: 0; max-width: 88vw; text-align: center; border-radius: 16px; }
+.modal-overlay { z-index: 950; }
+.view { padding-top: 0; padding-bottom: 8px; }
+.view.active { animation: none; }
+
+/* the header: the date in Cormorant, large */
+.hm-date { font-size: 46px; line-height: 1; font-weight: 500; margin-top: 8px; color: var(--ink); }
+.hm-day { font-style: italic; font-size: 19px; line-height: 1.25; color: var(--muted); margin-top: 4px; }
+.hm-head .ts-guide { padding-right: 96px; }
+
+/* today · schedule · history */
+.portal-toggle { justify-content: flex-start; gap: 6px; margin: 0 0 14px; }
+.portal-toggle-pill { min-height: 44px; padding: 0 16px; border-radius: 12px; border: 1px solid var(--leaf2); color: var(--muted); font-size: 13px; letter-spacing: 0; text-transform: none; background: rgba(21,19,27,.5); }
+.portal-toggle-pill.active { border-color: var(--t-text); color: var(--ink); background: var(--t-faint); }
+
+/* the day arc and the offers placed on it */
+.hm-arc { margin: 8px -4px 0; }
+.hm-arc svg { display: block; width: 100%; height: auto; overflow: visible; }
+.hm-arc text { font: 12px Inter, system-ui, sans-serif; fill: var(--muted); }
+.hm-cap { font-size: 12px; color: var(--muted); margin: 2px 0 8px; }
+.hm-offer { border-top: 1px solid var(--leaf2); }
+.hm-offer-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; }
+.hm-offer-tx { flex: 1; min-width: 0; min-height: 44px; display: block; text-align: left; }
+.hm-when { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--t-text); }
+.hm-dot { width: 8px; height: 8px; border-radius: 50%; border: 1.6px solid var(--t-text); flex: none; }
+.hm-taken .hm-dot { background: var(--t); }
+.hm-offer-tx b { display: block; font: 500 20px/1.15 "Cormorant Garamond", "Iowan Old Style", Georgia, serif; color: var(--ink); margin-top: 1px; }
+.hm-offer-tx small { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+button.hm-yes, button.hm-later { flex: none; min-height: 44px; min-width: 48px; border-radius: 12px; font-size: 13px; padding: 0 12px; text-align: center; }
+button.hm-yes { border: 1px solid var(--t-btn); background: var(--t-btn); color: var(--on-btn); font-weight: 500; }
+button.hm-later { border: 1px solid var(--leaf); color: var(--ink); }
+.hm-more { padding: 0 0 12px; font-size: 13px; line-height: 1.5; color: var(--muted); }
+.hm-more ol { padding-left: 18px; margin: 4px 0 0; }
+.hm-more li { margin: 3px 0; }
+.hm-more b { color: var(--ink); font-weight: 500; }
+.hm-none { font-size: 14px; color: var(--muted); padding: 10px 0 2px; border-top: 1px solid var(--leaf2); }
+
+/* the constellation: twelve temples as stars on a slow wheel around the day */
+.hm-cons { position: relative; height: 362px; margin: 2px 0 0; }
+.hm-web { position: absolute; left: 50%; top: 166px; width: 1px; height: 1px; overflow: visible; pointer-events: none; }
+.hm-orbit { transform-origin: 0 0; animation: hm-turn 900s linear infinite; }
+.hm-mid { position: absolute; left: 50%; top: 166px; width: 92px; height: 92px; margin: -46px 0 0 -46px; text-align: center; }
+button.hm-star { position: absolute; width: 48px; height: 48px; margin: -24px 0 0 -24px; padding: 0; border-radius: 50%; border: 1px solid var(--t-dim); background: var(--card); color: var(--t-text); display: grid; place-items: center; box-shadow: 0 0 14px -6px var(--t); }
+button.hm-star.hm-lit { border-color: var(--t-text); box-shadow: 0 0 0 4px var(--t-faint), 0 0 26px -2px var(--t); animation: hm-breathe 8s ease-in-out infinite; }
+.hm-star span { position: absolute; top: 50px; left: 50%; transform: translateX(-50%); font-size: 12px; color: var(--muted); white-space: nowrap; }
+.hm-star.hm-lit span { color: var(--ink); }
+.hm-star:focus-visible, .hm-yes:focus-visible, .hm-later:focus-visible, .hm-offer-tx:focus-visible, .portal-toggle-pill:focus-visible { outline: 2px solid var(--t-text); outline-offset: 2px; }
+@keyframes hm-turn { to { transform: rotate(360deg); } }
+@keyframes hm-breathe { 50% { box-shadow: 0 0 0 4px var(--t-faint), 0 0 34px 4px var(--t); } }
+.hm-legend { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; color: var(--muted); margin-top: 2px; }
+.hm-legend i { width: 10px; height: 10px; border-radius: 50%; border: 1px solid var(--t-text); box-shadow: 0 0 0 3px var(--t-faint), 0 0 10px var(--t); flex: none; }
+.hm-tiles button.ts-tile { min-height: 76px; }
+
+/* the small lines: the moon's read, the capture box, the backup */
+button.hm-read { display: block; width: 100%; min-height: 48px; text-align: left; padding: 12px 14px; margin: 12px 0 0; border: 1px solid var(--leaf2); border-radius: 14px; color: var(--muted); font-size: 13px; }
+.hm-read i { display: block; font: italic 17px/1.3 "Cormorant Garamond", Georgia, serif; color: var(--ink); margin: 2px 0; }
+.hm-read u { text-decoration-color: var(--t2-text); text-underline-offset: 4px; }
+.hm-kept { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-top: 1px solid var(--leaf2); margin-top: 8px; }
+.hm-kept span { flex: 1; min-width: 0; color: var(--ink); font-size: 14px; overflow-wrap: anywhere; }
+.hm-line { font-size: 13px; color: var(--muted); text-align: center; margin: 18px 0 0; }
+.hm-capture p { margin-top: 10px; font-size: 13px; }
+
+/* older cards on home (the morning check, the practices also open), drawn as cards of this house */
+.hrv-card, .next-practice { background: var(--card); border: 1px solid var(--leaf2); border-radius: 18px; padding: 16px; margin: 0 0 12px; }
+.hrv-eyebrow, .next-practice-eyebrow { font-size: 12px; letter-spacing: .04em; text-transform: none; color: var(--t2-text); opacity: 1; }
+.hrv-save { min-height: 44px; }
+.next-practice-card { min-height: 48px; }
+.next-practice-meta, .next-practice-source, .next-practice-duration, .next-practice-target-hint, .hrv-hint, .hrv-trend { font-size: 12px; opacity: 1; }
+.next-practice-stack .plan-stack-chip { font-size: 12px; text-transform: none; letter-spacing: 0; }
+.moon-swap-btn { min-height: 44px; padding: 0 14px; font-size: 12px; text-transform: none; letter-spacing: 0; }
+
+:root[data-night] .hm-orbit, :root[data-night] button.hm-star.hm-lit { animation: none; }
+@media (prefers-reduced-motion: reduce) { .hm-orbit, button.hm-star.hm-lit { animation: none; } }
 </style>
 
 <script>
@@ -1147,10 +1245,15 @@ document.getElementById('modal-overlay').addEventListener('click', e => { if (e.
 // ============================================================
 const Shell = {
   current: 'portal',
+  // Portal remake, step 4. A page that wears the new frame carries its own header and back button, so the Portal's
+  // old bar is not drawn over it. Today that is Mirror alone; add a page here in the step that migrates it.
+  NEW_FRAME: ['mirror.html'],
+  DOORS: ['portal', 'body', 'inner', 'breath', 'beast', 'magnetic', 'hibrations', 'strings', 'grimoire', 'vocal', 'mirror', 'observatory', 'kaching', 'village'],
   goTo(app) {
+    if (app === 'healing') app = 'grimoire';
     this.current = app;
     if (app === 'portal') {
-      document.getElementById('shell-title').textContent = 'portal · daily practice';
+      document.getElementById('shell-title').textContent = 'Portal';
       this.setDateTitle();
       document.getElementById('tab-bar').innerHTML = '';
       Portal.render();
@@ -1184,17 +1287,32 @@ const Shell = {
     } else if (app === 'mirror') {
       Shell.openTemple('mirror.html', 'the weekly mirror');
       return;
+    } else if (app === 'observatory') {
+      Shell.openTemple('observatory/index.html', 'observatory');
+      return;
+    } else if (app === 'kaching') {
+      Shell.openTemple('kaching.html', 'kaching');
+      return;
+    } else if (app === 'village') {
+      Shell.openTemple('village/index.html', 'the village');
+      return;
     }
     window.scrollTo(0, 0);
   },
   setDateTitle() {
     const d = new Date();
-    document.getElementById('shell-date').textContent = d.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' }).toLowerCase();
+    let moon = '';
+    try { if (window.TempleSky) moon = ' · ' + window.TempleSky.moon(d).name.toLowerCase(); } catch (e) {}
+    const big = document.getElementById('home-date');
+    if (big) big.textContent = d.toLocaleDateString('en-GB', { weekday: 'long' });
+    document.getElementById('shell-date').textContent = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' }) + moon;
   },
   openTemple(filename, title) {
     const overlay = document.getElementById('temple-overlay');
     const frame = document.getElementById('temple-frame');
     document.getElementById('temple-title').textContent = title;
+    // one header, not two: the old bar stays over every page that has not been migrated
+    document.getElementById('temple-topbar').hidden = Shell.NEW_FRAME.indexOf(String(filename).split(/[?#]/)[0]) >= 0;
     frame.src = filename;
     overlay.hidden = false;
     document.body.style.overflow = 'hidden';
@@ -1202,9 +1320,13 @@ const Shell = {
   closeTemple() {
     const overlay = document.getElementById('temple-overlay');
     const frame = document.getElementById('temple-frame');
+    const wasOpen = !overlay.hidden;
     overlay.hidden = true;
     frame.src = 'about:blank';
     document.body.style.overflow = '';
+    this.current = 'portal';
+    // what was done in the temple shows on home straight away (the radar, the offers)
+    if (wasOpen) { try { Portal.render(); } catch (e) {} }
   }
 };
 document.getElementById('temple-back').addEventListener('click', () => Shell.closeTemple());
@@ -1212,6 +1334,17 @@ document.getElementById('temple-back').addEventListener('click', () => Shell.clo
 window.addEventListener('message', e => {
   if (e.data === 'close-temple' || (e.data && e.data.action === 'close-temple')) {
     Shell.closeTemple();
+    return;
+  }
+  // Portal remake, step 4: a page in the new frame asks to move sideways (shell.js, TempleShell.go). Only our own
+  // temple frame is listened to, and only for a door the Portal has. The answer tells the page it was heard; with no
+  // answer the page opens the other one itself, as it did before this step.
+  if (e.data && e.data.action === 'goto' && typeof e.data.app === 'string') {
+    const frame = document.getElementById('temple-frame');
+    const app = e.data.app === 'healing' ? 'grimoire' : e.data.app;
+    if (e.source !== frame.contentWindow || Shell.DOORS.indexOf(app) < 0) return;
+    try { e.source.postMessage({ action: 'goto-ack' }, '*'); } catch (err) {}
+    if (app === 'portal') Shell.closeTemple(); else Shell.goTo(app);
   }
 });
 
@@ -1224,7 +1357,7 @@ const Portal = (function() {
     tuesday:   { kind: 'cardio',   name: 'Walk',                sub: 'recovery — the floor under everything', duration: '30+ min',   meta: 'zone 1' },
     wednesday: { kind: 'training', name: 'Push',                sub: 'chest + shoulders + triceps',          duration: '55–70 min', meta: '7 movements' },
     thursday:  { kind: 'cardio',   name: 'Walk',                sub: 'recovery + zone 2 if the body asks',  duration: '30–45 min', meta: 'zone 1–2' },
-    friday:    { kind: 'training', name: 'Legs + Core',         sub: 'the most important day — do not skip', duration: '60–75 min', meta: '8 movements' },
+    friday:    { kind: 'training', name: 'Legs + Core',         sub: 'legs and core — the systemic day', duration: '60–75 min', meta: '8 movements' },
     saturday:  { kind: 'training', name: 'Upper Hypertrophy',   sub: 'sculpt day — supersets, the pump',     duration: '45–55 min', meta: '9 movements' },
     sunday:    { kind: 'zen',      name: 'Zen Day',             sub: 'sauna, light walk, mobility — no minimums', duration: 'unscheduled', meta: 'rest' }
   };
@@ -2100,7 +2233,7 @@ const Portal = (function() {
       const card = document.createElement('div');
       card.className = 'next-practice-card next-moon';
       card.innerHTML =
-        '<div class="next-practice-name">' + moon.glyph + ' ' + escapeHtml(p.name) + '</div>' +
+        '<div class="next-practice-name">' + escapeHtml(p.name) + '</div>' +
         '<div class="next-practice-meta">' +
           '<span class="next-practice-source">moon \u00b7 ' + escapeHtml(moon.name) + '</span>' +
           '<span class="next-practice-duration">' + escapeHtml(p.durationLabel || '') + '</span>' +
@@ -2130,7 +2263,7 @@ const Portal = (function() {
     const moonCard = buildMoonPracticeCard();
     if (!suggestions.length && !hpCard && !moonCard) return;
     const wrap = el('div', 'next-practice');
-    wrap.appendChild(el('div', 'next-practice-eyebrow', 'feed the dim lines'));
+    wrap.appendChild(el('div', 'next-practice-eyebrow', 'Also open, if you like'));
     if (hpCard) wrap.appendChild(hpCard);
     if (moonCard) wrap.appendChild(moonCard);
     suggestions.forEach(s => {
@@ -2143,7 +2276,7 @@ const Portal = (function() {
           '<span class="next-practice-duration">' + escapeHtml(s.durationLabel) + '</span>' +
         '</div>' +
         '<div class="next-practice-stack">' + stackChips(s.stack) + '</div>' +
-        '<div class="next-practice-target-hint">feeds the ' + escapeHtml(s.targetStack) + ' line</div>';
+        '<div class="next-practice-target-hint">touches the ' + escapeHtml(s.targetStack) + ' line</div>';
       // Begin the specific suggested practice (inline portal timer for short ones,
       // deep-link + auto-start for the rest) — not just open the temple's home.
       card.addEventListener('click', () => executeBegin(s.source, s.id, s.name, true));
@@ -3211,6 +3344,426 @@ const Portal = (function() {
     });
   }
 
+  // ============================================================
+  // HOME · Portal remake, step 4 (portal_remake/BUILD_PLAN.md), "Night house, lit"
+  // The day's flow is the same data as before (the schedule slots, today's training from body_temple_v1, the daytime
+  // band, the flow extras, today's plan list); it is drawn as offers placed on the day arc, each a yes / not-now pair.
+  // Nothing here counts, nags or dates anything. Two new stores, both this page's own:
+  //   portal_shelf_v1    { v:1, items:[{ key, name, when, temple, practiceId, star }], day:'YYYY-MM-DD', later:[key], yes:[key] }
+  //                      items is the sleep-on-it shelf (no dates on purpose); later and yes are today's answers only.
+  //                      Any temple may add to items in a later step: the shelf on home shows them all.
+  //   portal_capture_v1  { v:1, lines:[{ id, text, at }] }   lines typed into the capture box, kept until step 6 gives them a road to A.
+  // No existing store is renamed or reshaped; backup_meta_v1 (Body Temple's) is only read.
+  // ============================================================
+  const SHELF_KEY = 'portal_shelf_v1';
+  const CAPTURE_KEY = 'portal_capture_v1';
+  const HOME_ORDER = ['body', 'inner', 'breath', 'beast', 'observatory', 'village', 'healing', 'vocal', 'strings', 'hibrations', 'mirror', 'kaching'];
+  const HOME_NAMES = { body: 'Body', inner: 'Inner', breath: 'Breath', beast: 'Beast', observatory: 'Observatory', village: 'Village', healing: 'Healing', vocal: 'Vocal', strings: 'Strings', hibrations: 'Hibrations', mirror: 'Mirror', kaching: 'Kaching' };
+  const STAR_ROUTE = { healing: 'grimoire' };                       // the Portal's own name for the Healing Temple
+  const ROUTE_STAR = { grimoire: 'healing', magnetic: 'beast' };    // which star an offer lights
+  let homeGrid = false;            // Lek, 11-14: the constellation first, the plain grid one tap away
+  let openOfferKey = null;
+  let captureDraft = '';
+  let homeNow = null;              // what the minute tick redraws: the day arc and the ring at the constellation's centre
+  let homeDay = '';
+
+  function loadShelf() {
+    let s = {};
+    try { s = JSON.parse(localStorage.getItem(SHELF_KEY) || '{}') || {}; } catch (e) { s = {}; }
+    const arr = (v) => (Array.isArray(v) ? v : []);
+    return { v: 1, items: arr(s.items).filter(it => it && it.key && it.name), day: typeof s.day === 'string' ? s.day : '', later: arr(s.later), yes: arr(s.yes) };
+  }
+  function saveShelf(s) { try { localStorage.setItem(SHELF_KEY, JSON.stringify(s)); } catch (e) {} }
+  // Today's view of the shelf. On a new day the answers start empty, and anything on the shelf that is on offer again
+  // today leaves the shelf (it is in front of him again). Nothing is written until he answers something.
+  function shelfFor(offers) {
+    const s = loadShelf(), today = dailyTodayKey();
+    if (s.day !== today) {
+      const again = new Set(offers.map(o => o.key));
+      s.items = s.items.filter(it => !again.has(it.key));
+      s.day = today; s.later = []; s.yes = [];
+    }
+    return s;
+  }
+
+  // The day's offers, from the same readers the old flow used.
+  function buildOffers(day, train) {
+    const out = [];
+    const slot = (v, when, hour, sub) => {
+      if (v === null || !v) return;
+      const route = sourceToRoute(v.source);
+      out.push({
+        key: when + ':' + (v.id || v.name), when: when, hour: hour, temple: route, practiceId: v.id, name: v.name, sub: sub || '',
+        meta: [v.durationLabel, v.meta, v.source ? v.source + ' temple' : ''].filter(Boolean), steps: lookupStepsFor(v.id)
+      });
+    };
+    const morning = getSlot(day, 'morning');
+    slot(morning, 'morning', 7.5, morning && morning.id === 'solar_gate' ? 'The foundation layer: the phone stays away, the body comes first.' : '');
+    out.push({
+      key: 'training:' + train.planId, when: train.kind === 'training' ? 'training' : (train.kind === 'cardio' ? 'cardio and recovery' : 'rest'), hour: 11.5,
+      temple: 'body', practiceId: train.planId, name: train.name, sub: train.sub || '',
+      meta: [train.duration, train.meta, 'body temple'].filter(Boolean), cross: CROSSLINKS[train.planId] || null
+    });
+    getMid(day).forEach((ref, i) => {
+      const route = sourceToRoute(ref.source);
+      out.push({
+        key: 'mid:' + i + ':' + (ref.id || ref.name), when: 'daytime', hour: Math.min(13 + i * 1.1, 16.5), temple: route, practiceId: ref.id, name: ref.name, sub: '',
+        meta: [ref.durationLabel, ref.source ? ref.source + ' temple' : ''].filter(Boolean), steps: lookupStepsFor(ref.id)
+      });
+    });
+    let j = 0;
+    const loose = () => Math.min(17.2 + (j++) * 0.7, 20.4);
+    getFlow(TODAY()).extras.forEach(x => {
+      out.push({
+        key: 'extra:' + x.id, when: x.source ? x.source + ', added' : 'added', hour: loose(), temple: null, star: x.source || null, name: x.name, sub: '',
+        meta: [x.durationLabel].concat((x.stack || []).map(k => (PLAN_STACKS[k] ? PLAN_STACKS[k].label : ''))).filter(Boolean), extraId: x.id
+      });
+    });
+    (getPlan(TODAY()).activities || []).forEach(a => {
+      out.push({
+        key: 'plan:' + a.id, when: 'planned', hour: loose(), temple: null, name: a.name, sub: '',
+        meta: (a.stack || []).map(k => (PLAN_STACKS[k] ? PLAN_STACKS[k].label : '')).filter(Boolean), planId: a.id, done: !!a.done
+      });
+    });
+    const evening = getSlot(day, 'evening');
+    slot(evening, 'evening', 21.5, evening && evening.id === 'evening_winddown' ? 'The day set down. Long exhales tell the system it is safe to sleep.' : '');
+    out.forEach(o => { if (o.star === undefined) o.star = o.temple; o.star = ROUTE_STAR[o.star] || o.star || null; });
+    return out;
+  }
+  const offerTaken = (o, shelf) => (o.planId ? !!o.done : shelf.yes.indexOf(o.key) >= 0);
+
+  // The day arc: the sun's real path today (sunrise and sunset from sky.js), the sun where it is now, and the open
+  // offers placed on it by their part of the day. A picture of the day, not a schedule: no hour is asked of anyone.
+  function dayArcSvg(now, open, shelf) {
+    const W = 311, H = 124, hz = 80, px = 10, amp = 56, deep = 16;
+    const s = (window.TempleSky && window.TempleSky.sun(now)) || { rise: 7, set: 17 };
+    const span = Math.max(0.5, s.set - s.rise), night = 24 - span;
+    const X = (h) => px + (W - 2 * px) * h / 24;
+    const Y = (h) => {
+      if (h >= s.rise && h <= s.set) return hz - amp * Math.sin(Math.PI * (h - s.rise) / span);
+      const t = h > s.set ? (h - s.set) / night : (h + 24 - s.set) / night;
+      return hz + deep * Math.sin(Math.PI * t);
+    };
+    const f = (n) => n.toFixed(1);
+    const seg = (a, b) => { const p = []; for (let h = a; h < b; h += 0.25) p.push(f(X(h)) + ' ' + f(Y(h))); p.push(f(X(b)) + ' ' + f(Y(b))); return 'M' + p.join(' L'); };
+    const clock = (h) => { const m = Math.round(h * 60); return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
+    const hNow = now.getHours() + now.getMinutes() / 60, up = hNow >= s.rise && hNow <= s.set;
+    let g = '<path d="M' + px + ' ' + hz + 'H' + (W - px) + '" stroke="var(--leaf)" stroke-width="1"/>' +
+      '<path d="' + seg(0, s.rise) + '" fill="none" stroke="var(--leaf)" stroke-width="1" stroke-dasharray="1 5" stroke-linecap="round"/>' +
+      '<path d="' + seg(s.set, 24) + '" fill="none" stroke="var(--leaf)" stroke-width="1" stroke-dasharray="1 5" stroke-linecap="round"/>' +
+      '<path d="' + seg(s.rise, s.set) + '" fill="none" stroke="var(--t2-text)" stroke-width="1.5" stroke-linecap="round" opacity=".75"/>';
+    open.forEach(o => {
+      g += '<circle' + (o.star ? ' data-temple="' + escapeHtml(o.star) + '"' : '') + ' cx="' + f(X(o.hour)) + '" cy="' + f(Y(o.hour)) + '" r="4.6" fill="' +
+        (offerTaken(o, shelf) ? 'var(--t)' : 'var(--card)') + '" stroke="var(--t-text)" stroke-width="1.6"/>';
+    });
+    g += up ? '<circle cx="' + f(X(hNow)) + '" cy="' + f(Y(hNow)) + '" r="9" fill="var(--t2)" opacity=".16"/><circle cx="' + f(X(hNow)) + '" cy="' + f(Y(hNow)) + '" r="4.4" fill="var(--t2)"/>'
+      : '<circle cx="' + f(X(hNow)) + '" cy="' + f(Y(hNow)) + '" r="3.6" fill="var(--bg)" stroke="var(--muted)" stroke-width="1.2"/>';
+    g += '<text x="' + f(X(s.rise)) + '" y="' + (H - 4) + '" text-anchor="middle">' + clock(s.rise) + '</text>' +
+      '<text x="' + f(X(s.set)) + '" y="' + (H - 4) + '" text-anchor="middle">' + clock(s.set) + '</text>';
+    const label = 'The day. Sunrise ' + clock(s.rise) + ', sunset ' + clock(s.set) + '. ' + (open.length ? open.length + (open.length === 1 ? ' offer' : ' offers') + ' placed on it.' : 'Nothing is placed on it.');
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + escapeHtml(label) + '">' + g + '</svg>';
+  }
+
+  function answerYes(o, offers) {
+    const s = shelfFor(offers);
+    if (o.planId) planToggle(o.planId);
+    else if (s.yes.indexOf(o.key) < 0) { s.yes.push(o.key); saveShelf(s); }
+    render();
+    if (o.temple) executeBegin(o.temple, o.practiceId, o.name);
+  }
+  function answerTakeBack(o, offers) {
+    const s = shelfFor(offers);
+    if (o.planId) planToggle(o.planId);
+    else { s.yes = s.yes.filter(k => k !== o.key); saveShelf(s); }
+    render();
+  }
+  function answerLater(o, offers) {
+    const s = shelfFor(offers);
+    if (s.later.indexOf(o.key) < 0) s.later.push(o.key);
+    s.yes = s.yes.filter(k => k !== o.key);
+    s.items = s.items.filter(it => it.key !== o.key);
+    s.items.push({ key: o.key, name: o.name, when: o.when, temple: o.temple || null, practiceId: o.practiceId || null, star: o.star || null });
+    saveShelf(s);
+    if (openOfferKey === o.key) openOfferKey = null;
+    render();
+    toast('Set down. It will wait, with no date.');
+  }
+
+  function buildDayCard(now, offers, shelf) {
+    const open = offers.filter(o => shelf.later.indexOf(o.key) < 0);
+    const card = el('section', 'ts-card ts-today ts-glass');
+    card.id = 'home-today';
+    card.appendChild(el('div', 'ts-eyebrow', 'Offered today'));
+    const arc = el('div', 'hm-arc'); arc.id = 'home-arc';
+    arc.innerHTML = dayArcSvg(now, open, shelf);
+    card.appendChild(arc);
+    card.appendChild(el('p', 'hm-cap', 'Placed by the part of the day, not by the clock.'));
+    homeNow = { open: open, shelf: shelf };
+    if (!open.length) {
+      card.appendChild(el('p', 'hm-none', 'Everything on offer today is set down. The day is yours as it is.'));
+    }
+    open.forEach(o => {
+      const taken = offerTaken(o, shelf);
+      const wrap = el('div', 'hm-offer' + (taken ? ' hm-taken' : ''));
+      wrap.dataset.offer = o.key;
+      if (o.star) wrap.dataset.temple = o.star;
+      const row = el('div', 'hm-offer-row');
+      const more = !!(o.sub || (o.steps && o.steps.length) || o.cross || o.extraId);
+      const isOpen = more && openOfferKey === o.key;
+      const tx = el(more ? 'button' : 'div', 'hm-offer-tx');
+      const when = el('span', 'hm-when'); when.appendChild(el('i', 'hm-dot')); when.appendChild(document.createTextNode(o.when + (taken ? ' · yes' : '')));
+      tx.appendChild(when);
+      tx.appendChild(el('b', '', o.name));
+      if (o.meta && o.meta.length) tx.appendChild(el('small', '', o.meta.join(' · ')));
+      if (more) {
+        tx.type = 'button'; tx.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        tx.addEventListener('click', () => { openOfferKey = isOpen ? null : o.key; render(); });
+      }
+      row.appendChild(tx);
+      if (taken) {
+        if (o.temple) {
+          const again = el('button', 'hm-later', 'Open'); again.type = 'button';
+          again.addEventListener('click', () => executeBegin(o.temple, o.practiceId, o.name));
+          row.appendChild(again);
+        }
+        const back = el('button', 'hm-later', 'Take back'); back.type = 'button';
+        back.addEventListener('click', () => answerTakeBack(o, offers));
+        row.appendChild(back);
+      } else {
+        const yes = el('button', 'hm-yes', 'Yes'); yes.type = 'button';
+        yes.setAttribute('aria-label', 'Yes: ' + o.name);
+        yes.addEventListener('click', () => answerYes(o, offers));
+        const later = el('button', 'hm-later', 'Not now'); later.type = 'button';
+        later.setAttribute('aria-label', 'Not now: ' + o.name);
+        later.addEventListener('click', () => answerLater(o, offers));
+        row.appendChild(yes); row.appendChild(later);
+      }
+      wrap.appendChild(row);
+      if (isOpen) {
+        const m = el('div', 'hm-more');
+        if (o.sub) m.appendChild(el('p', '', o.sub));
+        if (o.steps && o.steps.length) { const ol = el('ol'); o.steps.forEach(st => ol.appendChild(el('li', '', st))); m.appendChild(ol); }
+        if (o.cross && (o.cross.before || o.cross.after)) {
+          const head = el('p', '', o.cross.label); head.style.marginTop = '8px'; m.appendChild(head);
+          [['before', o.cross.before], ['after', o.cross.after]].forEach(pair => {
+            if (!pair[1]) return;
+            const p = el('p'); p.appendChild(el('b', '', pair[0])); p.appendChild(document.createTextNode(': ' + pair[1])); m.appendChild(p);
+          });
+        }
+        if (o.extraId) {
+          const off = el('button', 'ts-link', 'Take it off today'); off.type = 'button';
+          off.addEventListener('click', () => { removeFlowExtra(o.extraId); openOfferKey = null; render(); });
+          m.appendChild(off);
+        }
+        wrap.appendChild(m);
+      }
+      card.appendChild(wrap);
+    });
+    const add = el('button', 'ts-link', 'Add something to today'); add.type = 'button';
+    add.addEventListener('click', openAddToFlow);
+    card.appendChild(add);
+    return card;
+  }
+
+  const shellOf = () => window.TempleShell || null;
+  function sigFor(k, size) {
+    const ts = shellOf();
+    if (ts && ts.sig) return ts.sig(k, size);
+    return el('span', '', (HOME_NAMES[k] || k).charAt(0));
+  }
+  function ringHtml(now) {
+    if (!window.Charts) return '';
+    const fr = (now.getHours() * 60 + now.getMinutes()) / 1440;
+    return window.Charts.ring(fr, { size: 92, stroke: 3, label: String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'), sub: 'the day', aria: 'How far round the day is' });
+  }
+  function buildTemples(now, lit) {
+    const wrap = el('div'); wrap.id = 'home-temples';
+    wrap.appendChild(el('div', 'ts-sec', homeGrid ? 'The temples' : 'The temples, around the day'));
+    const ts = shellOf();
+    const open = (k) => Shell.goTo(STAR_ROUTE[k] || k);
+    if (homeGrid) {
+      const tiles = el('div', 'ts-tiles hm-tiles');
+      HOME_ORDER.forEach(k => {
+        const t = (ts && ts.TEMPLES[k]) || { name: HOME_NAMES[k], word: '' };
+        const b = el('button', 'ts-tile' + (lit.has(k) ? ' ts-here' : '')); b.type = 'button'; b.dataset.temple = k; b.dataset.open = k;
+        b.appendChild(sigFor(k, 26));
+        const d = el('div', '', t.name); d.appendChild(el('small', '', (t.word || '') + (lit.has(k) ? (t.word ? ' · ' : '') + 'on offer today' : '')));
+        b.appendChild(d);
+        b.addEventListener('click', () => open(k));
+        tiles.appendChild(b);
+      });
+      wrap.appendChild(tiles);
+    } else {
+      const cons = el('div', 'hm-cons');
+      const stars = HOME_ORDER.map((k, i) => { const a = (-90 + i * 30) * Math.PI / 180, r = i % 2 ? 98 : 140; return { k: k, x: r * Math.cos(a), y: r * Math.sin(a) }; });
+      cons.innerHTML = '<svg class="hm-web" viewBox="0 0 1 1" aria-hidden="true"><g class="hm-orbit"><circle r="98" fill="none" stroke="var(--leaf)" stroke-width="1" stroke-dasharray="1 7" stroke-linecap="round"/>' +
+        '<circle r="140" fill="none" stroke="var(--leaf)" stroke-width="1" stroke-dasharray="1 9" stroke-linecap="round"/></g>' +
+        '<polygon points="' + stars.map(s => s.x.toFixed(1) + ',' + s.y.toFixed(1)).join(' ') + '" fill="none" stroke="var(--leaf)" stroke-width="1"/></svg>' +
+        '<div class="hm-mid ts-chart" id="home-ring">' + ringHtml(now) + '</div>';
+      stars.forEach(s => {
+        const t = (ts && ts.TEMPLES[s.k]) || { name: HOME_NAMES[s.k], short: HOME_NAMES[s.k] };
+        const b = el('button', 'hm-star' + (lit.has(s.k) ? ' hm-lit' : '')); b.type = 'button'; b.dataset.temple = s.k; b.dataset.open = s.k;
+        b.style.left = 'calc(50% + ' + s.x.toFixed(1) + 'px)'; b.style.top = (166 + s.y).toFixed(1) + 'px';
+        b.setAttribute('aria-label', t.name + (lit.has(s.k) ? ', on offer today' : ''));
+        b.appendChild(sigFor(s.k, 24));
+        b.appendChild(el('span', '', t.short || HOME_NAMES[s.k]));
+        b.addEventListener('click', () => open(s.k));
+        cons.appendChild(b);
+      });
+      wrap.appendChild(cons);
+      const legend = el('div', 'hm-legend'); legend.appendChild(el('i')); legend.appendChild(document.createTextNode('a halo means something is on offer there today'));
+      wrap.appendChild(legend);
+    }
+    const swap = el('button', 'ts-link', homeGrid ? 'The constellation' : 'The plain grid, for speed'); swap.type = 'button'; swap.id = 'home-swap';
+    swap.addEventListener('click', () => { homeGrid = !homeGrid; render(); });
+    wrap.appendChild(swap);
+    return wrap;
+  }
+
+  // The moon's line: the same phase guide as before, as something read, with its door.
+  function buildMoonRead(now) {
+    const moon = moonPhase(now), g = MOON_GUIDE[moon.key];
+    if (!g) return null;
+    const b = el('button', 'hm-read'); b.type = 'button'; b.id = 'home-moon';
+    b.appendChild(document.createTextNode('The moon, ' + moon.name + '. Read, not prescribed.'));
+    b.appendChild(el('i', '', g.text));
+    if (g.label) b.appendChild(el('u', '', g.label));
+    if (g.route) b.addEventListener('click', () => Shell.goTo(g.route));
+    return b;
+  }
+
+  // The stack radar: the old Stack Pulse (same reader, same six lines), redrawn with charts.js. A shape, not a mark.
+  function buildRadar() {
+    const data = readStackPulse(), order = ['body', 'breath', 'energy', 'field', 'healing', 'primal'], nowMs = Date.now();
+    const age = (k) => (data.last[k] ? (nowMs - data.last[k]) / 86400000 : null);
+    const vals = order.map(k => { const a = age(k); return a === null || a >= 7 ? 0.08 : Math.max(0.24, 1 - a / 7 * 0.76); });
+    const card = el('section', 'ts-card'); card.id = 'home-radar';
+    card.appendChild(el('div', 'ts-eyebrow', 'The stack, the last seven days'));
+    const ch = el('div', 'ts-chart');
+    if (window.Charts) ch.innerHTML = window.Charts.radar(order, vals, { h: 236, label: 'Six lines of practice, by how lately each was touched' });
+    card.appendChild(ch);
+    const said = order.filter(k => { const a = age(k); return a !== null && a < 7; }).map(k => { const d = Math.floor(age(k)); return k + ' ' + (d <= 0 ? 'today' : d === 1 ? 'yesterday' : d + ' days ago'); });
+    const cf = el('div', 'ts-cf');
+    cf.appendChild(el('span', '', said.length ? said.join(' · ') : 'A quiet week draws small. That is all it says.'));
+    card.appendChild(cf);
+    return card;
+  }
+
+  // The sleep-on-it shelf: everything set down, in one quiet place, with no date.
+  function buildShelf(offers, shelf) {
+    const box = el('div', 'ts-shelf'); box.id = 'home-shelf';
+    if (!shelf.items.length) {
+      box.appendChild(el('b', '', 'Nothing set down.'));
+      box.appendChild(document.createTextNode(' Whatever you set aside rests here, with no date and no reminder.'));
+      return box;
+    }
+    box.appendChild(el('b', '', 'Set down, with no date.'));
+    shelf.items.forEach(it => {
+      const row = el('div', 'ts-shelf-item'); row.dataset.shelf = it.key;
+      if (it.star) row.dataset.temple = it.star;
+      row.appendChild(el('span', '', it.name));
+      const up = el('button', 'ts-btn', 'Pick up'); up.type = 'button';
+      up.addEventListener('click', () => {
+        const s = shelfFor(offers);
+        s.items = s.items.filter(x => x.key !== it.key); s.later = s.later.filter(k => k !== it.key);
+        saveShelf(s); render();
+        if (it.temple) executeBegin(it.temple, it.practiceId, it.name);
+      });
+      const go = el('button', 'ts-btn', 'Let go'); go.type = 'button';
+      go.addEventListener('click', () => { const s = shelfFor(offers); s.items = s.items.filter(x => x.key !== it.key); saveShelf(s); render(); });
+      row.appendChild(up); row.appendChild(go);
+      box.appendChild(row);
+    });
+    return box;
+  }
+
+  // Quick capture. The road from this box to A is step 6 (the bridge). Until then a line is kept on this phone and
+  // the page says so plainly; nothing claims to have been sent.
+  function loadCapture() { try { const c = JSON.parse(localStorage.getItem(CAPTURE_KEY) || '{}'); return Array.isArray(c.lines) ? c.lines : []; } catch (e) { return []; } }
+  function saveCapture(lines) { try { localStorage.setItem(CAPTURE_KEY, JSON.stringify({ v: 1, lines: lines })); } catch (e) {} }
+  function buildCapture() {
+    const card = el('section', 'ts-card hm-capture'); card.id = 'home-capture';
+    const lab = el('label', 'ts-felt', 'A line for A');
+    const inp = el('input'); inp.type = 'text'; inp.maxLength = 280; inp.id = 'home-capture-input'; inp.placeholder = 'a thought, a thing to file'; inp.autocomplete = 'off'; inp.value = captureDraft;
+    inp.addEventListener('input', () => { captureDraft = inp.value; });
+    lab.appendChild(inp); card.appendChild(lab);
+    const keep = () => {
+      const text = inp.value.trim(); if (!text) return;
+      const lines = loadCapture(); lines.push({ id: uid('cap'), text: text, at: new Date().toISOString() });
+      saveCapture(lines); captureDraft = ''; render();
+      toast('Kept on this phone.');
+    };
+    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') keep(); });
+    const rowB = el('div', 'ts-btnrow'); const b = el('button', 'ts-btn', 'Keep it'); b.type = 'button'; b.id = 'home-capture-keep'; b.addEventListener('click', keep);
+    rowB.appendChild(b); card.appendChild(rowB);
+    const lines = loadCapture();
+    card.appendChild(el('p', '', 'A line stays on this phone for now. The road from here to A is not built yet, so nothing has been sent.'));
+    lines.forEach(l => {
+      const row = el('div', 'hm-kept'); row.appendChild(el('span', '', l.text));
+      const x = el('button', 'ts-btn', 'Let go'); x.type = 'button';
+      x.addEventListener('click', () => { saveCapture(loadCapture().filter(y => y.id !== l.id)); render(); });
+      row.appendChild(x); card.appendChild(row);
+    });
+    return card;
+  }
+
+  // The backup line: when the last backup left this phone, said plainly. The backup itself lives in Body Temple.
+  function buildBackup() {
+    const wrap = el('div'); wrap.id = 'home-backup';
+    let at = null;
+    try { const m = JSON.parse(localStorage.getItem('backup_meta_v1') || 'null'); if (m && m.at && !isNaN(Date.parse(m.at))) at = new Date(m.at); } catch (e) {}
+    wrap.appendChild(el('p', 'hm-line', at ? 'The last backup left this phone on ' + at.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) + '.' : 'No backup has left this phone yet.'));
+    const b = el('button', 'ts-link', 'Backup and restore, in Body Temple'); b.type = 'button';
+    b.addEventListener('click', () => Shell.goTo('body'));
+    wrap.appendChild(b);
+    return wrap;
+  }
+
+  function renderHome(view, now, day, train) {
+    const offers = buildOffers(day, train), shelf = shelfFor(offers);
+    homeDay = dailyTodayKey();
+    view.appendChild(buildDayCard(now, offers, shelf));
+    const lit = new Set(offers.filter(o => o.star && shelf.later.indexOf(o.key) < 0 && !offerTaken(o, shelf)).map(o => o.star));
+    view.appendChild(buildTemples(now, lit));
+    const read = buildMoonRead(now); if (read) view.appendChild(read);
+    view.appendChild(el('div', 'ts-sec', 'What was there'));
+    view.appendChild(buildRadar());
+    renderNextPractice(view);
+    renderHrv(view);
+
+    // ── EMPTY SLOT, step 6 (the village wiring): the village pulse. Who is working, who answered, cards waiting.
+    //    It needs the bridge's /portal route. Nothing is drawn and nothing is invented until that exists. ──
+    const pulse = el('div'); pulse.id = 'slot-village-pulse'; pulse.dataset.slot = 'village-pulse'; pulse.dataset.step = '6'; pulse.hidden = true;
+    view.appendChild(pulse);
+    // ── EMPTY SLOT, step 5 (the directors in the app): A's brief card, her carries, the council, the bridge light.
+    //    It needs director.js and the village's thread stores. Empty until then. ──
+    const brief = el('div'); brief.id = 'slot-a-brief'; brief.dataset.slot = 'a-brief'; brief.dataset.step = '5'; brief.hidden = true;
+    view.appendChild(brief);
+
+    view.appendChild(el('div', 'ts-sec', 'Sleep on it'));
+    view.appendChild(buildShelf(offers, shelf));
+    view.appendChild(el('div', 'ts-sec', 'Quick capture'));
+    view.appendChild(buildCapture());
+    view.appendChild(buildBackup());
+    const mir = el('button', 'ts-link', 'The week, looked at'); mir.type = 'button';
+    mir.addEventListener('click', () => Shell.goTo('mirror'));
+    view.appendChild(mir);
+  }
+
+  // Once a minute: the clock in the ring and the sun on the arc move on; at midnight the day is drawn afresh.
+  function homeTick() {
+    if (document.hidden || subview !== 'flow') return;
+    const overlay = document.getElementById('temple-overlay');
+    if (overlay && !overlay.hidden) return;
+    const typing = document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+    if (homeDay && homeDay !== dailyTodayKey() && !typing) { Shell.setDateTitle(); render(); return; }
+    const now = new Date();
+    const ring = document.getElementById('home-ring'); if (ring) ring.innerHTML = ringHtml(now);
+    const arc = document.getElementById('home-arc'); if (arc && homeNow) arc.innerHTML = dayArcSvg(now, homeNow.open, homeNow.shelf);
+  }
+  setInterval(homeTick, 60000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) homeTick(); });
+
   function render() {
     const mount = document.getElementById('app-mount');
     mount.innerHTML = '';
@@ -3219,7 +3772,7 @@ const Portal = (function() {
 
     // ---- subview toggle (flow / schedule / history) ----
     const toggle = el('div', 'portal-toggle');
-    const flowPill = el('button', 'portal-toggle-pill' + (subview === 'flow' ? ' active' : ''), 'flow');
+    const flowPill = el('button', 'portal-toggle-pill' + (subview === 'flow' ? ' active' : ''), 'today');
     flowPill.addEventListener('click', () => { if (subview !== 'flow') { subview = 'flow'; window.scrollTo(0, 0); render(); } });
     const schedPill = el('button', 'portal-toggle-pill' + (subview === 'schedule' ? ' active' : ''), 'schedule');
     schedPill.addEventListener('click', () => { if (subview !== 'schedule') { subview = 'schedule'; window.scrollTo(0, 0); render(); } });
@@ -3247,137 +3800,7 @@ const Portal = (function() {
     // Read from Body Temple's actual schedule (source of truth), fall back to hardcoded defaults.
     const train = readBodyTempleSchedule(day) || TRAINING_SCHEDULE[day];
 
-    // Hero
-    const hero = document.createElement('div');
-    hero.className = 'portal-hero';
-    const arcText = day === 'sunday' ? 'zen day. let the wave settle.' :
-      `${train.kind === 'training' ? 'training day' : train.kind === 'cardio' ? 'cardio + recovery' : 'rest'} · ${train.name.toLowerCase()}`;
-    const moon = moonPhase(now);
-    hero.innerHTML = `
-      <div class="portal-date-big">${escapeHtml(now.toLocaleDateString(undefined, { month: 'long', day: 'numeric' }).toLowerCase())}</div>
-      <div class="portal-day-name">${escapeHtml(DAY_LABELS_LONG[dayIdx].toLowerCase())}</div>
-      <div class="portal-arc">${escapeHtml(arcText)}</div>
-      <div class="portal-moon${moon.hint ? ' lunar-hint' : ''}"><span class="portal-moon-glyph">${moon.glyph}</span><span>${escapeHtml(moon.name)}</span></div>`;
-    const lunarGuide = MOON_GUIDE[moon.key];
-    if (lunarGuide) {
-      const guide = el('button', 'portal-moon-guide' + (moon.hint ? ' lunar-hint' : ''));
-      guide.innerHTML = '<span class="pmg-text">' + escapeHtml(lunarGuide.text) + '</span>' +
-        (lunarGuide.label ? '<span class="pmg-cta">' + escapeHtml(lunarGuide.label) + ' →</span>' : '');
-      if (lunarGuide.route) guide.addEventListener('click', () => Shell.goTo(lunarGuide.route));
-      hero.appendChild(guide);
-    }
-    view.appendChild(hero);
-
-    renderHrv(view);
-
-    view.appendChild(el('div', 'section-eyebrow', "today's flow"));
-
-    const timeline = document.createElement('div');
-    timeline.className = 'timeline';
-
-    // Morning slot — from schedule (default: Solar Gate)
-    const morningVal = getSlot(day, 'morning');
-    if (morningVal !== null) {
-      const mRoute = sourceToRoute(morningVal.source);
-      const mMeta = [morningVal.durationLabel, morningVal.meta, morningVal.source ? morningVal.source + ' temple' : ''].filter(Boolean);
-      timeline.appendChild(makeBlock({
-        icon: '☉', iconClass: 'gold', cardClass: 'gold',
-        cardId: 'morning',
-        steps: lookupStepsFor(morningVal.id),
-        onBegin: mRoute ? () => executeBegin(mRoute, morningVal.id, morningVal.name) : null,
-        beginLabel: mRoute ? 'begin' : null,
-        eyebrow: 'morning', name: morningVal.name,
-        sub: morningVal.id === 'solar_gate' ? 'foundation layer — phone stays away, body comes first' : '',
-        meta: mMeta
-      }));
-    }
-
-    timeline.appendChild(makeBlock({
-      icon: train.kind === 'training' ? '☼' : train.kind === 'cardio' ? '◐' : '◯',
-      iconClass: train.kind === 'training' ? 'emerald' : 'dim',
-      cardClass: train.kind === 'training' ? 'emerald' : 'dim',
-      cardId: 'training',
-      onBegin: () => executeBegin('body', train.planId, train.name),
-      beginLabel: 'begin in body temple',
-      eyebrow: train.kind === 'training' ? 'training' : (train.kind === 'cardio' ? 'cardio / recovery' : 'rest'),
-      name: train.name, sub: train.sub,
-      meta: [train.duration, train.meta, 'body temple']
-    }));
-
-    const cross = CROSSLINKS[train.planId];
-    if (cross && (cross.before || cross.after)) {
-      const cl = document.createElement('div');
-      cl.className = 'crosslink';
-      let html = `<div class="crosslink-label">${escapeHtml(cross.label)}</div>`;
-      if (cross.before) html += `<div class="crosslink-text"><strong>before</strong> — ${escapeHtml(cross.before)}</div>`;
-      if (cross.before && cross.after) html += `<div style="height:8px"></div>`;
-      if (cross.after) html += `<div class="crosslink-text"><strong>after</strong> — ${escapeHtml(cross.after)}</div>`;
-      cl.innerHTML = html;
-      timeline.appendChild(cl);
-    }
-
-    // Daytime band — recurring practices scheduled between morning and evening
-    getMid(day).forEach((ref, i) => {
-      const rRoute = sourceToRoute(ref.source);
-      timeline.appendChild(makeBlock({
-        icon: '◇', iconClass: 'gold', cardClass: 'gold',
-        cardId: 'mid-' + i,
-        steps: lookupStepsFor(ref.id),
-        onBegin: rRoute ? () => executeBegin(rRoute, ref.id, ref.name) : null,
-        beginLabel: rRoute ? 'begin' : null,
-        eyebrow: 'daytime', name: ref.name, sub: '',
-        meta: [ref.durationLabel, ref.source ? ref.source + ' temple' : ''].filter(Boolean)
-      }));
-    });
-
-    // Evening slot — from schedule (default: Wind-Down)
-    const eveningVal = getSlot(day, 'evening');
-    if (eveningVal !== null) {
-      const eRoute = sourceToRoute(eveningVal.source);
-      const eMeta = [eveningVal.durationLabel, eveningVal.meta, eveningVal.source ? eveningVal.source + ' temple' : ''].filter(Boolean);
-      timeline.appendChild(makeBlock({
-        icon: '☽', iconClass: 'gold', cardClass: 'gold',
-        cardId: 'evening',
-        steps: lookupStepsFor(eveningVal.id),
-        onBegin: eRoute ? () => executeBegin(eRoute, eveningVal.id, eveningVal.name) : null,
-        beginLabel: eRoute ? 'begin' : null,
-        eyebrow: 'evening', name: eveningVal.name,
-        sub: eveningVal.id === 'evening_winddown' ? "drop the day. long exhales. give the system the signal that it's safe to sleep." : '',
-        meta: eMeta
-      }));
-    }
-
-    // render today's added flow extras after the defaults
-    renderFlowExtras(timeline);
-    view.appendChild(timeline);
-
-    // "+ add to today's flow" button
-    const flowAddBtn = el('button', 'flow-add-btn', '+ add to today’s flow');
-    flowAddBtn.addEventListener('click', openAddToFlow);
-    view.appendChild(flowAddBtn);
-
-    renderStackPulse(view);
-    renderNextPractice(view);
-
-    view.appendChild(el('div', 'section-eyebrow', 'jump in'));
-    const grid = document.createElement('div');
-    grid.className = 'temples-grid';
-    const mkCard = (color, chakra, name, sub, route) => {
-      const c = el('button', 'temple-card ' + color);
-      c.innerHTML = '<div class="temple-name ' + color + '"><span class="temple-chakra">' + chakra + '</span>' + name + '</div><div class="temple-sub">' + sub + '</div>';
-      c.addEventListener('click', () => Shell.goTo(route));
-      grid.appendChild(c);
-    };
-    mkCard('c-brow',   '🌌', 'Inner Temple',       'breath · meditation · daily', 'inner');
-    mkCard('breath',   '🌬️', 'Breath &amp; Energy',    'orbit · prana · cultivation', 'breath');
-    mkCard('c-root',   '🏋️', 'Body Temple',        'training · vessel', 'body');
-    mkCard('c-crown',  '🌿', 'Healing Temple',   'qi · reiki · prana', 'grimoire');
-    mkCard('azure',    '🎙️', 'Vocal Temple',       'breath · voice · range', 'vocal');
-    mkCard('c-sacral', '🔥', 'Lover Temple',       'primal · lover · sacred bodywork', 'beast');
-    mkCard('c-throat', '🎨', 'Hibrations',         'capture · craft · ship', 'hibrations');
-    mkCard('c-heart',  '🎸', 'Strings &amp; Soul', 'ukulele · guitar', 'strings');
-    mkCard('pewter',   '🪞', 'The Weekly Mirror',  'the week, reflected', 'mirror');
-    view.appendChild(grid);
+    renderHome(view, now, day, train);
 
     mount.appendChild(view);
   }
@@ -3385,7 +3808,28 @@ const Portal = (function() {
   Shell.setDateTitle();
   render();
 
-  return { render };
+  return { render, home() { subview = 'flow'; render(); } };
+})();
+
+// Portal remake, step 4: the shared frame on home. shell.js draws the bottom bar and the Temples sheet for every
+// page, and on a page opened alone its doors are plain links. Home is not alone: it is the page that holds the
+// overlay. So a door tapped in the bar or the sheet here opens in the Portal's own overlay, like every other door.
+(function () {
+  const ts = window.TempleShell;
+  if (!ts) return;
+  ts.openDirector = () => Shell.goTo('village');        // step 5's director.js takes this over (A's sheet)
+  document.addEventListener('click', (e) => {
+    const b = e.target && e.target.closest ? e.target.closest('.ts-bar button[data-go], .ts-sheet .ts-tile[data-go]') : null;
+    if (!b) return;
+    const k = b.dataset.go;
+    if (k === 'temples') return;                          // the sheet itself: shell.js opens it
+    e.preventDefault(); e.stopPropagation();
+    ts.closeSheet();
+    if (k === 'portal') { Portal.home(); window.scrollTo(0, 0); return; }
+    Shell.goTo((ts.TEMPLES[k] && ts.TEMPLES[k].portal) || k);
+  }, true);
+  const sky = document.querySelector('canvas.ts-sky');
+  if (sky && window.TempleSky) window.TempleSky.mount(sky);
 })();
 </script>
 <script>

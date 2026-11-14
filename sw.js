@@ -6,11 +6,15 @@
 // It never touches localStorage or IndexedDB — Lek's history lives there.
 //
 // Bump VERSION on every deploy that changes a file below.
-const VERSION = '2026-11-14.1';
+const VERSION = '2026-11-14.3';
 const CACHE = 'halohorns-' + VERSION;
 
 const SHELL = [
   './', './index.html', './manifest.json', './icon.svg', './temple_link.js',
+  // the shared frame of the Portal remake (step 3): every page that wears it needs these offline
+  './temple.css', './shell.js', './sky.js', './charts.js', './sigils.svg',
+  './faces/a.webp', './faces/garr.webp', './faces/hekka.webp', './faces/rak.webp', './faces/thorn.webp',
+  './faces/nokka.webp', './faces/ngoen.webp', './faces/paa.webp', './faces/malee.webp',
   './inner_temple.html', './beast_temple.html', './breath_temple.html', './healing_temple.html',
   './magnetic_temple.html', './hibrations.html', './strings.html', './vocal.html', './mirror.html',
   './body/', './body/index.html', './body/manifest.json', './body/icon.svg',
