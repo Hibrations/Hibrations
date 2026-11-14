@@ -12,6 +12,7 @@
 // thin lines and text use the text-safe --t-text. Each function returns an SVG string; put it inside an element with
 // class="ts-chart", or call Charts.mount(el, 'line', data, opts).
 //   spark · line (area on by default) · area · bars · ring · dial · radar · ribbon · wheel
+//   and since step 7 (Patterns): layers (the radar over time) · moon (the lunar month, with marks) · river
 (function () {
   'use strict';
   let uid = 0;
@@ -119,7 +120,7 @@
   // a ribbon: a row of soft cells, lit where something happened (levels 0..3). A year reads best as one row of 52.
   function ribbon(cells, o) {
     o = o || {}; cells = Array.isArray(cells) ? cells : []; const w = o.w || 311, cols = o.cols || 52, gap = o.gap == null ? 1.6 : o.gap, labels = o.labels || null;
-    const cw = (w - (cols - 1) * gap) / cols, ch = cols > 30 ? 22 : Math.min(cw, 22), rows = Math.max(1, Math.ceil(cells.length / cols)), foot = labels || o.count ? 18 : 0, h = rows * (ch + gap) - gap + foot, op = [0.09, 0.34, 0.62, 0.95];
+    const cw = (w - (cols - 1) * gap) / cols, ch = o.ch > 0 ? o.ch : cols > 30 ? 22 : Math.min(cw, 22), rows = Math.max(1, Math.ceil(cells.length / cols)), foot = labels || o.count ? 18 : 0, h = rows * (ch + gap) - gap + foot, op = [0.09, 0.34, 0.62, 0.95];
     const lit = cells.filter((l) => l > 0).length;
     return svg(w, h, o.label, cells.map((l, i) => `<rect x="${f((i % cols) * (cw + gap))}" y="${f(Math.floor(i / cols) * (ch + gap))}" width="${f(cw)}" height="${f(ch)}" rx="${f(Math.min(cw, ch) * 0.28)}" fill="var(--t)" opacity="${op[Math.max(0, Math.min(3, Math.round(+l || 0)))]}"/>`).join('') +
       (labels ? `<text x="0" y="${f(h - 2)}">${esc(labels[0])}</text><text x="${w}" y="${f(h - 2)}" text-anchor="end">${esc(labels[1])}</text>` : '') +
@@ -139,7 +140,61 @@
       ` style="max-width:${size}px;margin:0 auto"`);
   }
 
-  const kinds = { spark, line, area, bars, ring, dial, radar, ribbon, wheel };
+  // ── step 7 (Patterns): three more kinds. The ones above are as they were. ──
+
+  // layers: the radar over time. sets is a list of value lists (0..1 per axis), oldest first; the last one is now and
+  // is drawn filled, the earlier ones as thin outlines behind it. { counts: [n per axis] } adds a plain number to each
+  // axis name, and is only passed when the count is switched on.
+  function layers(ax, sets, o) {
+    o = o || {}; ax = Array.isArray(ax) ? ax : []; sets = (Array.isArray(sets) ? sets : []).filter(Array.isArray);
+    const n = ax.length || 1, w = o.w || 311, h = o.h || 250, cx = w / 2, cy = h / 2 + 2, R = o.r || 88;
+    const pt = (i, k) => { const a = -Math.PI / 2 + i * 2 * Math.PI / n; return [cx + R * k * Math.cos(a), cy + R * k * Math.sin(a)]; };
+    const poly = (k) => ax.map((_, i) => pt(i, typeof k === 'number' ? k : clamp(k[i])).map(f).join(',')).join(' ');
+    const now = sets.length ? sets[sets.length - 1] : [], old = sets.slice(0, -1), counts = Array.isArray(o.counts) ? o.counts : null;
+    return svg(w, h, o.label, [0.34, 0.67, 1].map((k) => `<polygon points="${poly(k)}" fill="none" stroke="var(--leaf)" stroke-width="1"/>`).join('') +
+      ax.map((_, i) => { const p = pt(i, 1); return `<path d="M${f(cx)} ${f(cy)}L${f(p[0])} ${f(p[1])}" stroke="var(--leaf)" stroke-width="1" opacity=".6"/>`; }).join('') +
+      old.map((v, j) => `<polygon points="${poly(v)}" fill="none" stroke="var(--t2-text)" stroke-width="1" stroke-linejoin="round" opacity="${f(0.2 + 0.4 * (j + 1) / (old.length || 1))}"/>`).join('') +
+      `<polygon points="${poly(now)}" fill="var(--t)" fill-opacity=".26" stroke="var(--t-text)" stroke-width="1.6" stroke-linejoin="round"/>` +
+      ax.map((_, i) => { const p = pt(i, clamp(now[i])); return `<circle cx="${f(p[0])}" cy="${f(p[1])}" r="2.6" fill="var(--t-text)"/>`; }).join('') +
+      ax.map((t, i) => { const p = pt(i, 1.2); return `<text x="${f(p[0])}" y="${f(p[1] + 4)}" text-anchor="middle">${esc(t)}${counts && counts[i] != null ? ' ' + esc(counts[i]) : ''}</text>`; }).join(''));
+  }
+
+  // moon: the lunar month as a ring, new moon at the top, going clockwise. days is one entry per day of the month
+  // (29 or 30), each a list of temple keys marked on that day; each mark is a small dot outside the ring in that
+  // temple's own colour (the dot carries data-temple, so temple.css colours it). A day with nothing has no dot, and
+  // that is all it has. { p: 0..1 where the moon is now, centre, sub, count }
+  function moon(days, o) {
+    o = o || {}; days = Array.isArray(days) ? days : []; const N = days.length || 30, size = o.size || 300, m = size / 2, R = o.r || 76, p = clamp(o.p), c = 2 * Math.PI * R;
+    const pol = (k, rad) => { const a = -Math.PI / 2 + k * 2 * Math.PI; return [m + rad * Math.cos(a), m + rad * Math.sin(a)]; };
+    const here = pol(p, R), lit = days.filter((d) => Array.isArray(d) && d.length).length;
+    return svg(size, size, o.label, `<circle cx="${m}" cy="${m}" r="${R}" fill="var(--t)" fill-opacity=".06" stroke="var(--leaf)" stroke-width="1"/>` +
+      [0, 0.25, 0.5, 0.75].map((k) => { const a = pol(k, R - 5), b = pol(k, R + 5); return `<path d="M${f(a[0])} ${f(a[1])}L${f(b[0])} ${f(b[1])}" stroke="var(--leaf)" stroke-width="1"/>`; }).join('') +
+      (p > 0.004 ? `<circle cx="${m}" cy="${m}" r="${R}" fill="none" stroke="var(--t-text)" stroke-width="3" stroke-linecap="round" stroke-dasharray="${f(c * p)} ${f(c)}" transform="rotate(-90 ${m} ${m})" opacity=".8"/>` : '') +
+      days.map((d, i) => (Array.isArray(d) ? d : []).slice(0, 7).map((k, j) => { const q = pol((i + 0.5) / N, R + 13 + j * 8.5); return `<circle data-temple="${esc(k)}" cx="${f(q[0])}" cy="${f(q[1])}" r="3" fill="var(--t)"/>`; }).join('')).join('') +
+      `<circle cx="${f(here[0])}" cy="${f(here[1])}" r="5" fill="var(--ink)"/>` +
+      `<text x="${m}" y="${f(m - R + 19)}" text-anchor="middle">new</text><text x="${m}" y="${f(m + R - 11)}" text-anchor="middle">full</text>` +
+      (o.centre ? `<text class="ts-num" x="${m}" y="${m + (o.sub ? 0 : 6)}" text-anchor="middle">${esc(o.centre)}</text>` : '') + (o.sub ? `<text x="${m}" y="${m + 17}" text-anchor="middle">${esc(o.sub)}</text>` : '') +
+      (o.count ? `<text x="${m}" y="${f(size - 2)}" text-anchor="middle">${lit}${typeof o.count === 'string' ? ' ' + esc(o.count) : ''}</text>` : ''),
+      ` style="max-width:${size}px;margin:0 auto"`);
+  }
+
+  // river: one quiet stream, as wide on each day as what was placed there. A day with nothing is the thread the river
+  // narrows to, never a break. { from, to, count, record }
+  function river(d, o) {
+    o = o || {}; d = nums(d).map((v) => (v == null || v < 0 ? 0 : v)); const w = o.w || 311, h = o.h || 86, mid = (h - 20) / 2, n = d.length;
+    const ends = `<text x="6" y="${h - 4}">${esc(o.from)}</text><text x="${w - 6}" y="${h - 4}" text-anchor="end">${esc(o.to)}</text>`;
+    const hi = Math.max(0, ...d), sum = d.reduce((a, v) => a + v, 0);
+    if (!n || !hi) return svg(w, h, o.label, quiet(w, mid) + ends);
+    const half = (v) => 0.7 + v / hi * (mid - 5), x = (i) => (n > 1 ? 6 + i * (w - 12) / (n - 1) : w / 2);
+    const up = d.map((v, i) => [x(i), mid - half(v), v]), down = d.map((v, i) => [x(i), mid + half(v), v]).reverse();
+    const t = top(up);
+    return svg(w, h, o.label, (n > 1 ? `<path d="${curve(up)} L${f(down[0][0])} ${f(down[0][1])} ${curve(down).replace(/^M[^C]*/, '')} Z" fill="var(--t)" fill-opacity=".34" stroke="var(--t-text)" stroke-width="1" stroke-linejoin="round"/>`
+        : `<circle cx="${f(w / 2)}" cy="${f(mid)}" r="${f(half(d[0]))}" fill="var(--t)" fill-opacity=".34" stroke="var(--t-text)" stroke-width="1"/>`) +
+      (o.record && t ? `<text x="${f(Math.min(Math.max(t[0], 14), w - 14))}" y="${f(Math.max(t[1] - 4, 10))}" text-anchor="middle">${fmt(t[2])}</text>` : '') +
+      ends + countText(o, fmt(sum), w / 2, h - 4, 'middle'));
+  }
+
+  const kinds = { spark, line, area, bars, ring, dial, radar, ribbon, wheel, layers, moon, river };
   function mount(el, kind, a, b, c) {
     if (!el || !kinds[kind]) return null;
     el.classList.add('ts-chart');

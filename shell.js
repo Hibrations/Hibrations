@@ -26,7 +26,7 @@
 //     moved into the header with its listeners. If the page has none, one is made as #back-btn and bound here:
 //     embedded it posts 'close-temple' to the parent, exactly as the thirteen pages do; standalone it opens the Portal.
 //   · the sky band (sky.js) behind the header.
-//   · the bottom bar: Today · Temples · Mirror · Village, and the temple's director as the fifth.
+//   · the bottom bar: Today · Temples · Patterns · Village, and the temple's director as the fifth.
 //   · the Temples sheet: every door, plainly (thirteen since step 8: Baby).
 //   · moving sideways: TempleShell.go('body'). Standalone it is a plain link. Embedded it posts
 //     {action:'goto', app:'body'} to the parent; a parent that handles it answers {action:'goto-ack'}. Today's Portal
@@ -54,7 +54,7 @@
     vocal:       { name: 'Vocal Temple', short: 'Vocal', word: 'steadiness', sub: 'the throat', file: 'vocal.html', dir: 'garr' },
     strings:     { name: 'Strings', short: 'Strings', word: 'play', sub: 'the hands learn', file: 'strings.html', dir: 'paa' },
     hibrations:  { name: 'Hibrations', short: 'Hibrations', word: 'the page', sub: 'being seen', file: 'hibrations.html', dir: 'nokka' },
-    mirror:      { name: 'The Weekly Mirror', short: 'Mirror', word: 'the mirror', sub: 'what was there', file: 'mirror.html', dir: 'a' },   // becomes Patterns in step 7
+    mirror:      { name: 'Patterns', short: 'Patterns', word: 'the mirror', sub: 'what was there', file: 'mirror.html', dir: 'a' },   // step 7: the Weekly Mirror became Patterns; the key and the file keep their names
     kaching:     { name: 'Kaching', short: 'Kaching', word: 'the ledger', sub: 'leave sums, the tally', file: 'kaching.html', dir: 'ngoen' },
     baby:        { name: 'Baby', short: 'Baby', word: 'the lit window', sub: 'the night-shift board', file: 'baby.html', dir: 'malee' },   // step 8
     magnetic:    { name: 'Magnetic Temple', short: 'Magnetic', word: 'fire', sub: 'the older cut', file: 'magnetic_temple.html', dir: 'rak', hidden: true },

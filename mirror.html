@@ -3,62 +3,131 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>The Weekly Mirror</title>
+<title>Patterns</title>
 <link href="fonts/fonts.css" rel="stylesheet">
 <link href="temple.css" rel="stylesheet">
 <style>
 /* Portal remake, step 3: the colours, header, sky and bottom bar come from temple.css and shell.js.
-   Only the classes this page's own script writes are styled here, with the shared tokens. */
+   Step 7: this page is Patterns. The file name, #view, #back-btn and the mirror's own script are kept; the mirror's
+   week is now the last section of the page. Everything new is prefixed pt-. */
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 body[data-temple] { --ink-faint: var(--t-dim); }
-.total { text-align: center; margin: 6px 0 4px; }
-.total-num { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 60px; font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; line-height: 1; }
+
+/* ---- the mirror's own classes (its script writes them) ---- */
+.total { text-align: center; margin: 2px 0 12px; }
+.total-num { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 48px; font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; line-height: 1; }
 .total-label { font-size: 13px; color: var(--muted); margin-top: 6px; }
-
-.reflection { background: var(--card); border: 1px solid var(--leaf2); border-radius: 18px; padding: 16px; margin: 18px 0 12px; font-size: 15px; color: var(--muted); line-height: 1.6; font-style: italic; box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 14px 28px -20px #000; }
+.reflection { font-size: 15px; color: var(--muted); line-height: 1.6; font-style: italic; margin-bottom: 6px; }
 .reflection b { color: var(--ink); font-style: normal; font-weight: 500; }
-
-.eyebrow { font-size: 12px; letter-spacing: .04em; color: var(--muted); margin: 20px 2px 8px; }
-
-.t-row { display: grid; grid-template-columns: 14px 1fr auto; gap: 12px; align-items: center; min-height: 48px; padding: 8px 2px; border-bottom: 1px solid var(--leaf2); }
-.t-dot { width: 10px; height: 10px; border-radius: 50%; }
+.eyebrow { font-size: 12px; letter-spacing: .04em; color: var(--muted); margin: 16px 0 6px; }
+.t-row { display: grid; grid-template-columns: 14px 1fr auto; gap: 12px; align-items: center; min-height: 44px; padding: 6px 0; border-bottom: 1px solid var(--leaf2); }
+.t-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--t); }
+.t-dot.quiet { background: var(--t-dim); opacity: .55; }
 .t-name { font-size: 15px; color: var(--ink); }
 .t-name.quiet { color: var(--muted); }
 .t-count { font-size: 15px; font-variant-numeric: tabular-nums; color: var(--muted); }
-.t-count.lead { color: var(--t-text); font-weight: 600; }
-
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { font-size: 13px; padding: 6px 13px; border-radius: 999px; border: 1px solid var(--leaf2); color: var(--muted); }
 .chip.fed { color: var(--ink); border-color: var(--t-text); background: var(--t-faint); }
-
 .hint { font-size: 13px; color: var(--muted); font-style: italic; margin-top: 12px; }
-.empty { text-align: center; color: var(--muted); font-style: italic; font-size: 14px; padding: 26px 10px; line-height: 1.6; }
+
+/* ---- Patterns ---- */
+.pt-range { position: sticky; top: 0; z-index: 5; display: flex; gap: 6px; margin: 4px -4px 0; padding: 8px 4px; background: var(--bg); }
+.pt-range button { flex: 1; min-width: 0; }
+.pt-span { font-size: 13px; color: var(--muted); margin: 2px 2px 0; }
+.pt-rib { margin-bottom: 14px; }
+.pt-rib:last-of-type { margin-bottom: 4px; }
+.pt-rl { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink); margin-bottom: 6px; }
+.pt-rl svg { color: var(--t-text); }
+.pt-rl small { margin-left: auto; font-size: 12px; color: var(--muted); }
+.pt-g + .pt-g { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--leaf2); }
+.pt-g .ts-two + .ts-two { margin-top: 12px; }
+.pt-g .ts-big { font-size: 30px; }
+.pt-g .ts-big small { font-size: 15px; }
+.pt-say { font-size: 13px; line-height: 1.5; color: var(--muted); margin-top: 8px; }
+.ts-card p.pt-say { font-size: 13px; margin-top: 8px; }
+.ts-cf button.pt-sw { flex: none; margin: 0; white-space: nowrap; }
+.pt-target { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 13px; color: var(--muted); }
+.pt-target input.ts-input { width: 96px; margin-top: 0; }
+.pt-target[hidden] { display: none; }
+.pt-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 10px; font-size: 12px; color: var(--muted); }
+.pt-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.pt-legend i { width: 8px; height: 8px; border-radius: 50%; background: var(--t); display: inline-block; }
+.ts-card p.pt-trail { font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-size: 20px; line-height: 1.5; color: var(--ink); overflow-wrap: anywhere; }
+.pt-trail i { font-style: normal; color: var(--t-text); padding: 0 7px; }
+.ts-card p.pt-names { font-size: 14px; line-height: 1.6; color: var(--ink); margin-top: 8px; overflow-wrap: anywhere; }
+.pt-names i { font-style: normal; color: var(--t2-text); padding: 0 6px; }
+#pt-read .ts-md { margin-top: 8px; }
+#pt-read .pt-acts { display: flex; flex-wrap: wrap; gap: 0 14px; margin-top: 6px; }
+#pt-read .pt-acts .ts-link { margin: 0; min-width: 44px; }
+.pt-sent { white-space: pre-wrap; overflow-wrap: anywhere; font: 13px/1.5 Inter, system-ui, sans-serif; color: var(--muted); margin-top: 8px; padding: 10px 12px; border: 1px dashed var(--leaf); border-radius: 12px; max-height: 260px; overflow-y: auto; }
+.pt-sent[hidden], #pt-read [hidden] { display: none; }
+#pt-read .ts-pair button.ts-later { flex: 1; }
 </style>
 <script src="shell.js"></script>
+<script src="charts.js"></script>
 </head>
 <body data-temple="mirror">
 <header class="ts-head">
   <div class="ts-hrow">
     <button class="ts-back" id="back-btn" type="button" aria-label="Back">←</button>
-    <div class="ts-tt"><b>The Weekly Mirror</b><span>what the last 7 days actually made</span></div>
+    <div class="ts-tt"><b>Patterns</b><span>the week, the season, the year</span></div>
   </div>
   <p class="ts-guide">What was there. Nothing else.</p>
 </header>
 <main class="ts-body">
-  <div id="view"></div>
+  <section class="ts-card ts-today" id="pt-read" aria-live="polite"></section>
+
+  <div class="pt-range ts-pills" id="pt-range" role="group" aria-label="How far back">
+    <button type="button" data-range="week">Week</button>
+    <button type="button" data-range="month">Month</button>
+    <button type="button" data-range="season">Season</button>
+    <button type="button" data-range="year">Year</button>
+  </div>
+  <p class="pt-span" id="pt-span"></p>
+
+  <div class="ts-sec" id="pt-ribsec">Temple by temple</div>
+  <section class="ts-card" id="pt-ribbons" data-graph="ribbons"></section>
+
+  <div class="ts-sec">The stack, this week against the last four</div>
+  <section class="ts-card" id="pt-stack" data-graph="stack"></section>
+
+  <div class="ts-sec">The body, as lines</div>
+  <section class="ts-card" id="pt-body" data-temple="body"></section>
+
+  <div class="ts-sec">The moon’s month</div>
+  <section class="ts-card" id="pt-moon" data-temple="observatory" data-graph="moon"></section>
+
+  <div class="ts-sec">Felt lines</div>
+  <section class="ts-card" id="pt-felt"></section>
+
+  <div class="ts-sec">The day plan, as a river</div>
+  <section class="ts-card" id="pt-river" data-temple="portal" data-graph="river"></section>
+
+  <div class="ts-sec">The last seven days, as the mirror reads them</div>
+  <section class="ts-card" id="pt-mirror" data-graph="mirror">
+    <div id="view"></div>
+    <div class="ts-cf"><span>the weekly mirror, as it was. no number unless you ask for one.</span><button type="button" class="ts-link pt-sw" data-sw="mirror:count"></button></div>
+  </section>
 </main>
 
 <script>
+// The Weekly Mirror's own script (Round 37), kept. It still reads the last seven days from the practice stores and
+// draws into #view, and it still binds #back-btn. Changed in step 7, and only this: the wording no longer names what
+// was not done ("stayed dark", "went unfed", "a nudge" are gone), the big count and the numbers per temple are behind
+// the page's count switch, the dots take each temple's own colour from temple.css, the Breath Temple has a row, a
+// quiet week draws the same rows as a full one, and a session stamped with a number (Healing, Vocal) is now read.
 (function () {
   'use strict';
 
   var TEMPLES = [
-    { key:'body_temple_v1',     name:'Body Temple',     color:'#c75a4d' },
-    { key:'inner_temple_v1',    name:'Inner Temple',    color:'#8f7bd4' },
-    { key:'beast_temple_v1',    name:'Beast Temple',    color:'#cf8447' },
-    { key:'magnetic_temple_v1', name:'Magnetic Temple', color:'#ccae50' },
-    { key:'grimoire_v1',        name:'Healing Grimoire',color:'#c2c8d8' },
-    { key:'vocal_v1',           name:'Vocal Temple',    color:'#6fa8d8' }
+    { key:'body_temple_v1',     name:'Body Temple',     temple:'body' },
+    { key:'inner_temple_v1',    name:'Inner Temple',    temple:'inner' },
+    { key:'breath_temple_v1',   name:'Breath Temple',   temple:'breath' },
+    { key:'beast_temple_v1',    name:'Beast Temple',    temple:'beast' },
+    { key:'magnetic_temple_v1', name:'Magnetic Temple', temple:'magnetic' },
+    { key:'grimoire_v1',        name:'Healing Temple',  temple:'healing' },
+    { key:'vocal_v1',           name:'Vocal Temple',    temple:'vocal' }
   ];
   var STACKS = ['body','breath','energy','field','healing','primal'];
   var INNER_CAT_STACK = { breath:['breath'], meditation:['energy'], movement:['body','breath'], vocal:['body','breath'], ritual:['energy','healing'] };
@@ -71,8 +140,10 @@ body[data-temple] { --ink-faint: var(--t-dim); }
 
   function el(t,c,h){ var n=document.createElement(t); if(c)n.className=c; if(h!=null)n.innerHTML=h; return n; }
   function esc(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
-  function read(key){ try{ var o=JSON.parse(localStorage.getItem(key)||'{}'); return o.sessions||[]; }catch(e){ return []; } }
-  function tsOf(s){ if(s.at)return Date.parse(s.at); if(s.date)return Date.parse(s.date+'T12:00:00'); return 0; }
+  function read(key){ try{ var o=JSON.parse(localStorage.getItem(key)||'{}'); return (o&&o.sessions)||[]; }catch(e){ return []; } }
+  function tsOf(s){ if(!s)return 0; if(typeof s.at==='number')return s.at; if(s.at)return Date.parse(s.at)||0; if(s.date)return Date.parse(s.date+'T12:00:00')||0; return 0; }
+  function wantsCount(){ try{ var o=JSON.parse(localStorage.getItem('portal_patterns_v1')||'{}'); return !!(o&&o.opts&&o.opts.mirror&&o.opts.mirror.count); }catch(e){ return false; } }
+  function list(a){ return a.length<2 ? a.join('') : a.slice(0,-1).join(', ')+' and '+a[a.length-1]; }
 
   function compute(){
     var cutoff = Date.now() - 7*86400000;
@@ -96,30 +167,23 @@ body[data-temple] { --ink-faint: var(--t-dim); }
     return { perTemple:perTemple, total:total, fed:fed };
   }
 
-  function reflection(data){
+  function reflection(data, count){
     if(data.total===0){
-      return 'A quiet week in the logs. The mirror shows nothing tended — which may mean you lived it without the app, or that the practice waited for you. Either is information, not a verdict. The wave returns.';
+      return 'A quiet week in the logs. That may mean you lived it without the app. Either way it is information, not a verdict.';
     }
-    // leader + quiet
-    var lead=null, leadN=-1, quiet=[];
-    TEMPLES.forEach(function(t){ var n=data.perTemple[t.key]; if(n>leadN){ leadN=n; lead=t; } if(n===0) quiet.push(t.name.replace(' Temple','').replace('Healing ','')); });
-    var quietStacks = STACKS.filter(function(k){ return !data.fed[k]; });
+    var leadN=0;
+    TEMPLES.forEach(function(t){ if(data.perTemple[t.key]>leadN) leadN=data.perTemple[t.key]; });
+    var leaders = TEMPLES.filter(function(t){ return data.perTemple[t.key]===leadN; }).map(function(t){ return '<b>'+esc(t.name)+'</b>'; });
     var parts = [];
-    parts.push('<b>' + esc(lead.name) + '</b> led the week with ' + leadN + (leadN===1?' practice':' practices') + '.');
-    if(quiet.length){
-      parts.push(' ' + esc(quiet.join(quiet.length===2?' and ':', ')) + (quiet.length===1?' stayed dark':' stayed dark') + '.');
-    } else {
-      parts.push(' Every temple got tended.');
-    }
-    if(quietStacks.length && quietStacks.length<6){
-      parts.push(' The <b>' + esc(quietStacks.join(', ')) + '</b> ' + (quietStacks.length===1?'line':'lines') + ' went unfed — worth a glance.');
-    }
+    if(leaders.length===1) parts.push(leaders[0] + ' was where most of the week went' + (count ? ', with ' + leadN + (leadN===1?' practice':' practices') : '') + '.');
+    else parts.push(list(leaders) + ' shared the week.');
+    var fedList = STACKS.filter(function(k){ return data.fed[k]; });
+    if(fedList.length===STACKS.length) parts.push(' All six lines were touched.');
+    else if(fedList.length) parts.push(' The <b>' + esc(list(fedList)) + '</b> ' + (fedList.length===1?'line was':'lines were') + ' touched.');
     // closing, rotates daily
     var closings = [
       'No score here. Just the shape your week actually made, handed back to you.',
-      'The body keeps an honest ledger. This is it — texture, not judgment.',
-      'See the pattern, then let your sacral decide what next week asks for.',
-      'What led, led for a reason. What went quiet is not a failure — it is a question.',
+      'The body keeps an honest ledger. This is it: texture, not judgment.',
       'The mirror does not scold. It only shows. The rest is yours.'
     ];
     var ci = Math.floor(Date.now()/86400000) % closings.length;
@@ -129,44 +193,494 @@ body[data-temple] { --ink-faint: var(--t-dim); }
 
   function render(){
     var v=document.getElementById('view'); v.innerHTML='';
-    var data=compute();
+    var data=compute(), count=wantsCount();
 
-    var total=el('div','total');
-    total.appendChild(el('div','total-num', data.total));
-    total.appendChild(el('div','total-label', data.total===1?'practice tended this week':'practices tended this week'));
-    v.appendChild(total);
-
-    if(data.total===0){
-      v.appendChild(el('div','reflection', reflection(data)));
-      v.appendChild(el('div','empty','Open a temple, run one practice, and the mirror will have something to show you.'));
-      return;
+    if(count){
+      var total=el('div','total');
+      total.appendChild(el('div','total-num', data.total));
+      total.appendChild(el('div','total-label', data.total===1?'practice marked in the last seven days':'practices marked in the last seven days'));
+      v.appendChild(total);
     }
 
-    v.appendChild(el('div','reflection', reflection(data)));
+    v.appendChild(el('div','reflection', reflection(data, count)));
 
     v.appendChild(el('div','eyebrow','by temple'));
-    var leadN=Math.max.apply(null, TEMPLES.map(function(t){return data.perTemple[t.key];}));
     TEMPLES.forEach(function(t){
       var n=data.perTemple[t.key];
-      var row=el('div','t-row');
-      var dot=el('div','t-dot'); dot.style.background = n? t.color : 'var(--ink-faint)'; dot.style.opacity = n? '1':'0.4';
-      row.appendChild(dot);
+      if(t.temple==='magnetic' && !n) return;            // the older cut: a row only when something is there
+      var row=el('div','t-row'); row.setAttribute('data-temple', t.temple);
+      row.appendChild(el('div','t-dot'+(n?'':' quiet')));
       row.appendChild(el('div','t-name'+(n?'':' quiet'), esc(t.name)));
-      row.appendChild(el('div','t-count'+(n===0?' zero':(n===leadN?' lead':'')), n));
+      if(count) row.appendChild(el('div','t-count', n));
       v.appendChild(row);
     });
 
-    v.appendChild(el('div','eyebrow','fuel lines fed'));
+    v.appendChild(el('div','eyebrow','lines touched'));
     var chips=el('div','chips');
     STACKS.forEach(function(k){
       chips.appendChild(el('div','chip '+(data.fed[k]?'fed':'quiet'), k));
     });
     v.appendChild(chips);
-    v.appendChild(el('div','hint','Fed = touched at least once in the last 7 days. A quiet line is a nudge, never a scold.'));
+    v.appendChild(el('div','hint','Lit means touched at least once in the last seven days.'));
   }
 
   document.getElementById('back-btn').addEventListener('click', function(){ try{ window.parent.postMessage('close-temple','*'); }catch(e){} try{ window.location.href='index.html'; }catch(e){} });
+  window.MirrorWeek = { render: render, stacksOf: function(){ return { STACKS:STACKS, INNER_CAT_STACK:INNER_CAT_STACK, GRIM_STACK:GRIM_STACK }; } };
   render();
+})();
+</script>
+
+<script>
+// Patterns (Portal remake step 7; portal_remake/BUILD_PLAN.md §2 and §6). One page that gathers every graph.
+//
+// The graph rule holds on all of it: a graph shows what is there. An empty store draws the same calm shape as a full
+// one. Nothing is red, no gap is drawn as a failure, nothing counts a run of days. A target, a record or a count is a
+// switch on its own graph, off until it is tapped, and remembered.
+//
+// This page READS the stores and writes exactly one, its own, and only on a tap:
+//   portal_patterns_v1 { v:1, range:'week'|'month'|'season'|'year',
+//                        opts:{ <graph>: { count?:true, record?:true, target?:true, targetKg?:number } },
+//                        read:{ id, at, day } }      the weekly read he last asked A for (the id of his question)
+//   graphs: ribbons (count) · stack (count) · lifts (record) · weight (target) · sleep (target) · moon (count) ·
+//           river (count) · mirror (count)
+// Read, never written: body_temple_v1, body_weigh_v1, body_watch_v1, body_extras_v1, inner_temple_v1, inner_extras_v1,
+// breath_temple_v1, beast_temple_v1, magnetic_temple_v1, grimoire_v1, healing_felt_v1, vocal_v1, portal_plan_v1,
+// portal_dir_v1 (is the question still on the phone), portal_advice_v1 (answers left today), and A's thread.
+//
+// The weekly read is asked only on his tap, through director.js's own send (TempleDirector.send: the village's
+// outbox and /sync, as every line to a director goes). What comes back is A's answer in her thread, shown here as
+// she wrote it. Nothing is asked by itself and nothing is written on the phone in her name.
+(function () {
+  'use strict';
+  const SET = 'portal_patterns_v1', DAY = 86400000, WEEK = 7 * DAY, C = window.Charts, TS = window.TempleShell;
+  const $ = (id) => document.getElementById(id);
+  const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+  const readJ = (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } };
+  const isObj = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+  const obj = (v) => (isObj(v) ? v : {});
+  const arr = (v) => (Array.isArray(v) ? v : []);
+  const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], WD = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const short = (t) => { const d = new Date(t); return d.getDate() + ' ' + MON[d.getMonth()]; };
+  const hhmm = (t) => { const d = new Date(t); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+  const localDay = (t) => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  const dayStart = (t) => { const d = new Date(t); return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(); };
+  const noon = (day) => Date.parse(day + 'T12:00:00');
+  const fmt = (n) => (Math.round(n * 10) / 10).toString();
+  const chart = (svg) => { const d = el('div', 'ts-chart'); d.innerHTML = svg || ''; return d; };
+  const say = (text) => el('p', 'pt-say', text);
+
+  // ── its own store ──
+  const RANGES = {
+    week:   { days: 7,   cells: 7,  unit: 'day',  say: 'the last seven days',       left: 'seven days ago',  right: 'today' },
+    month:  { days: 30,  cells: 30, unit: 'day',  say: 'the last thirty days',      left: 'thirty days ago', right: 'today' },
+    season: { days: 91,  cells: 13, unit: 'week', say: 'the last thirteen weeks',   left: 'thirteen weeks ago', right: 'now' },
+    year:   { days: 364, cells: 52, unit: 'week', say: 'the last fifty-two weeks',  left: 'a year ago',      right: 'now' },
+  };
+  function settings() {
+    const s = obj(readJ(SET));
+    return { v: 1, range: RANGES[s.range] ? s.range : 'week', opts: obj(s.opts), read: isObj(s.read) && typeof s.read.id === 'string' ? s.read : null };
+  }
+  function save(s) {
+    const out = { v: 1, range: s.range, opts: s.opts }; if (s.read) out.read = s.read;
+    try { localStorage.setItem(SET, JSON.stringify(out)); return true; } catch (e) { return false; }
+  }
+  const opt = (g) => obj(settings().opts[g]);
+  function flip(g, key) {
+    const s = settings(), o = obj(s.opts[g]);
+    if (o[key]) delete o[key]; else o[key] = true;
+    if (Object.keys(o).length) s.opts[g] = o; else delete s.opts[g];
+    save(s);
+  }
+  const range = () => RANGES[settings().range];
+
+  // ── what the temples hold: every marked practice as { t, temple, name, stacks } ──
+  const ROWS = [
+    { temple: 'body', name: 'Body' }, { temple: 'inner', name: 'Inner' }, { temple: 'breath', name: 'Breath' }, { temple: 'healing', name: 'Healing' },
+    { temple: 'beast', name: 'Beast', note: 'shown on this phone only' }, { temple: 'vocal', name: 'Vocal' },
+    { temple: 'magnetic', name: 'Magnetic', note: 'the older cut', sig: 'beast', ifAny: true },
+  ];
+  const FULL = { body: 'Body Temple', inner: 'Inner Temple', breath: 'Breath Temple', healing: 'Healing Temple', beast: 'Beast Temple', vocal: 'Vocal Temple', magnetic: 'Magnetic Temple' };
+  const sessionsOf = (key) => arr(obj(readJ(key)).sessions).filter(isObj);
+  const tsOf = (s) => (typeof s.at === 'number' ? s.at : s.at ? Date.parse(s.at) || 0 : s.date ? noon(s.date) || 0 : 0);
+  const strs = (v) => arr(v).filter((k) => typeof k === 'string');
+  function marks() {
+    const K = window.MirrorWeek ? window.MirrorWeek.stacksOf() : { INNER_CAT_STACK: {}, GRIM_STACK: {} }, out = [];
+    const push = (t, temple, name, stacks) => { if (t > 0) out.push({ t, temple, name: typeof name === 'string' ? name : '', stacks: stacks || [] }); };
+    sessionsOf('body_temple_v1').forEach((s) => push(tsOf(s), 'body', s.planName || (s.rest ? 'Rest day' : ''), s.type === 'training' ? ['body', 'breath'] : ['body']));
+    const lib = {}; arr(obj(readJ('inner_temple_v1')).library).forEach((e) => { if (isObj(e)) lib[e.id] = e; });
+    sessionsOf('inner_temple_v1').forEach((s) => push(tsOf(s), 'inner', s.practiceName, (lib[s.practiceId] && K.INNER_CAT_STACK[lib[s.practiceId].category]) || ['energy']));
+    arr(obj(readJ('inner_extras_v1')).marks).filter(isObj).forEach((m) => push(+m.at || 0, 'inner', 'The protective egg', []));
+    sessionsOf('breath_temple_v1').forEach((s) => push(tsOf(s), 'breath', s.name, strs(s.stack)));
+    sessionsOf('grimoire_v1').forEach((s) => push(tsOf(s), 'healing', s.name, Array.isArray(s.stack) ? strs(s.stack) : K.GRIM_STACK[s.id] || ['healing']));
+    sessionsOf('beast_temple_v1').forEach((s) => push(tsOf(s), 'beast', s.name, strs(s.stack)));
+    sessionsOf('magnetic_temple_v1').forEach((s) => push(tsOf(s), 'magnetic', s.name, strs(s.stack)));
+    sessionsOf('vocal_v1').forEach((s) => push(tsOf(s), 'vocal', s.name, strs(s.stack)));
+    return out;
+  }
+  // his own words, wherever a temple keeps them. Newest first. Beast's five-minute door writes two words of its own
+  // in front of his line; only what he typed after them is taken.
+  function feltLines() {
+    const out = [], push = (t, temple, text) => { text = typeof text === 'string' ? text.replace(/\s+/g, ' ').trim() : ''; if (t > 0 && text) out.push({ t, temple, text: text.slice(0, 200) }); };
+    arr(obj(readJ('healing_felt_v1')).lines).filter(isObj).forEach((l) => push(+l.at || 0, 'healing', l.text));
+    sessionsOf('inner_temple_v1').forEach((s) => push(tsOf(s), 'inner', s.finalNotes));
+    arr(obj(readJ('inner_extras_v1')).marks).filter(isObj).forEach((m) => push(+m.at || 0, 'inner', m.text));
+    sessionsOf('breath_temple_v1').forEach((s) => push(tsOf(s), 'breath', s.notes));
+    const door = /^the five-minute door · (?:warm and heavy|head buzzy)(?: · )?/;
+    sessionsOf('beast_temple_v1').forEach((s) => push(tsOf(s), 'beast', typeof s.notes === 'string' ? s.notes.replace(door, '') : ''));
+    sessionsOf('magnetic_temple_v1').forEach((s) => push(tsOf(s), 'magnetic', s.notes));
+    return out.sort((a, b) => b.t - a.t);
+  }
+
+  // ── the switch under a graph ──
+  const SW = {
+    'ribbons:count': ['show how many', 'hide the numbers'], 'stack:count': ['show the days', 'hide the days'], 'lifts:record': ['show the record', 'hide the record'],
+    'weight:target': ['show a target', 'hide the target'], 'sleep:target': ['show six hours as a line', 'back to the ribbon'], 'moon:count': ['show how many days', 'hide the number'],
+    'river:count': ['show how many', 'hide the number'], 'mirror:count': ['show the numbers', 'hide the numbers'],
+  };
+  function paintSwitch(b) {
+    const id = b.dataset.sw, p = id.split(':'), on = !!opt(p[0])[p[1]];
+    b.textContent = SW[id][on ? 1 : 0]; b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+  function sw(id) { const b = el('button', 'ts-link pt-sw'); b.type = 'button'; b.dataset.sw = id; paintSwitch(b); return b; }
+  function foot(text, id) { const f = el('div', 'ts-cf'); f.appendChild(el('span', '', text)); if (id) f.appendChild(sw(id)); return f; }
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest && e.target.closest('button[data-sw]'); if (!b) return;
+    const p = b.dataset.sw.split(':'); flip(p[0], p[1]);
+    if (p[0] === 'mirror') { if (window.MirrorWeek) window.MirrorWeek.render(); paintSwitch(b); } else paint();
+    const again = document.querySelector('button[data-sw="' + b.dataset.sw + '"]'); if (again) again.focus({ preventScroll: true });
+  });
+
+  // ── 1 · the temples as ribbons ──
+  function cellsFor(ts, r, now) {
+    const cells = Array(r.cells).fill(0), end = dayStart(now) + DAY;
+    ts.forEach((t) => { const k = r.cells - 1 - Math.floor((r.unit === 'day' ? end - t : now - t) / (r.unit === 'day' ? DAY : WEEK)); if (k >= 0 && k < r.cells && t <= now + DAY) cells[k]++; });
+    return cells;
+  }
+  function paintRibbons(all, now) {
+    const box = $('pt-ribbons'), r = range(), count = !!opt('ribbons').count; box.textContent = '';
+    $('pt-ribsec').textContent = settings().range === 'year' ? 'The year, temple by temple' : 'Temple by temple, ' + r.say;
+    ROWS.forEach((row) => {
+      const ts = all.filter((m) => m.temple === row.temple).map((m) => m.t);
+      if (row.ifAny && !ts.length) return;
+      const cells = cellsFor(ts, r, now), lv = cells.map((n) => (r.unit === 'day' ? Math.min(3, n) : n >= 4 ? 3 : n >= 2 ? 2 : n));
+      const d = el('div', 'pt-rib'); d.dataset.temple = row.temple; d.dataset.lit = String(lv.filter((n) => n > 0).length);
+      const l = el('div', 'pt-rl'); l.appendChild(TS.sig(row.sig || row.temple, 18)); l.appendChild(document.createTextNode(row.name)); if (row.note) l.appendChild(el('small', '', row.note));
+      d.appendChild(l);
+      d.appendChild(chart(C.ribbon(lv, { cols: r.cells, gap: r.cells > 30 ? 1.6 : r.cells > 13 ? 2.5 : 4, ch: 22, count: count ? (r.unit === 'day' ? 'days' : 'weeks') : false,
+        label: FULL[row.temple] + ', ' + r.say + ', lit where a practice was marked' })));
+      box.appendChild(d);
+    });
+    box.appendChild(foot(r.left + ' on the left, ' + r.right + ' on the right', 'ribbons:count'));
+  }
+
+  // ── 2 · the stack, this week against the last four ──
+  function paintStack(all, now) {
+    const box = $('pt-stack'), AX = ['body', 'breath', 'energy', 'field', 'healing', 'primal'], count = !!opt('stack').count; box.textContent = '';
+    const sets = [], days = [];
+    for (let w = 4; w >= 0; w--) {
+      const hi = now - w * WEEK, lo = hi - WEEK, seen = AX.map(() => new Set());
+      all.forEach((m) => { if (m.t > lo && m.t <= hi) m.stacks.forEach((k) => { const i = AX.indexOf(k); if (i >= 0) seen[i].add(localDay(m.t)); }); });
+      sets.push(seen.map((s) => Math.min(1, s.size / 7))); if (w === 0) days.push(...seen.map((s) => s.size));
+    }
+    const any = sets.some((s) => s.some((v) => v > 0));
+    box.dataset.any = any ? 'yes' : 'no';
+    box.appendChild(el('div', 'ts-eyebrow', 'where the week went'));
+    box.appendChild(chart(C.layers(AX, sets, { h: 236, counts: count ? days : null, label: 'Six lines of practice: this week filled, the four weeks before as thin outlines' })));
+    if (!any) box.appendChild(say('Nothing was marked in these five weeks. The shape draws itself when there is something to draw.'));
+    box.appendChild(foot('a shape, not a mark out of anything. the thin outlines are the four weeks before.', 'stack:count'));
+  }
+
+  // ── 3 · the body, as lines: top sets, weight, sleep. Each only where there is something. ──
+  const FAMILIES = [
+    { id: 'bench', name: 'Bench press', is: (e) => e.libraryId === 'bench_press' || /bench press/i.test(e.name || '') },
+    { id: 'pull', name: 'Pull-up', is: (e) => e.libraryId === 'pullup' || e.libraryId === 'weighted_pullup' || /\b(pull-?ups?|chin-?ups?)\b/i.test(e.name || '') },
+    { id: 'squat', name: 'Squat', is: (e) => e.libraryId === 'back_squat' || /back squat/i.test(e.name || '') },
+  ];
+  // as Body Temple reads a load: the typed weight, else a weight written in the note
+  function kgOf(e) {
+    if (typeof e.weight === 'number' && e.weight > 0) return e.weight;
+    const n = typeof e.notes === 'string' ? e.notes : '', kg = /(\d+(?:[.,]\d+)?)\s*(?:kg|kilo(?:s|gram)?)/i.exec(n), lb = kg ? null : /(\d+(?:[.,]\d+)?)\s*(?:lbs?|pound(?:s)?)/i.exec(n);
+    return kg ? parseFloat(kg[1].replace(',', '.')) : lb ? parseFloat(lb[1].replace(',', '.')) * 0.453592 : null;
+  }
+  function series(sessions, is, from) {                                  // the top set of each session, oldest first, as Body draws it
+    const plain = [], added = [];
+    sessions.slice().reverse().forEach((s) => {
+      if (typeof s.date !== 'string' || !(noon(s.date) >= from)) return;
+      let p = null, a = null;
+      arr(s.exercises).filter(isObj).forEach((e) => {
+        if (!is(e)) return;
+        if (e.bw) { if (e.done || e.weight > 0) a = Math.max(a == null ? 0 : a, e.weight > 0 ? e.weight : 0); return; }
+        const w = kgOf(e); if (w) p = Math.max(p == null ? 0 : p, Math.round(w * 10) / 10);
+      });
+      if (p != null) plain.push({ date: s.date, kg: p });
+      if (a != null) added.push({ date: s.date, kg: a });
+    });
+    return added.length ? { pts: added, added: true } : { pts: plain, added: false };
+  }
+  function nightsOf(now, n) {                                             // hours slept per night, oldest first; null where nothing was written
+    const w = arr(obj(readJ('body_watch_v1')).days).filter(isObj), typed = obj(obj(readJ('body_extras_v1')).sleep), out = [];
+    for (let i = n - 1; i >= 0; i--) {
+      const day = localDay(dayStart(now) - i * DAY + DAY / 2), wd = w.filter((d) => d.day === day)[0];
+      out.push(wd && typeof wd.sleep === 'number' && wd.sleep > 0 ? wd.sleep : typeof typed[day] === 'number' && typed[day] > 0 ? typed[day] : null);
+    }
+    return out;
+  }
+  function paintBody(now) {
+    const box = $('pt-body'), r = range(), from = dayStart(now) - (r.days - 1) * DAY; box.textContent = '';
+    const sessions = sessionsOf('body_temple_v1'); let n = 0;
+    const group = (id) => { const g = el('div', 'pt-g'); g.dataset.graph = id; box.appendChild(g); n++; return g; };
+
+    let fams = FAMILIES.map((f) => ({ name: f.name, s: series(sessions, f.is, from) })).filter((f) => f.s.pts.length);
+    if (!fams.length) {                                                   // none of the three is there: the three lifts that are there most
+      const seen = {};
+      sessions.forEach((s) => { if (typeof s.date === 'string' && noon(s.date) >= from) arr(s.exercises).filter(isObj).forEach((e) => { if (e.name && kgOf(e)) seen[e.name] = (seen[e.name] || 0) + 1; }); });
+      fams = Object.keys(seen).sort((a, b) => seen[b] - seen[a]).slice(0, 3).map((nm) => ({ name: nm, s: series(sessions, (e) => e.name === nm, from) })).filter((f) => f.s.pts.length);
+    }
+    if (fams.length) {
+      const g = group('lifts'), rec = !!opt('lifts').record;
+      fams.forEach((f) => {
+        const p = f.s.pts, last = p[p.length - 1], best = p.reduce((a, q) => (a && a.kg >= q.kg ? a : q), null);
+        const two = el('div', 'ts-two'), a = el('div'), b = el('div'), big = el('div', 'ts-big ts-serif', fmt(last.kg) + ' ');
+        a.appendChild(el('div', 'ts-eyebrow', f.name + (f.s.added ? ' · load added' : ' · top set'))); big.appendChild(el('small', '', 'kg')); a.appendChild(big);
+        b.appendChild(chart(C.spark(p.map((x) => x.kg), { w: 150, h: 44, record: rec, label: f.name + ', the top set of each session, ' + r.say })));
+        two.appendChild(a); two.appendChild(b); g.appendChild(two);
+        if (rec) g.appendChild(say('Highest in this span: ' + fmt(best.kg) + ' kg, ' + short(noon(best.date)) + '.'));
+      });
+      g.appendChild(foot('the heaviest set of each session, as logged. the number is the latest.', 'lifts:record'));
+    }
+
+    const weigh = arr(obj(readJ('body_weigh_v1')).entries).filter((e) => isObj(e) && /^\d{4}-\d{2}-\d{2}$/.test(e.date) && typeof e.kg === 'number' && noon(e.date) >= from).sort((a, b) => (a.date < b.date ? -1 : 1));
+    if (weigh.length) {
+      const g = group('weight'), o = opt('weight'), theirs = obj(obj(obj(readJ('body_extras_v1')).graphs).weight).targetKg;
+      const tk = o.target ? (typeof o.targetKg === 'number' ? o.targetKg : typeof theirs === 'number' ? theirs : null) : null;
+      g.appendChild(el('div', 'ts-eyebrow', 'Weigh-in'));
+      g.appendChild(chart(C.line(weigh.map((x) => x.kg), { h: 112, unit: ' kg', from: short(noon(weigh[0].date)), to: short(noon(weigh[weigh.length - 1].date)), target: tk == null ? undefined : tk, label: 'Weight, from the weigh-ins, ' + r.say })));
+      g.appendChild(foot('from the weigh-ins. a gap is just a gap.', 'weight:target'));
+      if (o.target) {
+        const row = el('div', 'pt-target'), inp = el('input', 'ts-input'), keep = el('button', 'ts-btn', 'Keep');
+        inp.type = 'text'; inp.inputMode = 'decimal'; inp.id = 'pt-target-kg'; inp.autocomplete = 'off'; inp.setAttribute('aria-label', 'A line at, in kg'); if (tk != null) inp.value = String(tk);
+        keep.type = 'button'; keep.id = 'pt-target-keep';
+        keep.addEventListener('click', () => {
+          const v = Math.round(parseFloat(String(inp.value).replace(',', '.')) * 10) / 10, s = settings(), w = obj(s.opts.weight);
+          if (v >= 20 && v <= 300) w.targetKg = v; else delete w.targetKg;
+          w.target = true; s.opts.weight = w; save(s); paint();
+        });
+        row.appendChild(el('span', '', 'a line at')); row.appendChild(inp); row.appendChild(el('span', '', 'kg')); row.appendChild(keep); g.appendChild(row);
+      }
+    }
+
+    const nights = nightsOf(now, r.days);
+    if (nights.some((v) => v != null)) {
+      const g = group('sleep'), six = !!opt('sleep').target;
+      let vals = nights, lab = r.unit === 'day' ? 'hours slept, night by night' : 'hours slept, the mean of each week';
+      if (r.unit === 'week') { vals = []; for (let i = 0; i < r.cells; i++) { const wk = nights.slice(i * 7, i * 7 + 7).filter((v) => v != null); vals.push(wk.length ? wk.reduce((a, v) => a + v, 0) / wk.length : null); } }
+      g.appendChild(el('div', 'ts-eyebrow', 'Sleep'));
+      g.appendChild(chart(six ? C.bars(vals.map((v) => (v == null ? 0 : v)), { h: 96, target: 6, labels: vals.map(() => ''), label: lab + ', with a line at six' })
+        : C.ribbon(vals.map((h) => (h == null ? 0 : h >= 7 ? 3 : h >= 6 ? 2 : 1)), { cols: vals.length, gap: vals.length > 30 ? 1.6 : vals.length > 13 ? 2.5 : 4, ch: 22, labels: [r.left, r.unit === 'day' ? 'last night' : 'now'], label: lab })));
+      g.appendChild(foot('lit by the hours, from the watch where it wrote and typed where you did.', 'sleep:target'));
+    }
+
+    box.dataset.any = n ? 'yes' : 'no';
+    if (!n) {
+      box.appendChild(el('div', 'ts-eyebrow', 'Body Temple'));
+      box.appendChild(chart(C.spark([], { w: 311, h: 36, label: 'Nothing from the Body Temple in this span' })));
+      box.appendChild(say('Nothing from the Body Temple in ' + r.say + ': no top set, no weigh-in, no night. A line draws itself when there is something to draw.'));
+    }
+  }
+
+  // ── 4 · the moon's month, with the marked days placed on it ──
+  function moonNow(now) {                                                 // the same mean month sky.js draws: true to within a few hours
+    const syn = 29.530588853, ref = Date.UTC(2000, 0, 6, 18, 14);
+    let age = ((now - ref) / DAY) % syn; if (age < 0) age += syn;
+    const p = age / syn;
+    const name = p < 0.03 || p > 0.97 ? 'New moon' : p < 0.22 ? 'Waxing crescent' : p < 0.28 ? 'First quarter' : p < 0.47 ? 'Waxing gibbous'
+      : p < 0.53 ? 'Full moon' : p < 0.72 ? 'Waning gibbous' : p < 0.78 ? 'Last quarter' : 'Waning crescent';
+    return { p, age, name, syn };
+  }
+  function paintMoon(all, now) {
+    const box = $('pt-moon'), m = moonNow(now), start = now - m.age * DAY, days = Array.from({ length: 30 }, () => []), seen = []; box.textContent = '';
+    all.forEach((x) => { if (x.t < start || x.t > now) return; const i = Math.min(29, Math.floor((x.t - start) / m.syn / DAY * 30)); if (days[i].indexOf(x.temple) < 0) days[i].push(x.temple); if (seen.indexOf(x.temple) < 0) seen.push(x.temple); });
+    const order = ROWS.map((r) => r.temple); days.forEach((d) => d.sort((a, b) => order.indexOf(a) - order.indexOf(b)));
+    box.dataset.marked = String(days.filter((d) => d.length).length);
+    box.appendChild(el('div', 'ts-eyebrow', 'computed, not looked up'));
+    box.appendChild(chart(C.moon(days, { p: m.p, centre: m.name, sub: 'day ' + (Math.floor(m.age) + 1), count: opt('moon').count ? 'days marked' : false,
+      label: 'The moon’s month as a ring, new moon at the top: ' + m.name + ', day ' + (Math.floor(m.age) + 1) + '. Each dot is a day a temple was marked.' })));
+    if (seen.length) {
+      const lg = el('div', 'pt-legend');
+      ROWS.filter((r) => seen.indexOf(r.temple) >= 0).forEach((r) => { const s = el('span'); s.dataset.temple = r.temple; s.appendChild(el('i')); s.appendChild(document.createTextNode(r.name)); lg.appendChild(s); });
+      box.appendChild(lg);
+    }
+    box.appendChild(foot(seen.length ? 'each dot is a day a temple was marked, in its own colour, since the new moon. read, not ruled.' : 'nothing marked since the new moon. the ring turns either way. read, not ruled.', 'moon:count'));
+  }
+
+  // ── 5 · felt lines, as a word trail ──
+  function paintFelt(now) {
+    const box = $('pt-felt'), r = range(), from = dayStart(now) - (r.days - 1) * DAY, all = feltLines().filter((l) => l.t >= from), l = all.slice(0, 30); box.textContent = '';
+    box.dataset.lines = String(l.length);
+    box.appendChild(el('div', 'ts-eyebrow', 'in your own words, newest first'));
+    if (!l.length) { box.appendChild(say('No lines kept in ' + r.say + '. A line written after a practice shows here, as you wrote it.')); return; }
+    const p = el('p', 'pt-trail'), seen = [];
+    l.forEach((x, i) => {
+      if (i) { const dot = el('i', '', '·'); dot.dataset.temple = x.temple; dot.setAttribute('aria-hidden', 'true'); p.appendChild(dot); }
+      const s = el('span', 'pt-line', x.text); s.dataset.temple = x.temple; s.title = (FULL[x.temple] || '') + ' · ' + short(x.t); p.appendChild(s);
+      if (seen.indexOf(x.temple) < 0) seen.push(x.temple);
+    });
+    box.appendChild(p);
+    box.appendChild(say('From ' + ROWS.filter((w) => seen.indexOf(w.temple) >= 0).map((w) => w.name).join(', ') + (all.length > l.length ? '. The newest thirty.' : '.')));
+  }
+
+  // ── 6 · the day plan's history: what was placed, never what was left ──
+  function paintRiver(now) {
+    const box = $('pt-river'), r = range(), n = Math.min(r.days, 30), plan = obj(readJ('portal_plan_v1')), vals = [], names = []; box.textContent = '';
+    const today = new Date(now).toISOString().slice(0, 10);              // the key home and dayplan.js use
+    for (let i = n - 1; i >= 0; i--) {
+      const key = new Date(Date.parse(today + 'T12:00:00Z') - i * DAY).toISOString().slice(0, 10), acts = arr(obj(plan[key]).activities).filter((a) => isObj(a) && typeof a.name === 'string' && a.name.trim());
+      vals.push(acts.length); acts.forEach((a) => names.unshift(a.name.trim().slice(0, 80)));
+    }
+    const any = vals.some((v) => v > 0);
+    box.dataset.any = any ? 'yes' : 'no';
+    box.appendChild(el('div', 'ts-eyebrow', 'what you placed'));
+    box.appendChild(chart(C.river(vals, { from: n === 7 ? 'seven days ago' : 'thirty days ago', to: 'today', count: opt('river').count ? 'placed' : false, label: 'The day plan, ' + (n === 7 ? 'seven' : 'thirty') + ' days: as wide each day as what was placed' })));
+    if (any) {
+      const p = el('p', 'pt-names');
+      names.slice(0, 12).forEach((nm, i) => { if (i) { const d = el('i', '', '·'); d.setAttribute('aria-hidden', 'true'); p.appendChild(d); } p.appendChild(document.createTextNode(nm)); });
+      box.appendChild(p);
+    } else box.appendChild(say('Nothing was placed in the plan in these ' + (n === 7 ? 'seven' : 'thirty') + ' days. The river is a thread until something is.'));
+    box.appendChild(foot('as wide as what you placed that day. what was left is not kept anywhere.' + (r.days > 30 ? ' the plan keeps thirty days.' : ''), 'river:count'));
+  }
+
+  // ── 7 · the range ──
+  function paintRange() {
+    const cur = settings().range;
+    $('pt-range').querySelectorAll('button').forEach((b) => { const on = b.dataset.range === cur; b.classList.toggle('ts-on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+    $('pt-span').textContent = 'Showing ' + RANGES[cur].say + '. The stack, the moon and the mirror keep their own spans.';
+  }
+  $('pt-range').addEventListener('click', (e) => {
+    const b = e.target.closest && e.target.closest('button[data-range]'); if (!b || !RANGES[b.dataset.range]) return;
+    const s = settings(); if (s.range === b.dataset.range) return;
+    s.range = b.dataset.range; save(s); paint();
+  });
+
+  // ── 9 · one weekly read by A ──
+  // What is sent is put together from the last seven days and shown to him before he sends it. The Beast Temple is
+  // thin outside this phone: only how many days, never a name or a line of it.
+  function weekText(now) {
+    const from = now - WEEK, wk = marks().filter((m) => m.t > from && m.t <= now).sort((a, b) => a.t - b.t), L = [];
+    L.push('A short read of this week, please: what you see in it, in a few lines.', '', 'What this phone holds for the last seven days (' + short(from + DAY) + ' to ' + short(now) + '):');
+    let any = false;
+    ROWS.forEach((row) => {
+      const ms = wk.filter((m) => m.temple === row.temple); if (!ms.length) return; any = true;
+      if (row.temple === 'beast' || row.temple === 'magnetic') { const d = new Set(ms.map((m) => localDay(m.t))).size; L.push(FULL[row.temple] + ': marked on ' + d + (d === 1 ? ' day.' : ' days.')); return; }
+      const bits = ms.slice(0, 14).map((m) => WD[new Date(m.t).getDay()] + (m.name ? ' (' + m.name.slice(0, 40) + ')' : ''));
+      L.push(FULL[row.temple] + ': ' + bits.join(', ') + (ms.length > 14 ? ', and ' + (ms.length - 14) + ' more' : '') + '.');
+    });
+    if (!any) L.push('Nothing was marked in a temple on this phone.');
+    const lines = []; wk.forEach((m) => m.stacks.forEach((k) => { if (lines.indexOf(k) < 0) lines.push(k); }));
+    if (lines.length) L.push('Lines touched: ' + lines.join(', ') + '.');
+    const nights = nightsOf(now, 7).map((h, i) => (h == null ? null : WD[new Date(dayStart(now) - (6 - i) * DAY).getDay()] + ' ' + fmt(h))).filter(Boolean);
+    if (nights.length) L.push('Sleep, hours by night: ' + nights.join(', ') + '.');
+    const weigh = arr(obj(readJ('body_weigh_v1')).entries).filter((e) => isObj(e) && typeof e.date === 'string' && typeof e.kg === 'number' && noon(e.date) > from && noon(e.date) <= now + DAY);
+    if (weigh.length) L.push('Weigh-in: ' + weigh.map((e) => fmt(e.kg) + ' kg (' + short(noon(e.date)) + ')').join(', ') + '.');
+    const felt = feltLines().filter((l) => l.t > from && l.temple !== 'beast' && l.temple !== 'magnetic').slice(0, 8);
+    if (felt.length) L.push('In his own words: ' + felt.map((l) => '"' + l.text.slice(0, 160) + '" (' + (ROWS.filter((w) => w.temple === l.temple)[0] || {}).name + ')').join('; ') + '.');
+    const plan = obj(readJ('portal_plan_v1')), placed = [];
+    Object.keys(plan).sort().forEach((k) => { const t = Date.parse(k + 'T12:00:00Z'); if (!(t > from - DAY && t <= now + DAY)) return; arr(obj(plan[k]).activities).filter(isObj).forEach((a) => { if (typeof a.name === 'string' && a.name.trim()) placed.push(a.from === 'rak' || a.temple === 'beast' || a.temple === 'magnetic' ? 'something from the Beast Temple' : a.name.trim().slice(0, 60)); }); });
+    if (placed.length) L.push('Placed in the day plan: ' + placed.slice(0, 12).join(', ') + (placed.length > 12 ? ', and ' + (placed.length - 12) + ' more' : '') + '.');
+    L.push('', 'Asked from the Patterns page, on his tap.');
+    return L.join('\n').slice(0, 4400);
+  }
+  let readStamp = '', folded = false, showSent = false, readNote = '', watch = null;
+  const pendingHas = (id) => arr(obj(readJ('portal_dir_v1')).pending).some((m) => m && m.id === id);
+  async function findReply(id) {
+    const Talk = window.TempleTalk; if (!Talk || !id) return null;
+    try { const rec = await Talk.getThread('a'); return arr(rec && rec.threads).flatMap((t) => arr(t.rows)).filter((r) => r && r.ref === id && !r.me && !r.sys).pop() || null; } catch (e) { return null; }
+  }
+  function capsLine() {
+    const c = obj(obj(readJ('portal_advice_v1')).caps);
+    return Number.isFinite(c.left) && typeof c.at === 'string' && c.at.slice(0, 10) === new Date().toISOString().slice(0, 10) ? 'The village has ' + c.left + (c.left === 1 ? ' answer' : ' answers') + ' left today.' : '';
+  }
+  function roadLine() {                                                    // where a question would wait, said plainly
+    const D = window.TempleDirector; if (!D) return '';                 // still loading: said only if he taps before it is there
+    const l = D.light();
+    if (l.text === 'not paired with the PC') return 'This phone is not paired with the PC yet. A question waits here until it is. Pairing is done once, in the village.';
+    if (l.text === 'phone offline') return 'The phone is offline. A question waits here until there is a connection.';
+    if (l.cls === 'ts-warn') return 'The PC is asleep or out of reach. A question waits here until it is back.';
+    return '';
+  }
+  function askRead() {
+    const D = window.TempleDirector, now = Date.now();
+    if (!D) { readNote = 'The road to the PC has not loaded on this page yet. Nothing was sent.'; readStamp = ''; paintRead(); return; }
+    const m = D.send('a', weekText(now), { kind: 'week', id: localDay(now - 6 * DAY), name: 'the week to ' + short(now) });
+    if (!m) { readNote = 'It could not be sent from this page. Nothing was sent.'; readStamp = ''; paintRead(); return; }
+    const s = settings(); s.read = { id: m.id, at: m.at, day: localDay(now) }; save(s);
+    readNote = ''; showSent = false; folded = false; readStamp = ''; paintRead();
+  }
+  async function paintRead() {
+    const box = $('pt-read'), s = settings(), rd = s.read, reply = rd ? await findReply(rd.id) : null, now = Date.now();
+    const onPhone = rd && !reply && pendingHas(rd.id), long = rd && !reply && !onPhone && now - Date.parse(rd.at) > 30 * 60000;
+    const state = !rd ? 'idle' : reply ? (reply.error ? 'error' : 'answered') : onPhone ? 'waiting' : long ? 'quiet' : 'sent';
+    const road = state === 'idle' || state === 'waiting' ? roadLine() : '';
+    const stamp = [state, rd && rd.id, reply && reply.id, road, capsLine(), folded, showSent, readNote, !!window.TempleDirector].join('|');
+    if (stamp === readStamp) return; readStamp = stamp;
+    box.textContent = ''; box.dataset.state = state;
+    const link = (text, id, fn) => { const b = el('button', 'ts-link', text); b.type = 'button'; b.id = id; b.addEventListener('click', fn); return b; };
+    const again = () => { const s2 = settings(); s2.read = null; save(s2); folded = false; readStamp = ''; paintRead(); };
+    const talk = () => { if (window.TempleDirector) window.TempleDirector.open('a', { tab: 'talk' }); };
+
+    if (state === 'idle' && folded) { box.appendChild(link('A read of the week, if you want one', 'pt-unfold', () => { folded = false; paintRead(); })); return; }
+    if (state === 'idle') {
+      box.appendChild(el('div', 'ts-eyebrow', 'a read of the week'));
+      box.appendChild(el('h2', '', 'A can read this week for you, if you would like'));
+      box.appendChild(el('p', '', 'It is a real run on the PC, and it only happens when you ask.'));
+      const caps = capsLine(); if (caps) box.appendChild(el('p', 'pt-say', caps));
+      if (road) { const p = el('p', 'pt-say', road); p.id = 'pt-road'; box.appendChild(p); }
+      if (readNote) { const p = el('p', 'pt-say', readNote); p.id = 'pt-readnote'; box.appendChild(p); }
+      const pair = el('div', 'ts-pair'), yes = el('button', 'ts-yes', 'Yes, ask A'), later = el('button', 'ts-later', 'Not now');
+      yes.type = 'button'; yes.id = 'pt-ask'; later.type = 'button'; later.id = 'pt-notnow';
+      yes.addEventListener('click', askRead); later.addEventListener('click', () => { folded = true; paintRead(); });
+      pair.appendChild(yes); pair.appendChild(later); box.appendChild(pair);
+      const pre = el('pre', 'pt-sent'); pre.id = 'pt-sent'; pre.hidden = !showSent; if (showSent) pre.textContent = weekText(now);
+      box.appendChild(link(showSent ? 'Fold what would be sent' : 'What would be sent', 'pt-showsent', () => { showSent = !showSent; paintRead(); }));
+      box.appendChild(pre);
+      return;
+    }
+    const asked = 'asked ' + (rd.day === localDay(now) ? 'today at ' + hhmm(Date.parse(rd.at)) : short(Date.parse(rd.at)));
+    if (state === 'waiting' || state === 'sent' || state === 'quiet') {
+      box.appendChild(el('div', 'ts-eyebrow', 'a read of the week · ' + asked));
+      box.appendChild(el('h2', '', state === 'waiting' ? 'Asked. It waits on this phone' : state === 'sent' ? 'Asked. A has it at the PC' : 'Asked. Nothing has come back yet'));
+      const p = el('p', '', state === 'waiting' ? (road || 'It is on its way to the PC.') + ' Her read lands here when it is written.'
+        : state === 'sent' ? 'Her read lands here when it is written. Nothing is shown until she has written it.'
+        : 'The PC took the question and no read has arrived. The talk with A shows where it stands.'); p.id = 'pt-wait'; box.appendChild(p);
+      const acts = el('div', 'pt-acts'); acts.appendChild(link('Open the talk with A', 'pt-talk', talk)); if (state === 'quiet') acts.appendChild(link('Ask again', 'pt-again', again)); box.appendChild(acts);
+      return;
+    }
+    // answered, or the PC said it could not
+    box.appendChild(el('div', 'ts-eyebrow', (state === 'error' ? 'a read of the week · ' : 'A’s read of the week · ') + asked));
+    const Talk = window.TempleTalk, Block = window.TempleAppBlock, text = Block ? Block.strip(reply.text || '') : reply.text || '';
+    if (state === 'error') box.appendChild(el('p', '', 'The PC answered that it could not write this one:'));
+    const md = el('div', 'ts-md'); md.id = 'pt-answer'; if (Talk) md.innerHTML = Talk.talkMd(text); else md.textContent = text; box.appendChild(md);
+    box.appendChild(el('p', 'pt-say', (reply.from || 'A') + ' · ' + short(Date.parse(reply.at) || now) + (rd.day !== localDay(now) ? ' · written for the week that ended ' + short(Date.parse(rd.at)) : '')));
+    const acts = el('div', 'pt-acts');
+    if (state !== 'error' && Talk) acts.appendChild(link('Copy', 'pt-copy', () => { try { Talk.copyText(text); } catch (e) {} }));
+    acts.appendChild(link('Open the talk with A', 'pt-talk', talk));
+    acts.appendChild(link(state === 'error' ? 'Ask again' : 'Ask for a new read', 'pt-again', again));
+    box.appendChild(acts);
+  }
+
+  // ── all of it ──
+  function paint() {
+    const now = Date.now(), all = marks();
+    paintRange(); paintRibbons(all, now); paintStack(all, now); paintBody(now); paintMoon(all, now); paintFelt(now); paintRiver(now);
+    document.querySelectorAll('#pt-mirror button[data-sw]').forEach(paintSwitch);
+  }
+  paint(); paintRead();
+  // director.js and talk.js arrive after the frame boots; another page of the house may write a store while this one is open
+  watch = setInterval(() => { if (!document.hidden) paintRead(); }, 3000);
+  window.addEventListener('storage', () => { paint(); if (window.MirrorWeek) window.MirrorWeek.render(); paintRead(); });
+  window.addEventListener('online', () => { readStamp = ''; paintRead(); });
+  window.addEventListener('offline', () => { readStamp = ''; paintRead(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { paint(); if (window.MirrorWeek) window.MirrorWeek.render(); paintRead(); } });
+  window.Patterns = { paint, paintRead, weekText, settings };
 })();
 </script>
 
