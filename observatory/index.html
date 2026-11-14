@@ -143,5 +143,10 @@ window.addEventListener('message', e=>{
   if (e.data === 'close-temple' || (e.data && e.data.action === 'close-temple')) closeSurface();
 });
 </script>
+<script>
+// C2 (2026-11-14): this app switches on the site's offline cache itself, so it works offline even on a phone where the
+// village was never opened. The one sw.js at the apps/ root; scope and caching are unchanged.
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('../sw.js').catch(function () {});
+</script>
 </body>
 </html>

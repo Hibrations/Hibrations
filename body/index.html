@@ -2165,6 +2165,15 @@ function undoRestore() {
   toast('restore undone');
 }
 
+// C2 conflict rule (2026-11-14): the phone is the home of this data. A backup older than what is here says so first.
+function olderWarning(s) {
+  let here; try { here = backupSummary(readAllStores()); } catch (e) { return ''; }
+  const newer = (here.lastSession && (!s.lastSession || here.lastSession > s.lastSession)) || here.sessions > s.sessions;
+  if (!newer) return '';
+  return '<div class="data-warn">this backup is older than what is here: its last session is ' + escapeHtml(s.lastSession || 'none')
+    + ', and this device has ' + here.sessions + ' sessions up to ' + escapeHtml(here.lastSession || '?') + '. restoring it would replace those.</div>';
+}
+
 function showRestorePreview(backup) {
   const s = backup.summary || backupSummary(backup.keys);
   const zone = document.getElementById('bk-zone');
@@ -2177,6 +2186,7 @@ function showRestorePreview(backup) {
     +   '<div><span class="data-num">' + s.fuelDays + '</span> days of fuel</div>'
     +   '<div class="subtle" style="margin-top:6px;">' + escapeHtml((s.keys || []).join(', ')) + '</div>'
     +   (backup.exportedAt ? '<div class="subtle">taken ' + escapeHtml(String(backup.exportedAt).slice(0, 10)) + '</div>' : '')
+    +   olderWarning(s)
     +   '<div class="data-warn">this replaces what is on the device now. a copy of the current data is kept, so you can undo it.</div>'
     +   '<button class="btn-primary" id="bk-confirm" style="width:100%;">replace with this backup</button>'
     + '</div>';
@@ -4738,5 +4748,10 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;}
 .save-toggle input{width:auto;}
 .tab-bar.fuel-bar .tab-btn.active{color:var(--fuel);}
 </style>
+<script>
+// C2 (2026-11-14): this app switches on the site's offline cache itself, so it works offline even on a phone where the
+// village was never opened. The one sw.js at the apps/ root; scope and caching are unchanged.
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('../sw.js').catch(function () {});
+</script>
 </body>
 </html>

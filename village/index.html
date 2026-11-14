@@ -608,7 +608,11 @@ function applyJob(e) {
   const d = e.data; if (!d || !d.id) return;
   if (e.kind === 'task') J.tasks[d.id] = d;
   else if (e.kind === 'goal') J.goals[d.id] = d;
-  else if (e.kind === 'card') { J.cards[d.id] = d; if (d.state !== 'open') trimCardDetails(); }
+  else if (e.kind === 'card') {
+    // C2 conflict rule (2026-11-14): the bridge keeps a card's first answer. If this device answered differently, say so.
+    const was = J.cards[d.id]; if (was && was.mine) { d.mine = was.mine; d.otherDevice = d.state !== 'open' && d.state !== was.mine.choice; }
+    J.cards[d.id] = d; if (d.state !== 'open') trimCardDetails();
+  }
   else if (e.kind === 'brief') { J.briefs = J.briefs.filter((b) => b.id !== d.id).concat(d).slice(-14); briefArrived = d; }
   else if (e.kind === 'chronicle') { if (!J.chronicle.some((c) => c.id === d.id)) J.chronicle = J.chronicle.concat(d).slice(-100); }
   else if (e.kind === 'round') J.round = d;
@@ -828,7 +832,7 @@ function cardsHtml() {
     const landed = k.landed === 'refused' ? ' · it didn’t hold when it got there, so nothing landed'
       : k.kind === 'offer' && k.state === 'yes' ? (k.landed === 'version' ? ` · in ${esc(inTemple)}, your old version kept` : k.landed === 'new' ? ` · in ${esc(inTemple)} as “${esc(k.landedName || '')}” (you had changed yours)` : k.landed === 'shelf' ? ` · on the shelf in ${esc(inTemple)}` : ` · lands when ${esc(inTemple)} opens on the phone`)
       : k.kind === 'plan' && k.state === 'yes' ? (k.landed === 'version' ? ' · in the Body Temple, your old version kept' : k.landed === 'new' ? ` · in the Body Temple as “${esc(k.landedName || k.plan.name)}” (you had changed yours)` : ' · lands when the Body Temple opens on the phone') : '';
-    const acts = k.state !== 'open' ? `<div class="meta">${k.state === 'yes' ? 'yes' : 'no'} · ${time(k.answered)}${k.noWhy ? ' · ' + esc(k.noWhy) : ''}${landed}</div>${k.state === 'yes' && copy ? `<div class="acts">${copy}</div>` : ''}`
+    const acts = k.state !== 'open' ? `<div class="meta">${k.state === 'yes' ? 'yes' : 'no'} · ${time(k.answered)}${k.noWhy ? ' · ' + esc(k.noWhy) : ''}${landed}${k.otherDevice ? ` · answered on the other device first; your ${k.mine.choice === 'yes' ? 'yes' : 'no'} here didn’t count` : ''}</div>${k.state === 'yes' && copy ? `<div class="acts">${copy}</div>` : ''}`
       : k.kind === 'hire' ? `<div class="acts"><button class="btn" data-interview="${esc(k.house)}">Interview</button><button class="btn" data-ans="yes" data-card="${esc(k.id)}">Yes, hire</button><button class="btn" data-ans="no" data-card="${esc(k.id)}">No</button><button class="btn" data-ans="change" data-card="${esc(k.id)}">Change it</button></div>`
       : k.kind === 'install' ? `<div class="acts">${copy}<button class="btn" data-ans="yes" data-card="${esc(k.id)}">Yes, I’ll install it</button><button class="btn" data-ans="no" data-card="${esc(k.id)}">No</button><button class="btn" data-ans="change" data-card="${esc(k.id)}">Change it</button></div>`
       : k.kind === 'email' ? `<div class="acts"><button class="btn" data-copy="${esc(k.id)}">Copy</button><button class="btn" data-ans="yes" data-card="${esc(k.id)}">Got it</button></div>`
@@ -898,7 +902,7 @@ function wireScroll() {
       while (!lineFits(JSON.stringify({ ref: k.id, choice, why }).length)) { why = prompt(`Too long to send. A line holds ${LINE_MAX.toLocaleString('en-GB')} characters. Shorten it, or cancel.`, why); if (why === null) return; }
     }
     outbox.push({ id: crypto.randomUUID(), kind: 'answer', to: 'A', text: JSON.stringify(why ? { ref: k.id, choice, why } : { ref: k.id, choice }), at: new Date().toISOString() }); save(K.outbox, outbox);
-    if (choice !== 'change') { k.state = choice; k.answered = new Date().toISOString(); if (why) k.noWhy = why; }
+    if (choice !== 'change') { k.state = choice; k.answered = new Date().toISOString(); k.mine = { choice, at: k.answered }; if (why) k.noWhy = why; }
     saveVillage(); sync();
     // "Change it" opens a letter to whoever made the card; a goal plan goes back to the goal box with its text
     if (choice === 'change') {
