@@ -4,115 +4,124 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Strings &amp; Soul</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<link href="temple.css" rel="stylesheet">
 <style>
-:root {
-  --bg: #0a0908; --bg-elev: #14110f; --bg-card: #1a1614;
-  --border: #2a2420; --border-soft: #1f1a17;
-  --ink: #e8e1d4; --ink-dim: #9a8f80; --ink-faint: #5e554a;
-  --teal: #46a3a8; --teal-dim: #2f6e70; --teal-faint: #1d3d3e;
-  --gold: #c89060; --crimson: #c78f8f;
-  --r-sm: 8px; --r-md: 14px; --r-lg: 20px;
-}
+/* Portal remake, step 8: the colours, header, sky and bottom bar come from temple.css and shell.js.
+   The page's old colour names are kept as aliases of the shared tokens, so its own script and classes work unchanged. */
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html, body { background: var(--bg); color: var(--ink); }
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; line-height: 1.55;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-  max-width: 680px; margin: 0 auto; min-height: 100vh; }
-.wrap { padding: 18px 16px 80px; }
+body[data-temple] {
+  --bg-elev: var(--card); --bg-card: var(--card); --border: var(--leaf); --border-soft: var(--leaf2);
+  --ink-dim: var(--muted); --ink-faint: var(--muted);
+  --teal: var(--t-text); --teal-dim: var(--t-dim); --teal-faint: var(--t-faint);
+  --gold: var(--t2-text); --crimson: var(--t-text);
+  --r-sm: 10px; --r-md: 14px; --r-lg: 18px;
+}
+#tl-btn { display: none !important; }   /* the director is in the header and the bar now (director.js) */
+
+/* the bare front: one chord on the wall, a shelf that holds nothing unless he puts it there */
+.st-wall { text-align: center; padding: 6px 0 2px; }
+.st-wall .st-name { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 44px; font-weight: 500; line-height: 1; color: var(--ink); }
+.st-wall svg { display: block; margin: 8px auto 0; }
+.st-wall .st-how { font-size: 13px; color: var(--muted); margin-top: 6px; }
+.st-shelf { display: block; width: 100%; min-height: 96px; margin: 18px 0 0; padding: 12px; border-radius: 16px; border: 1px dashed var(--leaf); background: transparent; color: var(--ink); font: inherit; font-size: 16px; line-height: 1.45; resize: vertical; }
+.st-shelf:focus-visible { outline: 2px solid var(--t-text); outline-offset: 2px; }
+.st-open { display: block; width: 100%; min-height: 48px; margin: 18px 0 0; border-radius: 14px; border: 1px solid var(--leaf2); background: none; color: var(--muted); font: inherit; font-size: 13px; cursor: pointer; }
+#st-bench[hidden] { display: none; }
+
+/* the bench (the page as it was): tabs, chords, drills, tuner */
 .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.back-btn { font-size: 13px; color: var(--ink-dim); background: var(--bg-card); border: 1px solid var(--border); border-radius: 999px; padding: 7px 14px; cursor: pointer; }
-.back-btn:active { color: var(--ink); border-color: var(--ink-dim); }
-.brand { text-align: right; }
-.brand-name { font-size: 21px; font-weight: 700; color: var(--teal); letter-spacing: -0.01em; }
-.brand-sub { font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); }
-.tabs { display: flex; gap: 8px; margin: 18px 0; }
-.tab { flex: 1; text-align: center; font-size: 13px; padding: 9px 6px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-card); color: var(--ink-dim); cursor: pointer; }
-.tab.active { color: var(--ink); border-color: var(--teal-dim); background: var(--bg-elev); }
-.eyebrow { font-size: 10.5px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-faint); margin: 22px 0 10px; }
+.back-btn { min-height: 44px; font: inherit; font-size: 13px; color: var(--ink); background: var(--bg-card); border: 1px solid var(--border); border-radius: 999px; padding: 0 16px; cursor: pointer; }
+.brand-sub { font-size: 12px; color: var(--muted); }
+.tabs { display: flex; gap: 6px; margin: 14px 0; }
+.tab { flex: 1; display: grid; place-items: center; min-height: 44px; font-size: 13px; padding: 0 6px; border-radius: 12px; border: 1px solid var(--border-soft); color: var(--ink-dim); cursor: pointer; }
+.tab.active { color: var(--ink); border-color: var(--t-text); background: var(--t-faint); }
+.eyebrow { font-size: 12px; letter-spacing: .04em; color: var(--muted); margin: 22px 2px 10px; }
 .eyebrow:first-child { margin-top: 2px; }
-.hint { font-size: 12px; color: var(--ink-faint); font-style: italic; margin-top: 8px; }
+.hint { font-size: 13px; color: var(--muted); font-style: italic; margin-top: 8px; }
 
-/* instrument toggle */
-.seg { display: flex; gap: 6px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 999px; padding: 4px; }
-.seg-btn { flex: 1; text-align: center; font-size: 13px; padding: 8px; border-radius: 999px; color: var(--ink-dim); cursor: pointer; }
-.seg-btn.on { background: var(--teal-faint); color: var(--ink); border: 1px solid var(--teal-dim); }
+.seg { display: flex; gap: 6px; }
+.seg-btn { flex: 1; display: grid; place-items: center; min-height: 44px; font-size: 13px; border-radius: 12px; border: 1px solid var(--border-soft); color: var(--ink-dim); cursor: pointer; }
+.seg-btn.on { background: var(--teal-faint); color: var(--ink); border-color: var(--t-text); }
 
-/* chord grid */
 .chord-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
-.chord-cell { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 10px 4px; text-align: center; cursor: pointer; }
-.chord-cell:active { border-color: var(--teal-dim); }
+.chord-cell { display: flex; flex-direction: column; justify-content: center; min-height: 56px; background: var(--bg-card); border: 1px solid var(--border-soft); border-radius: var(--r-sm); padding: 6px 4px; text-align: center; cursor: pointer; }
 .chord-cell.magic { border-color: var(--gold); }
 .chord-cell .cn { font-size: 15px; font-weight: 600; }
-.chord-cell .cm { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); margin-top: 2px; }
+.chord-cell .cm { font-size: 12px; color: var(--gold); margin-top: 1px; }
 
-/* chord diagram modal */
 .diagram-wrap { text-align: center; padding: 6px 0 2px; }
-.diagram-name { font-size: 24px; font-weight: 700; color: var(--teal); margin-bottom: 4px; }
-svg.chord { display: block; margin: 0 auto; }
+.diagram-name { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 34px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
+svg.chord { display: block; margin: 0 auto; max-width: 100%; }
+svg.chord circle[fill="#46a3a8"] { fill: var(--t); }
+svg.chord line { stroke: var(--t-dim); }
+svg.chord text { fill: var(--muted); }
+svg.chord circle[fill="none"] { stroke: var(--muted); }
 .diagram-fingers { font-size: 13px; color: var(--ink-dim); margin-top: 10px; }
 
-/* practice cards */
-.pcard { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-md); padding: 14px; margin-bottom: 12px; }
+.pcard { background: var(--bg-card); border: 1px solid var(--border-soft); border-radius: var(--r-lg); padding: 16px; margin-bottom: 12px; }
 .pcard h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
 .pcard .desc { font-size: 13px; color: var(--ink-dim); }
-.pcard .meta { font-size: 11px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 7px; }
+.pcard .meta { font-size: 12px; color: var(--muted); margin-top: 7px; }
 
-/* chord-change drill */
 .drill-row { display: flex; gap: 8px; align-items: center; margin: 10px 0; }
-.drill-sel { flex: 1; background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--ink); font-family: inherit; font-size: 15px; padding: 10px; }
+.drill-sel { flex: 1; min-height: 44px; background: var(--bg); border: 1px solid var(--border-soft); border-radius: var(--r-sm); color: var(--ink); font-family: inherit; font-size: 16px; padding: 0 10px; }
 .drill-arrow { color: var(--teal); font-size: 18px; }
-.drill-timer { font-size: 44px; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; margin: 6px 0; }
+.drill-timer { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 44px; font-weight: 500; text-align: center; font-variant-numeric: tabular-nums; margin: 6px 0; }
 .counter-row { display: flex; align-items: center; justify-content: center; gap: 18px; margin: 8px 0 4px; }
 .counter-btn { width: 54px; height: 54px; border-radius: 50%; border: 1px solid var(--teal-dim); background: var(--teal-faint); color: var(--ink); font-size: 24px; cursor: pointer; }
-.counter-val { font-size: 40px; font-weight: 700; min-width: 70px; text-align: center; font-variant-numeric: tabular-nums; }
-.counter-label { text-align: center; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-faint); }
-.btn { width: 100%; padding: 12px; border-radius: var(--r-md); font-size: 14px; font-weight: 600; border: 1px solid var(--teal-dim); background: var(--teal-faint); color: var(--ink); cursor: pointer; margin-top: 8px; }
-.btn:active { background: var(--teal-dim); }
-.btn.ghost { background: var(--bg-card); border-color: var(--border); color: var(--ink-dim); }
+.counter-val { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 40px; font-weight: 500; min-width: 70px; text-align: center; font-variant-numeric: tabular-nums; }
+.counter-label { text-align: center; font-size: 12px; color: var(--muted); }
+.btn { width: 100%; min-height: 48px; padding: 0 12px; border-radius: var(--r-md); font: inherit; font-size: 14px; font-weight: 500; border: 1px solid var(--leaf); background: none; color: var(--ink); cursor: pointer; margin-top: 8px; }
+.btn.ghost { border-color: var(--border-soft); color: var(--ink-dim); }
 
-/* metronome */
-.metro-bpm { font-size: 48px; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; color: var(--teal); }
-.metro-label { text-align: center; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 8px; }
-input[type=range] { width: 100%; accent-color: var(--teal); margin: 6px 0; }
+.metro-bpm { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 48px; font-weight: 500; text-align: center; font-variant-numeric: tabular-nums; color: var(--ink); line-height: 1.1; }
+.metro-label { text-align: center; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+input[type=range] { width: 100%; min-height: 44px; accent-color: var(--t); margin: 0; }
 .beats { display: flex; justify-content: center; gap: 10px; margin: 12px 0; }
-.beat-dot { width: 16px; height: 16px; border-radius: 50%; background: var(--bg-card); border: 1px solid var(--border); }
-.beat-dot.on { background: var(--teal); border-color: var(--teal); }
+.beat-dot { width: 16px; height: 16px; border-radius: 50%; background: var(--bg); border: 1px solid var(--border); }
+.beat-dot.on { background: var(--t); border-color: var(--t); }
 
-/* strum + progression */
 .row-card { background: var(--bg-card); border: 1px solid var(--border-soft); border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 9px; }
 .row-card .t { font-size: 14px; font-weight: 600; }
-.row-card .p { font-size: 13px; color: var(--ink-dim); margin-top: 3px; letter-spacing: 0.04em; }
+.row-card .p { font-size: 13px; color: var(--ink-dim); margin-top: 3px; }
 .strum-pattern { font-family: ui-monospace, monospace; font-size: 17px; letter-spacing: 4px; color: var(--teal); margin-top: 4px; }
 .chordline { font-family: ui-monospace, monospace; font-size: 15px; letter-spacing: 1px; color: var(--gold); margin-top: 4px; }
 
-/* tuner */
-.string-btn { display: flex; align-items: center; justify-content: space-between; width: 100%; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-md); padding: 16px 18px; margin-bottom: 9px; cursor: pointer; }
-.string-btn:active { border-color: var(--teal); }
-.string-note { font-size: 22px; font-weight: 700; }
-.string-meta { font-size: 12px; color: var(--ink-faint); }
+.string-btn { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 60px; background: var(--bg-card); border: 1px solid var(--border-soft); border-radius: var(--r-md); padding: 10px 18px; margin-bottom: 9px; cursor: pointer; }
+.string-note { font-size: 22px; font-weight: 600; }
+.string-meta { font-size: 12px; color: var(--muted); }
 .string-play { font-size: 13px; color: var(--teal); }
 
-.overlay { position: fixed; inset: 0; background: var(--bg); z-index: 50; overflow-y: auto; padding: 18px 16px 40px; max-width: 680px; margin: 0 auto; }
+.overlay { position: fixed; inset: 0; background: var(--bg); z-index: 50; overflow-y: auto; padding: calc(18px + env(safe-area-inset-top, 0px)) 16px calc(var(--ts-bar) + 40px); max-width: 640px; margin: 0 auto; }
 .overlay[hidden] { display: none; }
-.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: var(--bg-elev); border: 1px solid var(--teal-dim); color: var(--ink); padding: 10px 18px; border-radius: 999px; font-size: 13px; z-index: 80; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+.toast { position: fixed; left: 50%; bottom: calc(var(--ts-bar) + 24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); max-width: 90vw; background: var(--card); border: 1px solid var(--leaf); color: var(--ink); padding: 10px 18px; border-radius: 999px; font-size: 13px; z-index: 880; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
 .toast.show { opacity: 1; }
 </style>
-<link href="fonts/fonts.css" rel="stylesheet">
+<script src="shell.js"></script>
 <script src="temple_link.js" data-app="strings"></script>
 </head>
-<body>
-<div class="wrap">
-  <div class="topbar">
-    <button class="back-btn" id="back-btn">← portal</button>
-    <div class="brand"><div class="brand-name">Strings &amp; Soul</div><div class="brand-sub">ukulele · guitar · the vessel for the song</div></div>
+<body data-temple="strings">
+<header class="ts-head">
+  <div class="ts-hrow">
+    <button class="ts-back" id="back-btn" type="button" aria-label="Back">←</button>
+    <div class="ts-tt"><b>Strings &amp; Soul</b><span>ukulele · guitar</span></div>
   </div>
-  <div class="tabs" id="tabs">
-    <div class="tab active" data-tab="chords">chords</div>
-    <div class="tab" data-tab="practice">practice</div>
-    <div class="tab" data-tab="tune">tune</div>
+  <p class="ts-guide">A chord, or not.</p>
+</header>
+<main class="ts-body">
+  <div class="st-wall" id="st-wall"></div>
+  <textarea class="st-shelf" id="st-shelf" aria-label="The shelf" autocomplete="off" spellcheck="false"></textarea>
+  <button class="st-open" id="st-open" type="button" aria-expanded="false" aria-controls="st-bench">The bench: chords, drills, tuner</button>
+  <div id="st-bench" hidden>
+    <div class="tabs" id="tabs">
+      <div class="tab active" data-tab="chords">chords</div>
+      <div class="tab" data-tab="practice">practice</div>
+      <div class="tab" data-tab="tune">tune</div>
+    </div>
+    <div id="view"></div>
   </div>
-  <div id="view"></div>
-</div>
+</main>
 <div class="overlay" id="modal" hidden></div>
 <div class="toast" id="toast"></div>
 
@@ -462,9 +471,45 @@ input[type=range] { width: 100%; accent-color: var(--teal); margin: 6px 0; }
 })();
 </script>
 
-<style>
-/* ── Codex × Pleroma skin (R56) ── */
-body{font-family:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;}.brand-name{font-family:'Cormorant Garamond',serif;font-weight:600;letter-spacing:0;}.eyebrow,.section-eyebrow{letter-spacing:0.24em;}
-</style>
+<script>
+// Portal remake, step 8 · Paa's three asks, beside the page's own script (which is unchanged above).
+//   one chord on the wall: picked when the page opens, never tracked, nothing remembered about it
+//   the bare shelf: one box, no title, no date, no count. Its own store, strings_shelf_v1 { text }.
+//   the bench (the page as it was) is one tap behind, and the page always opens bare.
+(function () {
+  'use strict';
+  var WALL = [
+    { n: 'C', f: [0, 0, 0, 3], how: 'ring finger, third fret, the string nearest the floor' },
+    { n: 'Am', f: [2, 0, 0, 0], how: 'one finger, second fret, the string nearest you' },
+    { n: 'F', f: [2, 0, 1, 0], how: 'two fingers' }
+  ];
+  var ch = WALL[Math.floor(Math.random() * WALL.length)];
+  var left = 24, top = 26, sp = 28, fh = 30, W = left * 2 + sp * 3, H = top + fh * 4 + 22, s = '';
+  s += '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + ch.n + ' on the ukulele">';
+  for (var i = 0; i < 4; i++) s += '<path d="M' + (left + i * sp) + ' ' + top + 'V' + (top + fh * 4) + '" stroke="var(--t-dim)" stroke-width="1.5"/>';
+  for (var r = 0; r <= 4; r++) s += '<path d="M' + left + ' ' + (top + r * fh) + 'H' + (left + sp * 3) + '" stroke="var(--t-dim)" stroke-width="' + (r ? 1.5 : 4) + '" stroke-linecap="round"/>';
+  ch.f.forEach(function (fv, j) {
+    var x = left + j * sp;
+    if (fv === 0) s += '<circle cx="' + x + '" cy="' + (top - 13) + '" r="5" fill="none" stroke="var(--muted)" stroke-width="1.5"/>';
+    else s += '<circle cx="' + x + '" cy="' + (top + (fv - 0.5) * fh) + '" r="9" fill="var(--t)"/>';
+  });
+  ['G', 'C', 'E', 'A'].forEach(function (t, j) { s += '<text x="' + (left + j * sp) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="12" fill="var(--muted)">' + t + '</text>'; });
+  s += '</svg>';
+  document.getElementById('st-wall').innerHTML = '<div class="st-name">' + ch.n + '</div>' + s + '<div class="st-how">' + ch.how + '</div>';
+
+  var KEY = 'strings_shelf_v1', box = document.getElementById('st-shelf');
+  try { var o = JSON.parse(localStorage.getItem(KEY) || 'null'); if (o && typeof o.text === 'string') box.value = o.text; } catch (e) {}
+  box.addEventListener('input', function () {
+    try { if (box.value) localStorage.setItem(KEY, JSON.stringify({ text: box.value })); else localStorage.removeItem(KEY); } catch (e) {}
+  });
+
+  var open = document.getElementById('st-open'), bench = document.getElementById('st-bench');
+  open.addEventListener('click', function () {
+    bench.hidden = !bench.hidden;
+    open.setAttribute('aria-expanded', bench.hidden ? 'false' : 'true');
+    open.textContent = bench.hidden ? 'The bench: chords, drills, tuner' : 'Put the bench away';
+  });
+})();
+</script>
 </body>
 </html>

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Baby</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<link href="temple.css" rel="stylesheet">
+<style>
+/* Portal remake, step 8: Malee's night-shift board as a page, in the shared frame (temple.css, shell.js).
+   Built from Baby/village/malee/night_shift_board.md (14 Nov 2026). Mum's chair comes first and her cells are hers.
+   One next date, never a calendar wall. The money strip says "waiting", never zero. Nothing counts, nothing is owed,
+   nothing here is sent anywhere. */
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+.bb-date b { display: block; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 32px; font-weight: 500; line-height: 1.1; color: var(--ink); margin: 4px 0 6px; }
+.bb-date #bb-date-what { font-size: 15px; color: var(--ink); }
+.bb-src { font-size: 12px; line-height: 1.5; color: var(--muted); margin-top: 10px; }
+.bb-lines p { font-size: 14px; line-height: 1.5; color: var(--muted); margin-top: 6px; }
+.bb-lines p:first-of-type { color: var(--ink); }
+.bb-cellrow { padding: 10px 0; border-top: 1px solid var(--leaf2); }
+.bb-cellrow:first-of-type { margin-top: 10px; }
+.bb-cellrow label, .bb-cellrow > span { display: block; font-size: 13px; color: var(--muted); }
+.bb-hers { min-height: 44px; margin-top: 6px; padding: 10px 12px; border-radius: 12px; border: 1px dashed var(--leaf); font-size: 15px; line-height: 1.45; color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere; }
+.bb-hers:empty::after { content: ''; }
+textarea.bb-ta, input.bb-in { display: block; width: 100%; min-height: 48px; margin-top: 6px; padding: 10px 12px; border-radius: 12px; border: 1px dashed var(--leaf); background: var(--bg); color: var(--ink); font: inherit; font-size: 16px; line-height: 1.45; resize: vertical; }
+textarea.bb-ta.bb-has, input.bb-in.bb-has { border-style: solid; border-color: var(--t-dim); }
+.bb-ta:focus-visible, .bb-in:focus-visible { outline: 2px solid var(--t-text); outline-offset: 2px; }
+.bb-chairs .ts-row { min-height: 52px; }
+.ts-pills { margin: 10px 0 2px; }
+.ts-pills button { flex: 1; min-width: 0; padding: 0 2px; }
+.ts-pills button.bb-today:not(.ts-on) { color: var(--ink); }
+.bb-over { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin: 12px 0 0; }
+.bb-over[hidden] { display: none; }
+.bb-over i { height: 10px; border-radius: 4px; background: var(--t); opacity: .1; }
+.bb-over i.bb-lit { opacity: .8; }
+.bb-money b { display: block; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 25px; font-weight: 500; color: var(--ink); margin: 4px 0; }
+.bb-money .ts-row { min-height: 48px; }
+.bb-money .ts-row span { font-size: 15px; font-variant-numeric: tabular-nums; color: var(--ink); white-space: nowrap; }
+.ts-card > p + p { margin-top: 6px; }
+</style>
+<script src="shell.js"></script>
+<script src="leave_sums.js"></script>
+</head>
+<body data-temple="baby">
+<header class="ts-head">
+  <div class="ts-hrow">
+    <div class="ts-tt"><b>Baby</b><span>the night-shift board · Patrick's first weeks</span></div>
+  </div>
+  <p class="ts-guide">A house with a lit window. Her chair first.</p>
+</header>
+<main class="ts-body">
+
+  <!-- one date at a time -->
+  <section class="ts-card ts-today bb-date" id="bb-date">
+    <div class="ts-eyebrow">the next date</div>
+    <b id="bb-date-when"></b>
+    <p id="bb-date-what"></p>
+    <p class="bb-src">Copied from Baby/barsel/barsel_timeline.md as it stood on 14 Nov 2026; the file wins. Most dates count from the real birth day and move if the baby comes early or late. Check borger.dk before acting on any of them.</p>
+  </section>
+
+  <!-- 1. the chair for Patrick's mum, written first -->
+  <section class="ts-card bb-lines" id="bb-mum">
+    <div class="ts-eyebrow">her chair · written first</div>
+    <h2>Patrick's mum</h2>
+    <p>She is a person at this table. Her chair is fixed, never a fill-in slot.</p>
+    <p>Her sleep block is set first each week, by her. These six lines are hers, in her words. Nobody fills them in for her, and nothing here decides for her.</p>
+    <div id="bb-mum-cells"></div>
+    <div class="ts-btnrow"><button class="ts-btn" id="bb-mum-edit" type="button" aria-pressed="false">She is writing now</button></div>
+    <p class="bb-src">Her lines stay on this phone. This page sends nothing anywhere.</p>
+  </section>
+
+  <!-- 4. the week grid, mum's row first -->
+  <section class="ts-card" id="bb-week">
+    <div class="ts-eyebrow">this week · filled together</div>
+    <div class="ts-pills" id="bb-days" role="tablist"></div>
+    <div id="bb-rows"></div>
+    <div class="bb-over" id="bb-over" hidden aria-hidden="true"></div>
+    <p class="bb-src">Her row first. A new week starts blank. An empty day is just an empty day.</p>
+  </section>
+
+  <!-- 2. the frame -->
+  <section class="ts-card bb-lines">
+    <div class="ts-eyebrow">the frame · Garr's clock</div>
+    <p>Lek is up at 05:00, with about 6 hours of sleep. The window 23:00 to 05:00 is the floor.</p>
+    <p>The 6 hours count 23 to 5. Plan from 6, never from 8.</p>
+    <p>A night plan that cuts into the window carries a named swap, not a quiet "I'll manage".</p>
+  </section>
+
+  <!-- 6. the money strip -->
+  <section class="ts-card bb-money" id="bb-money">
+    <div class="ts-eyebrow">the money strip · Ngoen's sums</div>
+    <b id="bb-money-head"></b>
+    <div id="bb-money-rows"></div>
+    <p id="bb-money-note"></p>
+    <div class="ts-btnrow"><button class="ts-btn" id="bb-money-go" type="button">Open the leave sums</button></div>
+  </section>
+
+  <!-- 3. the other chairs -->
+  <section class="ts-card ts-rows bb-chairs">
+    <div class="ts-row"><div><div class="ts-n">Lek</div><div class="ts-s">his protected window; the nights he is on</div></div></div>
+    <div class="ts-row"><div><div class="ts-n">Malee</div><div class="ts-s">the dates</div></div></div>
+    <div class="ts-row"><div><div class="ts-n">Ngoen</div><div class="ts-s">weeks and kroner</div></div></div>
+    <div class="ts-row"><div><div class="ts-n">Garr</div><div class="ts-s">whether Lek's body can carry it</div></div></div>
+  </section>
+</main>
+
+<script>
+// Baby, step 8 of the Portal remake. One new store, this page's own:
+//   baby_board_v1  { mum: { sleep, feeding, nights, visitors, say, how },      her six lines, in her words
+//                    weeks: { '<Monday, YYYY-MM-DD>': { <row>: [7 strings] } } }   the grid; the last eight weeks are kept
+// It reads kaching_leave_v1 through leave_sums.js for the money strip and writes nothing there.
+(function () {
+  'use strict';
+  var KEY = 'baby_board_v1';
+  var $ = function (id) { return document.getElementById(id); };
+  function el(t, c, txt) { var n = document.createElement(t); if (c) n.className = c; if (txt != null) n.textContent = txt; return n; }
+  function load() {
+    var o = null; try { o = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
+    if (!o || typeof o !== 'object' || Array.isArray(o)) o = {};
+    if (!o.mum || typeof o.mum !== 'object') o.mum = {};
+    if (!o.weeks || typeof o.weeks !== 'object') o.weeks = {};
+    return o;
+  }
+  var state = load();
+  function save() {
+    var keys = Object.keys(state.weeks).sort(); while (keys.length > 8) delete state.weeks[keys.shift()];
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  // ---------- the next date: one, never a wall ----------
+  // SOURCE: Baby/barsel/barsel_timeline.md (Malee, 2026-11-01, updated 2026-11-04), copied on 2026-11-14. The seven dates
+  // are the ones Malee's board lists for the strip (night_shift_board.md §5), in the timeline's own words. The file wins:
+  // if it changes, change these. "until" is the last day a line is still the next one; the two "about" lines have no day
+  // in the file, so they stand until their month is over. Left out, as on Malee's strip: the dagpenge application day
+  // (8 weeks after the first leave day, which moves) and 5 Jan 2036.
+  var DATES = [
+    { until: '2026-12-08', when: 'by 8 Dec 2026', what: 'Employer must know about the 2 weeks. Already planned at work: only check it is written down and that the 2 weeks are the standard barsel weeks.' },
+    { until: '2027-01-04', when: '4 Jan 2027', what: 'Lek’s planned leave start, a day before the due date. If the baby comes early or late, ask work whether the plan bends.' },
+    { until: '2027-01-05', when: '5 Jan 2027', what: 'Due date, a Tuesday.' },
+    { until: '2027-03-16', when: '16 Mar 2027', what: 'The 2 weeks must be used by this date (the first 10 weeks).' },
+    { until: '2027-05-31', when: 'about May 2027', what: 'Notice for the second leave, about 8 weeks before it starts. The exact date once Lek knows the start.' },
+    { until: '2027-07-31', when: 'about July 2027', what: 'Second leave, when Patrick is about 6 months and his mum starts work. It needs the weeks left over and an agreement with work.' },
+    { until: '2028-01-05', when: '5 Jan 2028', what: 'All 9 earmarked weeks used (the child turns 1).' }
+  ];
+  function iso(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function paintDate() {
+    var today = iso(new Date()), next = null;
+    for (var i = 0; i < DATES.length; i++) if (DATES[i].until >= today) { next = DATES[i]; break; }
+    $('bb-date').hidden = !next;
+    if (next) { $('bb-date-when').textContent = next.when; $('bb-date-what').textContent = next.what; }
+  }
+
+  // ---------- her chair ----------
+  var MUM = [
+    ['sleep', 'Sleep block, when'], ['feeding', 'Feeding, how and who helps'], ['nights', 'Who gets up at night'],
+    ['visitors', 'Visitors, when and who'], ['say', 'What she’d like this board to say about her'], ['how', 'How are you, really?']
+  ];
+  var hers = false;
+  function paintMum() {
+    var box = $('bb-mum-cells'); box.textContent = '';
+    MUM.forEach(function (m) {
+      var r = el('div', 'bb-cellrow'), v = typeof state.mum[m[0]] === 'string' ? state.mum[m[0]] : '';
+      if (hers) {
+        var lab = el('label', '', m[1]), ta = el('textarea', 'bb-ta' + (v ? ' bb-has' : '')); ta.rows = 2; ta.value = v; ta.id = 'bb-mum-' + m[0]; lab.htmlFor = ta.id;
+        ta.addEventListener('input', function () { if (ta.value.trim()) state.mum[m[0]] = ta.value; else delete state.mum[m[0]]; ta.classList.toggle('bb-has', !!ta.value.trim()); save(); });
+        r.appendChild(lab); r.appendChild(ta);
+      } else {
+        r.appendChild(el('span', '', m[1])); var d = el('div', 'bb-hers', v); d.dataset.cell = m[0];
+        if (!v) d.setAttribute('aria-label', m[1] + ': left for her'); r.appendChild(d);
+      }
+      box.appendChild(r);
+    });
+    var b = $('bb-mum-edit'); b.textContent = hers ? 'Done' : 'She is writing now'; b.setAttribute('aria-pressed', hers ? 'true' : 'false');
+  }
+  $('bb-mum-edit').addEventListener('click', function () { hers = !hers; paintMum(); });
+
+  // ---------- the week grid ----------
+  var ROWS = [
+    ['mum', 'Mum’s protected block'], ['window', 'Lek’s window 23:00 to 05:00 kept?'], ['up', 'Who is up for the night'],
+    ['swap', 'Swap named if Lek’s window is cut'], ['meals', 'Meals in the house'], ['help', 'Help in (family, friends, village)']
+  ];
+  var DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  var now = new Date(), todayIx = (now.getDay() + 6) % 7, monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - todayIx), WK = iso(monday), day = todayIx;
+  function week() { return state.weeks[WK] || {}; }
+  function setCell(rowKey, d, v) {
+    var w = state.weeks[WK] || (state.weeks[WK] = {}), r = w[rowKey] || (w[rowKey] = ['', '', '', '', '', '', '']);
+    r[d] = v;
+    if (!r.some(function (x) { return x && x.trim(); })) delete w[rowKey];
+    if (!Object.keys(w).length) delete state.weeks[WK];
+    save(); paintOver();
+  }
+  function paintOver() {      // the week as it is: six rows by seven days, lit where something is written. Drawn only when something is.
+    var w = week(), box = $('bb-over'), any = false; box.textContent = '';
+    ROWS.forEach(function (r) { for (var d = 0; d < 7; d++) { var on = !!(w[r[0]] && w[r[0]][d] && w[r[0]][d].trim()); any = any || on; box.appendChild(el('i', on ? 'bb-lit' : '')); } });
+    box.hidden = !any;
+  }
+  function paintWeek() {
+    var bar = $('bb-days'), rows = $('bb-rows'), w = week(); bar.textContent = ''; rows.textContent = '';
+    DAYS.forEach(function (n, i) {
+      var b = el('button', (i === day ? 'ts-on' : '') + (i === todayIx ? ' bb-today' : ''), n); b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', i === day ? 'true' : 'false');
+      b.addEventListener('click', function () { day = i; paintWeek(); }); bar.appendChild(b);
+    });
+    ROWS.forEach(function (r) {
+      var row = el('div', 'bb-cellrow'), lab = el('label', '', r[1]), inp = el('input', 'bb-in'), v = (w[r[0]] && w[r[0]][day]) || '';
+      inp.type = 'text'; inp.maxLength = 160; inp.autocomplete = 'off'; inp.value = v; inp.id = 'bb-g-' + r[0]; lab.htmlFor = inp.id; inp.classList.toggle('bb-has', !!v);
+      inp.addEventListener('input', function () { inp.classList.toggle('bb-has', !!inp.value.trim()); setCell(r[0], day, inp.value); });
+      row.appendChild(lab); row.appendChild(inp); rows.appendChild(row);
+    });
+    paintOver();
+  }
+
+  // ---------- the money strip: "waiting", never zero ----------
+  function paintMoney() {
+    var LS = window.LeaveSums, c = LS ? LS.compute(LS.read()) : {}, rows = $('bb-money-rows'), have = [];
+    rows.textContent = '';
+    if (c.G1 != null) have.push(['Leave 1 · the gap a leave week', c.G1]);
+    if (c.G2 != null) have.push(['Leave 2 · the gap a leave week', c.G2]);
+    if (c.total != null) have.push(['Both leaves together', c.total]);
+    if (!have.length) {
+      $('bb-money-head').textContent = 'Waiting';
+      $('bb-money-note').textContent = 'Ngoen’s sums drop in here once Lek has typed his pay and his employer’s answer on the Kaching page. Until then this says waiting, not zero.';
+      return;
+    }
+    $('bb-money-head').textContent = 'In kroner, before tax';
+    have.forEach(function (h) { var r = el('div', 'ts-row'), d = el('div'); d.appendChild(el('div', 'ts-n', h[0])); r.appendChild(d); r.appendChild(el('span', '', h[1] === 0 ? 'no gap' : LS.kr(h[1]))); rows.appendChild(r); });
+    $('bb-money-note').textContent = c.total == null ? 'The rest is still waiting on a number only Lek can type.' : 'From the numbers Lek typed on the Kaching page. Gross, not net.';
+  }
+  $('bb-money-go').addEventListener('click', function () { if (window.TempleShell) TempleShell.go('kaching'); else location.href = 'kaching.html'; });
+  window.addEventListener('storage', function (e) { if (e.key === 'kaching_leave_v1') paintMoney(); });
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) { paintMoney(); paintDate(); } });
+
+  paintDate(); paintMum(); paintWeek(); paintMoney();
+})();
+</script>
+</body>
+</html>

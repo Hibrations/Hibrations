@@ -12,7 +12,7 @@
 //     embedded it posts 'close-temple' to the parent, exactly as the thirteen pages do; standalone it opens the Portal.
 //   · the sky band (sky.js) behind the header.
 //   · the bottom bar: Today · Temples · Mirror · Village, and the temple's director as the fifth.
-//   · the Temples sheet: twelve doors, plainly.
+//   · the Temples sheet: every door, plainly (thirteen since step 8: Baby).
 //   · moving sideways: TempleShell.go('body'). Standalone it is a plain link. Embedded it posts
 //     {action:'goto', app:'body'} to the parent; a parent that handles it answers {action:'goto-ack'}. Today's Portal
 //     does not yet (step 4), so with no answer in 250 ms the frame opens the page itself.
@@ -40,10 +40,11 @@
     strings:     { name: 'Strings', short: 'Strings', word: 'play', sub: 'the hands learn', file: 'strings.html', dir: 'paa' },
     hibrations:  { name: 'Hibrations', short: 'Hibrations', word: 'the page', sub: 'being seen', file: 'hibrations.html', dir: 'nokka' },
     mirror:      { name: 'The Weekly Mirror', short: 'Mirror', word: 'the mirror', sub: 'what was there', file: 'mirror.html', dir: 'a' },   // becomes Patterns in step 7
-    kaching:     { name: 'Kaching', short: 'Kaching', word: 'the ledger', sub: 'make, save, grow', file: 'kaching.html', dir: 'ngoen' },
+    kaching:     { name: 'Kaching', short: 'Kaching', word: 'the ledger', sub: 'leave sums, the tally', file: 'kaching.html', dir: 'ngoen' },
+    baby:        { name: 'Baby', short: 'Baby', word: 'the lit window', sub: 'the night-shift board', file: 'baby.html', dir: 'malee' },   // step 8
     magnetic:    { name: 'Magnetic Temple', short: 'Magnetic', word: 'fire', sub: 'the older cut', file: 'magnetic_temple.html', dir: 'rak', hidden: true },
   };
-  const GRID = ['body', 'inner', 'breath', 'beast', 'observatory', 'village', 'healing', 'vocal', 'strings', 'hibrations', 'mirror', 'kaching'];
+  const GRID = ['body', 'inner', 'breath', 'beast', 'observatory', 'village', 'healing', 'vocal', 'strings', 'hibrations', 'mirror', 'kaching', 'baby'];
   const BAR = ['portal', 'temples', 'mirror', 'village'];               // and the director's face as the fifth (Lek, 11-14)
   const DIRECTORS = {
     a: { name: 'A', house: null }, garr: { name: 'Garr', house: 'fitness' }, hekka: { name: 'Hekka', house: 'esoteric' },
@@ -198,7 +199,7 @@
       scrim = el('div', 'ts-scrim'); scrim.hidden = true; scrim.addEventListener('click', closeSheet);
       sheet = el('div', 'ts-sheet'); sheet.hidden = true; sheet.setAttribute('role', 'dialog'); sheet.setAttribute('aria-modal', 'true'); sheet.setAttribute('aria-label', 'The temples');
       const head = el('div', 'ts-sheet-head'), nm = el('div');
-      nm.appendChild(el('b', '', 'The temples')); nm.appendChild(el('span', '', 'twelve doors, plainly'));
+      nm.appendChild(el('b', '', 'The temples')); nm.appendChild(el('span', '', 'every door, plainly'));
       const x = el('button', 'ts-x'); x.type = 'button'; x.setAttribute('aria-label', 'Close'); x.appendChild(sig('x', 20)); x.addEventListener('click', closeSheet);
       head.appendChild(nm); head.appendChild(x);
       const bodyEl = el('div', 'ts-sheet-body'), tiles = el('div', 'ts-tiles');

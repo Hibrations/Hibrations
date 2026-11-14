@@ -4,146 +4,153 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Healing Temple</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<link href="temple.css" rel="stylesheet">
 <style>
-:root {
-  --bg: #0a0908; --bg-elev: #14110f; --bg-card: #1a1614;
-  --border: #2a2420; --border-soft: #1f1a17;
-  --ink: #e8e1d4; --ink-dim: #9a8f80; --ink-faint: #5e554a;
-  --indigo: #7d8fd0; --indigo-dim: #4a5494; --indigo-faint: #2a3052;
-  --gold: #c89060; --silver: #b9c0cf; --crimson: #c78f8f;
-  --r-sm: 8px; --r-md: 14px; --r-lg: 20px;
-}
+/* Portal remake, step 8: the colours, header, sky and bottom bar come from temple.css and shell.js.
+   The page's old colour names are kept as aliases of the shared tokens, so its own script and classes work unchanged. */
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html, body { background: var(--bg); color: var(--ink); }
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; line-height: 1.55;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-  max-width: 680px; margin: 0 auto; min-height: 100vh; }
-.wrap { padding: 18px 16px 80px; }
-.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.back-btn { font-size: 13px; color: var(--ink-dim); background: var(--bg-card); border: 1px solid var(--border); border-radius: 999px; padding: 7px 14px; cursor: pointer; }
-.back-btn:active { color: var(--ink); border-color: var(--ink-dim); }
-.brand { text-align: right; }
-.brand-name { font-size: 20px; font-weight: 700; color: var(--indigo); letter-spacing: -0.01em; }
-.brand-sub { font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); }
-.tabs { display: flex; gap: 8px; margin: 18px 0; }
-.tab { flex: 1; text-align: center; font-size: 13px; padding: 9px 6px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-card); color: var(--ink-dim); cursor: pointer; }
-.tab.active { color: var(--ink); border-color: var(--indigo-dim); background: var(--bg-elev); }
-.eyebrow { font-size: 10.5px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-faint); margin: 24px 0 10px; }
+body[data-temple] {
+  --bg-elev: var(--card); --bg-card: var(--card); --border: var(--leaf); --border-soft: var(--leaf2);
+  --ink-dim: var(--muted); --ink-faint: var(--muted);
+  --indigo: var(--t-text); --indigo-dim: var(--t-dim); --indigo-faint: var(--t-faint);
+  --gold: var(--t2-text); --silver: var(--ink); --crimson: var(--t2-text); --c-crown: var(--t-dim);
+  --r-sm: 10px; --r-md: 14px; --r-lg: 18px;
+}
+#tl-btn { display: none !important; }   /* the director is in the header and the bar now (director.js) */
+.tabs { display: flex; gap: 6px; margin: 4px 0 16px; }
+.tab { flex: 1; display: grid; place-items: center; min-height: 44px; font-size: 13px; padding: 0 4px; border-radius: 12px; border: 1px solid var(--border-soft); color: var(--ink-dim); cursor: pointer; }
+.tab.active { color: var(--ink); border-color: var(--t-text); background: var(--t-faint); }
+.eyebrow { font-size: 12px; letter-spacing: .04em; color: var(--muted); margin: 24px 2px 10px; }
 .eyebrow:first-child { margin-top: 2px; }
-.hint { font-size: 12px; color: var(--ink-faint); font-style: italic; margin-top: 8px; }
-.stage-name { color: var(--indigo); }
+.hint { font-size: 13px; color: var(--muted); font-style: italic; margin-top: 8px; }
+.stage-name { color: var(--t-text); }
 
-/* practice cards */
-.pcard { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-md); margin-bottom: 9px; overflow: hidden; }
+.pcard { background: var(--bg-card); border: 1px solid var(--border-soft); border-radius: var(--r-md); margin-bottom: 9px; overflow: hidden; }
 .pcard.integration { border-color: var(--gold); }
-.pcard-head { padding: 13px 14px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.pcard-head:active { background: var(--bg-elev); }
-.pc-name { font-size: 15px; font-weight: 600; }
-.pc-dur { font-size: 11px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; }
-.pcard-body { display: none; padding: 0 14px 14px; }
-.pcard.open .pcard-body { display: block; }
+.pc-name { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 19px; font-weight: 500; }
+.pc-dur { font-size: 12px; color: var(--muted); white-space: nowrap; }
 .pc-section { margin-top: 12px; }
 .cat-group { margin-bottom: 9px; }
-.cat-header { width: 100%; display: flex; align-items: center; gap: 10px; padding: 13px 15px; text-align: left; background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--r-md); transition: border-color 0.15s; }
-.cat-group.open .cat-header { border-color: var(--gold); border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
-.cat-label { flex: 1; font-family: 'Cormorant Garamond', serif; font-weight: 500; font-size: 16px; color: var(--ink); letter-spacing: 0; text-transform: none; }
-.cat-count { font-size: 11px; color: var(--ink-faint); letter-spacing: 0.06em; font-variant-numeric: tabular-nums; }
-.cat-chevron { color: var(--ink-faint); font-size: 16px; transition: transform 0.2s; }
-.cat-group.open .cat-chevron { transform: rotate(90deg); color: var(--gold); }
+.cat-header { width: 100%; min-height: 52px; display: flex; align-items: center; gap: 10px; padding: 0 15px; text-align: left; font: inherit; color: var(--ink); background: var(--bg-elev); border: 1px solid var(--border-soft); border-radius: var(--r-md); cursor: pointer; }
+.cat-group.open .cat-header { border-color: var(--t-text); }
+.cat-label { flex: 1; font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 500; font-size: 19px; color: var(--ink); }
+.cat-count { display: none; }   /* a count on a door is a count: left out */
+.cat-chevron { color: var(--muted); font-size: 16px; }
+.cat-group.open .cat-chevron { transform: rotate(90deg); color: var(--t-text); }
 .cat-body { display: none; flex-direction: column; gap: 8px; padding: 9px 0 3px; }
 .cat-group.open .cat-body { display: flex; }
-.pc-label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--indigo); margin-bottom: 4px; }
-.pc-text { font-size: 13.5px; color: var(--ink-dim); }
+.pc-label { font-size: 12px; color: var(--t-text); margin-bottom: 4px; }
+.pc-text { font-size: 14px; color: var(--ink-dim); }
 .pcard-inner { padding: 13px 14px; }
-.pcard-inner .pc-name { margin-bottom: 3px; }
-.pcard-inner .pc-dur { margin-bottom: 2px; }
+.pcard-inner .pc-name { margin-bottom: 1px; }
 .step-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-.step-action-btn { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); padding: 7px 12px; border: 1px solid var(--border); border-radius: 999px; background: none; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
-.step-action-btn:active { border-color: var(--ink); color: var(--ink); }
-.step-action-btn.accent { color: var(--gold); border-color: var(--gold); }
+.step-action-btn { min-height: 44px; font: inherit; font-size: 13px; color: var(--ink-dim); padding: 0 14px; border: 1px solid var(--border-soft); border-radius: 12px; background: none; cursor: pointer; }
+.step-action-btn.accent { color: var(--ink); border-color: var(--t-text); }
 .step-notes, .step-form { margin-top: 12px; display: none; }
 .step-notes.open, .step-form.open { display: block; }
-.step-notes textarea { width: 100%; box-sizing: border-box; font-size: 14px; background: var(--bg); color: var(--ink); border: 1px solid var(--border); border-radius: var(--r-md); padding: 8px 10px; min-height: 70px; }
-.step-notes-prompt { font-size: 11px; color: var(--ink-faint); font-style: italic; margin-bottom: 6px; }
-.step-form { background: var(--bg-elev); border: 1px solid var(--border-soft); border-radius: var(--r-md); padding: 14px 16px; }
+.step-notes textarea { width: 100%; font: inherit; font-size: 16px; background: var(--bg); color: var(--ink); border: 1px solid var(--border-soft); border-radius: var(--r-md); padding: 10px 12px; min-height: 76px; }
+.step-notes-prompt { font-size: 13px; color: var(--muted); font-style: italic; margin-bottom: 6px; }
+.step-form { background: var(--bg); border: 1px solid var(--border-soft); border-radius: var(--r-md); padding: 14px 16px; }
 .form-section { margin-bottom: 12px; }
 .form-section:last-child { margin-bottom: 0; }
-.form-label { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--indigo); margin-bottom: 4px; }
-.form-text { font-size: 13.5px; color: var(--ink); line-height: 1.55; }
+.form-label { font-size: 12px; color: var(--t-text); margin-bottom: 4px; }
+.form-text { font-size: 14px; color: var(--ink); line-height: 1.55; }
 .form-text.muted { color: var(--ink-dim); }
-.hpath { margin: 0 0 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-md); padding: 13px 15px; }
-.hpath-eyebrow { font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 10px; }
-.hpath-track { display: flex; gap: 4px; margin-bottom: 11px; }
-.hpath-dot { flex: 1; height: 6px; border-radius: 3px; background: var(--border); cursor: pointer; transition: background 0.15s; }
-.hpath-dot.done { background: var(--c-crown); }
-.hpath-dot.current { background: var(--gold); }
-.hpath-stage { font-size: 14px; font-weight: 600; color: var(--ink); }
-.hpath-focus { font-size: 12px; color: var(--ink-dim); line-height: 1.5; margin-top: 3px; }
+
+.hpath { margin: 0 0 14px; background: linear-gradient(180deg, var(--t-faint), var(--card) 78%); border: 1px solid var(--t-dim); border-radius: 18px; padding: 16px; }
+.hpath-eyebrow { font-size: 12px; color: var(--t2-text); letter-spacing: .04em; margin-bottom: 10px; }
+.hpath-track { display: flex; gap: 4px; margin-bottom: 4px; }
+.hpath-dot { flex: 1; height: 6px; border-radius: 3px; background: var(--line); cursor: pointer; background-clip: content-box; padding: 19px 0; box-sizing: content-box; }
+.hpath-dot.done { background-color: var(--t-dim); }
+.hpath-dot.current { background-color: var(--t-text); }
+.hpath-stage { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 23px; font-weight: 500; color: var(--ink); line-height: 1.15; }
+.hpath-focus { font-size: 13px; color: var(--ink-dim); line-height: 1.5; margin-top: 3px; }
 .hpath-sug { display: flex; align-items: flex-start; gap: 8px; margin-top: 11px; border-top: 1px solid var(--border-soft); padding-top: 10px; }
-.hpath-ex { flex: 1; text-align: left; background: none; border: none; padding: 0; cursor: pointer; }
-.hpath-ex .hpe-label { display: block; font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); }
-.hpath-ex .hpe-name { display: block; font-size: 13px; color: var(--indigo); margin-top: 3px; }
-.hpath-ex .hpe-cue { display: block; font-size: 11.5px; font-style: italic; color: var(--ink-dim); margin-top: 2px; line-height: 1.45; }
-.hpath-ex:active .hpe-name { color: var(--gold); }
-.hpath-roll { flex: none; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); background: none; border: 1px solid var(--border); border-radius: 999px; padding: 5px 9px; cursor: pointer; white-space: nowrap; }
-.hpath-roll:active { color: var(--indigo); border-color: var(--indigo); }
+.hpath-ex { flex: 1; min-height: 44px; text-align: left; font: inherit; background: none; border: none; padding: 0; cursor: pointer; }
+.hpath-ex .hpe-label { display: block; font-size: 12px; color: var(--muted); }
+.hpath-ex .hpe-name { display: block; font-size: 15px; color: var(--ink); margin-top: 3px; }
+.hpath-ex .hpe-cue { display: block; font-size: 13px; font-style: italic; color: var(--ink-dim); margin-top: 2px; line-height: 1.45; }
+.hpath-roll, .hpath-navbtn { flex: none; min-height: 44px; font: inherit; font-size: 13px; color: var(--ink-dim); background: none; border: 1px solid var(--border-soft); border-radius: 12px; padding: 0 12px; cursor: pointer; white-space: nowrap; }
 .hpath-nav { display: flex; gap: 8px; margin-top: 11px; }
-.hpath-navbtn { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); background: none; border: 1px solid var(--border); border-radius: 999px; padding: 4px 11px; cursor: pointer; }
-.hpath-navbtn:active { color: var(--gold); border-color: var(--gold); }
-.pc-actions { display: flex; gap: 9px; margin-top: 16px; }
-.btn { flex: 1; padding: 11px; border-radius: var(--r-md); font-size: 13px; font-weight: 600; border: 1px solid var(--indigo-dim); background: var(--indigo-faint); color: var(--ink); cursor: pointer; }
-.btn:active { background: var(--indigo-dim); }
-.btn.ghost { background: var(--bg-card); border-color: var(--border); color: var(--ink-dim); }
+.btn { flex: 1; min-height: 48px; padding: 0 12px; border-radius: var(--r-md); font: inherit; font-size: 14px; font-weight: 500; border: 1px solid var(--leaf); background: none; color: var(--ink); cursor: pointer; }
+.btn.ghost { border-color: var(--border-soft); color: var(--ink-dim); }
 
-/* timer overlay */
-.tov { position: fixed; inset: 0; background: var(--bg); z-index: 60; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; }
+.tov { position: fixed; inset: 0; background: var(--bg); z-index: 60; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 24px 16px calc(var(--ts-bar) + 24px); text-align: center; }
 .tov.show { display: flex; }
-.tov-name { font-size: 18px; color: var(--indigo); margin-bottom: 8px; }
-.tov-time { font-size: 68px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.tov-btns { display: flex; gap: 12px; margin-top: 28px; }
-.tov-btn { padding: 12px 22px; border-radius: var(--r-md); font-size: 14px; border: 1px solid var(--border); background: var(--bg-card); color: var(--ink); cursor: pointer; }
-.tov-btn.done { border-color: var(--indigo-dim); background: var(--indigo-faint); }
+.tov-name { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 23px; color: var(--ink); margin-bottom: 8px; }
+.tov-time { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 68px; font-weight: 500; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.tov-btns { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 28px; }
+.tov-btn { min-height: 48px; padding: 0 16px; border-radius: var(--r-md); font: inherit; font-size: 14px; border: 1px solid var(--leaf); background: none; color: var(--ink); cursor: pointer; }
+.tov-btn.done { border-color: var(--t-btn); background: var(--t-btn); color: var(--on-btn); font-weight: 500; }
 
-/* lunar */
 .moon-now { text-align: center; padding: 14px 0 6px; }
 .moon-glyph { font-size: 56px; line-height: 1; }
-.moon-phase { font-size: 17px; font-weight: 600; margin-top: 8px; }
+.moon-phase { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 23px; font-weight: 500; margin-top: 8px; }
 .moon-energy { font-size: 13px; color: var(--ink-dim); margin-top: 2px; }
-.moon-work { font-size: 14px; color: var(--indigo); margin-top: 10px; padding: 12px 16px; background: var(--bg-elev); border: 1px solid var(--indigo-dim); border-radius: var(--r-md); }
+.moon-work { font-size: 14px; color: var(--ink); margin-top: 10px; padding: 12px 16px; background: var(--t-faint); border: 1px solid var(--t-dim); border-radius: var(--r-md); }
 .lrow { display: flex; gap: 12px; padding: 11px 4px; border-bottom: 1px solid var(--border-soft); align-items: baseline; }
-.lrow.cur { background: var(--bg-elev); border-radius: var(--r-sm); padding-left: 10px; padding-right: 10px; }
+.lrow.cur { background: var(--t-faint); border-radius: var(--r-sm); padding-left: 10px; padding-right: 10px; }
 .lrow .lg { font-size: 20px; }
-.lrow .ln { font-size: 13.5px; font-weight: 600; min-width: 96px; }
-.lrow .lw { font-size: 12.5px; color: var(--ink-dim); }
+.lrow .ln { font-size: 14px; font-weight: 600; min-width: 96px; }
+.lrow .lw { font-size: 13px; color: var(--ink-dim); }
 
-/* path */
-.law { background: var(--bg-card); border-left: 2px solid var(--indigo-dim); border-radius: 0 var(--r-md) var(--r-md) 0; padding: 13px 16px; margin-bottom: 10px; }
-.law .lt { font-size: 14px; font-weight: 600; color: var(--indigo); }
+.law { background: var(--bg-card); border: 1px solid var(--border-soft); border-left: 2px solid var(--t-dim); border-radius: 0 var(--r-md) var(--r-md) 0; padding: 13px 16px; margin-bottom: 10px; }
+.law .lt { font-size: 14px; font-weight: 600; color: var(--t-text); }
 .law .lb { font-size: 13px; color: var(--ink-dim); margin-top: 4px; }
 .stagerow { display: flex; gap: 10px; padding: 10px 4px; border-bottom: 1px solid var(--border-soft); }
 .stagerow .sn { font-size: 13px; font-weight: 600; min-width: 92px; }
-.stagerow .sf { font-size: 12.5px; color: var(--ink-dim); }
-.quote { font-style: italic; color: var(--ink-dim); font-size: 14px; text-align: center; margin: 22px 0 6px; padding: 0 8px; }
+.stagerow .sf { font-size: 13px; color: var(--ink-dim); }
+.quote { font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; color: var(--ink); font-size: 17px; text-align: center; margin: 22px 0 6px; padding: 0 8px; }
 
-.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: var(--bg-elev); border: 1px solid var(--indigo-dim); color: var(--ink); padding: 10px 18px; border-radius: 999px; font-size: 13px; z-index: 80; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+/* step 8: the felt line, the source marks, the year */
+#he-felt[hidden], #he-trail[hidden], #he-year[hidden] { display: none; }
+#he-year, #he-trail { margin-top: 18px; }
+button.he-mark { display: inline-flex; align-items: center; min-height: 44px; margin: 2px 0 0; padding: 0; font: inherit; background: none; border: none; cursor: pointer; }
+button.he-mark span { font-size: 12px; color: var(--t2-text); border: 1px solid var(--leaf); border-radius: 99px; padding: 2px 10px; }
+.he-src { font-size: 13px; color: var(--muted); line-height: 1.5; margin: 0 0 4px; }
+.he-src[hidden] { display: none; }
+.he-line { font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-size: 17px; line-height: 1.35; color: var(--ink); margin-top: 10px; }
+.he-line small { display: block; font: 12px Inter, system-ui, sans-serif; font-style: normal; color: var(--muted); margin-top: 1px; }
+
+.toast { position: fixed; left: 50%; bottom: calc(var(--ts-bar) + 24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); max-width: 90vw; background: var(--card); border: 1px solid var(--leaf); color: var(--ink); padding: 10px 18px; border-radius: 999px; font-size: 13px; z-index: 880; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
 .toast.show { opacity: 1; }
 </style>
-<link href="fonts/fonts.css" rel="stylesheet">
+<script src="shell.js"></script>
+<script src="charts.js"></script>
 <script src="temple_link.js" data-app="healing"></script>
 </head>
-<body>
-<div class="wrap">
-  <div class="topbar">
-    <button class="back-btn" id="back-btn">← portal</button>
-    <div class="brand"><div class="brand-name">Healing Temple</div><div class="brand-sub">qi · reiki · prana · the great work</div></div>
+<body data-temple="healing">
+<header class="ts-head">
+  <div class="ts-hrow">
+    <button class="ts-back" id="back-btn" type="button" aria-label="Back">←</button>
+    <div class="ts-tt"><b>Healing Temple</b><span>qi · reiki · prana · the great work</span></div>
   </div>
+  <p class="ts-guide">Repair, gently. Read, not prescribed.</p>
+</header>
+<main class="ts-body">
+  <section class="ts-card ts-today" id="he-felt" hidden>
+    <div class="ts-eyebrow">marked · thank you</div>
+    <label class="ts-felt" for="he-felt-in"><span id="he-felt-q">One line on how it felt, if you want.</span>
+      <input id="he-felt-in" type="text" maxlength="200" autocomplete="off"></label>
+    <div class="ts-pair"><button class="ts-yes" id="he-felt-keep" type="button">Keep the line</button><button class="ts-later" id="he-felt-skip" type="button">Not now</button></div>
+  </section>
   <div class="tabs" id="tabs">
     <div class="tab active" data-tab="practices">practices</div>
     <div class="tab" data-tab="lunar">lunar</div>
     <div class="tab" data-tab="path">the path</div>
   </div>
   <div id="view"></div>
-</div>
+  <section class="ts-card" id="he-year" hidden>
+    <div class="ts-eyebrow">a year, as it was</div>
+    <div id="he-ribbon" style="margin-top:10px"></div>
+    <p style="margin-top:8px">Lit in the weeks a practice was marked here. It shows what is there, nothing else.</p>
+  </section>
+  <section class="ts-card" id="he-trail" hidden>
+    <div class="ts-eyebrow">felt lines</div>
+    <div id="he-lines"></div>
+  </section>
+</main>
 
 <div class="tov" id="tov">
   <div class="tov-name" id="tov-name"></div>
@@ -655,9 +662,97 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sa
 })();
 </script>
 
-<style>
-/* ── Codex × Pleroma skin (R56) ── */
-body{font-family:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;}.brand-name{font-family:'Cormorant Garamond',serif;font-weight:600;letter-spacing:0;}.pc-name,.stage-name{font-family:'Cormorant Garamond',serif;font-weight:500;}.eyebrow,.section-eyebrow{letter-spacing:0.24em;}
-</style>
+<script>
+// Portal remake, step 8 · Hekka's two asks and the page's graphs, beside the page's own script (unchanged above).
+//   the felt line: after a practice is marked, one optional line. Kept in its own store, healing_felt_v1
+//     { lines: [{ id, name, at, text }] }, newest first, never counted, never asked for twice.
+//   source marks: a small mark on a practice whose claim Hekka's table marks. The words are copied from
+//     Esoteric/village/hekka/knowledge/sources.md (rows B11, H6 to H10, H16). Those rows are the hub's first marks,
+//     still to be checked by Hekka, and the page says so. A practice with no row carries no mark.
+//   graphs (plan §2): the year as 52 soft cells and the felt lines as a trail. Both read only, both drawn only
+//     when something is stored. grimoire_v1 is read and never written here.
+(function () {
+  'use strict';
+  var FELT = 'healing_felt_v1', WEEK = 7 * 86400000;
+  var $ = function (id) { return document.getElementById(id); };
+  function read(k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
+  function sessions() { var s = read('grimoire_v1', {}).sessions; return Array.isArray(s) ? s : []; }
+  function lines() { var l = read(FELT, {}).lines; return Array.isArray(l) ? l : []; }
+
+  // ---- source marks ----
+  var ROWS = {
+    H9: { mark: 'narrower', line: 'Reviews find benefits for blood pressure, balance and mood, with weak study quality.' },
+    B11: { mark: 'tradition', line: 'Daoist inner-alchemy lineage. A lineage, not research.' },
+    H8: { mark: 'tradition', line: 'Chinese medicine and Theosophical maps. They are not one system.' },
+    H6: { mark: 'tradition', line: 'Usui lineage. Trials are small and mostly no better than sham; touch and rest are calming.' },
+    H7: { mark: 'tradition', line: 'Choa Kok Sui’s system. “Science” is its own title, not a finding.' },
+    H16: { mark: 'tradition', line: 'A healer’s working model (Simon Heather). An imagery practice, which is the true thing to say about it.' },
+    H10: { mark: 'tradition', line: 'Golden Dawn, written up by Israel Regardie. Hermetic, not Daoist.' }
+  };
+  var BY_NAME = {
+    'Zhan Zhuang — Standing Pole': 'H9', 'Water Qigong Flow': 'H9', 'Eight Pieces of Brocade': 'H9',
+    'Microcosmic Orbit': 'B11', 'Laogong Activation & Energy Ball': 'H8',
+    'Self-Treatment — Hand Positions': 'H6', 'Distance Healing (Level 2)': 'H6',
+    'The Six-Step Protocol': 'H7', 'Hand Sensitizing': 'H7',
+    'The Silver Shell — Shielding': 'H16', 'The Middle Pillar': 'H10'
+  };
+  function marks() {
+    var cards = document.querySelectorAll('#view .pcard-inner');
+    for (var i = 0; i < cards.length; i++) {
+      var c = cards[i], nm = c.querySelector('.pc-name'), row = nm && ROWS[BY_NAME[nm.textContent]];
+      if (!row || c.querySelector('.he-mark')) continue;
+      var b = document.createElement('button'), s = document.createElement('span'), p = document.createElement('p');
+      b.type = 'button'; b.className = 'he-mark'; b.setAttribute('aria-expanded', 'false'); s.textContent = row.mark; b.appendChild(s);
+      p.className = 'he-src'; p.hidden = true; p.textContent = row.line + ' A first mark, still to be checked by Hekka.';
+      (function (b, p) { b.addEventListener('click', function () { p.hidden = !p.hidden; b.setAttribute('aria-expanded', p.hidden ? 'false' : 'true'); }); })(b, p);
+      var after = c.querySelector('.pc-dur') || nm;
+      after.parentNode.insertBefore(p, after.nextSibling); after.parentNode.insertBefore(b, p);
+    }
+  }
+
+  // ---- the year and the trail ----
+  function graphs() {
+    var s = sessions(), now = Date.now(), cells = [], any = false, i;
+    for (i = 0; i < 52; i++) cells.push(0);
+    s.forEach(function (x) { var k = 51 - Math.floor((now - (+x.at || 0)) / WEEK); if (k >= 0 && k < 52) { cells[k]++; any = true; } });
+    $('he-year').hidden = !any || !window.Charts;
+    if (!$('he-year').hidden) Charts.mount($('he-ribbon'), 'ribbon', cells.map(function (n) { return n >= 4 ? 3 : n >= 2 ? 2 : n; }), { labels: ['a year ago', 'now'], label: 'A year, lit in the weeks a practice was marked' });
+    var l = lines(), box = $('he-lines');
+    $('he-trail').hidden = !l.length;
+    box.textContent = '';
+    l.slice(0, 6).forEach(function (x) {
+      var d = document.createElement('div'), sm = document.createElement('small');
+      d.className = 'he-line'; d.textContent = x.text; sm.textContent = x.name; d.appendChild(sm); box.appendChild(d);
+    });
+  }
+
+  // ---- the felt line ----
+  var seen = (sessions()[0] || {}).at || 0, pending = null;
+  function offer() {
+    var top = sessions()[0];
+    if (!top || !(top.at > seen)) return;
+    seen = top.at; pending = top;
+    $('he-felt-in').value = ''; $('he-felt').hidden = false;
+  }
+  function put(away) { pending = null; $('he-felt').hidden = true; if (away) graphs(); }
+  $('he-felt-keep').addEventListener('click', function () {
+    var t = $('he-felt-in').value.trim();
+    if (t && pending) {
+      var o = read(FELT, {}); if (!o || typeof o !== 'object' || Array.isArray(o)) o = {};
+      if (!Array.isArray(o.lines)) o.lines = [];
+      o.lines.unshift({ id: pending.id, name: pending.name, at: pending.at, text: t.slice(0, 200) });
+      if (o.lines.length > 200) o.lines.length = 200;
+      try { localStorage.setItem(FELT, JSON.stringify(o)); } catch (e) {}
+    }
+    put(true);
+  });
+  $('he-felt-skip').addEventListener('click', function () { put(false); });
+  $('he-felt-in').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('he-felt-keep').click(); });
+
+  function pass() { marks(); offer(); graphs(); }
+  pass();
+  try { new MutationObserver(pass).observe($('view'), { childList: true }); } catch (e) {}
+})();
+</script>
 </body>
 </html>

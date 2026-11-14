@@ -4,121 +4,110 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Vocal Temple</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<link href="temple.css" rel="stylesheet">
 <style>
-:root {
-  --bg: #0a0908; --bg-elev: #14110f; --bg-card: #1a1614;
-  --border: #2a2420; --border-soft: #1f1a17;
-  --ink: #e8e1d4; --ink-dim: #9a8f80; --ink-faint: #5e554a;
-  --azure: #6fa8d8; --azure-dim: #3f6e98; --azure-faint: #243d54;
-  --gold: #c89060; --crimson: #c78f8f;
-  --r-sm: 8px; --r-md: 14px; --r-lg: 20px;
-}
+/* Portal remake, step 8: the colours, header, sky and bottom bar come from temple.css and shell.js.
+   The page's old colour names are kept as aliases of the shared tokens, so its own script and classes work unchanged.
+   The throat rule holds here: nothing on this page measures or shows volume. */
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html, body { background: var(--bg); color: var(--ink); }
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; line-height: 1.55;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-  max-width: 680px; margin: 0 auto; min-height: 100vh; }
-.wrap { padding: 18px 16px 80px; }
-.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.back-btn { font-size: 13px; color: var(--ink-dim); background: var(--bg-card); border: 1px solid var(--border); border-radius: 999px; padding: 7px 14px; cursor: pointer; }
-.back-btn:active { color: var(--ink); border-color: var(--ink-dim); }
-.brand { text-align: right; }
-.brand-name { font-size: 20px; font-weight: 700; color: var(--azure); letter-spacing: -0.01em; }
-.brand-sub { font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); }
-.tabs { display: flex; gap: 8px; margin: 18px 0; }
-.tab { flex: 1; text-align: center; font-size: 13px; padding: 9px 6px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-card); color: var(--ink-dim); cursor: pointer; }
-.tab.active { color: var(--ink); border-color: var(--azure-dim); background: var(--bg-elev); }
-.eyebrow { font-size: 10.5px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-faint); margin: 22px 0 10px; }
+body[data-temple] {
+  --bg-elev: var(--card); --bg-card: var(--card); --border: var(--leaf); --border-soft: var(--leaf2);
+  --ink-dim: var(--muted); --ink-faint: var(--muted);
+  --azure: var(--t-text); --azure-dim: var(--t-dim); --azure-faint: var(--t-faint);
+  --gold: var(--t2-text); --crimson: var(--t-text);
+  --r-sm: 10px; --r-md: 14px; --r-lg: 18px;
+}
+.tabs { display: flex; gap: 6px; margin: 4px 0 16px; }
+.tab { flex: 1; display: grid; place-items: center; min-height: 44px; font-size: 13px; padding: 0 4px; border-radius: 12px; border: 1px solid var(--border-soft); color: var(--ink-dim); cursor: pointer; }
+.tab.active { color: var(--ink); border-color: var(--t-text); background: var(--t-faint); }
+.eyebrow { font-size: 12px; letter-spacing: .04em; color: var(--muted); margin: 22px 2px 10px; }
 .eyebrow:first-child { margin-top: 2px; }
-.cat { color: var(--azure); }
-.hint { font-size: 12px; color: var(--ink-faint); font-style: italic; margin-top: 8px; }
+.cat { color: var(--t-text); }
+.hint { font-size: 13px; color: var(--muted); font-style: italic; margin-top: 8px; }
 
-.pcard { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-md); margin-bottom: 9px; overflow: hidden; }
-.pcard-head { padding: 13px 14px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.pcard-head:active { background: var(--bg-elev); }
-.pc-name { font-size: 15px; font-weight: 600; }
-.pc-dur { font-size: 11px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; }
-.pcard-body { display: none; padding: 0 14px 14px; }
-.pcard.open .pcard-body { display: block; }
+.pcard { background: var(--bg-card); border: 1px solid var(--border-soft); border-radius: var(--r-md); margin-bottom: 9px; overflow: hidden; }
+.pc-name { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 19px; font-weight: 500; }
+.pc-dur { font-size: 12px; color: var(--muted); white-space: nowrap; }
 .pc-section { margin-top: 12px; }
 .cat-group { margin-bottom: 9px; }
-.cat-header { width: 100%; display: flex; align-items: center; gap: 10px; padding: 13px 15px; text-align: left; background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--r-md); transition: border-color 0.15s; }
-.cat-group.open .cat-header { border-color: var(--azure); border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
-.cat-label { flex: 1; font-family: 'Cormorant Garamond', serif; font-weight: 500; font-size: 16px; color: var(--ink); letter-spacing: 0; text-transform: none; }
-.cat-count { font-size: 11px; color: var(--ink-faint); letter-spacing: 0.06em; font-variant-numeric: tabular-nums; }
-.cat-chevron { color: var(--ink-faint); font-size: 16px; transition: transform 0.2s; }
-.cat-group.open .cat-chevron { transform: rotate(90deg); color: var(--azure); }
+.cat-header { width: 100%; min-height: 52px; display: flex; align-items: center; gap: 10px; padding: 0 15px; text-align: left; font: inherit; color: var(--ink); background: var(--bg-elev); border: 1px solid var(--border-soft); border-radius: var(--r-md); cursor: pointer; }
+.cat-group.open .cat-header { border-color: var(--t-text); }
+.cat-label { flex: 1; font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 500; font-size: 19px; color: var(--ink); }
+.cat-count { display: none; }   /* a count on a door is a count: left out */
+.cat-chevron { color: var(--muted); font-size: 16px; }
+.cat-group.open .cat-chevron { transform: rotate(90deg); color: var(--t-text); }
 .cat-body { display: none; flex-direction: column; gap: 8px; padding: 9px 0 3px; }
 .cat-group.open .cat-body { display: flex; }
-.pc-label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--azure); margin-bottom: 4px; }
-.pc-text { font-size: 13.5px; color: var(--ink-dim); }
+.pc-label { font-size: 12px; color: var(--t-text); margin-bottom: 4px; }
+.pc-text { font-size: 14px; color: var(--ink-dim); }
 .pcard-inner { padding: 13px 14px; }
-.pcard-inner .pc-name { margin-bottom: 3px; }
-.pcard-inner .pc-dur { margin-bottom: 2px; }
+.pcard-inner .pc-name { margin-bottom: 1px; }
 .step-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-.step-action-btn { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); padding: 7px 12px; border: 1px solid var(--border); border-radius: 999px; background: none; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
-.step-action-btn:active { border-color: var(--ink); color: var(--ink); }
-.step-action-btn.accent { color: var(--azure); border-color: var(--azure); }
+.step-action-btn { min-height: 44px; font: inherit; font-size: 13px; color: var(--ink-dim); padding: 0 14px; border: 1px solid var(--border-soft); border-radius: 12px; background: none; cursor: pointer; }
+.step-action-btn.accent { color: var(--ink); border-color: var(--t-text); }
 .step-notes, .step-form { margin-top: 12px; display: none; }
 .step-notes.open, .step-form.open { display: block; }
-.step-notes textarea { width: 100%; box-sizing: border-box; font-size: 14px; background: var(--bg); color: var(--ink); border: 1px solid var(--border); border-radius: var(--r-md); padding: 8px 10px; min-height: 70px; }
-.step-notes-prompt { font-size: 11px; color: var(--ink-faint); font-style: italic; margin-bottom: 6px; }
-.step-form { background: var(--bg-elev); border: 1px solid var(--border-soft); border-radius: var(--r-md); padding: 14px 16px; }
+.step-notes textarea { width: 100%; font: inherit; font-size: 16px; background: var(--bg); color: var(--ink); border: 1px solid var(--border-soft); border-radius: var(--r-md); padding: 10px 12px; min-height: 76px; }
+.step-notes-prompt { font-size: 13px; color: var(--muted); font-style: italic; margin-bottom: 6px; }
+.step-form { background: var(--bg); border: 1px solid var(--border-soft); border-radius: var(--r-md); padding: 14px 16px; }
 .form-section { margin-bottom: 12px; }
 .form-section:last-child { margin-bottom: 0; }
-.form-label { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--azure); margin-bottom: 4px; }
-.form-text { font-size: 13.5px; color: var(--ink); line-height: 1.55; }
+.form-label { font-size: 12px; color: var(--t-text); margin-bottom: 4px; }
+.form-text { font-size: 14px; color: var(--ink); line-height: 1.55; }
 .form-text.muted { color: var(--ink-dim); }
-.pc-actions { display: flex; gap: 9px; margin-top: 16px; }
-.btn { flex: 1; padding: 11px; border-radius: var(--r-md); font-size: 13px; font-weight: 600; border: 1px solid var(--azure-dim); background: var(--azure-faint); color: var(--ink); cursor: pointer; }
-.btn:active { background: var(--azure-dim); }
-.btn.ghost { background: var(--bg-card); border-color: var(--border); color: var(--ink-dim); }
+.btn { display: block; width: 100%; min-height: 48px; padding: 0 12px; border-radius: var(--r-md); font: inherit; font-size: 14px; font-weight: 500; border: 1px solid var(--leaf); background: none; color: var(--ink); cursor: pointer; }
+.btn.ghost { border-color: var(--border-soft); color: var(--ink-dim); }
 
-.tov { position: fixed; inset: 0; background: var(--bg); z-index: 60; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; }
+.tov { position: fixed; inset: 0; background: var(--bg); z-index: 60; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 24px 24px calc(var(--ts-bar) + 24px); text-align: center; }
 .tov.show { display: flex; }
-.tov-name { font-size: 18px; color: var(--azure); margin-bottom: 8px; }
-.tov-time { font-size: 68px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.tov-name { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 23px; color: var(--ink); margin-bottom: 8px; }
+.tov-time { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 68px; font-weight: 500; font-variant-numeric: tabular-nums; line-height: 1.1; }
 .tov-btns { display: flex; gap: 12px; margin-top: 28px; }
-.tov-btn { padding: 12px 22px; border-radius: var(--r-md); font-size: 14px; border: 1px solid var(--border); background: var(--bg-card); color: var(--ink); cursor: pointer; }
-.tov-btn.done { border-color: var(--azure-dim); background: var(--azure-faint); }
+.tov-btn { min-height: 48px; padding: 0 22px; border-radius: var(--r-md); font: inherit; font-size: 14px; border: 1px solid var(--leaf); background: none; color: var(--ink); cursor: pointer; }
+.tov-btn.done { border-color: var(--t-btn); background: var(--t-btn); color: var(--on-btn); font-weight: 500; }
 
 .row-card { background: var(--bg-card); border: 1px solid var(--border-soft); border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 9px; }
 .row-card .t { font-size: 14px; font-weight: 600; }
 .row-card .p { font-size: 13px; color: var(--ink-dim); margin-top: 3px; }
 
-/* voice tab */
 .pitch-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
-.pitch-btn { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 14px 4px; text-align: center; cursor: pointer; }
-.pitch-btn:active { border-color: var(--azure); background: var(--bg-elev); }
-.pitch-note { font-size: 16px; font-weight: 700; }
-.pitch-hz { font-size: 9px; color: var(--ink-faint); margin-top: 2px; }
-.drone-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-md); padding: 16px; text-align: center; margin-top: 8px; }
-.drone-now { font-size: 30px; font-weight: 700; color: var(--azure); font-variant-numeric: tabular-nums; }
-.drone-label { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 10px; }
-.drone-pick { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 12px 0; }
-.drone-opt { font-size: 13px; padding: 7px 13px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-elev); color: var(--ink-dim); cursor: pointer; }
-.drone-opt.on { border-color: var(--azure-dim); color: var(--ink); background: var(--azure-faint); }
+.pitch-btn { min-height: 60px; display: flex; flex-direction: column; justify-content: center; background: var(--bg-card); border: 1px solid var(--border-soft); border-radius: var(--r-sm); padding: 6px 4px; text-align: center; cursor: pointer; }
+.pitch-note { font-size: 16px; font-weight: 600; }
+.pitch-hz { font-size: 12px; color: var(--muted); margin-top: 1px; }
+.drone-card { background: var(--bg-card); border: 1px solid var(--border-soft); border-radius: var(--r-lg); padding: 16px; text-align: center; margin-top: 8px; }
+.drone-now { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 32px; font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; }
+.drone-label { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+.drone-pick { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 12px 0 0; }
+.drone-opt { display: grid; place-items: center; min-width: 52px; min-height: 44px; font-size: 13px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--border-soft); color: var(--ink-dim); cursor: pointer; }
+.drone-opt.on { border-color: var(--t-text); color: var(--ink); background: var(--t-faint); }
 
-/* resonance — chakra sound map */
-.ch-row { display: flex; align-items: center; gap: 12px; background: var(--bg-card); border: 1px solid var(--border); border-left-width: 3px; border-radius: var(--r-md); padding: 11px 13px; margin-bottom: 8px; }
-.ch-info { flex: 1; }
+.ch-row { display: flex; align-items: center; gap: 12px; background: var(--bg-card); border: 1px solid var(--border-soft); border-left-width: 3px; border-radius: var(--r-md); padding: 11px 13px; margin-bottom: 8px; }
+.ch-info { flex: 1; min-width: 0; }
 .ch-name { font-size: 15px; font-weight: 600; }
-.ch-bija { font-size: 12.5px; color: var(--ink-dim); margin-top: 2px; letter-spacing: 0.02em; }
-.ch-gathers { font-size: 11.5px; color: var(--ink-faint); margin-top: 3px; }
-.ch-tone-btn { width: 46px; height: 46px; flex: 0 0 auto; border-radius: 50%; background: var(--bg-elev); border: 1px solid var(--border); font-size: 18px; cursor: pointer; }
-.ch-tone-btn:active { background: var(--bg-card); }
+.ch-bija { font-size: 13px; color: var(--ink-dim); margin-top: 2px; }
+.ch-gathers { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.ch-tone-btn { width: 48px; height: 48px; flex: 0 0 auto; border-radius: 50%; background: none; border: 1px solid var(--border); font-size: 18px; cursor: pointer; }
 
-.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: var(--bg-elev); border: 1px solid var(--azure-dim); color: var(--ink); padding: 10px 18px; border-radius: 999px; font-size: 13px; z-index: 80; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+.vo-rhythm { margin-top: 22px; }
+.vo-rhythm[hidden] { display: none; }
+.vo-rhythm p { margin-top: 8px; }
+
+.toast { position: fixed; left: 50%; bottom: calc(var(--ts-bar) + 24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); max-width: 90vw; background: var(--card); border: 1px solid var(--leaf); color: var(--ink); padding: 10px 18px; border-radius: 999px; font-size: 13px; z-index: 880; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
 .toast.show { opacity: 1; }
 </style>
-<link href="fonts/fonts.css" rel="stylesheet">
+<script src="shell.js"></script>
+<script src="charts.js"></script>
 </head>
-<body>
-<div class="wrap">
-  <div class="topbar">
-    <button class="back-btn" id="back-btn">← portal</button>
-    <div class="brand"><div class="brand-name">Vocal Temple</div><div class="brand-sub">throat · breath · the voice finding coherence</div></div>
+<body data-temple="vocal">
+<header class="ts-head">
+  <div class="ts-hrow">
+    <button class="ts-back" id="back-btn" type="button" aria-label="Back">←</button>
+    <div class="ts-tt"><b>Vocal Temple</b><span class="brand-sub">throat · breath · the voice finding coherence</span></div>
   </div>
+  <p class="ts-guide">Soft, warm, low. Steady is enough.</p>
+</header>
+<main class="ts-body">
   <div class="tabs" id="tabs">
     <div class="tab active" data-tab="warmups">warmups</div>
     <div class="tab" data-tab="daily">daily</div>
@@ -126,7 +115,12 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sa
     <div class="tab" data-tab="resonance">resonance</div>
   </div>
   <div id="view"></div>
-</div>
+  <section class="ts-card vo-rhythm" id="vo-rhythm" hidden>
+    <div class="ts-eyebrow">the last twelve weeks</div>
+    <div id="vo-ribbon" style="margin-top:10px"></div>
+    <p>Lit where the voice was used. How even, never how loud.</p>
+  </section>
+</main>
 
 <div class="tov" id="tov">
   <div class="tov-name" id="tov-name"></div>
@@ -513,9 +507,25 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sa
 })();
 </script>
 
-<style>
-/* ── Codex × Pleroma skin (R56) ── */
-body{font-family:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;}.brand-name{font-family:'Cormorant Garamond',serif;font-weight:600;letter-spacing:0;}.pc-name,.stage-name{font-family:'Cormorant Garamond',serif;font-weight:500;}.eyebrow,.section-eyebrow{letter-spacing:0.24em;}
-</style>
+<script>
+// Portal remake, step 8 · the Vocal Temple's one graph, beside the page's own script (unchanged above).
+// It reads vocal_v1 and writes nothing. The store holds when a practice was marked, never how it sounded, so the
+// picture is of rhythm: twelve weeks as soft cells, lit where the voice was used. No count, no target, and with
+// nothing stored the card is not drawn at all.
+(function () {
+  'use strict';
+  var card = document.getElementById('vo-rhythm'), box = document.getElementById('vo-ribbon'), WEEK = 7 * 86400000;
+  function draw() {
+    var s = []; try { s = (JSON.parse(localStorage.getItem('vocal_v1') || '{}').sessions) || []; } catch (e) {}
+    var now = Date.now(), cells = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], any = false;
+    s.forEach(function (x) { var k = 11 - Math.floor((now - (+x.at || 0)) / WEEK); if (k >= 0 && k < 12) { cells[k]++; any = true; } });
+    card.hidden = !any || !window.Charts;
+    if (card.hidden) return;
+    Charts.mount(box, 'ribbon', cells.map(function (n) { return n >= 4 ? 3 : n >= 2 ? 2 : n; }), { cols: 12, gap: 4, labels: ['twelve weeks ago', 'now'], label: 'Twelve weeks, lit where the voice was used' });
+  }
+  draw();
+  try { new MutationObserver(draw).observe(document.getElementById('view'), { childList: true }); } catch (e) {}
+})();
+</script>
 </body>
 </html>

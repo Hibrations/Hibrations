@@ -4,224 +4,135 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Hibrations</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<link href="temple.css" rel="stylesheet">
 <style>
-:root {
-  --bg: #0a0908;
-  --bg-elev: #14110f;
-  --bg-card: #1a1614;
-  --border: #2a2420;
-  --border-soft: #1f1a17;
-  --ink: #e8e1d4;
-  --ink-dim: #9a8f80;
-  --ink-faint: #5e554a;
-  --amethyst: #9a7bc8;
-  --amethyst-dim: #6f5092;
-  --amethyst-faint: #463458;
-  --gold: #c89060;
-  --gold-dim: #8a6440;
-  --crimson: #c78f8f;
-  --joey: #c78f8f;
-  --sophia: #9a7bc8;
-  --lineage: #c89060;
-  --practice: #6ba879;
-  --r-sm: 8px;
-  --r-md: 14px;
-  --r-lg: 20px;
-}
+/* Portal remake, step 8: the colours, header, sky and bottom bar come from temple.css and shell.js.
+   The page's old colour names are kept as aliases of the shared tokens, so its own script and classes work unchanged.
+   Gold (the accent) marks Lek's yes and nothing else: Nokka's rule. Nothing on this page posts. */
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html, body { background: var(--bg); color: var(--ink); }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-  line-height: 1.55;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-  max-width: 680px;
-  margin: 0 auto;
-  min-height: 100vh;
+body[data-temple] {
+  --bg-elev: var(--card); --bg-card: var(--card); --border: var(--leaf); --border-soft: var(--leaf2);
+  --ink-dim: var(--muted); --ink-faint: var(--muted);
+  --amethyst: var(--t-text); --amethyst-dim: var(--t-dim); --amethyst-faint: var(--t-faint);
+  --gold: #D4A64A; --gold-dim: var(--leaf); --crimson: var(--muted);
+  --joey: #D8A0AA; --sophia: #A191C7; --lineage: var(--t-text); --practice: #7FA68A;
+  --r-sm: 10px; --r-md: 14px; --r-lg: 18px;
 }
-.wrap { padding: 18px 16px 80px; }
-
-/* header */
+#tl-btn { display: none !important; }   /* the director is in the header and the bar now (director.js) */
 .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
-.back-btn {
-  font-size: 13px; color: var(--ink-dim); background: var(--bg-card);
-  border: 1px solid var(--border); border-radius: 999px; padding: 7px 14px; cursor: pointer;
-}
-.back-btn:active { color: var(--ink); border-color: var(--ink-dim); background: var(--bg-elev); }
-.brand { text-align: right; }
-.brand-name {
-  font-size: 22px; font-weight: 700; letter-spacing: -0.01em;
-  background: linear-gradient(110deg, var(--amethyst), var(--gold));
-  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
-}
-.brand-sub { font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); }
+.brand-sub { font-size: 12px; color: var(--muted); }
 
-/* north star */
-.northstar {
-  margin: 16px 0 14px; padding: 13px 16px; border-left: 2px solid var(--amethyst-dim);
-  background: var(--bg-elev); border-radius: 0 var(--r-md) var(--r-md) 0;
-  font-style: italic; color: var(--ink-dim); font-size: 14px;
-}
+.northstar { margin: 0 0 14px; font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; color: var(--ink); font-size: 17px; line-height: 1.35; }
+.northstar:empty { display: none; }
 
-/* tabs */
-.tabs { display: flex; gap: 8px; margin: 16px 0 18px; }
-.tab {
-  flex: 1; text-align: center; font-size: 13px; letter-spacing: 0.04em;
-  padding: 9px 6px; border-radius: 999px; border: 1px solid var(--border);
-  background: var(--bg-card); color: var(--ink-dim); cursor: pointer;
-}
-.tab.active { color: var(--ink); border-color: var(--amethyst-dim); background: var(--bg-elev); }
-
-.eyebrow { font-size: 10.5px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-faint); margin: 22px 0 10px; }
+.tabs { display: flex; gap: 6px; margin: 14px 0 16px; }
+.tab { flex: 1; display: grid; place-items: center; min-height: 44px; font-size: 13px; padding: 0 4px; border-radius: 12px; border: 1px solid var(--border-soft); color: var(--ink-dim); cursor: pointer; }
+.tab.active { color: var(--ink); border-color: var(--t-text); background: var(--t-faint); }
+.eyebrow { font-size: 12px; letter-spacing: .04em; color: var(--muted); margin: 22px 2px 10px; }
 .eyebrow:first-child { margin-top: 4px; }
 
-/* capture */
-.capture-box {
-  width: 100%; min-height: 130px; resize: vertical; background: var(--bg-card);
-  border: 1px solid var(--border); border-radius: var(--r-md); color: var(--ink);
-  font-family: inherit; font-size: 16px; line-height: 1.5; padding: 14px;
-}
-.capture-box:focus { outline: none; border-color: var(--amethyst-dim); }
-.capture-box::placeholder { color: var(--ink-faint); }
-.chip-row { display: flex; flex-wrap: wrap; gap: 7px; margin: 12px 0; }
-.chip {
-  font-size: 12px; padding: 6px 12px; border-radius: 999px; cursor: pointer;
-  border: 1px solid var(--border); background: var(--bg-card); color: var(--ink-dim);
-}
-.chip.on { color: var(--ink); border-color: var(--amethyst-dim); background: var(--bg-elev); }
+.capture-box { width: 100%; min-height: 130px; resize: vertical; background: var(--bg-card); border: 1px solid var(--border-soft); border-radius: var(--r-md); color: var(--ink); font-family: inherit; font-size: 16px; line-height: 1.5; padding: 14px; }
+.capture-box:focus { outline: none; border-color: var(--t-text); }
+.capture-box::placeholder { color: var(--muted); }
+.chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+.chip { display: grid; place-items: center; min-height: 44px; font-size: 13px; padding: 0 14px; border-radius: 12px; cursor: pointer; border: 1px solid var(--border-soft); color: var(--ink-dim); }
+.chip.on { color: var(--ink); border-color: var(--t-text); background: var(--t-faint); }
 .chip.joey.on { border-color: var(--joey); color: var(--joey); }
 .chip.sophia.on { border-color: var(--sophia); color: var(--sophia); }
 .chip.lineage.on { border-color: var(--lineage); color: var(--lineage); }
 .chip.practice.on { border-color: var(--practice); color: var(--practice); }
-.btn-primary {
-  width: 100%; padding: 13px; border-radius: var(--r-md); font-size: 15px; font-weight: 600;
-  border: 1px solid var(--amethyst-dim); background: var(--amethyst-faint); color: var(--ink);
-  cursor: pointer; margin-top: 4px;
-}
-.btn-primary:active { background: var(--amethyst-dim); }
-.hint { font-size: 12px; color: var(--ink-faint); text-align: center; margin-top: 10px; font-style: italic; }
+.btn-primary { width: 100%; min-height: 48px; padding: 0 13px; border-radius: var(--r-md); font: inherit; font-size: 14px; font-weight: 500; border: 1px solid var(--t-btn); background: var(--t-btn); color: var(--on-btn); cursor: pointer; margin-top: 4px; }
+.hint { font-size: 13px; color: var(--muted); text-align: center; margin-top: 10px; font-style: italic; }
 
-/* tuning strip */
-.tuning {
-  display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-bottom: 16px;
-  background: var(--bg-elev); border: 1px solid var(--border-soft); border-radius: var(--r-md);
-}
+.tuning { display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-bottom: 16px; background: var(--bg-elev); border: 1px solid var(--border-soft); border-radius: var(--r-md); }
 .tuning-icon { font-size: 20px; }
-.tuning-text { font-size: 12.5px; color: var(--ink-dim); font-style: italic; }
+.tuning-text { font-size: 13px; color: var(--ink-dim); font-style: italic; }
 
-/* piece cards */
 .stage-group { margin-bottom: 8px; }
-.stage-head { display: flex; align-items: baseline; gap: 8px; margin: 18px 0 9px; }
-.stage-name { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--amethyst); }
-.stage-count { font-size: 11px; color: var(--ink-faint); }
-.piece {
-  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-md);
-  padding: 12px 14px; margin-bottom: 9px; cursor: pointer;
-}
-.piece:active { border-color: var(--amethyst-dim); }
-.piece.integration { border-color: var(--gold-dim); background: linear-gradient(180deg, var(--bg-card), #1c1712); }
+.stage-head { display: flex; align-items: baseline; gap: 8px; margin: 18px 2px 9px; }
+.stage-name { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 19px; color: var(--ink); }
+.stage-count { display: none; }   /* no counts on this page (Nokka) */
+.piece { background: var(--bg-card); border: 1px solid var(--border-soft); border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 9px; cursor: pointer; min-height: 56px; }
+.piece.integration { border-color: var(--leaf); }
 .piece-title { font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 3px; }
-.piece-title.untitled { color: var(--ink-faint); font-weight: 400; font-style: italic; }
+.piece-title.untitled { color: var(--muted); font-weight: 400; font-style: italic; }
 .piece-excerpt { font-size: 13px; color: var(--ink-dim); margin-bottom: 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .piece-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-.tag-pill { font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--border); color: var(--ink-dim); }
+.tag-pill { font-size: 12px; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--border-soft); color: var(--ink-dim); }
 .tag-pill.joey { color: var(--joey); border-color: var(--joey); }
 .tag-pill.sophia { color: var(--sophia); border-color: var(--sophia); }
 .tag-pill.lineage { color: var(--lineage); border-color: var(--lineage); }
 .tag-pill.practice { color: var(--practice); border-color: var(--practice); }
-.integration-mark { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); display: inline-flex; align-items: center; gap: 4px; }
-.piece-track { font-size: 11.5px; color: var(--ink-faint); margin-top: 7px; }
+.integration-mark { font-size: 12px; color: var(--t2-text); display: inline-flex; align-items: center; gap: 4px; }
+.piece-track { font-size: 12px; color: var(--muted); margin-top: 7px; }
 .piece-chakras { letter-spacing: 2px; margin-top: 6px; font-size: 13px; }
-.empty-line { font-size: 13px; color: var(--ink-faint); font-style: italic; padding: 6px 2px; }
+.empty-line { font-size: 13px; color: var(--muted); font-style: italic; padding: 6px 2px; }
 
-/* detail overlay */
-.overlay {
-  position: fixed; inset: 0; background: var(--bg); z-index: 50; overflow-y: auto;
-  padding: 18px 16px calc(40px + env(safe-area-inset-bottom));
-  max-width: 680px; margin: 0 auto;
-}
+.overlay { position: fixed; inset: 0; background: var(--bg); z-index: 50; overflow-y: auto; padding: calc(18px + env(safe-area-inset-top, 0px)) 16px calc(var(--ts-bar) + 40px + env(safe-area-inset-bottom, 0px)); max-width: 640px; margin: 0 auto; }
 .overlay[hidden] { display: none; }
-.detail-input {
-  width: 100%; background: transparent; border: none; color: var(--ink);
-  font-family: inherit; font-size: 19px; font-weight: 700; padding: 6px 0; margin-bottom: 4px;
-}
+.detail-input { width: 100%; min-height: 44px; background: transparent; border: none; color: var(--ink); font-family: 'Cormorant Garamond', Georgia, serif; font-size: 25px; font-weight: 600; padding: 6px 0; margin-bottom: 4px; }
 .detail-input:focus { outline: none; }
-.detail-input::placeholder { color: var(--ink-faint); font-weight: 400; }
-.detail-body {
-  width: 100%; min-height: 200px; resize: vertical; background: var(--bg-card);
-  border: 1px solid var(--border); border-radius: var(--r-md); color: var(--ink);
-  font-family: inherit; font-size: 15.5px; line-height: 1.6; padding: 13px; margin: 8px 0 4px;
-}
-.detail-body:focus { outline: none; border-color: var(--amethyst-dim); }
-.field-label { font-size: 10.5px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-faint); margin: 20px 0 9px; }
+.detail-input::placeholder { color: var(--muted); font-weight: 400; }
+.detail-body { width: 100%; min-height: 200px; resize: vertical; background: var(--bg-card); border: 1px solid var(--border-soft); border-radius: var(--r-md); color: var(--ink); font-family: inherit; font-size: 16px; line-height: 1.6; padding: 13px; margin: 8px 0 4px; }
+.detail-body:focus { outline: none; border-color: var(--t-text); }
+.field-label { font-size: 12px; letter-spacing: .04em; color: var(--muted); margin: 20px 2px 9px; }
 .track-row { display: flex; gap: 8px; }
-.track-input {
-  flex: 1; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-sm);
-  color: var(--ink); font-family: inherit; font-size: 14px; padding: 10px 12px;
-}
-.track-input:focus { outline: none; border-color: var(--amethyst-dim); }
-.track-input::placeholder { color: var(--ink-faint); }
+.track-input { flex: 1; min-width: 0; min-height: 44px; background: var(--bg-card); border: 1px solid var(--border-soft); border-radius: var(--r-sm); color: var(--ink); font-family: inherit; font-size: 16px; padding: 0 12px; }
+.track-input:focus { outline: none; border-color: var(--t-text); }
+.track-input::placeholder { color: var(--muted); }
 .chakra-palette { display: flex; flex-wrap: wrap; gap: 6px; }
-.chakra-btn {
-  font-size: 18px; width: 40px; height: 40px; border-radius: var(--r-sm); cursor: pointer;
-  border: 1px solid var(--border); background: var(--bg-card); opacity: 0.4; display: flex; align-items: center; justify-content: center;
-}
-.chakra-btn.on { opacity: 1; border-color: var(--amethyst-dim); background: var(--bg-elev); }
-.stage-pills { display: flex; flex-wrap: wrap; gap: 7px; }
-.stage-pill {
-  font-size: 12px; padding: 7px 13px; border-radius: 999px; cursor: pointer;
-  border: 1px solid var(--border); background: var(--bg-card); color: var(--ink-dim);
-}
-.stage-pill.on { color: var(--ink); border-color: var(--amethyst); background: var(--amethyst-faint); }
-.artboy {
-  margin: 20px 0 4px; padding: 13px 15px; border: 1px dashed var(--gold-dim);
-  border-radius: var(--r-md); background: var(--bg-elev); cursor: pointer;
-}
-.artboy-q { font-size: 13.5px; color: var(--gold); font-weight: 600; }
+.chakra-btn { font-size: 18px; width: 44px; height: 44px; border-radius: var(--r-sm); cursor: pointer; border: 1px solid var(--border-soft); background: var(--bg-card); opacity: 0.45; display: flex; align-items: center; justify-content: center; }
+.chakra-btn.on { opacity: 1; border-color: var(--t-text); background: var(--t-faint); }
+.stage-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.stage-pill { display: grid; place-items: center; min-height: 44px; font-size: 13px; padding: 0 14px; border-radius: 12px; cursor: pointer; border: 1px solid var(--border-soft); color: var(--ink-dim); }
+.stage-pill.on { color: var(--ink); border-color: var(--t-text); background: var(--t-faint); }
+.artboy { margin: 20px 0 4px; min-height: 48px; padding: 13px 15px; border: 1px dashed var(--leaf); border-radius: var(--r-md); cursor: pointer; }
+.artboy-q { font-size: 14px; color: var(--t2-text); font-weight: 500; }
 .artboy-body { font-size: 13px; color: var(--ink-dim); font-style: italic; margin-top: 8px; display: none; }
 .artboy.open .artboy-body { display: block; }
-.detail-actions { display: flex; gap: 10px; margin-top: 26px; }
-.btn-ship {
-  flex: 1; padding: 13px; border-radius: var(--r-md); font-size: 14px; font-weight: 600;
-  border: 1px solid var(--gold-dim); background: #1c1712; color: var(--gold); cursor: pointer;
-}
-.btn-ship:active { background: var(--gold-dim); color: var(--bg); }
+.detail-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+.btn-ship { flex: 1; min-height: 48px; padding: 0 13px; border-radius: var(--r-md); font: inherit; font-size: 14px; font-weight: 500; border: 1px solid var(--gold); background: none; color: var(--gold); cursor: pointer; }
 .btn-ship[disabled] { opacity: 0.35; cursor: default; }
-.btn-del {
-  padding: 13px 16px; border-radius: var(--r-md); font-size: 13px;
-  border: 1px solid var(--border); background: var(--bg-card); color: var(--crimson); cursor: pointer;
-}
-.detail-back { font-size: 13px; color: var(--ink-dim); background: var(--bg-card); border: 1px solid var(--border); border-radius: 999px; padding: 7px 14px; cursor: pointer; }
-.detail-stamp { font-size: 11px; color: var(--ink-faint); margin-top: 18px; text-align: center; }
+.btn-del { min-height: 48px; padding: 0 16px; border-radius: var(--r-md); font: inherit; font-size: 13px; border: 1px solid var(--border-soft); background: none; color: var(--muted); cursor: pointer; }
+.detail-back { min-height: 44px; font: inherit; font-size: 13px; color: var(--ink); background: var(--bg-card); border: 1px solid var(--border); border-radius: 999px; padding: 0 16px; cursor: pointer; }
+.detail-stamp { font-size: 12px; color: var(--muted); margin-top: 18px; text-align: center; }
 
-/* shipped */
-.shipped-head { text-align: center; margin: 6px 0 20px; }
-.shipped-count { font-size: 34px; font-weight: 700; color: var(--gold); }
-.shipped-label { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-faint); }
+.shipped-head { display: none; }   /* a count of posts: left out (Nokka: no post counts) */
 .shipped-piece { background: var(--bg-card); border: 1px solid var(--border-soft); border-radius: var(--r-md); padding: 13px 15px; margin-bottom: 10px; }
 .shipped-title { font-size: 15px; font-weight: 600; color: var(--ink); }
-.shipped-date { font-size: 11px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 3px; }
+.shipped-date { font-size: 12px; color: var(--muted); margin-top: 3px; }
 
-/* toast */
-.toast {
-  position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%);
-  background: var(--bg-elev); border: 1px solid var(--amethyst-dim); color: var(--ink);
-  padding: 10px 18px; border-radius: 999px; font-size: 13px; z-index: 80; opacity: 0; transition: opacity 0.2s; pointer-events: none;
-}
+/* step 8: Nokka's draft shelf, four drawers; copy, never post */
+.hb-shelf { margin-top: 22px; }
+.hb-shelf .ts-pills { margin: 10px 0 4px; }
+.hb-shelf .ts-pills button { flex: 1; min-width: 0; padding: 0 4px; }
+.hb-draft { padding: 12px 0; border-top: 1px solid var(--leaf2); }
+.hb-draft.hb-yes { border-top-color: #D4A64A; }
+.hb-first { display: block; width: 100%; min-height: 44px; text-align: left; font: inherit; font-size: 15px; color: var(--ink); background: none; border: none; padding: 0; cursor: pointer; }
+.hb-first small { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+.hb-text { font-size: 14px; line-height: 1.55; color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere; margin: 8px 0 0; }
+.hb-text[hidden] { display: none; }
+.hb-acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.hb-acts button { flex: 1; min-height: 44px; font: inherit; font-size: 13px; color: var(--ink); background: none; border: 1px solid var(--leaf2); border-radius: 12px; padding: 0 8px; cursor: pointer; }
+.hb-acts button.hb-on { border-color: var(--t-text); background: var(--t-faint); }
+.hb-none { font-size: 13px; color: var(--muted); padding: 10px 0 2px; }
+.hb-copy { min-height: 48px; padding: 0 16px; border-radius: 14px; font: inherit; font-size: 13px; border: 1px solid var(--leaf); background: none; color: var(--ink); cursor: pointer; }
+
+.toast { position: fixed; left: 50%; bottom: calc(var(--ts-bar) + 24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); max-width: 90vw; background: var(--card); border: 1px solid var(--leaf); color: var(--ink); padding: 10px 18px; border-radius: 999px; font-size: 13px; z-index: 880; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
 .toast.show { opacity: 1; }
 </style>
-<link href="fonts/fonts.css" rel="stylesheet">
+<script src="shell.js"></script>
 <script src="temple_link.js" data-app="hibrations"></script>
 </head>
-<body>
-<div class="wrap" id="main">
-  <div class="topbar">
-    <button class="back-btn" id="back-btn">← portal</button>
-    <div class="brand">
-      <div class="brand-name">Hibrations</div>
-      <div class="brand-sub">Artboy · the voice · the work</div>
-    </div>
+<body data-temple="hibrations">
+<header class="ts-head">
+  <div class="ts-hrow">
+    <button class="ts-back" id="back-btn" type="button" aria-label="Back">←</button>
+    <div class="ts-tt"><b>Hibrations</b><span>Artboy · the voice · the work</span></div>
   </div>
-
+</header>
+<main class="ts-body" id="main">
   <div class="northstar" id="northstar"></div>
 
   <div class="tabs" id="tabs">
@@ -231,7 +142,14 @@ body {
   </div>
 
   <div id="view"></div>
-</div>
+
+  <section class="ts-card hb-shelf" id="hb-shelf">
+    <div class="ts-eyebrow">Nokka's draft shelf</div>
+    <div class="ts-pills" id="hb-drawers" role="tablist"></div>
+    <div id="hb-list"></div>
+    <p class="hb-none">Copy takes a draft to your clipboard. Nothing here posts.</p>
+  </section>
+</main>
 
 <div class="overlay" id="detail" hidden></div>
 <div class="toast" id="toast"></div>
@@ -705,9 +623,97 @@ body {
 })();
 </script>
 
-<style>
-/* ── Codex × Pleroma skin (R56) ── */
-body{font-family:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;}.brand-name{font-family:'Cormorant Garamond',serif;font-weight:600;letter-spacing:0;}.stage-name{font-family:'Cormorant Garamond',serif;font-weight:500;}.eyebrow,.section-eyebrow{letter-spacing:0.24em;}
-</style>
+<script>
+// Portal remake, step 8 · Nokka's asks, beside the page's own script (unchanged above).
+//   the draft shelf, four drawers: drafted, seen, yes, let go. It shows what Nokka has left: the shelf items in
+//     link_hibrations_v1 and the pieces on the desk that carry her name (both read only). Which drawer a draft is
+//     in lives in a store of its own, hibrations_shelf_v1 { status: { <key>: 'seen' | 'yes' | 'let go' } }; a draft
+//     with no entry is "drafted". No counts on the drawers.
+//   a copy button on each draft, and on an open piece. There is no post button and no network call: Lek pastes.
+(function () {
+  'use strict';
+  var KEY = 'hibrations_shelf_v1', DRAWERS = ['drafted', 'seen', 'yes', 'let go'], drawer = 'drafted', openKey = null;
+  var $ = function (id) { return document.getElementById(id); };
+  function read(k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
+  function el(t, c, txt) { var n = document.createElement(t); if (c) n.className = c; if (txt != null) n.textContent = txt; return n; }
+  function status() { var o = read(KEY, {}); return o && o.status && typeof o.status === 'object' ? o.status : {}; }
+  function setStatus(k, v) {
+    var o = read(KEY, {}); if (!o || typeof o !== 'object' || Array.isArray(o)) o = {};
+    if (!o.status || typeof o.status !== 'object') o.status = {};
+    if (v === 'drafted') delete o.status[k]; else o.status[k] = v;
+    try { localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) {}
+  }
+  function drafts() {
+    var out = [], link = read('link_hibrations_v1', {}), st = read('hibrations_v1', {});
+    (Array.isArray(link.shelf) ? link.shelf : []).forEach(function (i) {
+      if (i && i.id && typeof i.text === 'string') out.push({ key: 's:' + i.id, title: i.title || '', text: i.text, by: i.by || 'Nokka' });
+    });
+    (Array.isArray(st.pieces) ? st.pieces : []).forEach(function (p) {
+      if (p && p.id && p.by && p.by !== 'Lek' && p.stage !== 'shipped') out.push({ key: 'p:' + p.id, title: p.title || '', text: p.body || '', by: p.by });
+    });
+    return out.reverse();
+  }
+  function firstLine(d) { var l = (d.text || '').split('\n').filter(function (x) { return x.trim(); })[0] || d.title || 'a draft'; return l.length > 90 ? l.slice(0, 88) + '…' : l; }
+  function say(m) { var t = $('toast'); if (!t) return; t.textContent = m; t.classList.add('show'); setTimeout(function () { t.classList.remove('show'); }, 1600); }
+  function copy(text) {
+    function fallback() {
+      var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select(); var ok = false; try { ok = document.execCommand('copy'); } catch (e) {} ta.remove();
+      say(ok ? 'Copied. Paste it where you want it.' : 'Could not copy here. Select the text and copy it by hand.');
+    }
+    try { navigator.clipboard.writeText(text).then(function () { say('Copied. Paste it where you want it.'); }, fallback); } catch (e) { fallback(); }
+  }
+
+  function paint() {
+    var bar = $('hb-drawers'), list = $('hb-list'), st = status(), all = drafts();
+    bar.textContent = ''; list.textContent = '';
+    DRAWERS.forEach(function (d) {
+      var b = el('button', d === drawer ? 'ts-on' : '', d); b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', d === drawer ? 'true' : 'false');
+      b.addEventListener('click', function () { drawer = d; openKey = null; paint(); });
+      bar.appendChild(b);
+    });
+    var here = all.filter(function (d) { return (st[d.key] || 'drafted') === drawer; });
+    if (!here.length) {
+      list.appendChild(el('p', 'hb-none', !all.length ? 'Nothing drafted. Nothing drafts unless you pull it.' : 'This drawer is empty.'));
+      return;
+    }
+    here.forEach(function (d) {
+      var row = el('div', 'hb-draft' + (drawer === 'yes' ? ' hb-yes' : '')), first = el('button', 'hb-first', firstLine(d)), body = el('p', 'hb-text', d.text), acts = el('div', 'hb-acts');
+      first.type = 'button'; first.appendChild(el('small', '', d.by + (d.title ? ' · ' + d.title : '')));
+      body.hidden = openKey !== d.key;
+      first.addEventListener('click', function () {
+        openKey = openKey === d.key ? null : d.key;
+        if (openKey && (st[d.key] || 'drafted') === 'drafted') { setStatus(d.key, 'seen'); say('Moved to seen.'); }
+        paint();
+      });
+      var c = el('button', '', 'Copy'); c.type = 'button'; c.addEventListener('click', function () { copy(d.text); });
+      acts.appendChild(c);
+      [['yes', 'Yes'], ['let go', 'Let go']].forEach(function (p) {
+        var b = el('button', drawer === p[0] ? 'hb-on' : '', drawer === p[0] ? 'Back to seen' : p[1]); b.type = 'button';
+        b.addEventListener('click', function () { setStatus(d.key, drawer === p[0] ? 'seen' : p[0]); openKey = null; paint(); });
+        acts.appendChild(b);
+      });
+      row.appendChild(first); row.appendChild(body); row.appendChild(acts); list.appendChild(row);
+    });
+  }
+  paint();
+  try { new MutationObserver(paint).observe($('view'), { childList: true }); } catch (e) {}
+  window.addEventListener('storage', function (e) { if (e.key === 'link_hibrations_v1' || e.key === KEY) paint(); });
+
+  // a copy button on an open piece: the title and the body, as they stand in the two fields
+  try {
+    new MutationObserver(function () {
+      var d = $('detail'), acts = d.querySelector('.detail-actions');
+      if (!acts || acts.querySelector('.hb-copy')) return;
+      var b = el('button', 'hb-copy', 'Copy'); b.type = 'button';
+      b.addEventListener('click', function () {
+        var t = d.querySelector('.detail-input'), bd = d.querySelector('.detail-body');
+        copy(((t && t.value.trim()) ? t.value.trim() + '\n\n' : '') + (bd ? bd.value : ''));
+      });
+      acts.insertBefore(b, acts.firstChild);
+    }).observe($('detail'), { childList: true });
+  } catch (e) {}
+})();
+</script>
 </body>
 </html>

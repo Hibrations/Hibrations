@@ -6,7 +6,7 @@
 // It never touches localStorage or IndexedDB — Lek's history lives there.
 //
 // Bump VERSION on every deploy that changes a file below.
-const VERSION = '2026-11-14.4';
+const VERSION = '2026-11-14.5';
 const CACHE = 'halohorns-' + VERSION;
 
 const SHELL = [
@@ -22,6 +22,8 @@ const SHELL = [
   './body/', './body/index.html', './body/manifest.json', './body/icon.svg',
   './village/', './village/index.html', './village/manifest.json', './village/icon.svg',
   './tarot.html', './astrology.html', './kaching.html',
+  // step 8: the Baby page, and the leave-sums arithmetic Kaching and Baby share
+  './baby.html', './leave_sums.js',
   './observatory/', './observatory/index.html', './observatory/tarot.html', './observatory/astrology.html',
   './fonts/fonts.css',
   './fonts/CormorantGaramond-italic-latin-1.woff2', './fonts/CormorantGaramond-italic-latin-ext-0.woff2',

@@ -1100,7 +1100,7 @@ button.hm-later { border: 1px solid var(--leaf); color: var(--ink); }
 .hm-more b { color: var(--ink); font-weight: 500; }
 .hm-none { font-size: 14px; color: var(--muted); padding: 10px 0 2px; border-top: 1px solid var(--leaf2); }
 
-/* the constellation: twelve temples as stars on a slow wheel around the day */
+/* the constellation: the temples as stars on a slow wheel around the day (thirteen since step 8: Baby) */
 .hm-cons { position: relative; height: 362px; margin: 2px 0 0; }
 .hm-web { position: absolute; left: 50%; top: 166px; width: 1px; height: 1px; overflow: visible; pointer-events: none; }
 .hm-orbit { transform-origin: 0 0; animation: hm-turn 900s linear infinite; }
@@ -1266,8 +1266,8 @@ const Shell = {
   current: 'portal',
   // Portal remake, step 4. A page that wears the new frame carries its own header and back button, so the Portal's
   // old bar is not drawn over it. Today that is Mirror alone; add a page here in the step that migrates it.
-  NEW_FRAME: ['mirror.html'],
-  DOORS: ['portal', 'body', 'inner', 'breath', 'beast', 'magnetic', 'hibrations', 'strings', 'grimoire', 'vocal', 'mirror', 'observatory', 'kaching', 'village'],
+  NEW_FRAME: ['mirror.html', 'strings.html', 'vocal.html', 'healing_temple.html', 'hibrations.html', 'kaching.html', 'baby.html'],   // step 8: the small temples
+  DOORS: ['portal', 'body', 'inner', 'breath', 'beast', 'magnetic', 'hibrations', 'strings', 'grimoire', 'vocal', 'mirror', 'observatory', 'kaching', 'baby', 'village'],
   goTo(app) {
     if (app === 'healing') app = 'grimoire';
     this.current = app;
@@ -1311,6 +1311,9 @@ const Shell = {
       return;
     } else if (app === 'kaching') {
       Shell.openTemple('kaching.html', 'kaching');
+      return;
+    } else if (app === 'baby') {
+      Shell.openTemple('baby.html', 'baby');
       return;
     } else if (app === 'village') {
       Shell.openTemple('village/index.html', 'the village');
@@ -3376,8 +3379,8 @@ const Portal = (function() {
   // ============================================================
   const SHELF_KEY = 'portal_shelf_v1';
   const CAPTURE_KEY = 'portal_capture_v1';
-  const HOME_ORDER = ['body', 'inner', 'breath', 'beast', 'observatory', 'village', 'healing', 'vocal', 'strings', 'hibrations', 'mirror', 'kaching'];
-  const HOME_NAMES = { body: 'Body', inner: 'Inner', breath: 'Breath', beast: 'Beast', observatory: 'Observatory', village: 'Village', healing: 'Healing', vocal: 'Vocal', strings: 'Strings', hibrations: 'Hibrations', mirror: 'Mirror', kaching: 'Kaching' };
+  const HOME_ORDER = ['body', 'inner', 'breath', 'beast', 'observatory', 'village', 'healing', 'vocal', 'strings', 'hibrations', 'mirror', 'kaching', 'baby'];
+  const HOME_NAMES = { body: 'Body', inner: 'Inner', breath: 'Breath', beast: 'Beast', observatory: 'Observatory', village: 'Village', healing: 'Healing', vocal: 'Vocal', strings: 'Strings', hibrations: 'Hibrations', mirror: 'Mirror', kaching: 'Kaching', baby: 'Baby' };
   const STAR_ROUTE = { healing: 'grimoire' };                       // the Portal's own name for the Healing Temple
   const ROUTE_STAR = { grimoire: 'healing', magnetic: 'beast' };    // which star an offer lights
   let homeGrid = false;            // Lek, 11-14: the constellation first, the plain grid one tap away
@@ -3628,7 +3631,7 @@ const Portal = (function() {
       wrap.appendChild(tiles);
     } else {
       const cons = el('div', 'hm-cons');
-      const stars = HOME_ORDER.map((k, i) => { const a = (-90 + i * 30) * Math.PI / 180, r = i % 2 ? 98 : 140; return { k: k, x: r * Math.cos(a), y: r * Math.sin(a) }; });
+      const stars = HOME_ORDER.map((k, i) => { const a = (-90 + i * 360 / HOME_ORDER.length) * Math.PI / 180, r = i % 2 ? 98 : 140; /* step 8: evenly round, however many doors */ return { k: k, x: r * Math.cos(a), y: r * Math.sin(a) }; });
       cons.innerHTML = '<svg class="hm-web" viewBox="0 0 1 1" aria-hidden="true"><g class="hm-orbit"><circle r="98" fill="none" stroke="var(--leaf)" stroke-width="1" stroke-dasharray="1 7" stroke-linecap="round"/>' +
         '<circle r="140" fill="none" stroke="var(--leaf)" stroke-width="1" stroke-dasharray="1 9" stroke-linecap="round"/></g>' +
         '<polygon points="' + stars.map(s => s.x.toFixed(1) + ',' + s.y.toFixed(1)).join(' ') + '" fill="none" stroke="var(--leaf)" stroke-width="1"/></svg>' +
