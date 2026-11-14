@@ -16,6 +16,11 @@
 <script src="sky.js"></script>
 <script src="charts.js"></script>
 <script src="shell.js"></script>
+<!-- Portal remake, step 5: the directors in the app, and the dynamic day plan. -->
+<script src="appblock.js"></script>
+<script src="talk.js"></script>
+<script src="dayplan.js"></script>
+<script src="director.js"></script>
 <style>
 :root {
   --bg-elev: #14110f;
@@ -1118,6 +1123,20 @@ button.hm-read { display: block; width: 100%; min-height: 48px; text-align: left
 .hm-kept { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-top: 1px solid var(--leaf2); margin-top: 8px; }
 .hm-kept span { flex: 1; min-width: 0; color: var(--ink); font-size: 14px; overflow-wrap: anywhere; }
 .hm-line { font-size: 13px; color: var(--muted); text-align: center; margin: 18px 0 0; }
+/* step 5: the dynamic day plan. The tray under an offer (where, size, the way off), and a director's suggestion. */
+.hm-plan { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--leaf2); }
+.hm-plan .ts-minfull { border-top: none; padding-top: 0; margin: 0 0 8px; }
+.hm-src { font-size: 13px; color: var(--muted); margin: 0 0 8px; }
+.hm-src .ts-srcmark { margin-left: 0; margin-right: 6px; }
+.hm-ctl { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.hm-ctl > span { width: 42px; flex: none; font-size: 12px; color: var(--muted); }
+.hm-ctl .ts-pills { flex: 1; min-width: 0; }
+.hm-ctl .ts-pills button { flex: 1; min-width: 0; padding: 0 4px; }
+.hm-sug { padding: 10px 0 12px; border-top: 1px solid var(--leaf2); }
+.hm-sug b { display: block; font: 500 19px/1.2 "Cormorant Garamond", Georgia, serif; color: var(--ink); margin-top: 2px; }
+.hm-sug small { display: block; font-size: 13px; color: var(--muted); margin-top: 3px; }
+.hm-sug .hm-offer-row { padding: 10px 0 0; }
+.hm-sug .hm-yes, .hm-sug .hm-later { flex: 1; }
 .hm-capture p { margin-top: 10px; font-size: 13px; }
 
 /* older cards on home (the morning check, the practices also open), drawn as cards of this house */
@@ -3421,14 +3440,14 @@ const Portal = (function() {
     });
     (getPlan(TODAY()).activities || []).forEach(a => {
       out.push({
-        key: 'plan:' + a.id, when: 'planned', hour: loose(), temple: null, name: a.name, sub: '',
-        meta: (a.stack || []).map(k => (PLAN_STACKS[k] ? PLAN_STACKS[k].label : '')).filter(Boolean), planId: a.id, done: !!a.done
+        key: 'plan:' + a.id, when: (a.from && a.from !== 'rak' && window.TempleDirector ? 'from ' + window.TempleDirector.nameOf(a.from) : 'planned'), hour: loose(), temple: null, name: a.name, sub: '',
+        meta: (a.stack || []).map(k => (PLAN_STACKS[k] ? PLAN_STACKS[k].label : '')).filter(Boolean), planId: a.id, done: !!a.done, act: a
       });
     });
     const evening = getSlot(day, 'evening');
     slot(evening, 'evening', 21.5, evening && evening.id === 'evening_winddown' ? 'The day set down. Long exhales tell the system it is safe to sleep.' : '');
     out.forEach(o => { if (o.star === undefined) o.star = o.temple; o.star = ROUTE_STAR[o.star] || o.star || null; });
-    return out;
+    return window.TemplePlan ? window.TemplePlan.shape(out) : out;     // step 5: the dynamic day plan
   }
   const offerTaken = (o, shelf) => (o.planId ? !!o.done : shelf.yes.indexOf(o.key) >= 0);
 
@@ -3499,6 +3518,18 @@ const Portal = (function() {
     card.appendChild(arc);
     card.appendChild(el('p', 'hm-cap', 'Placed by the part of the day, not by the clock.'));
     homeNow = { open: open, shelf: shelf };
+    if (window.TemplePlan && window.TempleDirector) window.TemplePlan.suggestions({ home: true }).forEach(s => {
+      const sg = el('div', 'hm-sug'); sg.dataset.sug = s.id;
+      sg.appendChild(el('span', 'hm-when', 'a change, offered'));
+      sg.appendChild(el('b', '', window.TemplePlan.sentence(s, window.TempleDirector.nameOf(s.dir))));
+      if (s.why) sg.appendChild(el('small', '', s.why));
+      const pr = el('div', 'hm-offer-row');
+      const y = el('button', 'hm-yes', 'Yes'); y.type = 'button';
+      y.addEventListener('click', () => { const r = window.TemplePlan.apply(s, offers); render(); toast(r.text); });
+      const n = el('button', 'hm-later', 'Not now'); n.type = 'button';
+      n.addEventListener('click', () => { window.TemplePlan.later(s); render(); toast('Left as it is.'); });
+      pr.appendChild(y); pr.appendChild(n); sg.appendChild(pr); card.appendChild(sg);
+    });
     if (!open.length) {
       card.appendChild(el('p', 'hm-none', 'Everything on offer today is set down. The day is yours as it is.'));
     }
@@ -3508,10 +3539,10 @@ const Portal = (function() {
       wrap.dataset.offer = o.key;
       if (o.star) wrap.dataset.temple = o.star;
       const row = el('div', 'hm-offer-row');
-      const more = !!(o.sub || (o.steps && o.steps.length) || o.cross || o.extraId);
+      const more = !!window.TemplePlan || !!(o.sub || (o.steps && o.steps.length) || o.cross || o.extraId);   // step 5: every offer opens, to be moved, resized or taken off
       const isOpen = more && openOfferKey === o.key;
       const tx = el(more ? 'button' : 'div', 'hm-offer-tx');
-      const when = el('span', 'hm-when'); when.appendChild(el('i', 'hm-dot')); when.appendChild(document.createTextNode(o.when + (taken ? ' · yes' : '')));
+      const when = el('span', 'hm-when'); when.appendChild(el('i', 'hm-dot')); when.appendChild(document.createTextNode(o.when + (o.size === 'min' ? ' · minimum' : '') + (taken ? ' · yes' : '')));
       tx.appendChild(when);
       tx.appendChild(el('b', '', o.name));
       if (o.meta && o.meta.length) tx.appendChild(el('small', '', o.meta.join(' · ')));
@@ -3555,6 +3586,8 @@ const Portal = (function() {
           off.addEventListener('click', () => { removeFlowExtra(o.extraId); openOfferKey = null; render(); });
           m.appendChild(off);
         }
+        if (window.TemplePlan) m.appendChild(window.TemplePlan.controls(o, { render: render, toast: toast, offers: offers }));
+        if (window.TempleDirector && o.practiceId && !o.thin) window.TempleDirector.lenses(o.practiceId, o.name).forEach(b => m.appendChild(b));
         wrap.appendChild(m);
       }
       card.appendChild(wrap);
@@ -3667,10 +3700,11 @@ const Portal = (function() {
         const s = shelfFor(offers);
         s.items = s.items.filter(x => x.key !== it.key); s.later = s.later.filter(k => k !== it.key);
         saveShelf(s); render();
+        if (it.card && window.TempleDirector) window.TempleDirector.pickUp(it.from, it.card);     // step 5: into today's plan
         if (it.temple) executeBegin(it.temple, it.practiceId, it.name);
       });
       const go = el('button', 'ts-btn', 'Let go'); go.type = 'button';
-      go.addEventListener('click', () => { const s = shelfFor(offers); s.items = s.items.filter(x => x.key !== it.key); saveShelf(s); render(); });
+      go.addEventListener('click', () => { const s = shelfFor(offers); s.items = s.items.filter(x => x.key !== it.key); saveShelf(s); render(); if (it.card && window.TempleDirector) window.TempleDirector.letGo(it.from, it.card); });
       row.appendChild(up); row.appendChild(go);
       box.appendChild(row);
     });
@@ -3735,10 +3769,12 @@ const Portal = (function() {
     //    It needs the bridge's /portal route. Nothing is drawn and nothing is invented until that exists. ──
     const pulse = el('div'); pulse.id = 'slot-village-pulse'; pulse.dataset.slot = 'village-pulse'; pulse.dataset.step = '6'; pulse.hidden = true;
     view.appendChild(pulse);
-    // ── EMPTY SLOT, step 5 (the directors in the app): A's brief card, her carries, the council, the bridge light.
-    //    It needs director.js and the village's thread stores. Empty until then. ──
+    // ── Step 5 (the directors in the app), filled by director.js (TempleDirector.fillHome): A's card with her brief,
+    //    her chat and the council; then the houses' state lines, which sit behind the one switch in Settings below. ──
     const brief = el('div'); brief.id = 'slot-a-brief'; brief.dataset.slot = 'a-brief'; brief.dataset.step = '5'; brief.hidden = true;
     view.appendChild(brief);
+    const houseLines = el('div'); houseLines.id = 'slot-house-lines'; houseLines.dataset.slot = 'house-lines'; houseLines.dataset.step = '5'; houseLines.hidden = true;
+    view.appendChild(houseLines);
 
     view.appendChild(el('div', 'ts-sec', 'Sleep on it'));
     view.appendChild(buildShelf(offers, shelf));
@@ -3748,6 +3784,8 @@ const Portal = (function() {
     const mir = el('button', 'ts-link', 'The week, looked at'); mir.type = 'button';
     mir.addEventListener('click', () => Shell.goTo('mirror'));
     view.appendChild(mir);
+    const setSlot = el('div'); setSlot.id = 'slot-settings'; setSlot.dataset.slot = 'settings'; setSlot.dataset.step = '5'; setSlot.hidden = true;
+    view.appendChild(setSlot);
   }
 
   // Once a minute: the clock in the ring and the sun on the arc move on; at midnight the day is drawn afresh.
@@ -3762,6 +3800,15 @@ const Portal = (function() {
     const arc = document.getElementById('home-arc'); if (arc && homeNow) arc.innerHTML = dayArcSvg(now, homeNow.open, homeNow.shelf);
   }
   setInterval(homeTick, 60000);
+  // step 5: the plan, the shelf or the day's changes were written (by the sheet here, or by a temple open over this page)
+  function homeRedraw() {
+    if (subview !== 'flow') return;
+    const a = document.activeElement, mount = document.getElementById('app-mount');
+    if (a && mount && mount.contains(a) && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return;
+    render();
+  }
+  window.addEventListener('temple-plan', homeRedraw);
+  window.addEventListener('storage', (e) => { if (e.key === 'portal_plan_v1' || e.key === 'portal_dayplan_v1' || e.key === 'portal_shelf_v1') homeRedraw(); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) homeTick(); });
 
   function render() {
@@ -3803,6 +3850,7 @@ const Portal = (function() {
     renderHome(view, now, day, train);
 
     mount.appendChild(view);
+    if (window.TempleDirector) { window.TempleDirector.offers = () => buildOffers(day, train); window.TempleDirector.fillHome(); }
   }
 
   Shell.setDateTitle();
@@ -3817,7 +3865,7 @@ const Portal = (function() {
 (function () {
   const ts = window.TempleShell;
   if (!ts) return;
-  ts.openDirector = () => Shell.goTo('village');        // step 5's director.js takes this over (A's sheet)
+  // step 5: director.js sets ts.openDirector, so the face in the bar opens A's sheet here
   document.addEventListener('click', (e) => {
     const b = e.target && e.target.closest ? e.target.closest('.ts-bar button[data-go], .ts-sheet .ts-tile[data-go]') : null;
     if (!b) return;

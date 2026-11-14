@@ -99,8 +99,8 @@
     }, 250);
     return true;
   }
-  // the director: the temple's own ask sheet where it has one (temple_link.js), otherwise their door in the village.
-  // Step 5's director.js takes this over by setting TempleShell.openDirector.
+  // the director: director.js (step 5) sets TempleShell.openDirector to its sheet. This is what a tap does if that
+  // file has not loaded: the temple's own ask sheet where it has one (temple_link.js), otherwise their door in the village.
   function openDirector() {
     const d = DIRECTORS[T.dir]; if (!d) return;
     if (window.TempleLink && typeof window.TempleLink.open === 'function') { window.TempleLink.open(null); return; }
@@ -237,6 +237,11 @@
     meta.content = html.hasAttribute('data-night') ? '#0D0C12' : '#15131B';
     if (!document.querySelector('link[rel~="icon"]')) { const l = el('link'); l.rel = 'icon'; l.type = 'image/svg+xml'; l.href = ROOT + 'icon.svg'; document.head.appendChild(l); }   // standalone, a tab or a shortcut gets the house's icon
     buildHeader(); buildSky(); buildBar();
+    // step 5: the directors in every page of the frame. Four files, in this order; a page that loaded them itself (home) is left alone.
+    if (!window.TempleDirector) for (const f of ['appblock.js', 'talk.js', 'dayplan.js', 'director.js']) {
+      if ((f === 'appblock.js' && window.TempleAppBlock) || (f === 'talk.js' && window.TempleTalk) || (f === 'dayplan.js' && window.TemplePlan)) continue;
+      const s = el('script'); s.src = ROOT + f; s.async = false; document.head.appendChild(s);
+    }
     html.setAttribute('data-shell', 'ready');
     // offline: one service worker for the whole site, at the apps/ root. It never touches localStorage.
     if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register(ROOT + 'sw.js').catch(() => {});

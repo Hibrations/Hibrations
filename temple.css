@@ -165,6 +165,85 @@ button.ts-x{border:1px solid var(--leaf2);color:var(--muted)}
 .ts-sheet-body{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:6px 16px calc(16px + env(safe-area-inset-bottom,0px));scrollbar-width:none}
 .ts-sheet-body::-webkit-scrollbar{display:none}
 
+/* ---------- step 5: the director's sheet (talk, advice, shelf), the council, A's card, the houses' lines ---------- */
+.ts-dsheet{height:88vh;height:88dvh}
+.ts-dface{flex:none;display:block}
+.ts-pc,.ts-light{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin:0}
+.ts-pc{padding:0 16px 0 88px}
+.ts-light{white-space:nowrap}
+.ts-dot{width:8px;height:8px;border-radius:50%;flex:none;border:1.5px solid var(--muted);font-style:normal}
+.ts-dot.ts-ok{background:var(--t2-text);border-color:var(--t2-text)}
+.ts-dot.ts-warn{border-color:var(--t2-text)}
+.ts-dsheet .ts-tabs[hidden]{display:none}
+.ts-dsheet .ts-sheet-body{padding-top:10px;border-top:1px solid transparent}
+.ts-dsheet[data-mode="talk"] .ts-sheet-body{display:flex;flex-direction:column;gap:8px;padding-bottom:10px}
+.ts-msg{flex:none;max-width:88%;padding:10px 12px;border-radius:16px;font-size:15px;line-height:1.45;overflow-wrap:anywhere;white-space:pre-wrap}
+.ts-msg.ts-me{align-self:flex-end;margin-left:auto;background:var(--t-faint);border:1px solid var(--t-dim);color:var(--ink);border-bottom-right-radius:6px}
+.ts-msg.ts-me.ts-wait{border-style:dashed}
+.ts-msg.ts-them{align-self:flex-start;background:var(--bg);border:1px solid var(--leaf2);border-bottom-left-radius:6px;white-space:normal}
+.ts-msg.ts-them.ts-err{border-style:dashed}
+.ts-msg.ts-fold .ts-md{max-height:220px;overflow:hidden;-webkit-mask-image:linear-gradient(#000 70%,transparent);mask-image:linear-gradient(#000 70%,transparent)}
+.ts-msg.ts-sys,.ts-msg.ts-day{align-self:center;max-width:100%;margin:0 auto;padding:2px 8px;font-size:12px;color:var(--muted);text-align:center;white-space:normal}
+.ts-about{display:block;font-size:12px;color:var(--t2-text);margin-bottom:2px}
+.ts-meta{font-size:12px;color:var(--muted);margin-top:4px;white-space:normal}
+.ts-acts{display:flex;flex-wrap:wrap;align-items:center;gap:0 12px}
+.ts-acts span{flex:1;min-width:110px}
+.ts-acts button{font:inherit;font-size:13px;color:var(--t-text);background:none;border:none;min-height:44px;padding:0 4px;cursor:pointer;text-decoration:underline;text-decoration-color:var(--leaf);text-underline-offset:4px}
+.ts-md p{margin:0 0 8px;font-size:15px;color:var(--ink)}
+.ts-md>:last-child{margin-bottom:0}
+.ts-md h4{font:600 19px/1.2 "Cormorant Garamond",Georgia,serif;margin:10px 0 4px;color:var(--ink)}
+.ts-md ul,.ts-md ol{margin:0 0 8px;padding-left:20px}
+.ts-md li{margin:3px 0}
+.ts-md blockquote{margin:0 0 8px;padding-left:10px;border-left:2px solid var(--leaf);color:var(--muted)}
+.ts-md code{font:13px ui-monospace,Consolas,monospace;background:var(--card);padding:1px 4px;border-radius:4px}
+.ts-md pre{overflow-x:auto;background:var(--card);padding:8px;border-radius:8px;margin:0 0 8px}
+.ts-md a{color:var(--t-text)}
+.ts-md hr{border:0;border-top:1px solid var(--leaf2);margin:10px 0}
+.ts-quiet{font-size:14px;line-height:1.5;color:var(--muted);margin:10px 2px}
+.ts-quiet b{color:var(--ink);font-weight:500}
+.ts-note{font-size:13px;color:var(--ink);margin:4px 0 12px;padding:10px 12px;border:1px solid var(--leaf);border-radius:12px}
+.ts-stamp,.ts-status,.ts-over{font-size:12px;line-height:1.4;color:var(--muted);margin:8px 2px 0}
+.ts-over{color:var(--t2-text)}
+.ts-over[hidden]{display:none}
+button.ts-newpill{position:absolute;left:50%;transform:translateX(-50%);bottom:156px;z-index:2;min-height:44px;padding:0 14px;border-radius:99px;border:1px solid var(--leaf);background:var(--card);color:var(--ink);font-size:13px;white-space:nowrap}
+button.ts-newpill[hidden]{display:none}
+.ts-compose{padding:8px 16px calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--leaf2)}
+.ts-compose:empty{display:none}
+.ts-crow{display:flex;gap:8px;align-items:flex-end}
+.ts-crow textarea,textarea.ts-ctext{flex:1;min-width:0;min-height:48px;max-height:30vh;padding:12px;border-radius:14px;border:1px solid var(--leaf2);background:var(--bg);color:var(--ink);font:inherit;font-size:16px;line-height:1.35;resize:none}
+textarea.ts-ctext{display:block;width:100%;margin:10px 0 0}
+.ts-crow button.ts-yes{flex:none;min-height:48px;min-width:72px;border-radius:14px;font-size:14px;padding:0 14px}
+button.ts-wide{display:block;width:100%;min-height:48px;border-radius:14px;font-size:14px;margin-top:8px}
+.ts-refchip{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--t2-text);margin-bottom:6px}
+.ts-refchip span{flex:1;min-width:0}
+.ts-refchip button.ts-link{margin:0;line-height:44px}
+.ts-refchip:empty{display:none}
+.ts-adv h2,.ts-sug h2{font-size:21px}
+.ts-adv .ts-road{margin-bottom:0}
+.ts-src{font-size:13px;color:var(--muted);margin-top:8px}
+.ts-src .ts-srcmark{margin-left:0;margin-right:6px}
+.ts-card p.ts-pre{white-space:pre-wrap;color:var(--ink)}
+.ts-card p.ts-why{font-style:italic;margin-top:6px}
+.ts-seats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 0}
+button.ts-seat{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:86px;padding:8px 4px;border:1px solid var(--leaf2);border-radius:14px;font-size:13px;color:var(--muted)}
+button.ts-seat.ts-on{border-color:var(--t-text);background:var(--t-faint);color:var(--ink)}
+.ts-seat .ts-face,.ts-staterow .ts-face,.ts-lens .ts-face{box-shadow:none}
+.ts-arow{display:flex;align-items:center;gap:12px}
+.ts-arow>div{flex:1;min-width:0}
+.ts-arow b{display:block;font:500 21px/1.15 "Cormorant Garamond",Georgia,serif;color:var(--ink)}
+.ts-arow span:not(.ts-face){display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.ts-acard .ts-btnrow{flex-wrap:wrap}
+.ts-acard .ts-btnrow .ts-btn{flex:1 1 auto}
+button.ts-staterow{display:flex;align-items:center;gap:12px;width:100%;min-height:60px;padding:8px 0;border-bottom:1px solid var(--leaf2);text-align:left}
+button.ts-staterow:last-child{border-bottom:none}
+.ts-staterow>div{flex:1;min-width:0}
+.ts-staterow .ts-n{font-size:15px;color:var(--ink)}
+.ts-staterow .ts-s{font-size:13px;color:var(--muted);margin-top:1px}
+.ts-setrow{display:flex;align-items:center;gap:12px;font-size:14px}
+.ts-setrow>span{flex:1;min-width:0;color:var(--ink)}
+.ts-setrow .ts-btn{min-width:64px}
+:where(.ts-seat,.ts-staterow,.ts-lens,.ts-newpill,.ts-acts button,.ts-crow textarea,.ts-ctext):focus-visible{outline:2px solid var(--t-text);outline-offset:2px}
+
 /* ---------- quiet hours ---------- */
 :root[data-night] .ts-face{box-shadow:0 0 0 3px rgba(13,12,18,.6)}
 :root[data-night] button.ts-back{background:rgba(13,12,18,.55)}
