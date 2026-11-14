@@ -293,3 +293,31 @@ p.ts-sleepline{font-size:14px;line-height:1.45;color:var(--ink);margin:0 0 12px;
 :where(.ts-barback,.ts-minrow button,.ts-set button):focus-visible{outline:2px solid var(--t-text);outline-offset:2px}
 /* a hidden link or button is hidden (their display rules above would otherwise show them) */
 button.ts-link[hidden],a.ts-link[hidden],button.ts-btn[hidden],a.ts-btn[hidden]{display:none}
+
+/* ---------- step 12: search, the temple's sigil in the header and the bar, and the last of the a11y pass ---------- */
+.ts-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+.ts-hsig{color:var(--t-text);flex:none;width:22px;height:22px}
+.ts-hrow .ts-hsig+.ts-tt{margin-left:-4px}
+button.ts-hsearch{width:48px;height:48px;border-radius:50%;flex:none;display:grid;place-items:center;padding:0;margin:0;font:inherit;cursor:pointer;border:1px solid var(--leaf);background:rgba(21,19,27,.55);color:var(--ink);-webkit-tap-highlight-color:transparent}
+:root[data-night] button.ts-hsearch{background:rgba(13,12,18,.55)}
+button.ts-searchbtn{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;margin:0 0 12px;padding:0 14px;font:inherit;font-size:15px;text-align:left;cursor:pointer;border:1px solid var(--leaf);border-radius:14px;background:var(--bg);color:var(--muted);-webkit-tap-highlight-color:transparent}
+.ts-searchsheet{height:88vh;height:88dvh}
+html:is([data-large],[data-night],[data-onehand]) .ts-searchsheet{height:calc(var(--ts-sheet)/var(--ts-type))}
+.ts-searchlab{margin:0 16px 4px}
+.ts-searchlab input{margin-top:0;min-height:48px;-webkit-appearance:none;appearance:none}
+.ts-searchlab input::-webkit-search-cancel-button{-webkit-appearance:none}
+.ts-foundbox{padding-top:2px}
+.ts-foundsec h2.ts-sec{font-weight:400;margin-top:16px}
+button.ts-found{display:flex;align-items:flex-start;gap:12px;width:100%;min-height:56px;padding:10px 0;border-bottom:1px solid var(--leaf2);text-align:left}
+.ts-found .ts-sig{color:var(--t-text);margin-top:2px}
+.ts-foundtx{flex:1;min-width:0;display:block}
+.ts-foundtx b{display:block;font-weight:500;font-size:15px;line-height:1.3;color:var(--ink);overflow-wrap:anywhere}
+.ts-foundtx .ts-foundmore{display:block;font-size:14px;line-height:1.4;color:var(--ink);margin-top:2px;overflow-wrap:anywhere}
+.ts-foundtx small{display:block;font-size:12px;line-height:1.4;color:var(--muted);margin-top:2px}
+:where(.ts-hsearch,.ts-searchbtn,.ts-found,.ts-searchlab input,.ts-felt input,input.ts-input,.ts-pills button,.ts-road button,.ts-tabs button,.ts-pair button,.ts-state,.ts-wide):focus-visible{outline:2px solid var(--t-text);outline-offset:2px}
+.ts-found:focus-visible{outline-offset:-2px}
+/* A focus ring on everything that takes focus, on every page of the frame: the pages' own buttons, tabs, cards and
+   fields had none, and several of their stylesheets switch the outline off. A ring only shows for a keyboard (and in a
+   text field while it is typed in), never on a tap. */
+body[data-temple] :is(button,a[href],input,select,textarea,summary,[role="button"],[tabindex]:not([tabindex="-1"])):focus-visible{outline:2px solid var(--t-text) !important;outline-offset:2px}
+body[data-temple] :is(.ts-found,.ts-tile,.practice-summary,.cat-header):focus-visible{outline-offset:-2px}

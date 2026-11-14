@@ -27,7 +27,9 @@
 //     embedded it posts 'close-temple' to the parent, exactly as the thirteen pages do; standalone it opens the Portal.
 //   · the sky band (sky.js) behind the header.
 //   · the bottom bar: Today · Temples · Patterns · Village, and the temple's director as the fifth.
-//   · the Temples sheet: every door, plainly (thirteen since step 8: Baby).
+//   · the Temples sheet: every door, plainly (thirteen since step 8: Baby), and since step 12 "Search the house" on top.
+//   · step 12: the temple's sigil beside its name in the header and on the bar's Temples button; TempleShell.openSearch()
+//     (search.js, loaded on first use). sky.js rests under <html data-covered>, which home sets while its overlay is open.
 //   · moving sideways: TempleShell.go('body'). Standalone it is a plain link. Embedded it posts
 //     {action:'goto', app:'body'} to the parent; a parent that handles it answers {action:'goto-ack'}. Today's Portal
 //     does not yet (step 4), so with no answer in 250 ms the frame opens the page itself.
@@ -348,6 +350,10 @@
     if (!tt.querySelector('b')) tt.appendChild(el('b', '', body.dataset.name || T.name));
     if (!tt.querySelector('span')) { const sub = body.dataset.sub || T.sub || T.word; if (sub) tt.appendChild(el('span', '', sub)); }
 
+    // step 12: the temple's own sigil beside its name, in its colour (the same drawing as on home, in the bar and in search).
+    // Not on home itself: its header is full (the bridge light, A's face), and its sigil is the bar's Today.
+    if (KEY !== 'portal' && !row.querySelector('.ts-hsig')) { const hs = sig(KEY === 'magnetic' ? 'beast' : KEY, 26); hs.classList.add('ts-hsig'); hs.dataset.sig = KEY; row.insertBefore(hs, tt); }
+
     if (T.dir && !row.querySelector('.ts-face')) {
       const f = face(T.dir, 'button'); f.type = 'button'; f.dataset.director = T.dir;
       f.setAttribute('aria-label', directorName());
@@ -373,8 +379,11 @@
     const lit = BAR.includes(KEY) ? KEY : 'temples';
     for (const k of BAR) {
       const b = el('button', k === lit ? 'ts-on' : ''); b.type = 'button'; b.dataset.go = k;
-      b.appendChild(sig(k === 'temples' ? 'grid' : k, 22));
+      const here = k === 'temples' && lit === 'temples';                 // step 12: in a temple, Temples wears that temple's sigil
+      const bs = sig(k === 'temples' ? (here ? (KEY === 'magnetic' ? 'beast' : KEY) : 'grid') : k, 22); bs.dataset.sig = k === 'temples' ? (here ? KEY : 'grid') : k;
+      b.appendChild(bs);
       b.appendChild(document.createTextNode(k === 'temples' ? 'Temples' : TEMPLES[k].short));
+      if (here) b.setAttribute('aria-label', 'Temples. This is ' + T.name);
       if (k === lit) b.setAttribute('aria-current', 'page');
       b.addEventListener('click', () => { if (k === 'temples') openTemples(); else if (k === KEY) { closeSheet(); window.scrollTo(0, 0); } else go(k); });
       nav.appendChild(b);
@@ -397,6 +406,10 @@
       const x = el('button', 'ts-x'); x.type = 'button'; x.setAttribute('aria-label', 'Close'); x.appendChild(sig('x', 20)); x.addEventListener('click', closeSheet);
       head.appendChild(nm); head.appendChild(x);
       const bodyEl = el('div', 'ts-sheet-body'), tiles = el('div', 'ts-tiles');
+      const sb = el('button', 'ts-searchbtn'); sb.type = 'button'; sb.dataset.open = 'search';     // step 12
+      sb.appendChild(sig('search', 22)); sb.appendChild(el('span', '', 'Search the house'));
+      sb.addEventListener('click', () => { closeSheet(); openSearch(); });
+      bodyEl.appendChild(sb);
       for (const k of GRID) {
         const t = TEMPLES[k], b = el('button', 'ts-tile' + (k === KEY ? ' ts-here' : '')); b.type = 'button'; b.dataset.temple = k; b.dataset.go = k;
         b.appendChild(sig(k, 28));
@@ -423,6 +436,23 @@
     sheet.hidden = true; scrim.hidden = true; html.style.overflow = '';
     if (lastFocus && lastFocus.focus) { try { lastFocus.focus({ preventScroll: true }); } catch (e) {} }
   }
+
+  // ── step 12: search. search.js and its index are fetched the first time it is opened, never before, so a page that
+  // is only looked at carries none of it. Offline they come from the service worker's cache (both are in SHELL). ──
+  let searchLoad = null;
+  function loadOne(f) { return new Promise((ok, no) => { const s = el('script'); s.src = ROOT + f; s.addEventListener('load', ok); s.addEventListener('error', no); document.head.appendChild(s); }); }
+  function openSearch(q) {
+    if (!KEY) return Promise.resolve(false);
+    if (window.TempleSearch) { window.TempleSearch.open(q); return Promise.resolve(true); }
+    if (!searchLoad) searchLoad = loadOne('search_index.js').catch(() => {}).then(() => loadOne('search.js'));
+    return searchLoad.then(() => { if (window.TempleSearch) window.TempleSearch.open(q); return !!window.TempleSearch; }, () => { searchLoad = null; return false; });
+  }
+  // "/" opens it from a keyboard, unless something is being typed
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey || !booted) return;
+    const a = document.activeElement; if (a && (/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) || a.isContentEditable)) return;
+    e.preventDefault(); openSearch();
+  });
 
   // ── step 11: the Settings sheet. Four things, each said plainly; a tap is the only thing that changes one. ──
   let setSheet = null, setScrim = null;
@@ -486,8 +516,24 @@
   }
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
 
-  const api = window.TempleShell = { ROOT, EMBEDDED, TEMPLES, DIRECTORS, GRID, host, go, back, openTemples, closeSheet, openDirector, sig, face, isNight, temple: null,
+  const api = window.TempleShell = { ROOT, EMBEDDED, TEMPLES, DIRECTORS, GRID, host, go, back, openTemples, closeSheet, openDirector, openSearch, sig, face, isNight, temple: null,
     MODES, modes, setMode, openSettings, minimum, setMinimum, minimumCard, sleep, sleepLine, babyTop, babyDates: BABY_DATES, nextDate, localDay, refreshModes: applyModes };
+
+  // ── step 12: what a screen reader needs and the pages' own scripts do not say. Nothing visible changes. ──
+  //   · the temple's name in the header is the page's first heading; a section line (.ts-sec) and a sheet's title are
+  //     second-level headings, so the headings are in order on every page without touching a page's markup;
+  //   · a field whose only name is its placeholder gets that as its label.
+  // Run once at boot and again, a moment later, whenever a page redraws itself.
+  function polish() {
+    const h = document.querySelector('.ts-head .ts-tt b'); if (h && !h.hasAttribute('role')) { h.setAttribute('role', 'heading'); h.setAttribute('aria-level', '1'); }
+    document.querySelectorAll('.ts-sec:not([role]), .ts-sheet-head b:not([role])').forEach((e) => { if (/^H[1-6]$/.test(e.tagName)) return; e.setAttribute('role', 'heading'); e.setAttribute('aria-level', '2'); });
+    document.querySelectorAll('input[placeholder]:not([aria-label]):not([aria-labelledby]), textarea[placeholder]:not([aria-label]):not([aria-labelledby])').forEach((e) => {
+      if (e.type === 'hidden' || e.closest('label') || (e.id && document.querySelector('label[for="' + e.id.replace(/"/g, '') + '"]'))) return;
+      if (e.placeholder.trim()) e.setAttribute('aria-label', e.placeholder.trim());
+    });
+  }
+  let polishing = null;
+  const polishSoon = () => { if (!polishing) polishing = setTimeout(() => { polishing = null; polish(); }, 120); };
 
   function boot() {
     KEY = document.body && document.body.dataset.temple;
@@ -506,6 +552,7 @@
     booted = true; applyModes();                                         // step 11: the minimum first, the sleep line, the bar's back
     { const b = document.querySelector('.ts-head .ts-back'); if (b && window.MutationObserver) new MutationObserver(syncBack).observe(b, { attributes: true }); }
     document.addEventListener('click', () => setTimeout(syncBack, 0));
+    polish(); if (window.MutationObserver) new MutationObserver(polishSoon).observe(document.body, { childList: true, subtree: true });   // step 12
     html.setAttribute('data-shell', 'ready');
     // offline: one service worker for the whole site, at the apps/ root. It never touches localStorage.
     if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register(ROOT + 'sw.js').catch(() => {});

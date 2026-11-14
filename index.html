@@ -1063,6 +1063,22 @@ nav.tab-bar {
 body[data-temple="portal"] { --ts-skyh: 330px; }
 body[data-temple="portal"] #back-btn[data-shell="made"] { display: none; }   /* home is the root: nothing to go back to */
 #temple-topbar[hidden] { display: none; }
+#temple-title { display: flex; align-items: center; justify-content: center; gap: 8px; }
+#temple-title .ts-sig { color: var(--t-text); }
+#temple-back { min-height: 44px; }
+.portal-toggle .ts-hsearch { margin-left: auto; width: 44px; height: 44px; }
+/* step 12, contrast and reach on the older parts of home: the stack chips' words in ink (their own tones stay as the
+   chip's ground), the history line at a readable size, the reset button a full 44 px */
+.plan-stack-chip { color: var(--ink) !important; }
+.history-eyebrow { font-size: 12px; letter-spacing: .04em; text-transform: none; color: var(--muted); opacity: 1; }
+.schedule-reset { min-height: 44px; }
+/* step 12: large type and the night skin together are the largest the page gets (1.19); the wheel is drawn a little
+   smaller then, so the outer stars' names stay on the screen (its type is still larger than by day) */
+html[data-large][data-night] .hm-cons { zoom: .92; }
+/* step 12: under the overlay nothing on home moves (the sky band stops in sky.js) */
+:root[data-covered] .hm-orbit, :root[data-covered] button.hm-star.hm-lit { animation-play-state: paused; }
+/* and the wheel rests while it is scrolled off the screen (index.html, consWatch) */
+.hm-cons.hm-away .hm-orbit, .hm-cons.hm-away button.hm-star.hm-lit { animation-play-state: paused; }
 #toast { z-index: 1200; bottom: calc(var(--ts-bar) + env(safe-area-inset-bottom, 0px) + 22px); letter-spacing: 0; max-width: 88vw; text-align: center; border-radius: 16px; }
 .modal-overlay { z-index: 950; }
 .view { padding-top: 0; padding-bottom: 8px; }
@@ -1341,9 +1357,15 @@ const Shell = {
   openTemple(filename, title) {
     const overlay = document.getElementById('temple-overlay');
     const frame = document.getElementById('temple-frame');
-    document.getElementById('temple-title').textContent = title;
+    const tt = document.getElementById('temple-title'), file = String(filename).split(/[?#]/)[0];
+    tt.textContent = title;
+    // step 12: the door's own sigil in the old bar too, in its colour (the village and Magnetic are the two left under it)
+    const ts = window.TempleShell, tk = ts ? Object.keys(ts.TEMPLES).filter(k => ts.TEMPLES[k].file === file)[0] : null, bar = document.getElementById('temple-topbar');
+    if (tk) { bar.dataset.temple = tk; const sg = ts.sig(tk === 'magnetic' ? 'beast' : tk, 20); sg.dataset.sig = tk; tt.insertBefore(sg, tt.firstChild); } else delete bar.dataset.temple;
+    // step 12, the battery: home is covered, so its sky band and the slow wheel rest until the temple closes
+    document.documentElement.setAttribute('data-covered', '');
     // one header, not two: the old bar stays over every page that has not been migrated
-    document.getElementById('temple-topbar').hidden = Shell.NEW_FRAME.indexOf(String(filename).split(/[?#]/)[0]) >= 0;
+    document.getElementById('temple-topbar').hidden = Shell.NEW_FRAME.indexOf(file) >= 0;
     frame.src = filename;
     overlay.hidden = false;
     document.body.style.overflow = 'hidden';
@@ -1353,6 +1375,7 @@ const Shell = {
     const frame = document.getElementById('temple-frame');
     const wasOpen = !overlay.hidden;
     overlay.hidden = true;
+    document.documentElement.removeAttribute('data-covered');
     frame.src = 'about:blank';
     document.body.style.overflow = '';
     this.current = 'portal';
@@ -3611,6 +3634,8 @@ const Portal = (function() {
   }
 
   const shellOf = () => window.TempleShell || null;
+  // step 12, the battery: the slow wheel and the halo only move while the constellation is on the screen
+  const consWatch = window.IntersectionObserver ? new IntersectionObserver((es) => es.forEach((e) => e.target.classList.toggle('hm-away', !e.isIntersecting))) : null;
   function sigFor(k, size) {
     const ts = shellOf();
     if (ts && ts.sig) return ts.sig(k, size);
@@ -3656,6 +3681,7 @@ const Portal = (function() {
         cons.appendChild(b);
       });
       wrap.appendChild(cons);
+      if (consWatch) { consWatch.disconnect(); consWatch.observe(cons); }      // step 12: the wheel rests while it is off the screen
       const legend = el('div', 'hm-legend'); legend.appendChild(el('i')); legend.appendChild(document.createTextNode('a halo means something is on offer there today'));
       wrap.appendChild(legend);
     }
@@ -3896,6 +3922,13 @@ const Portal = (function() {
     const histPill = el('button', 'portal-toggle-pill' + (subview === 'history' ? ' active' : ''), 'history');
     histPill.addEventListener('click', () => { if (subview !== 'history') { subview = 'history'; window.scrollTo(0, 0); render(); } });
     toggle.appendChild(flowPill); toggle.appendChild(schedPill); toggle.appendChild(histPill);
+    // step 12: search, one tap from home, at the end of this row. search.js is fetched on the first tap, not before.
+    if (window.TempleShell && window.TempleShell.openSearch) {
+      const sb = el('button', 'ts-hsearch'); sb.type = 'button'; sb.id = 'home-search'; sb.setAttribute('aria-label', 'Search the house');
+      sb.appendChild(window.TempleShell.sig('search', 22));
+      sb.addEventListener('click', () => window.TempleShell.openSearch());
+      toggle.appendChild(sb);
+    }
     view.appendChild(toggle);
 
     // (the 'plan' tab was retired — its ad-hoc daily list is now covered by the
@@ -3948,6 +3981,13 @@ const Portal = (function() {
   }, true);
   const sky = document.querySelector('canvas.ts-sky');
   if (sky && window.TempleSky) window.TempleSky.mount(sky);
+  // step 12: search. A result opens in the Portal's own overlay; `at` is a hash the page already answers (Body's #backup).
+  ts.homeOpen = (k, at) => {
+    if (!ts.TEMPLES[k]) return;
+    if (k === 'portal') { Shell.closeTemple(); Portal.home(); window.scrollTo(0, 0); return; }
+    if (at) { Shell.current = k; Shell.openTemple(ts.TEMPLES[k].file + at, ts.TEMPLES[k].name.toLowerCase()); return; }
+    Shell.goTo(ts.TEMPLES[k].portal || k);
+  };
 })();
 </script>
 <script>

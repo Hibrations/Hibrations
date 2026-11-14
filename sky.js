@@ -2,7 +2,8 @@
 // A slim canvas behind a page's header: slow stars, the moon drawn from its real phase, and a horizon glow that leans
 // to the temple's colour and follows the real sun (dawn gold, day pale, dusk ember, night indigo).
 // It is the "where am I, when am I" anchor. It moves a few pixels a minute and never faster; under
-// prefers-reduced-motion and in the night skin it is a still picture, redrawn once a minute.
+// prefers-reduced-motion and in the night skin it is a still picture, redrawn once a minute. Hidden, covered by
+// another page, or scrolled out of view it does not run at all (step 12).
 // No network, no storage, no library. shell.js mounts it; a page can also call TempleSky.mount(canvas) itself.
 (function () {
   'use strict';
@@ -105,24 +106,41 @@
   // Still when the reader asked for less motion, and in the night skin (no animation in quiet hours; easier on the battery).
   const still = () => mql.matches || document.documentElement.hasAttribute('data-night');
   const drawAll = () => { for (const c of mounted) if (c.isConnected) draw(c); };
+  // Step 12, the battery: the timer only exists while somebody can see the band. It stops (no timer at all, not an
+  // idle one) when the page is hidden, when another page covers this one (<html data-covered>, set by home under its
+  // overlay), and when every band is scrolled out of view. Whatever ends one of those starts it again with one draw.
+  const root = document.documentElement, seen = new Map();
+  const covered = () => root.hasAttribute('data-covered');
+  const inView = (c) => c.isConnected && seen.get(c) !== false;
+  const awake = () => !document.hidden && !covered() && mounted.some(inView);
+  const stats = { draws: 0, ticks: 0 };                                  // read by the tests and by the weight check
+  const stop = () => { if (timer) clearTimeout(timer); timer = null; };
   function tick() {
     timer = null;
-    if (!mounted.some((c) => c.isConnected)) return;
-    if (!document.hidden) drawAll();
+    if (!awake()) return;                                                // asleep: nothing is scheduled until kick()
+    stats.ticks++;
+    for (const c of mounted) if (inView(c)) { draw(c); stats.draws++; }
     timer = setTimeout(tick, still() ? 60000 : FRAME_MS);
   }
+  function kick() { stop(); tick(); }
+  const io = window.IntersectionObserver ? new IntersectionObserver((es) => {
+    let woke = false;
+    for (const e of es) { const was = seen.get(e.target); seen.set(e.target, e.isIntersecting); if (e.isIntersecting && was === false) woke = true; }
+    if (woke && !timer) kick();
+  }) : null;
   function mount(canvas) {
     if (!canvas || mounted.includes(canvas)) return canvas;
     canvas.setAttribute('aria-hidden', 'true');
     mounted.push(canvas);
-    draw(canvas);
-    if (!timer) timer = setTimeout(tick, still() ? 60000 : FRAME_MS);
+    draw(canvas); stats.draws++;
+    if (io) io.observe(canvas);
+    if (!timer && awake()) timer = setTimeout(tick, still() ? 60000 : FRAME_MS);
     return canvas;
   }
-  const kick = () => { if (timer) clearTimeout(timer); tick(); };
-  window.addEventListener('resize', drawAll);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) kick(); });
+  window.addEventListener('resize', () => { if (awake()) drawAll(); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); else kick(); });
+  if (window.MutationObserver) new MutationObserver(() => { if (covered()) stop(); else kick(); }).observe(root, { attributes: true, attributeFilter: ['data-covered'] });
   if (mql.addEventListener) mql.addEventListener('change', kick);
 
-  window.TempleSky = { mount, redraw: kick, draw, moon, sun, lightAt, PLACE };
+  window.TempleSky = { mount, redraw: kick, draw, moon, sun, lightAt, PLACE, stats, running: () => !!timer };
 })();
