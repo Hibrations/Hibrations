@@ -1076,9 +1076,9 @@ body[data-temple="portal"] #back-btn[data-shell="made"] { display: none; }   /* 
    smaller then, so the outer stars' names stay on the screen (its type is still larger than by day) */
 html[data-large][data-night] .hm-cons { zoom: .92; }
 /* step 12: under the overlay nothing on home moves (the sky band stops in sky.js) */
-:root[data-covered] .hm-orbit, :root[data-covered] button.hm-star.hm-lit { animation-play-state: paused; }
+:root[data-covered] .hm-orbit, :root[data-covered] button.hm-star.hm-lit, :root[data-covered] .hm-spark, :root[data-covered] .hm-sunhalo, :root[data-covered] .hm-nowsun { animation-play-state: paused; }
 /* and the wheel rests while it is scrolled off the screen (index.html, consWatch) */
-.hm-cons.hm-away .hm-orbit, .hm-cons.hm-away button.hm-star.hm-lit { animation-play-state: paused; }
+.hm-cons.hm-away .hm-orbit, .hm-cons.hm-away button.hm-star.hm-lit, .hm-cons.hm-away .hm-spark, .hm-cons.hm-away .hm-sunhalo { animation-play-state: paused; }
 #toast { z-index: 1200; bottom: calc(var(--ts-bar) + env(safe-area-inset-bottom, 0px) + 22px); letter-spacing: 0; max-width: 88vw; text-align: center; border-radius: 16px; }
 .modal-overlay { z-index: 950; }
 .view { padding-top: 0; padding-bottom: 8px; }
@@ -1119,7 +1119,15 @@ button.hm-later { border: 1px solid var(--leaf); color: var(--ink); }
 /* the constellation: the temples as stars on a slow wheel around the day (thirteen since step 8: Baby) */
 .hm-cons { position: relative; height: 362px; margin: 2px 0 0; }
 .hm-web { position: absolute; left: 50%; top: 166px; width: 1px; height: 1px; overflow: visible; pointer-events: none; }
-.hm-orbit { transform-origin: 0 0; animation: hm-turn 900s linear infinite; }
+.hm-orbit { transform-origin: 0 0; animation: hm-turn 240s linear infinite; }
+/* 2026-11-15, Lek: "animated". The outer ring turns the other way, slower; a spark walks the web; the sun glows */
+.hm-orbit2 { animation-duration: 360s; animation-direction: reverse; }
+.hm-spark { animation: hm-spark 34s linear infinite; }
+.hm-sunhalo, .hm-nowsun { transform-box: fill-box; transform-origin: center; animation: hm-glow 5s ease-in-out infinite; }
+@keyframes hm-spark { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+@keyframes hm-glow { 50% { opacity: .36; transform: scale(1.4); } }
+.hm-alsolink { margin-top: 2px; }
+.hm-alsosheet .next-practice { background: none; border: 0; padding: 0; margin: 0; }
 .hm-mid { position: absolute; left: 50%; top: 166px; width: 92px; height: 92px; margin: -46px 0 0 -46px; text-align: center; }
 button.hm-star { position: absolute; width: 48px; height: 48px; margin: -24px 0 0 -24px; padding: 0; border-radius: 50%; border: 1px solid var(--t-dim); background: var(--card); color: var(--t-text); display: grid; place-items: center; box-shadow: 0 0 14px -6px var(--t); }
 button.hm-star.hm-lit { border-color: var(--t-text); box-shadow: 0 0 0 4px var(--t-faint), 0 0 26px -2px var(--t); animation: hm-breathe 8s ease-in-out infinite; }
@@ -1164,7 +1172,7 @@ button.hm-read { display: block; width: 100%; min-height: 48px; text-align: left
 .next-practice-stack .plan-stack-chip { font-size: 12px; text-transform: none; letter-spacing: 0; }
 .moon-swap-btn { min-height: 44px; padding: 0 14px; font-size: 12px; text-transform: none; letter-spacing: 0; }
 
-:root[data-night] .hm-orbit, :root[data-night] button.hm-star.hm-lit { animation: none; }
+:root[data-night] .hm-orbit, :root[data-night] button.hm-star.hm-lit, :root[data-night] .hm-spark, :root[data-night] .hm-sunhalo, :root[data-night] .hm-nowsun { animation: none; }
 
 /* step 11: baby season on home. One thing on top, the three lines, the next offer; the rest is one tap away. */
 .hm-one { cursor: pointer; }
@@ -1174,7 +1182,7 @@ button.hm-read { display: block; width: 100%; min-height: 48px; text-align: left
 button.hm-foldbtn { display: grid; width: 100%; min-height: 48px; margin: 4px 0 14px; }
 .view.hm-baby:not(.hm-open) .portal-toggle { display: none; }
 .hm-offer[hidden], .hm-arc[hidden], .hm-cap[hidden], .hm-sug[hidden] { display: none; }
-@media (prefers-reduced-motion: reduce) { .hm-orbit, button.hm-star.hm-lit { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .hm-orbit, button.hm-star.hm-lit, .hm-spark, .hm-sunhalo, .hm-nowsun { animation: none; } }
 </style>
 
 <script>
@@ -1502,7 +1510,7 @@ const Portal = (function() {
   // Multi-step Inner Temple practices that should never use portal timer —
   // they have rich step-by-step flows that live in the temple.
   const MULTI_STEP_INNER = new Set([
-    'solar_gate', 'evening_winddown', 'evening_wind_down',
+    'solar_gate', 'solar_gate_short', 'evening_winddown', 'evening_wind_down',
     'microcosmic_orbit_practice', 'vocal_warmup_practice', 'quick_reset'
   ]);
 
@@ -1751,6 +1759,13 @@ const Portal = (function() {
       'D · Movement — qigong or sun salutation, breath leads',
       'E · Silent sit — nothing to do',
       'F · Intention — what does this day ask?'
+    ],
+    solar_gate_short: [
+      'A · Glass of water — slow sips, phone stays away',
+      'B · Box breath — 4-4-4-4, four minutes',
+      'C · Qigong opening — breath leads the arms',
+      'D · One minute still — nothing to do',
+      'E · Intention — what does this day ask?'
     ],
     evening_winddown: [
       'A · Light mobility — gentle, nothing intense',
@@ -2311,13 +2326,58 @@ const Portal = (function() {
     } catch (e) { return null; }
   }
 
+  // Lek, 2026-11-15: "also open, if you like" cluttered home. It is now one line in the day card; the cards
+  // themselves open in a sheet, built fresh each time so they read the day as it is.
+  function alsoOpenLink() {
+    const n = buildNextPractices().length + (buildHealingPathCard() ? 1 : 0) + (buildMoonPracticeCard() ? 1 : 0);
+    if (!n) return null;
+    const b = el('button', 'ts-link hm-alsolink', 'Also open, if you like · ' + n + ' more'); b.type = 'button'; b.id = 'home-alsoopen';
+    b.setAttribute('aria-haspopup', 'dialog');
+    b.addEventListener('click', () => openAlsoOpen(b));
+    return b;
+  }
+  let alsoSheet = null;
+  function closeAlsoOpen() {
+    if (!alsoSheet) return;
+    const back = alsoSheet.back; alsoSheet.scrim.remove(); alsoSheet.sheet.remove(); alsoSheet = null;
+    document.documentElement.style.overflow = '';
+    document.removeEventListener('keydown', alsoKey);
+    if (back && back.isConnected) { try { back.focus({ preventScroll: true }); } catch (e) {} }
+  }
+  function alsoKey(e) { if (e.key === 'Escape') closeAlsoOpen(); }
+  function openAlsoOpen(from) {
+    closeAlsoOpen();
+    const body = el('div', 'ts-sheet-body');
+    renderNextPractice(body);
+    if (!body.firstChild) return;
+    const scrim = el('div', 'ts-scrim'); scrim.addEventListener('click', closeAlsoOpen);
+    const sheet = el('div', 'ts-sheet hm-alsosheet'); sheet.id = 'home-alsosheet';
+    sheet.setAttribute('role', 'dialog'); sheet.setAttribute('aria-modal', 'true'); sheet.setAttribute('aria-label', 'Also open, if you like');
+    const head = el('div', 'ts-sheet-head'), nm = el('div');
+    nm.appendChild(el('b', '', 'Also open')); nm.appendChild(el('span', '', 'if you like, nothing asked'));
+    const x = el('button', 'ts-x'); x.type = 'button'; x.setAttribute('aria-label', 'Close');
+    const ts = shellOf(); if (ts && ts.sig) x.appendChild(ts.sig('x', 20)); else x.textContent = '×';
+    x.addEventListener('click', closeAlsoOpen);
+    head.appendChild(nm); head.appendChild(x);
+    sheet.appendChild(head); sheet.appendChild(body);
+    // a card begins its practice somewhere else: the sheet goes first (capture, so it closes before the card's own click runs on)
+    body.addEventListener('click', (e) => { if (e.target.closest('.next-practice-card') && !e.target.closest('.moon-swap-btn')) closeAlsoOpen(); }, true);
+    // "another" under the moon's card re-renders home; the sheet redraws its own cards after it
+    // (capture: the swap button stops its click from bubbling)
+    body.addEventListener('click', (e) => { if (e.target.closest('.moon-swap-btn')) setTimeout(() => { if (alsoSheet && alsoSheet.sheet === sheet) { body.textContent = ''; renderNextPractice(body); } }, 0); }, true);
+    document.body.appendChild(scrim); document.body.appendChild(sheet);
+    document.documentElement.style.overflow = 'hidden';
+    document.addEventListener('keydown', alsoKey);
+    alsoSheet = { scrim: scrim, sheet: sheet, back: from };
+    x.focus({ preventScroll: true });
+  }
+
   function renderNextPractice(view) {
     const suggestions = buildNextPractices();
     const hpCard = buildHealingPathCard();
     const moonCard = buildMoonPracticeCard();
     if (!suggestions.length && !hpCard && !moonCard) return;
     const wrap = el('div', 'next-practice');
-    wrap.appendChild(el('div', 'next-practice-eyebrow', 'Also open, if you like'));
     if (hpCard) wrap.appendChild(hpCard);
     if (moonCard) wrap.appendChild(moonCard);
     suggestions.forEach(s => {
@@ -3247,7 +3307,9 @@ const Portal = (function() {
   }
 
   const SCHEDULE_KEY = 'portal_flow_schedule_v1';
-  const DEFAULT_MORNING = { name: 'Solar Gate', source: 'inner', durationLabel: '~30 min', meta: '6 steps', id: 'solar_gate' };
+  const DEFAULT_MORNING = { name: 'Solar Gate', source: 'inner', durationLabel: '~30 min', meta: '6 steps · the full gate', id: 'solar_gate' };
+  // Lek, 2026-11-15: thirty minutes is a weekend thing. Monday to Friday the default morning is the short gate.
+  const DEFAULT_MORNING_WEEKDAY = { name: 'Solar Gate', source: 'inner', durationLabel: '~10 min', meta: '5 steps · the weekday gate', id: 'solar_gate_short' };
   const DEFAULT_EVENING = { name: 'Wind-Down', source: 'inner', durationLabel: '~15 min', meta: '4 steps', id: 'evening_winddown' };
 
   function loadSchedule() {
@@ -3258,7 +3320,8 @@ const Portal = (function() {
   function getSlot(weekday, slot) {
     const sched = loadSchedule();
     if (sched[weekday] && sched[weekday][slot] !== undefined) return sched[weekday][slot];
-    return slot === 'morning' ? DEFAULT_MORNING : DEFAULT_EVENING;
+    if (slot !== 'morning') return DEFAULT_EVENING;
+    return weekday === 'saturday' || weekday === 'sunday' ? DEFAULT_MORNING : DEFAULT_MORNING_WEEKDAY;
   }
   function setSlot(weekday, slot, value) {
     const sched = loadSchedule();
@@ -3452,7 +3515,8 @@ const Portal = (function() {
       });
     };
     const morning = getSlot(day, 'morning');
-    slot(morning, 'morning', 7.5, morning && morning.id === 'solar_gate' ? 'The foundation layer: the phone stays away, the body comes first.' : '');
+    slot(morning, 'morning', 7.5, morning && morning.id === 'solar_gate' ? 'The full gate, for a morning with time: the phone stays away, the body comes first.'
+      : morning && morning.id === 'solar_gate_short' ? 'Ten minutes before the phone: water, breath, body, stillness, intention.' : '');
     out.push({
       key: 'training:' + train.planId, when: train.kind === 'training' ? 'training' : (train.kind === 'cardio' ? 'cardio and recovery' : 'rest'), hour: 11.5,
       temple: 'body', practiceId: train.planId, name: train.name, sub: train.sub || '',
@@ -3510,7 +3574,7 @@ const Portal = (function() {
       g += '<circle' + (o.star ? ' data-temple="' + escapeHtml(o.star) + '"' : '') + ' cx="' + f(X(o.hour)) + '" cy="' + f(Y(o.hour)) + '" r="4.6" fill="' +
         (offerTaken(o, shelf) ? 'var(--t)' : 'var(--card)') + '" stroke="var(--t-text)" stroke-width="1.6"/>';
     });
-    g += up ? '<circle cx="' + f(X(hNow)) + '" cy="' + f(Y(hNow)) + '" r="9" fill="var(--t2)" opacity=".16"/><circle cx="' + f(X(hNow)) + '" cy="' + f(Y(hNow)) + '" r="4.4" fill="var(--t2)"/>'
+    g += up ? '<circle class="hm-nowsun" cx="' + f(X(hNow)) + '" cy="' + f(Y(hNow)) + '" r="9" fill="var(--t2)" opacity=".16"/><circle cx="' + f(X(hNow)) + '" cy="' + f(Y(hNow)) + '" r="4.4" fill="var(--t2)"/>'
       : '<circle cx="' + f(X(hNow)) + '" cy="' + f(Y(hNow)) + '" r="3.6" fill="var(--bg)" stroke="var(--muted)" stroke-width="1.2"/>';
     g += '<text x="' + f(X(s.rise)) + '" y="' + (H - 4) + '" text-anchor="middle">' + clock(s.rise) + '</text>' +
       '<text x="' + f(X(s.set)) + '" y="' + (H - 4) + '" text-anchor="middle">' + clock(s.set) + '</text>';
@@ -3551,6 +3615,15 @@ const Portal = (function() {
     const arc = el('div', 'hm-arc'); arc.id = 'home-arc';
     arc.innerHTML = dayArcSvg(now, open, shelf);
     card.appendChild(arc);
+    // once a visit: the sun's path draws itself from sunrise, and the offers settle onto it in the day's order
+    arriveOnce('arc', () => requestAnimationFrame(() => {
+      const path = arc.querySelectorAll('svg path')[3];
+      if (path && path.getTotalLength) { const L = path.getTotalLength(); path.animate([{ strokeDasharray: '0 ' + L }, { strokeDasharray: L + ' 0' }], { duration: 1400, easing: 'ease-out' }); }
+      arc.querySelectorAll('svg circle[stroke="var(--t-text)"]').forEach((c, i) => {
+        c.style.transformBox = 'fill-box'; c.style.transformOrigin = 'center';
+        c.animate([{ transform: 'scale(0)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 600, delay: 500 + i * 140, easing: 'cubic-bezier(.3,1.5,.5,1)', fill: 'backwards' });
+      });
+    }));
     card.appendChild(el('p', 'hm-cap', 'Placed by the part of the day, not by the clock.'));
     homeNow = { open: open, shelf: shelf };
     if (window.TemplePlan && window.TempleDirector) window.TemplePlan.suggestions({ home: true }).forEach(s => {
@@ -3646,6 +3719,42 @@ const Portal = (function() {
     const fr = (now.getHours() * 60 + now.getMinutes()) / 1440;
     return window.Charts.ring(fr, { size: 92, stroke: 3, label: String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'), sub: 'the day', aria: 'How far round the day is' });
   }
+  // The sun on the constellation: a place on the circle between the rings, midnight at the top, as on the ring in the
+  // middle. Lit while it is up, hollow while it is down, as on the day's arc.
+  function consSun(now) {
+    const fr = (now.getHours() * 60 + now.getMinutes()) / 1440, a = fr * 2 * Math.PI, R = 119;
+    const s = (window.TempleSky && window.TempleSky.sun(now)) || { rise: 7, set: 17 }, h = fr * 24, up = h >= s.rise && h <= s.set;
+    const p = (k) => [(R * Math.sin(k)).toFixed(1), (-R * Math.cos(k)).toFixed(1)], a0 = a - 0.5, s0 = p(a0), s1 = p(a);
+    return '<path d="M' + s0[0] + ' ' + s0[1] + 'A' + R + ' ' + R + ' 0 0 1 ' + s1[0] + ' ' + s1[1] + '" fill="none" stroke="var(--t2)" stroke-width="2" stroke-linecap="round" opacity=".32"/>' +
+      (up ? '<circle class="hm-sunhalo" cx="' + s1[0] + '" cy="' + s1[1] + '" r="9" fill="var(--t2)" opacity=".18"/><circle cx="' + s1[0] + '" cy="' + s1[1] + '" r="4.2" fill="var(--t2)"/>'
+        : '<circle cx="' + s1[0] + '" cy="' + s1[1] + '" r="3.6" fill="var(--bg)" stroke="var(--muted)" stroke-width="1.2"/>');
+  }
+  // Motion that happens once a visit: a re-render (every tap re-renders home) does not play it again.
+  const arrived = new Set();
+  const motionOk = () => !document.documentElement.hasAttribute('data-night') && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) && !!Element.prototype.animate;
+  function arriveOnce(key, fn) {
+    if (arrived.has(key)) return;
+    arrived.add(key);
+    if (motionOk()) { try { fn(); } catch (e) {} }
+  }
+  // the same, but when it first comes onto the screen (the radar is below the fold)
+  const inViewWatch = window.IntersectionObserver ? new IntersectionObserver((es) => es.forEach((e) => {
+    if (!e.isIntersecting) return;
+    inViewWatch.unobserve(e.target);
+    const go = e.target._arrive; e.target._arrive = null; if (go) go();
+  }), { threshold: 0.35 }) : null;
+  function arriveInView(key, node, fn) {
+    if (arrived.has(key) || !inViewWatch) return;
+    node._arrive = () => arriveOnce(key, fn);
+    inViewWatch.observe(node);
+  }
+  // a ring's arc fills from nothing to where it is
+  function growRing(box) {
+    const arc = box && box.querySelectorAll('svg circle')[1], d = arc && arc.getAttribute('stroke-dasharray');
+    if (!d) return;
+    const c = d.split(' ')[1];
+    arc.animate([{ strokeDasharray: '0 ' + c }, { strokeDasharray: d }], { duration: 1500, delay: 200, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'backwards' });
+  }
   function buildTemples(now, lit) {
     const wrap = el('div'); wrap.id = 'home-temples';
     wrap.appendChild(el('div', 'ts-sec', homeGrid ? 'The temples' : 'The temples, around the day'));
@@ -3666,11 +3775,16 @@ const Portal = (function() {
     } else {
       const cons = el('div', 'hm-cons');
       const stars = HOME_ORDER.map((k, i) => { const a = (-90 + i * 360 / HOME_ORDER.length) * Math.PI / 180, r = i % 2 ? 98 : 140; /* step 8: evenly round, however many doors */ return { k: k, x: r * Math.cos(a), y: r * Math.sin(a) }; });
-      cons.innerHTML = '<svg class="hm-web" viewBox="0 0 1 1" aria-hidden="true"><g class="hm-orbit"><circle r="98" fill="none" stroke="var(--leaf)" stroke-width="1" stroke-dasharray="1 7" stroke-linecap="round"/>' +
-        '<circle r="140" fill="none" stroke="var(--leaf)" stroke-width="1" stroke-dasharray="1 9" stroke-linecap="round"/></g>' +
-        '<polygon points="' + stars.map(s => s.x.toFixed(1) + ',' + s.y.toFixed(1)).join(' ') + '" fill="none" stroke="var(--leaf)" stroke-width="1"/></svg>' +
+      // 2026-11-15, Lek: "animated". The two rings turn against each other, a spark of light walks the web, and the
+      // sun sits between the rings where the day is (homeTick moves it). On the first visit the web draws itself and
+      // the stars come out from the middle (arriveOnce; never at night or under reduced motion).
+      const pts = stars.map(s => s.x.toFixed(1) + ',' + s.y.toFixed(1)).join(' ');
+      cons.innerHTML = '<svg class="hm-web" viewBox="0 0 1 1" aria-hidden="true"><g class="hm-orbit"><circle r="98" fill="none" stroke="var(--leaf)" stroke-width="1" stroke-dasharray="1 7" stroke-linecap="round"/></g>' +
+        '<g class="hm-orbit hm-orbit2"><circle r="140" fill="none" stroke="var(--leaf)" stroke-width="1" stroke-dasharray="1 9" stroke-linecap="round"/></g>' +
+        '<polygon class="hm-webline" pathLength="1" points="' + pts + '" fill="none" stroke="var(--leaf)" stroke-width="1"/>' +
+        '<polygon class="hm-spark" pathLength="100" points="' + pts + '" fill="none" stroke="var(--t-text)" stroke-width="2" stroke-linecap="round" stroke-dasharray="3.2 96.8" opacity=".75"/></svg>' +
         '<div class="hm-mid ts-chart" id="home-ring">' + ringHtml(now) + '</div>';
-      stars.forEach(s => {
+      stars.forEach((s, i) => {
         const t = (ts && ts.TEMPLES[s.k]) || { name: HOME_NAMES[s.k], short: HOME_NAMES[s.k] };
         const b = el('button', 'hm-star' + (lit.has(s.k) ? ' hm-lit' : '')); b.type = 'button'; b.dataset.temple = s.k; b.dataset.open = s.k;
         b.style.left = 'calc(50% + ' + s.x.toFixed(1) + 'px)'; b.style.top = (166 + s.y).toFixed(1) + 'px';
@@ -3679,6 +3793,18 @@ const Portal = (function() {
         b.appendChild(el('span', '', t.short || HOME_NAMES[s.k]));
         b.addEventListener('click', () => open(s.k));
         cons.appendChild(b);
+        s.b = b; s.i = i;
+      });
+      // the sun on its own layer above the stars, so a star never hides it (it passes over their rims)
+      const sunLayer = el('div'); sunLayer.innerHTML = '<svg class="hm-web" viewBox="0 0 1 1" aria-hidden="true"><g id="home-sun">' + consSun(now) + '</g></svg>';
+      cons.appendChild(sunLayer.firstChild);
+      arriveOnce('cons', () => {
+        const ease = 'cubic-bezier(.2,.8,.2,1)';
+        const web = cons.querySelector('.hm-webline');
+        if (web) web.animate([{ strokeDasharray: '0 1' }, { strokeDasharray: '1 0' }], { duration: 1600, easing: 'ease-out' });
+        stars.forEach(s => s.b.animate([{ transform: 'translate(' + (-s.x).toFixed(1) + 'px,' + (-s.y).toFixed(1) + 'px) scale(.25)', opacity: 0 }, { transform: 'none', opacity: 1 }],
+          { duration: 900, delay: 120 + s.i * 60, easing: ease, fill: 'backwards' }));
+        growRing(cons.querySelector('#home-ring'));
       });
       wrap.appendChild(cons);
       if (consWatch) { consWatch.disconnect(); consWatch.observe(cons); }      // step 12: the wheel rests while it is off the screen
@@ -3713,6 +3839,16 @@ const Portal = (function() {
     const ch = el('div', 'ts-chart');
     if (window.Charts) ch.innerHTML = window.Charts.radar(order, vals, { h: 236, label: 'Six lines of practice, by how lately each was touched' });
     card.appendChild(ch);
+    // the week's shape grows out of the middle the first time it comes onto the screen
+    arriveInView('radar', ch, () => {
+      const svg = ch.querySelector('svg'), vb = svg && svg.viewBox && svg.viewBox.baseVal;
+      if (!vb || !vb.width) return;
+      const shape = [...svg.querySelectorAll('polygon')].filter(p => p.getAttribute('fill') !== 'none').concat([...svg.querySelectorAll('circle')]);
+      shape.forEach(n => {
+        n.style.transformBox = 'view-box'; n.style.transformOrigin = (vb.width / 2) + 'px ' + (vb.height / 2 + 2) + 'px';
+        n.animate([{ transform: 'scale(0)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 1100, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'backwards' });
+      });
+    });
     const said = order.filter(k => { const a = age(k); return a !== null && a < 7; }).map(k => { const d = Math.floor(age(k)); return k + ' ' + (d <= 0 ? 'today' : d === 1 ? 'yesterday' : d + ' days ago'); });
     const cf = el('div', 'ts-cf');
     cf.appendChild(el('span', '', said.length ? said.join(' · ') : 'A quiet week draws small. That is all it says.'));
@@ -3832,6 +3968,7 @@ const Portal = (function() {
     }
     if (sleepSays) { const sl = el('p', 'ts-sleepline', sleepSays); sl.id = 'home-sleepline'; view.appendChild(sl); }
     const dayCard = buildDayCard(now, offers, shelf);
+    const also = alsoOpenLink(); if (also) dayCard.appendChild(also);
     view.appendChild(dayCard);
     let rest = view;
     if (baby) {
@@ -3852,7 +3989,6 @@ const Portal = (function() {
     const read = buildMoonRead(now); if (read) rest.appendChild(read);
     rest.appendChild(el('div', 'ts-sec', 'What was there'));
     rest.appendChild(buildRadar());
-    renderNextPractice(rest);
     renderHrv(rest);
 
     // ── EMPTY SLOT, step 6 (the village wiring): the village pulse. Who is working, who answered, cards waiting.
@@ -3892,6 +4028,7 @@ const Portal = (function() {
     if (homeDay && homeDay !== dailyTodayKey() && !typing) { Shell.setDateTitle(); render(); return; }
     const now = new Date();
     const ring = document.getElementById('home-ring'); if (ring) ring.innerHTML = ringHtml(now);
+    const sun = document.getElementById('home-sun'); if (sun) sun.innerHTML = consSun(now);
     const arc = document.getElementById('home-arc'); if (arc && homeNow) arc.innerHTML = dayArcSvg(now, homeNow.open, homeNow.shelf);
   }
   setInterval(homeTick, 60000);

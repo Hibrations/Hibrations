@@ -931,7 +931,7 @@ const DEFAULT_DATA = {
     {
       id: 'solar_gate',
       name: 'Solar Gate',
-      subtitle: 'morning ritual — the foundation layer',
+      subtitle: 'the full gate — for the weekend, when there is time',
       type: 'morning',
       duration: '~30 min',
       intro: "The first 30 minutes write the whole day. Phone stays away. Body, breath, intention, then the world.",
@@ -944,6 +944,24 @@ const DEFAULT_DATA = {
         { id: 'sg-f', libraryId: 'intention_setting', letter: 'F', name: 'Intention', duration: 60, cues: 'what does this day ask?' }
       ],
       closing: 'phone, breakfast, the world.'
+    },
+    // Lek, 2026-11-15: "only have 30 minutes to do at weekend". The weekday gate keeps every layer of the full one
+    // (water, breath, body, stillness, intention) in about ten minutes; theta wake goes, the sit is one minute.
+    {
+      id: 'solar_gate_short',
+      name: 'Solar Gate · short',
+      subtitle: 'the weekday gate — every layer, ten minutes',
+      type: 'morning',
+      duration: '~10 min',
+      intro: "Ten minutes before the phone. The same five layers as the full gate, each made small: water, breath, body, stillness, intention.",
+      steps: [
+        { id: 'sgs-a', libraryId: 'water_glass', letter: 'A', name: 'Glass of water', duration: 60, cues: 'slow sips. phone stays away.' },
+        { id: 'sgs-b', libraryId: 'box_breath', letter: 'B', name: 'Box breath', duration: 240, cues: '4-4-4-4. let the pauses be still.' },
+        { id: 'sgs-c', libraryId: 'qigong_opening', letter: 'C', name: 'Qigong opening', duration: 180, cues: 'slow. breath leads the arms.' },
+        { id: 'sgs-d', libraryId: 'silent_sit', letter: 'D', name: 'One minute still', duration: 60, cues: 'nothing to do.' },
+        { id: 'sgs-e', libraryId: 'intention_setting', letter: 'E', name: 'Intention', duration: 60, cues: 'what does this day ask?' }
+      ],
+      closing: 'phone, breakfast, the world. the full gate waits for the weekend.'
     },
     {
       id: 'evening_winddown',
@@ -1004,8 +1022,18 @@ const DEFAULT_DATA = {
     }
   ],
   schedule: { morning: 'solar_gate', evening: 'evening_winddown' },
-  sessions: []
+  sessions: [],
+  mergedDefaults: ['solar_gate_short']
 };
+// Practices added to the defaults after a phone already had its store. Each reaches an existing store once
+// (loadState); if Lek deletes one afterwards it stays deleted.
+const NEW_DEFAULT_PRACTICES = ['solar_gate_short'];
+// Weekdays get the short gate, Saturday and Sunday the full one, while the morning is still the default Solar Gate.
+function morningFor(id, d) {
+  const day = (d || new Date()).getDay(), weekend = day === 0 || day === 6;
+  if (id === 'solar_gate' && !weekend && getPractice('solar_gate_short')) return 'solar_gate_short';
+  return id;
+}
 
 // ============================================================
 // STATE
@@ -1032,6 +1060,13 @@ function loadState() {
     if (!parsed.practices) parsed.practices = JSON.parse(JSON.stringify(DEFAULT_DATA.practices));
     if (!parsed.schedule) parsed.schedule = JSON.parse(JSON.stringify(DEFAULT_DATA.schedule));
     if (!parsed.sessions) parsed.sessions = [];
+    if (!Array.isArray(parsed.mergedDefaults)) parsed.mergedDefaults = [];
+    NEW_DEFAULT_PRACTICES.forEach(id => {
+      if (parsed.mergedDefaults.includes(id)) return;
+      parsed.mergedDefaults.push(id);
+      const d = DEFAULT_DATA.practices.find(p => p.id === id);
+      if (d && !parsed.practices.some(p => p.id === id)) parsed.practices.push(JSON.parse(JSON.stringify(d)));
+    });
     return parsed;
   } catch (e) {
     console.warn('state load failed, using defaults', e);
@@ -1128,7 +1163,7 @@ function renderHome() {
   wrap.appendChild(el('div', 'today-eyebrow', 'today'));
 
   // Morning
-  const morningId = state.schedule.morning;
+  const morningId = morningFor(state.schedule.morning);
   const morning = getPractice(morningId);
   if (morning) {
     const card = document.createElement('div');
