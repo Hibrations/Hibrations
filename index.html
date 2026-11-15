@@ -21,6 +21,7 @@
 <script src="talk.js"></script>
 <script src="dayplan.js"></script>
 <script src="director.js"></script>
+<script src="train_gen.js"></script>
 <style>
 :root {
   --bg-elev: #14110f;
@@ -1464,13 +1465,27 @@ const Portal = (function() {
       if (!planId) return null;
       const plan = (state.plans || []).find(p => p.id === planId);
       if (plan) {
+        // 2026-11-15: the movements Body Temple will open with today, from the same generator (train_gen.js),
+        // and the strength movements that have been a while. Today's only: another day shows the plan as before.
+        let moves = null, sub = plan.subtitle || '';
+        if (window.TrainGen && dayName === DAYS[new Date().getDay()]) {
+          try {
+            const picks = TrainGen.pick(state, plan, { date: TODAY() });
+            moves = picks.map(p => { const load = TrainGen.loadLine(TrainGen.history(state, p.libraryId, TODAY()));
+              return p.name + ' · ' + (p.lastDone ? 'last done ' + TrainGen.ago(p.lastDone, TODAY()) : 'not logged yet') + (load ? ': ' + load : '') + (p.rotated ? ' · new this time' : ''); });
+            const ids = {}; picks.forEach(p => { if (p.libraryId) ids[p.libraryId] = true; });
+            const due = TrainGen.overdue(state, { date: TODAY(), exclude: ids, max: 3, minDays: 14 });
+            if (due.length) sub = (sub ? sub + '. ' : '') + 'been a while: ' + due.map(d => d.name.toLowerCase() + ' (' + (d.lastDone ? 'last ' + TrainGen.ago(d.lastDone, TODAY()) : 'not logged yet') + ')').join(', ');
+          } catch (e) { moves = null; }
+        }
         return {
           kind: 'training',
           planId: planId,
           name: plan.name,
-          sub: plan.subtitle || '',
+          sub: sub,
           duration: plan.duration || '',
-          meta: (plan.exercises && plan.exercises.length) ? plan.exercises.length + ' movements' : ''
+          meta: (plan.exercises && plan.exercises.length) ? plan.exercises.length + ' movements' : '',
+          moves: moves
         };
       }
       const alt = (state.altModes || []).find(m => m.id === planId);
@@ -3520,7 +3535,8 @@ const Portal = (function() {
     out.push({
       key: 'training:' + train.planId, when: train.kind === 'training' ? 'training' : (train.kind === 'cardio' ? 'cardio and recovery' : 'rest'), hour: 11.5,
       temple: 'body', practiceId: train.planId, name: train.name, sub: train.sub || '',
-      meta: [train.duration, train.meta, 'body temple'].filter(Boolean), cross: CROSSLINKS[train.planId] || null
+      meta: [train.duration, train.meta, 'body temple'].filter(Boolean), cross: CROSSLINKS[train.planId] || null,
+      steps: train.moves || null
     });
     getMid(day).forEach((ref, i) => {
       const route = sourceToRoute(ref.source);

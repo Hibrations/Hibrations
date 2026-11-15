@@ -881,6 +881,7 @@ main { padding: 0 22px; }
 <link href="../temple.css" rel="stylesheet">
 <script src="../shell.js"></script>
 <script src="../charts.js"></script>
+<script src="../train_gen.js"></script>
 </head>
 <body data-temple="body">
 
@@ -2478,9 +2479,7 @@ function renderHome() {
   card.className = 'today-card';
 
   if (plan) {
-    const rotationEyebrow = planHasRotation(plan.id)
-      ? `<div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--emerald);opacity:0.75;margin:4px 0 8px;">block ${getCurrentBlock()} · variant ${String.fromCharCode(65 + (getCurrentBlock() % 4))} · week ${getVariationWeekOf2()} of 2</div>`
-      : '';
+    const rotationEyebrow = '';   // 2026-11-15: the movements themselves show under the card now (train_gen.js)
     card.innerHTML = `
       <div class="today-name">${escapeHtml(plan.name)}</div>
       ${rotationEyebrow}
@@ -3031,63 +3030,25 @@ document.getElementById('modal-overlay').addEventListener('click', e => {
 // ============================================================
 // SESSION
 // ============================================================
-// Round 17 — Bi-weekly exercise rotation for Push / Pull / Legs.
-// Schoenfeld + Israetel: variation within movement patterns improves
-// hypertrophy outcomes without sacrificing progressive overload.
-// 2-week blocks = 2 sessions per exercise (enough to add weight or reps),
-// then the slot rotates to the next exercise in its pool.
+// 2026-11-15 — today's movements are generated from the log (../train_gen.js, shared with the Portal).
+// Each slot draws from a family of movements that do the same job: never what that slot had in the last
+// session of this plan, the one done longest ago first. Movements alone in their family stay as written.
+// This replaces Round 17's bi-weekly calendar rotation (the ISO-week pools), which ignored what was done
+// and whose pools were lettered for an older plan, so Pull's lat-pulldown slot could turn into a deadlift.
 // ============================================================
-const ROTATION_POOLS = {
-  pull: {
-    A: ['pullup', 'weighted_pullup', 'lat_pulldown', 'lat_pulldown_close'],    // vertical pull
-    B: ['barbell_row', 'cable_row', 'db_row', 'pendlay_row', 'kb_renegade_row'], // horizontal pull (+ KB)
-    C: ['conventional_deadlift', 'romanian_deadlift', 'trap_bar_deadlift', 'kb_single_arm_dl'], // hip hinge (+ KB)
-    D: ['hammer_curl', 'incline_db_curl'],                                     // biceps
-    E: ['face_pull', 'rear_delt_fly', 'straight_arm_pulldown']                 // rear delt + lat width
-  },
-  push: {
-    A: ['bench_press', 'flat_db_press', 'incline_db_press'],                   // horizontal push
-    B: ['overhead_press', 'db_shoulder_press', 'push_press', 'kb_strict_press', 'kb_bottoms_up_press'], // vertical push (+ KB)
-    C: ['dips', 'tricep_pushdown', 'overhead_tricep_extension'],               // triceps
-    D: ['lateral_raise'],                                                       // lateral delt (single)
-    E: ['cable_fly', 'doorway_pec']                                            // chest fly
-  },
-  legs: {
-    A: ['back_squat', 'front_squat', 'kb_front_squat', 'goblet_squat', 'leg_press'], // squat pattern (+ KB)
-    B: ['walking_lunge', 'bulgarian_split_squat', 'pistol_squat'],             // lunge pattern
-    C: ['lying_leg_curl', 'romanian_deadlift', 'kb_single_arm_dl'],            // hamstring (+ KB)
-    D: ['hip_thrust'],                                                          // hip/glute
-    E: ['standing_calf_raise']                                                  // calf (single)
-  }
-};
-
-function getISOWeekNumber(date) {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  return Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+function todaysPicks(plan) {
+  try { return (window.TrainGen && plan) ? TrainGen.pick(state, plan, { date: TODAY() }) : null; }
+  catch (e) { try { console.warn('train_gen', e); } catch (x) {} return null; }
 }
 
-// Bi-weekly cadence: block index = floor(ISO week / 2).
-function getCurrentBlock() {
-  return Math.floor(getISOWeekNumber(new Date()) / 2);
-}
-
-function getRotatedLibraryId(planId, slotLetter, fallbackId) {
-  const pool = ROTATION_POOLS[planId] && ROTATION_POOLS[planId][slotLetter];
-  if (!pool || pool.length === 0) return fallbackId;
-  const idx = getCurrentBlock() % pool.length;
-  return pool[idx];
-}
-
-// "Variation week 1 of 2" or "2 of 2" — tells Lek which session of the 2-week block this is.
-function getVariationWeekOf2() {
-  return (getISOWeekNumber(new Date()) % 2) + 1;
-}
-
-// Pull / Push / Legs are the only plans with rotation in V1. Returns boolean.
 function planHasRotation(planId) {
-  return !!ROTATION_POOLS[planId];
+  const picks = todaysPicks(getPlan(planId));
+  return !!picks && picks.some(p => !p.anchor);
+}
+
+function firstSentence(t) {
+  const m = String(t || '').match(/^.*?[.!?](\s|$)/);
+  return (m ? m[0] : String(t || '')).trim();
 }
 
 function startSession(planId) {
@@ -3097,29 +3058,27 @@ function startSession(planId) {
     date: TODAY(),
     planId: plan.id,
     planName: plan.name,
-    exercises: plan.exercises.map(ex => {
-      // Apply rotation if this plan + slot has a pool. Look up the rotated
-      // library entry; if it exists in the user's library, swap libraryId + name.
-      // If lookup fails (exercise deleted from library), fall back to the saved exercise.
-      const rotatedId = getRotatedLibraryId(planId, ex.letter, ex.libraryId);
-      const useRotated = rotatedId && rotatedId !== ex.libraryId;
-      const libEntry = useRotated ? (state.library || []).find(l => l.id === rotatedId) : null;
+    exercises: (function () { const picks = todaysPicks(plan); return plan.exercises.map((ex, i) => {
+      // Today's pick for this slot (train_gen.js). The slot keeps its sets, reps and rest; a movement rotated in
+      // brings its own first line of execution as the cue, since the plan's cue was written for the other one.
+      const pk = picks && picks[i] && picks[i].slot === ex ? picks[i] : null;
+      const libEntry = pk && pk.rotated ? getLibEntry(pk.libraryId) : null;
       return {
         id: ex.id,
         libraryId: libEntry ? libEntry.id : ex.libraryId,
         name: libEntry ? libEntry.name : ex.name,
         letter: ex.letter,
-        alt: ex.alt,
+        alt: libEntry ? 'today in place of ' + ex.name : ex.alt,
         sets: ex.sets,
         reps: ex.reps,
         rest: ex.rest,
-        cues: ex.cues,
+        cues: libEntry ? (firstSentence(libEntry.execution) || ex.cues) : ex.cues,
         done: false,
         notes: '',
         notesOpen: false,
         formOpen: false
       };
-    }),
+    }); })(),
     warmup: plan.warmup || [],
     cooldown: plan.cooldown || [],
     duration: plan.duration,
@@ -3222,12 +3181,23 @@ function renderSession() {
 // Surfaces the most recent notes for the same exercise so Lek walks into
 // the gym knowing what to beat. Plateau flag fires when last 3 sessions
 // have identical notes (case-insensitive) — signal to vary or deload.
+// 2026-11-15: a movement is also found by its library id, so "Barbell row (Pendlay)" in one plan and "Barbell row"
+// in another (or rotated in by train_gen.js) share one history. The id is the open session's for that name, else the library's.
+function libIdForName(name) {
+  const inRun = activeSession && (activeSession.exercises || []).find(e => e.name === name && e.libraryId);
+  if (inRun) return inRun.libraryId;
+  const lib = (state.library || []).find(l => nameMatches(l.name, name));
+  return lib ? lib.id : null;
+}
+function sameMovement(e, name, id) { return e.name === name || (!!id && e.libraryId === id); }
+
 function findLastSessionExercise(name) {
   if (!name || !state.sessions) return null;
+  const id = libIdForName(name);
   for (let i = 0; i < state.sessions.length; i++) {
     const s = state.sessions[i];
     if (!s.exercises || s.deload) continue;   // step 10: a deload session is passed over
-    const ex = s.exercises.find(e => e.name === name);
+    const ex = s.exercises.find(e => sameMovement(e, name, id));
     if (ex) return { exercise: ex, sessionDate: s.date };
   }
   return null;
@@ -3236,10 +3206,11 @@ function findLastSessionExercise(name) {
 function findRecentSessionsForExercise(name, max) {
   const out = [];
   if (!name || !state.sessions) return out;
+  const id = libIdForName(name);
   for (let i = 0; i < state.sessions.length && out.length < max; i++) {
     const s = state.sessions[i];
     if (!s.exercises || s.deload) continue;   // step 10: a deload session is passed over
-    const ex = s.exercises.find(e => e.name === name);
+    const ex = s.exercises.find(e => sameMovement(e, name, id));
     if (ex) out.push({ exercise: ex, sessionDate: s.date });
   }
   return out;
@@ -3677,6 +3648,7 @@ function closeSession() {
     exercises: activeSession.exercises.map(e => ({
       name: e.name,
       libraryId: e.libraryId,
+      slot: e.id || undefined,   // 2026-11-15: which plan slot it filled, so the next session of the plan can rotate that slot
       done: e.done,
       notes: e.notes,
       weight: typeof e.weight === 'number' && e.weight > 0 ? e.weight : undefined,
@@ -5465,6 +5437,101 @@ button.bx-sw { flex: none; min-height: 44px; padding: 0 4px; font-size: 13px; co
   render();
   if (location.hash === '#backup') try { openDataModal(); } catch (e) {}   // a door straight to backup & restore, for home's backup line
   watchSync();
+})();
+</script>
+<style>
+/* 2026-11-15 · today's movements and "been a while" (tg-), under the Today card */
+.tg-list { list-style: none; margin: 8px 0 0; padding: 0; }
+.tg-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid var(--leaf2); }
+.tg-row:first-child { border-top: 0; }
+.tg-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.tg-name { font-size: 15px; color: var(--ink); }
+.tg-when { font-size: 12px; line-height: 1.35; color: var(--muted); }
+.tg-load { font-size: 13px; line-height: 1.35; color: var(--ink); font-variant-numeric: tabular-nums; }
+button.tg-swap { flex: none; width: 44px; height: 44px; border: 1px solid var(--leaf2); border-radius: 12px; font-size: 18px; color: var(--muted); }
+button.tg-go { display: flex; width: 100%; min-height: 44px; align-items: center; gap: 8px; text-align: left; padding: 0; color: var(--ink); font-size: 15px; }
+button.tg-go span:first-child { flex: 1; min-width: 0; }
+button.tg-go span + span { font-size: 12px; color: var(--muted); }
+</style>
+<script>
+// 2026-11-15 · under the Today card: the movements train_gen.js picked for today, each with when it was last done
+// and a ↻ to take another from its family, and "been a while", the strength movements not done for two weeks or more.
+// It reads the page's state only. The one thing it writes is a swap made by hand today (body_picks_v1, via TrainGen).
+// Wrapped like step 10's additions: a fault here leaves Today as it was.
+(function () {
+  'use strict';
+  var TG = window.TrainGen;
+  if (!TG || typeof renderHome !== 'function' || typeof el !== 'function') return;
+  function rerender() { var y = window.scrollY; render(); window.scrollTo(0, y); }
+  function when(p) { return p.lastDone ? 'last done ' + TG.ago(p.lastDone, TODAY()) : 'not logged yet'; }
+
+  function movesCard(plan) {
+    var picks = TG.pick(state, plan, { date: TODAY() });
+    if (!picks.length) return null;
+    var card = el('div', 'bx-card'); card.id = 'tg-moves';
+    card.appendChild(el('div', 'bx-eyebrow', 'today’s movements · picked from your log'));
+    var list = el('ol', 'tg-list');
+    picks.forEach(function (p) {
+      var li = el('li', 'tg-row' + (p.rotated ? ' tg-new' : '')), txt = el('div', 'tg-txt');
+      txt.appendChild(el('span', 'tg-name', p.name));
+      var say = p.anchor ? 'stays: nothing in the library does its job · ' + when(p)
+        : (p.rotated ? 'in place of ' + p.slot.name + ' · ' : '') + when(p);
+      txt.appendChild(el('span', 'tg-when', say));
+      var load = TG.loadLine(TG.history(state, p.libraryId, TODAY()));
+      if (load) txt.appendChild(el('span', 'tg-load', 'last time: ' + load));
+      li.appendChild(txt);
+      if (p.options.length > 1) {
+        var b = el('button', 'tg-swap', '↻'); b.type = 'button';
+        b.setAttribute('aria-label', 'another movement in place of ' + p.name);
+        b.addEventListener('click', function () {
+          var o = p.options, next = o[(o.indexOf(p.libraryId) + 1) % o.length];
+          TG.saveSwap(plan.id, p.slot.id, next === o[0] ? null : next, TODAY());
+          rerender();
+        });
+        li.appendChild(b);
+      }
+      list.appendChild(li);
+    });
+    card.appendChild(list);
+    card.appendChild(el('div', 'bx-say', 'nothing repeats what its slot had last time. ↻ takes another from the same family.'));
+    return { card: card, ids: picks.reduce(function (m, p) { if (p.libraryId) m[p.libraryId] = true; return m; }, {}) };
+  }
+
+  function whileCard(exclude) {
+    var rows = TG.overdue(state, { date: TODAY(), exclude: exclude, max: 5, minDays: 14 });
+    if (!rows.length) return null;
+    var card = el('div', 'bx-card'); card.id = 'tg-while';
+    card.appendChild(el('div', 'bx-eyebrow', 'been a while'));
+    var list = el('ol', 'tg-list');
+    rows.forEach(function (r) {
+      var li = el('li', 'tg-row'), b = el('button', 'tg-go');
+      b.type = 'button';
+      b.appendChild(el('span', '', r.name));
+      var load = TG.loadLine(TG.history(state, r.libraryId, TODAY()));
+      b.appendChild(el('span', '', r.lastDone ? 'last ' + TG.ago(r.lastDone, TODAY()) + (load ? ' · ' + load.split(' · ')[0] : '') : 'not logged yet'));
+      b.addEventListener('click', function () { openExerciseDetail(r.libraryId); });
+      li.appendChild(b); list.appendChild(li);
+    });
+    card.appendChild(list);
+    card.appendChild(el('div', 'bx-say', 'the plans bring these back on their own as they come round. in a session, “add an exercise” takes one in today.'));
+    return card;
+  }
+
+  function decorate(wrap) {
+    var card = wrap.querySelector('.today-card'); if (!card) return;
+    var nameEl = card.querySelector('.today-name'), name = nameEl ? nameEl.textContent.trim() : '';
+    var plan = (state.plans || []).filter(function (p) { return p.name === name; })[0] || null;   // the plan the card offers (step 10 may offer another)
+    var after = card.nextSibling, ids = {};
+    if (plan) { var m = movesCard(plan); if (m) { wrap.insertBefore(m.card, after); ids = m.ids; } }
+    var w = whileCard(ids); if (w) wrap.insertBefore(w, after);
+  }
+
+  var own = window.renderHome;
+  window.renderHome = function () {
+    var wrap = own.apply(this, arguments);
+    try { decorate(wrap); } catch (e) { try { console.warn('train_gen today', e); } catch (x) {} }
+    return wrap;
+  };
 })();
 </script>
 </body>
