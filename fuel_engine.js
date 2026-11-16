@@ -79,6 +79,11 @@
     if (ALIAS[n]) out.push(ALIAS[n]);
     if (REVERSE[n]) out.push(REVERSE[n]);
     n.split(' ').forEach(function (w) { if (ALIAS[w]) out.push(n.replace(w, ALIAS[w])); if (REVERSE[w]) out.push(n.replace(w, REVERSE[w])); });
+    var SYN = { 'svinekød': 'grisekød', 'svin': 'gris', 'svinemørbrad': 'grisekød mørbrad', 'flæsk': 'grisekød', 'kartofler': 'kartoffel', 'kogte': 'kogt', 'stegte': 'stegt', 'rå': 'rå' };
+    n.split(' ').forEach(function (w) { if (SYN[w]) out.push(n.replace(w, SYN[w])); });
+    // every word at once: "kartofler kogte" → "kartoffel kogt" (Frida's own wording)
+    var all = n.split(' ').map(function (w) { return SYN[w] || (w.length > 5 && /er$/.test(w) ? w.slice(0, -1) : w.length > 4 && /e$/.test(w) ? w.slice(0, -1) : w); }).join(' ');
+    if (all !== n) out.push(all);
     // Danish plurals: frikadeller → frikadelle, kartofler → kartofl(el), æbler → æble
     n.split(' ').forEach(function (w) {
       if (w.length > 5 && /er$/.test(w)) { out.push(n.replace(w, w.slice(0, -1))); out.push(n.replace(w, w.slice(0, -2))); }
@@ -119,10 +124,11 @@
     [/^(ris|rice)$/, /^Ris, kogte/], [/^pasta$/, /^Pasta, kogt/], [/^(kartofl|kartoffel|kartofler|potato|potatoes)$/, /^Kartoffel, kogt/],
     [/^(laks|salmon)$/, /^Laks, atlantisk, opdræt, rå/], [/^(hakket oksekød|oksekød|minced beef)$/, /^Oksekød, hakket, 8-12% fedt/],
     [/^(smør|butter)$/, /^Smør, saltet/], [/^(ost|cheese)$/, /^Ost, fast, 45\+, alle typer/], [/^(kylling|chicken)$/, /^Kylling, kød og skind, rå/],
-    [/^(skyr)$/, /^Skyr/], [/^(havregryn|oats)$/, /^Havregryn, uspec/], [/^(hytteost|cottage cheese)$/, /^Hytteost, 5\+/]
+    [/^(skyr)$/, /^Skyr/], [/^(æble|æbler|apple|apples)$/, /^Æble, uspec\., råt/], [/^(banan|bananer|banana)$/, /^Banan, rå/], [/^(havregryn|oats)$/, /^Havregryn, uspec/], [/^(hytteost|cottage cheese)$/, /^Hytteost, 5\+/]
   ];
   var DISH = /(sandwich|fastfood|burger|pizza|salat|med|i olie|dybfrost|konserves)/i;
   function usualBonus(food, q) {
+    if (food.src === 'dish') return /^frikadel/.test(fold(q)) && /^Frikadeller$/.test(food.name) ? 45 : 0;
     if (food.src !== 'frida') return 0;
     var n = fold(q), b = 0;
     USUAL.forEach(function (u) { if (u[0].test(n) && u[1].test(food.name)) b += 45; });
@@ -142,8 +148,10 @@
     return { id: fd.id, name: fd.name, src: 'mine', from: fd.src || null, serving: fd.serving || '1 serving', servingG: sg || null, perServing: ps, per100: per100, barcode: fd.barcode || null };
   }
   // food_dk.js rows: [id, Danish name, English name, kcal, protein, carbs, fat, fibre] per 100 g
+  // food_dk_dishes.js rows add 'dish' and a portion in grams: Danish home dishes worked out from Frida's ingredients
   function fromFrida(r) {
-    return { id: 'frida:' + r[0], name: r[1], alt: r[2] || '', src: 'frida', serving: '100 g', servingG: 100,
+    var dish = r[8] === 'dish', portion = dish && r[9] ? r[9] : null;
+    return { id: 'frida:' + r[0], name: r[1], alt: r[2] || '', src: dish ? 'dish' : 'frida', serving: portion ? '1 portion (' + portion + ' g)' : '100 g', servingG: portion || 100,
       per100: { kcal: r[3] || 0, p: r[4] || 0, c: r[5] || 0, f: r[6] || 0, fib: r[7] || 0 } };
   }
   function scale(n, k) { return { kcal: (n.kcal || 0) * k, p: (n.p || 0) * k, c: (n.c || 0) * k, f: (n.f || 0) * k, fib: (n.fib || 0) * k }; }
@@ -166,6 +174,7 @@
   };
   // grams of one piece or slice, for foods whose name says what they are
   var PIECE = [
+    [/frikadelle/, 60], [/æbleskive/, 30], [/hakkebøf|beef patty/, 150],   // dishes first: "æbleskive" is not an apple
     [/\b(æg|egg)/, 60], [/rugbrød|rye bread/, 45], [/franskbrød|toast|white bread|bolle|bun/, 30], [/knækbrød|crispbread/, 12],
     [/banan|banana/, 120], [/æble|apple/, 150], [/appelsin|orange/, 160], [/pære|pear/, 170], [/kiwi/, 75], [/mandarin|clementin/, 70],
     [/kartoffel|potato/, 100], [/gulerod|carrot/, 70], [/tomat|tomato/, 100], [/avocado/, 150], [/frikadelle/, 60], [/pålæg|ham|skinke|salami/, 15],
@@ -361,6 +370,7 @@
       }
       var named = PIECE.some(function (r) { return r[0].test(fold(part.query)); });   // "½ kyllingebryst": a piece, by what was said
       if (unit === null && named && !(qty > 20) && !/^1 (large|medium|small|slice|stk|piece)/i.test(food.serving || '')) unit = 'piece';
+      if (unit === null && food.src === 'dish' && !(qty > 20)) unit = 'portion';
       if (unit === null) unit = (food.src === 'mine' && !(qty > 20)) ? 'serving' : (qty > 20 ? 'g' : (pieceGrams(food, 'piece') ? 'piece' : 'serving'));
       return { part: part, food: food, alts: hits.slice(1), amt: amountOf(food, qty === null ? 1 : qty, unit) };
     });

@@ -4246,8 +4246,13 @@ function fuelTargetsInfo(key) { return FE() ? FE().targetsFor(state, fuelStore()
 function fuelTargets(key) { return fuelTargetsInfo(key).t; }
 
 // Frida, on first use
-let fridaState = 'idle', fridaWaiting = [];
-function fridaRows() { return Array.isArray(window.FOOD_DK) ? window.FOOD_DK : null; }
+let fridaState = 'idle', fridaWaiting = [], fridaAll = null;
+function fridaRows() {                                 // Frida, and the Danish dishes worked out from it (food_dk_dishes.js)
+  if (!Array.isArray(window.FOOD_DK)) return null;
+  const dishes = Array.isArray(window.FOOD_DK_DISHES) ? window.FOOD_DK_DISHES : [];
+  if (!fridaAll || fridaAll.length !== window.FOOD_DK.length + dishes.length) fridaAll = window.FOOD_DK.concat(dishes);
+  return fridaAll;
+}
 function loadFrida(then) {                             // then: run once the Danish foods are in (only if they arrive later)
   if (fridaRows()) { fridaState = 'ready'; return; }
   if (then && (fridaState === 'idle' || fridaState === 'loading')) fridaWaiting.push(then);
@@ -4258,6 +4263,9 @@ function loadFrida(then) {                             // then: run once the Dan
   s.onload = () => done(true);
   s.onerror = () => done(false);
   document.head.appendChild(s);
+  const d = document.createElement('script'); d.src = '../food_dk_dishes.js'; d.async = true;
+  d.onload = () => { fridaAll = null; };
+  document.head.appendChild(d);
 }
 let offFound = [];                                     // Open Food Facts products found on this visit, as foods
 function fuelSources() { return { mine: state.fuel.foods || [], frida: fridaRows(), off: offFound }; }
@@ -4284,7 +4292,7 @@ function lastAmountOf(food) {
 function logFood(food, amt, when) {
   fuelLogFor(fuelToday()).push(FE().logItem(food, amt, uid('log'), when || Date.now()));
 }
-const SRC_WORD = { mine: 'yours', frida: 'Frida · DTU', off: 'Open Food Facts' };
+const SRC_WORD = { mine: 'yours', frida: 'Frida · DTU', dish: 'Danish dish · from Frida', off: 'Open Food Facts' };
 function foodMeta(food) {
   const n = food.perServing || food.per100 || {}, per = food.perServing ? food.serving : '100 g';
   return SRC_WORD[food.src === 'mine' && food.from ? food.from : food.src] + ' · ' + per + ' · ' + r0(n.kcal) + ' kcal · ' + r0(n.p) + 'p ' + r0(n.c) + 'c ' + r0(n.f) + 'f';
@@ -4334,6 +4342,7 @@ function renderFuelToday() {
   acts.appendChild(logBtn);
   if (smart) {
     const scan = el('button', 'btn-secondary', 'scan'); scan.id = 'fx-scan-btn'; scan.setAttribute('aria-label', 'scan a barcode'); scan.onclick = openScanModal; acts.appendChild(scan);
+    const photo = el('button', 'btn-secondary', 'photo'); photo.id = 'fx-photo-btn'; photo.setAttribute('aria-label', 'a photo of the meal'); photo.onclick = openPhotoModal; acts.appendChild(photo);
     const meals = el('button', 'btn-secondary', 'meals'); meals.id = 'fx-meals-btn'; meals.onclick = openMealsModal; acts.appendChild(meals);
   }
   wrap.appendChild(acts);
@@ -4432,10 +4441,16 @@ function fuelSayCard() {
     sayText = ta.value;
     if (!sayText.trim()) return;
     loadFrida(() => { if (sayDraft) { sayDraft = readSay(sayText); quietRerenderFuel(); } });
-    sayDraft = readSay(sayText);
+    sayDraft = readSay(sayText); photoInfo = null;
     render();
   };
   card.appendChild(read);
+  if (sayDraft && photoInfo) {
+    const info = el('div', 'fx-photo-info'); info.id = 'fx-photo-info';
+    info.appendChild(el('div', '', 'from the photo: ' + (photoInfo.seen || 'a meal') + '. check the amounts: a photo guesses portions, and these are guesses.'));
+    if (photoInfo.question) info.appendChild(el('div', 'fx-photo-q', 'Claude asks: ' + photoInfo.question + ' change the lines below to match.'));
+    card.appendChild(info);
+  }
   if (sayDraft) card.appendChild(sayPreview());
   return card;
 }
@@ -4444,6 +4459,97 @@ function readSay(text) {
     text: x.part.text, query: x.part.query, food: x.food, alts: x.alts || [], qty: x.amt ? x.amt.qty : 1, unit: x.amt ? x.amt.unit : 'serving'
   }));
 }
+// ── a photo of the meal, read on the PC (2026-11-16) ──
+// The phone shrinks each photo to ≤1568 px and re-encodes it as jpeg (which also drops the camera's location data), and
+// sends it through the village's pairing to the bridge's /fuel/photo. Claude names what is on the plate and guesses
+// grams, nothing else; the names are matched here against his foods, Frida and the Danish dishes, and the lines land in
+// the same preview as "write it as you'd say it". Nothing is logged until he says so, and the photo is kept nowhere.
+let photoInfo = null;                                  // { seen, question } while the preview came from a photo
+function fuelBridge() { try { const v = JSON.parse(localStorage.getItem('village_v1') || 'null'); return v && v.bridge && v.bridge.url && v.bridge.token ? v.bridge : null; } catch (e) { return null; } }
+async function shrinkPhoto(file) {
+  const MAX = 1568;
+  let bmp;
+  try { bmp = await createImageBitmap(file, { imageOrientation: 'from-image' }); } catch (e) { bmp = await createImageBitmap(file); }
+  const k = Math.min(1, MAX / Math.max(bmp.width, bmp.height));
+  const c = document.createElement('canvas'); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+  c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+  try { bmp.close(); } catch (e) {}
+  const url = c.toDataURL('image/jpeg', 0.85);
+  return { type: 'image/jpeg', data: url.slice(url.indexOf(',') + 1), w: c.width, h: c.height };
+}
+function photoToDraft(ans) {
+  const src = fuelSources(), use = fuelUsage(), rows = [];
+  const one = (x, hidden) => {
+    const noun = x.da ? x.da.split(',')[0].trim().split(/\s+/).pop() : '';
+    const tries = [x.da, x.da && x.da.split(',')[0], x.en, noun].filter(Boolean);   // "kartofler, kogte", "kartofler", English, then the noun alone
+    let guessed = false;
+    let hits = [];
+    for (const q of tries) { hits = FE().search(src, q, use, 4); if (hits.length) { guessed = q === noun && q !== x.da; break; } }
+    const food = hits[0] || null, row = { text: x.da || x.en, query: x.da || x.en, food: food, alts: hits.slice(1), why: hidden ? (x.why || 'fat from the cooking') : '', sure: guessed ? 'low' : (x.sure || '') };
+    if (food && x.count && (FE().namedPiece || FE().pieceGrams)(food, 'piece') && !hidden) { row.qty = x.count; row.unit = 'piece'; }
+    else { row.qty = x.grams; row.unit = 'g'; }
+    if (food && !unitChoices(food).some(c => c[0] === row.unit)) { const a = FE().amountOf(food, row.qty, row.unit); row.qty = a.servings; row.unit = 'serving'; }
+    rows.push(row);
+  };
+  (ans.items || []).forEach(x => one(x, false));
+  (ans.hidden || []).forEach(x => one(x, true));
+  return rows;
+}
+function openPhotoModal() {
+  const br = fuelBridge();
+  if (!br) {
+    openModalWith(modalHead('a photo of the meal') + '<div class="bx-say">a photo is read on your PC, through the village. this phone isn’t paired with it yet: open the village, and pair it there (the QR code on the PC). until then, write the meal in words.</div>');
+    return;
+  }
+  openModalWith(modalHead('a photo of the meal')
+    + '<div class="bx-say">the whole plate in the picture, from a little above. a fork or a knife beside it helps the sizes, and so does a kitchen scale if the food was weighed.</div>'
+    + '<div class="fx-shots" id="fx-shots"></div>'
+    + '<label class="btn-primary fx-shot-btn" id="fx-shot-lab">take a photo<input type="file" accept="image/*" capture="environment" id="fx-shot-in" hidden></label>'
+    + '<div class="editor-field"><div class="editor-label">what the photo can’t show (optional)</div><textarea id="fx-photo-note" rows="2" placeholder="e.g. fried in butter · 2 dl sovs · sødmælk"></textarea></div>'
+    + '<div class="bx-say" id="fx-photo-say"></div>'
+    + '<div class="editor-actions"><button class="btn-primary" id="fx-photo-go" disabled>read it</button></div>');
+  const shots = [], box = document.getElementById('fx-shots'), say = document.getElementById('fx-photo-say');
+  const go = document.getElementById('fx-photo-go'), lab = document.getElementById('fx-shot-lab'), inp = document.getElementById('fx-shot-in');
+  const draw = () => {
+    box.innerHTML = '';
+    shots.forEach((sh, i) => {
+      const f = el('div', 'fx-shot'); const im = document.createElement('img'); im.src = 'data:image/jpeg;base64,' + sh.data; im.alt = 'photo ' + (i + 1); f.appendChild(im);
+      const x = el('button', 'food-row-x', '×'); x.setAttribute('aria-label', 'take photo ' + (i + 1) + ' away'); x.onclick = () => { shots.splice(i, 1); draw(); }; f.appendChild(x);
+      box.appendChild(f);
+    });
+    go.disabled = !shots.length;
+    lab.hidden = shots.length >= 2;
+    lab.firstChild.textContent = shots.length ? 'a second angle (optional)' : 'take a photo';
+  };
+  inp.onchange = async () => {
+    const f = inp.files && inp.files[0]; inp.value = '';
+    if (!f) return;
+    say.textContent = 'getting it ready…';
+    try { shots.push(await shrinkPhoto(f)); say.textContent = ''; } catch (e) { say.textContent = 'that photo couldn’t be opened. try another.'; }
+    draw();
+  };
+  go.onclick = async () => {
+    if (!shots.length) return;
+    go.disabled = true; lab.hidden = true;
+    say.textContent = 'your PC is looking at it… about ten seconds.';
+    const ctrl = new AbortController(), timer = setTimeout(() => ctrl.abort(), 130000);
+    let res = null, ans = null;
+    try {
+      res = await fetch(br.url + '/fuel/photo', { method: 'POST', signal: ctrl.signal, headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + br.token },
+        body: JSON.stringify({ images: shots.map(sh => ({ type: sh.type, data: sh.data })), note: document.getElementById('fx-photo-note').value }) });
+      ans = await res.json().catch(() => null);
+    } catch (e) { res = null; }
+    clearTimeout(timer);
+    if (!res) { say.textContent = 'the PC can’t be reached right now. is it on? write the meal in words for now; the photo isn’t kept.'; go.disabled = false; return; }
+    if (res.status === 401) { say.textContent = 'the pairing with the PC has changed. pair the phone again in the village.'; return; }
+    if (!res.ok || !ans || ans.error) { say.textContent = (ans && ans.text) || 'the PC couldn’t read it this time. try again, or write it in words.'; go.disabled = res.status === 429; return; }
+    if (!(ans.items || []).length) { say.textContent = 'no food was seen in that photo. try again with the plate in the frame.'; go.disabled = false; return; }
+    sayDraft = photoToDraft(ans); sayText = ''; photoInfo = { seen: ans.seen || '', question: ans.question || '' };
+    closeModal(); render();
+    const c = document.getElementById('fx-say-card'); if (c) c.scrollIntoView({ block: 'start' });
+  };
+}
+
 function unitChoices(food) {
   const out = [];
   if (food.perServing) out.push(['serving', '× ' + food.serving]);
@@ -4491,6 +4597,8 @@ function sayPreview() {
         sel.onchange = () => { const all = [row.food].concat(row.alts), f = all[+sel.value]; row.alts = all.filter(x => x !== f); row.food = f; const la = lastAmountOf(f); if (la) { row.qty = la.qty; row.unit = la.unit; } render(); };
         head.appendChild(sel);
       } else head.appendChild(el('span', '', row.food.name + ' · ' + SRC_WORD[row.food.src]));
+      if (row.why) head.appendChild(el('div', 'fx-why', 'not seen, likely: ' + row.why));
+      else if (row.sure === 'low') head.appendChild(el('div', 'fx-why', 'a rough guess from the photo'));
       r.appendChild(head);
       const line = el('div', 'fx-pline');
       const n = el('span', 'fx-pn', r0(amt.n.kcal) + ' kcal · ' + r1(amt.n.p) + 'p');
@@ -4515,10 +4623,10 @@ function sayPreview() {
     const ok = sayDraft.filter(x => x.food && x.qty > 0);
     if (!ok.length) return;
     const now = Date.now();
-    ok.forEach((x, i) => logFood(x.food, FE().amountOf(x.food, x.qty, x.unit), now + i));
-    saveState(); sayDraft = null; sayText = ''; render(); toast('logged');
+    ok.forEach((x, i) => { logFood(x.food, FE().amountOf(x.food, x.qty, x.unit), now + i); if (photoInfo) { const l = fuelLogFor(fuelToday()); l[l.length - 1].via = 'photo'; } });
+    saveState(); sayDraft = null; sayText = ''; photoInfo = null; render(); toast('logged');
   };
-  const drop = el('button', 'btn-secondary', 'clear'); drop.onclick = () => { sayDraft = null; render(); };
+  const drop = el('button', 'btn-secondary', 'clear'); drop.onclick = () => { sayDraft = null; photoInfo = null; render(); };
   pair.appendChild(go); pair.appendChild(drop);
   box.appendChild(pair);
   return box;
@@ -4612,7 +4720,7 @@ function renderFuelFoods() {
     const r = el('div', 'food-row pick');
     r.innerHTML = '<div class="food-row-main"><div class="food-row-name">' + escapeHtml(fd.name) + '</div>'
       + '<div class="food-row-meta">' + escapeHtml(fd.serving) + ' · ' + r0(fd.kcal) + ' kcal · ' + r0(fd.p) + 'p ' + r0(fd.c) + 'c ' + r0(fd.f) + 'f'
-      + (fd.src === 'off' ? ' · Open Food Facts' : fd.src === 'frida' ? ' · Frida' : '') + '</div></div>';
+      + (fd.src === 'off' ? ' · Open Food Facts' : fd.src === 'frida' ? ' · Frida' : fd.src === 'dish' ? ' · Danish dish' : '') + '</div></div>';
     r.onclick = () => openFoodModal(fd);
     wrap.appendChild(r);
   });
@@ -4620,7 +4728,7 @@ function renderFuelFoods() {
   return wrap;
 }
 function fuelCredits() {
-  return el('div', 'fx-credit', 'Danish foods: Frida 5.5, the National Food Institute, DTU (CC BY 4.0)' + (fridaState === 'missing' ? ', not on this device yet' : '') + '. packaged products: Open Food Facts, open data (ODbL).');
+  return el('div', 'fx-credit', 'Danish foods: Frida 5.5, the National Food Institute, DTU (CC BY 4.0)' + (fridaState === 'missing' ? ', not on this device yet' : '') + '. Danish dishes such as frikadeller and flæskesteg: worked out from Frida’s ingredients with classic home recipes, so estimates. packaged products: Open Food Facts, open data (ODbL).');
 }
 
 function renderFuelHistory() {
@@ -5320,6 +5428,16 @@ button.fx-mealrow{width:100%;text-align:left;color:inherit;font:inherit;}
 .fx-cam{position:relative;border-radius:14px;overflow:hidden;margin-bottom:10px;background:#000;}
 .fx-cam video{display:block;width:100%;max-height:46vh;object-fit:cover;}
 .fx-cam[hidden]{display:none;}
+.fx-photo-info{margin-top:10px;font-size:13px;line-height:1.45;color:var(--muted);}
+.fx-photo-q{margin-top:6px;color:var(--ink);}
+.fx-why{font-size:12px;line-height:1.35;color:var(--fuel);margin-top:2px;}
+.fx-shots{display:flex;gap:8px;margin:10px 0;}
+.fx-shot{position:relative;flex:0 0 46%;border-radius:12px;overflow:hidden;background:#000;}
+.fx-shot img{display:block;width:100%;height:150px;object-fit:cover;}
+.fx-shot .food-row-x{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.55);color:#fff;border-radius:99px;}
+label.fx-shot-btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:48px;margin:6px 0 12px;cursor:pointer;}
+label.fx-shot-btn[hidden]{display:none;}
+#fx-photo-go:disabled,#fx-log-these:disabled{opacity:.45;cursor:default;}
 .food-row-meta{font-size:12px;color:var(--ink-dim);font-variant-numeric:tabular-nums;}
 .food-row-kcal{font-variant-numeric:tabular-nums;color:var(--fuel);font-size:15px;}
 .food-row-x{color:var(--ink-faint);font-size:20px;padding:0 4px;line-height:1;}
