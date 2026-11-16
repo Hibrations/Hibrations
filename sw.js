@@ -6,7 +6,7 @@
 // It never touches localStorage or IndexedDB — Lek's history lives there.
 //
 // Bump VERSION on every deploy that changes a file below.
-const VERSION = '2026-11-15.3';
+const VERSION = '2026-11-16.1';
 const CACHE = 'halohorns-' + VERSION;
 
 const SHELL = [
@@ -17,6 +17,8 @@ const SHELL = [
   './appblock.js', './talk.js', './dayplan.js', './director.js',
   // 2026-11-15: today's movements from the log, shared by Body Temple and the Portal
   './train_gen.js',
+  // 2026-11-16: Fuel's engine, and Frida (the Danish foods), fetched on first use and kept for offline
+  './fuel_engine.js', './food_dk.js',
   './faces/a.webp', './faces/garr.webp', './faces/hekka.webp', './faces/rak.webp', './faces/thorn.webp',
   './faces/nokka.webp', './faces/ngoen.webp', './faces/paa.webp', './faces/malee.webp',
   './inner_temple.html', './beast_temple.html', './breath_temple.html', './healing_temple.html',

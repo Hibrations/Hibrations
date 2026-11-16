@@ -882,6 +882,7 @@ main { padding: 0 22px; }
 <script src="../shell.js"></script>
 <script src="../charts.js"></script>
 <script src="../train_gen.js"></script>
+<script src="../fuel_engine.js"></script>
 </head>
 <body data-temple="body">
 
@@ -2072,7 +2073,7 @@ async function copyBackupText() {
 // Body-only export (Lek, 2026-11-05). Just this temple's own stores, for handing its data on. It is not a backup:
 // the full file below is what saves the other temples, so this never marks the device as backed up.
 const WEIGH_KEY = 'body_weigh_v1';
-const BODY_KEYS = [STORAGE_KEY, 'body_inbox_v1', 'body_garr_v1', WEIGH_KEY];
+const BODY_KEYS = [STORAGE_KEY, 'body_inbox_v1', 'body_garr_v1', WEIGH_KEY, 'body_fuel_v1'];
 
 // Weigh-in (Lek's yes, 2026-11-05): one dated kg per day, kept in its own key so the sessions store is never touched.
 // No streaks, no "missing weeks": a gap is just a gap.
@@ -4228,12 +4229,80 @@ function macroRow(label, val, target, cls) {
   return row;
 }
 
+// ════════════════════════════════════════════════════════════
+// FUEL, MADE SMART (2026-11-16). The thinking lives in ../fuel_engine.js (FuelEngine); this is the page side.
+// body_temple_v1.fuel keeps what it always kept (targets, foods, log) and its shapes; a log item may carry a few
+// optional fields more (g, fib, src, label, q, u). What is new lives in a sibling store:
+//   body_fuel_v1  { byDay: bool, training: {calories, protein, carbs, fat}, rest: {…}, meals: [{ id, name, items: [...] }] }
+// Without it, targets follow Fitness/training_plan.md by day (FuelEngine.DEFAULT_TARGETS). Opening Fuel writes nothing.
+// Sources: his own foods; Frida 5.5, the Danish food database (DTU, CC BY 4.0), as ../food_dk.js, loaded on first use;
+// Open Food Facts (ODbL), asked only when he scans a barcode or searches it, and only with the barcode or the words.
+// ════════════════════════════════════════════════════════════
+const FUEL_KEY = 'body_fuel_v1';
+function fuelStore() { try { const o = JSON.parse(localStorage.getItem(FUEL_KEY) || 'null'); return o && typeof o === 'object' && !Array.isArray(o) ? o : {}; } catch (e) { return {}; } }
+function changeFuelStore(fn) { const o = fuelStore(); fn(o); try { localStorage.setItem(FUEL_KEY, JSON.stringify(o)); } catch (e) { toast('could not save — storage full?'); } }
+const FE = () => window.FuelEngine || null;
+function fuelTargetsInfo(key) { return FE() ? FE().targetsFor(state, fuelStore(), key || fuelToday()) : { kind: null, why: '', t: state.fuel.targets }; }
+function fuelTargets(key) { return fuelTargetsInfo(key).t; }
+
+// Frida, on first use
+let fridaState = 'idle', fridaWaiting = [];
+function fridaRows() { return Array.isArray(window.FOOD_DK) ? window.FOOD_DK : null; }
+function loadFrida(then) {                             // then: run once the Danish foods are in (only if they arrive later)
+  if (fridaRows()) { fridaState = 'ready'; return; }
+  if (then && (fridaState === 'idle' || fridaState === 'loading')) fridaWaiting.push(then);
+  if (fridaState !== 'idle') return;
+  fridaState = 'loading';
+  const done = (ok) => { fridaState = ok && fridaRows() ? 'ready' : 'missing'; const w = fridaWaiting; fridaWaiting = []; if (fridaState === 'ready') w.forEach(f => { try { f(); } catch (e) {} }); };
+  const s = document.createElement('script'); s.src = '../food_dk.js'; s.async = true;
+  s.onload = () => done(true);
+  s.onerror = () => done(false);
+  document.head.appendChild(s);
+}
+let offFound = [];                                     // Open Food Facts products found on this visit, as foods
+function fuelSources() { return { mine: state.fuel.foods || [], frida: fridaRows(), off: offFound }; }
+function fuelUsage() { return FE().usage(state.fuel.log, 120, fuelToday()); }
+function foodFor(id) {
+  if (!id || !FE()) return null;
+  const m = (state.fuel.foods || []).find(f => f.id === id);
+  if (m) return FE().fromMine(m);
+  if (String(id).indexOf('frida:') === 0 && fridaRows()) { const n = +String(id).slice(6), r = fridaRows().find(x => x[0] === n); return r ? FE().fromFrida(r) : null; }
+  const o = offFound.find(f => f.id === id);
+  return o || null;
+}
+// The food a logged line stood for; a line with no food left (a quick entry, a deleted food) is its own food.
+function foodOfItem(it) {
+  return foodFor(it.foodId) || { id: it.foodId || null, name: it.name, src: 'mine', serving: '1 serving', servingG: it.g && it.servings ? it.g / it.servings : null,
+    perServing: { kcal: (it.kcal || 0) / (it.servings || 1), p: (it.p || 0) / (it.servings || 1), c: (it.c || 0) / (it.servings || 1), f: (it.f || 0) / (it.servings || 1), fib: (it.fib || 0) / (it.servings || 1) } };
+}
+function amountOfItem(food, it) { return FE().amountOf(food, it.q || it.servings || 1, it.u || 'serving'); }
+function lastAmountOf(food) {
+  const u = fuelUsage(), x = (food.id && u[food.id]) || u['name:' + FE().fold(food.name)];
+  if (!x || !x.last) return null;
+  return x.last.u ? { qty: x.last.q, unit: x.last.u } : { qty: x.last.servings || 1, unit: 'serving' };
+}
+function logFood(food, amt, when) {
+  fuelLogFor(fuelToday()).push(FE().logItem(food, amt, uid('log'), when || Date.now()));
+}
+const SRC_WORD = { mine: 'yours', frida: 'Frida · DTU', off: 'Open Food Facts' };
+function foodMeta(food) {
+  const n = food.perServing || food.per100 || {}, per = food.perServing ? food.serving : '100 g';
+  return SRC_WORD[food.src === 'mine' && food.from ? food.from : food.src] + ' · ' + per + ' · ' + r0(n.kcal) + ' kcal · ' + r0(n.p) + 'p ' + r0(n.c) + 'c ' + r0(n.f) + 'f';
+}
+function nText(n) { return '+' + r0(n.p) + ' g protein · ' + r0(n.kcal) + ' kcal'; }
+function quietRerenderFuel() { const a = document.activeElement; if (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return; const y = window.scrollY; render(); window.scrollTo(0, y); }
+
+// what he wrote, read and waiting to be logged (kept across redraws)
+let sayText = '', sayDraft = null;
+
 function renderFuelToday() {
   const wrap = el('div');
   const day = fuelToday();
   const items = state.fuel.log[day] || [];
   const tot = dayTotals(items);
-  const tgt = state.fuel.targets;
+  const info = fuelTargetsInfo(day), tgt = info.t;
+  const smart = !!FE();
+  if (smart) loadFrida();
 
   wrap.appendChild(el('div', 'today-eyebrow', 'fuel · today'));
 
@@ -4246,54 +4315,290 @@ function renderFuelToday() {
   card.appendChild(macroRow('protein', tot.p, tgt.protein, 'protein'));
   card.appendChild(macroRow('carbs', tot.c, tgt.carbs, 'carbs'));
   card.appendChild(macroRow('fat', tot.f, tgt.fat, 'fat'));
+  const fib = items.reduce((a, i) => a + (i.fib || 0), 0);
+  if (fib > 0) card.appendChild(macroRow('fibre', fib, 30, 'fibre'));
+  if (info.kind) card.appendChild(el('div', 'fx-day', info.kind === 'training'
+    ? 'a training day · ' + info.why + '. protein first, carbs around the session.'
+    : 'a rest day · ' + info.why + '. maintenance: eat to the line, not under it.'));
   wrap.appendChild(card);
 
+  if (smart) {
+    const next = fuelNextCard(items, tot, tgt, info);
+    if (next) wrap.appendChild(next);
+    wrap.appendChild(fuelSayCard());
+  }
+
+  const acts = el('div', 'fx-acts');
   const logBtn = el('button', 'btn-primary', '+ log food');
-  logBtn.style.width = '100%';
-  logBtn.onclick = openLogFoodModal;
-  wrap.appendChild(logBtn);
+  logBtn.onclick = () => openLogFoodModal();
+  acts.appendChild(logBtn);
+  if (smart) {
+    const scan = el('button', 'btn-secondary', 'scan'); scan.id = 'fx-scan-btn'; scan.setAttribute('aria-label', 'scan a barcode'); scan.onclick = openScanModal; acts.appendChild(scan);
+    const meals = el('button', 'btn-secondary', 'meals'); meals.id = 'fx-meals-btn'; meals.onclick = openMealsModal; acts.appendChild(meals);
+  }
+  wrap.appendChild(acts);
+
+  if (smart) { const u = fuelUsualCard(day); if (u) wrap.appendChild(u); }
 
   wrap.appendChild(el('div', 'section-eyebrow', 'logged today'));
   if (!items.length) {
     wrap.appendChild(el('div', 'subtle', 'nothing logged yet. tap + log food.'));
   } else {
-    items.forEach(it => {
-      const r = el('div', 'food-row');
-      r.innerHTML = '<div class="food-row-main"><div class="food-row-name">' + escapeHtml(it.name) + '</div>'
-        + '<div class="food-row-meta">' + r1(it.servings) + '× · ' + r0(it.p) + 'p ' + r0(it.c) + 'c ' + r0(it.f) + 'f</div></div>'
-        + '<div class="food-row-kcal">' + r0(it.kcal) + '</div>';
-      const x = el('button', 'food-row-x', '×');
-      x.onclick = () => {
-        const log = fuelLogFor(day);
-        const idx = log.findIndex(l => l.id === it.id);
-        if (idx > -1) log.splice(idx, 1);
-        saveState(); render(); toast('removed');
-      };
-      r.appendChild(x);
-      wrap.appendChild(r);
+    const groups = [['', []], ['morning', []], ['midday', []], ['afternoon', []], ['evening', []]];
+    items.forEach(it => { const g = it.ts && smart ? FE().mealOf(it.ts) : ''; groups.find(x => x[0] === g)[1].push(it); });
+    groups.forEach(([meal, list]) => {
+      if (!list.length) return;
+      if (meal) {
+        const head = el('div', 'fx-meal');
+        head.appendChild(el('span', '', meal + ' · ' + r0(dayTotals(list).kcal) + ' kcal'));
+        if (list.length >= 2) { const keep = el('button', 'fx-link', 'keep as a meal'); keep.onclick = () => openKeepMealModal(list, meal); head.appendChild(keep); }
+        wrap.appendChild(head);
+      }
+      list.slice().sort((a, b) => (a.ts || 0) - (b.ts || 0)).forEach(it => wrap.appendChild(fuelLogRow(it, day)));
     });
   }
   return wrap;
 }
 
+function fuelLogRow(it, day) {
+  const r = el('div', 'food-row');
+  const main = el(FE() ? 'button' : 'div', 'food-row-main');
+  if (FE()) { main.type = 'button'; main.setAttribute('aria-label', 'change the amount of ' + it.name); main.onclick = () => openEditLogModal(it, day); }
+  main.innerHTML = '<div class="food-row-name">' + escapeHtml(it.name) + '</div>'
+    + '<div class="food-row-meta">' + escapeHtml(it.label || (FE() ? amountOfItem(foodOfItem(it), it).label : r1(it.servings) + '×')) + ' · ' + r0(it.p) + 'p ' + r0(it.c) + 'c ' + r0(it.f) + 'f</div>';
+  r.appendChild(main);
+  r.appendChild(el('div', 'food-row-kcal', String(r0(it.kcal))));
+  const x = el('button', 'food-row-x', '×');
+  x.setAttribute('aria-label', 'take ' + it.name + ' off today');
+  x.onclick = () => {
+    const log = fuelLogFor(day);
+    const idx = log.findIndex(l => l.id === it.id);
+    if (idx > -1) log.splice(idx, 1);
+    saveState(); render(); toast('removed');
+  };
+  r.appendChild(x);
+  return r;
+}
+
+// "what's next": protein and energy left, ideas from what he eats, the evening line on a training day
+function fuelNextCard(items, tot, tgt, info) {
+  const left = { kcal: tgt.calories - tot.kcal, p: tgt.protein - tot.p };
+  const hour = new Date().getHours();
+  const card = el('div', 'bx-card'); card.id = 'fx-next';
+  card.appendChild(el('div', 'bx-eyebrow', 'what’s next'));
+  let say;
+  if (!items.length) say = 'nothing written yet today. protein first: ' + r0(tgt.protein) + ' g across the day.';
+  else if (left.kcal < 0) say = r0(-left.kcal) + ' kcal past the line. nothing to fix; tomorrow is its own day.';
+  else if (left.p > 8) say = r0(left.p) + ' g protein to go, ' + r0(left.kcal) + ' kcal left.';
+  else say = 'protein is in. ' + r0(left.kcal) + ' kcal left' + (info.kind === 'training' ? ', and carbs are welcome around the session.' : '.');
+  card.appendChild(el('div', 'bx-say', say));
+  if (hour >= 19 && info.kind === 'training' && left.p > 15)
+    card.appendChild(el('div', 'bx-say', 'after a hard day, a small protein snack before bed (skyr, an egg, a handful of nuts) helps against the 3–5 am wake.'));
+  if (left.p >= 8 && left.kcal >= 80) {
+    const u = fuelUsage(), pool = [];
+    Object.keys(u).sort((a, b) => u[b].count - u[a].count).slice(0, 24).forEach(k => {
+      const x = u[k], food = x.foodId ? foodFor(x.foodId) : null;
+      if (!food || !x.last) return;
+      pool.push({ food: food, amt: amountOfItem(food, x.last) });
+    });
+    const ideas = FE().suggest(pool, left, 3);
+    if (ideas.length) {
+      card.appendChild(el('div', 'fx-sub', 'from what you usually eat, to close it:'));
+      ideas.forEach(idea => {
+        const b = el('button', 'fx-idea');
+        b.type = 'button';
+        b.appendChild(el('span', 'fx-idea-what', idea.items.map(i => i.amt.label + ' ' + i.food.name.toLowerCase()).join(' + ')));
+        b.appendChild(el('span', 'fx-idea-n', '+' + r0(idea.p) + ' g protein · ' + r0(idea.kcal) + ' kcal · log it'));
+        b.onclick = () => { idea.items.forEach(i => logFood(i.food, i.amt)); saveState(); render(); toast('logged'); };
+        card.appendChild(b);
+      });
+    }
+  }
+  return card;
+}
+
+// write it as you'd say it
+function fuelSayCard() {
+  const card = el('div', 'bx-card'); card.id = 'fx-say-card';
+  card.appendChild(el('div', 'bx-eyebrow', 'write it as you’d say it'));
+  const ta = document.createElement('textarea');
+  ta.id = 'fx-say'; ta.rows = 2; ta.value = sayText;
+  ta.placeholder = 'e.g. 2 æg, 2 skiver rugbrød med leverpostej, 300 g skyr';
+  ta.setAttribute('aria-label', 'what you ate, in your own words');
+  ta.addEventListener('input', e => { sayText = e.target.value; });
+  card.appendChild(ta);
+  const read = el('button', 'btn-secondary', 'read it'); read.id = 'fx-read';
+  read.onclick = () => {
+    sayText = ta.value;
+    if (!sayText.trim()) return;
+    loadFrida(() => { if (sayDraft) { sayDraft = readSay(sayText); quietRerenderFuel(); } });
+    sayDraft = readSay(sayText);
+    render();
+  };
+  card.appendChild(read);
+  if (sayDraft) card.appendChild(sayPreview());
+  return card;
+}
+function readSay(text) {
+  return FE().parseMeal(fuelSources(), text, fuelUsage(), lastAmountOf).map(x => ({
+    text: x.part.text, query: x.part.query, food: x.food, alts: x.alts || [], qty: x.amt ? x.amt.qty : 1, unit: x.amt ? x.amt.unit : 'serving'
+  }));
+}
+function unitChoices(food) {
+  const out = [];
+  if (food.perServing) out.push(['serving', '× ' + food.serving]);
+  if (food.per100 || food.servingG) out.push(['g', 'g']);
+  if (/whey|protein ?pulver|protein ?powder|kasein|casein/i.test(food.name)) out.push(['scoop', 'scoops']);
+  if ((FE().namedPiece || FE().pieceGrams)(food, 'piece')) { out.push(['piece', 'pieces']); if (/brød|bread|ost|cheese|pålæg|skinke|ham|leverpostej/i.test(food.name + ' ' + (food.alt || ''))) out.push(['slice', 'slices']); }
+  if (food.per100) { out.push(['tbsp', 'tbsp']); out.push(['tsp', 'tsp']); }
+  if (!out.length) out.push(['serving', '× serving']);
+  return out;
+}
+function amountControls(food, qty, unit, onChange) {
+  const box = el('div', 'fx-amount');
+  const q = document.createElement('input');
+  q.type = 'number'; q.inputMode = 'decimal'; q.min = '0'; q.step = 'any'; q.value = String(Math.round(qty * 100) / 100); q.className = 'fx-qty';
+  q.setAttribute('aria-label', 'how much');
+  const u = document.createElement('select'); u.className = 'fx-unit'; u.setAttribute('aria-label', 'unit');
+  const ch = unitChoices(food);
+  if (!ch.some(c => c[0] === unit)) {                  // a unit read from his words ("1 glas") stays offered
+    const w = FE().UNIT_WORD && FE().UNIT_WORD[unit];
+    if (w || unit === 'ml') ch.unshift([unit, unit === 'ml' ? 'ml' : w[1]]); else unit = ch[0][0];
+  }
+  ch.forEach(([v, label]) => { const o = document.createElement('option'); o.value = v; o.textContent = label; if (v === unit) o.selected = true; u.appendChild(o); });
+  const fire = () => onChange(Math.max(0, parseFloat(String(q.value).replace(',', '.')) || 0), u.value);
+  q.addEventListener('input', fire); u.addEventListener('change', fire);
+  box.appendChild(q); box.appendChild(u);
+  return box;
+}
+function sayPreview() {
+  const box = el('div', 'fx-preview'); box.id = 'fx-preview';
+  let total = { kcal: 0, p: 0 };
+  sayDraft.forEach((row, i) => {
+    const r = el('div', 'fx-prow');
+    if (!row.food) {
+      r.appendChild(el('div', 'fx-pname', '“' + row.query + '”: not found'));
+      const look = el('button', 'fx-link', 'search for it');
+      look.onclick = () => openLogFoodModal(row.query);
+      r.appendChild(look);
+    } else {
+      const amt = FE().amountOf(row.food, row.qty, row.unit);
+      total.kcal += amt.n.kcal; total.p += amt.n.p;
+      const head = el('div', 'fx-pname');
+      if (row.alts.length) {
+        const sel = document.createElement('select'); sel.className = 'fx-pick'; sel.setAttribute('aria-label', 'which food for ' + row.query);
+        [row.food].concat(row.alts).forEach((f, j) => { const o = document.createElement('option'); o.value = String(j); o.textContent = f.name + ' · ' + SRC_WORD[f.src]; sel.appendChild(o); });
+        sel.onchange = () => { const all = [row.food].concat(row.alts), f = all[+sel.value]; row.alts = all.filter(x => x !== f); row.food = f; const la = lastAmountOf(f); if (la) { row.qty = la.qty; row.unit = la.unit; } render(); };
+        head.appendChild(sel);
+      } else head.appendChild(el('span', '', row.food.name + ' · ' + SRC_WORD[row.food.src]));
+      r.appendChild(head);
+      const line = el('div', 'fx-pline');
+      const n = el('span', 'fx-pn', r0(amt.n.kcal) + ' kcal · ' + r1(amt.n.p) + 'p');
+      line.appendChild(amountControls(row.food, row.qty, row.unit, (q, u) => {
+        row.qty = q; row.unit = u;
+        const a = FE().amountOf(row.food, q, u); n.textContent = r0(a.n.kcal) + ' kcal · ' + r1(a.n.p) + 'p';
+        const t = sayDraft.filter(x => x.food).reduce((s, x) => { const b = FE().amountOf(x.food, x.qty, x.unit); s.kcal += b.n.kcal; s.p += b.n.p; return s; }, { kcal: 0, p: 0 });
+        const tt = document.getElementById('fx-ptotal'); if (tt) tt.textContent = 'together ' + r0(t.kcal) + ' kcal · ' + r0(t.p) + ' g protein';
+      }));
+      line.appendChild(n);
+      r.appendChild(line);
+    }
+    const x = el('button', 'food-row-x', '×'); x.setAttribute('aria-label', 'leave out ' + (row.food ? row.food.name : row.query));
+    x.onclick = () => { sayDraft.splice(i, 1); if (!sayDraft.length) sayDraft = null; render(); };
+    r.appendChild(x);
+    box.appendChild(r);
+  });
+  box.appendChild(el('div', 'fx-ptotal', 'together ' + r0(total.kcal) + ' kcal · ' + r0(total.p) + ' g protein')).id = 'fx-ptotal';
+  const pair = el('div', 'bx-pair');
+  const go = el('button', 'btn-primary', 'log these'); go.id = 'fx-log-these';
+  go.onclick = () => {
+    const ok = sayDraft.filter(x => x.food && x.qty > 0);
+    if (!ok.length) return;
+    const now = Date.now();
+    ok.forEach((x, i) => logFood(x.food, FE().amountOf(x.food, x.qty, x.unit), now + i));
+    saveState(); sayDraft = null; sayText = ''; render(); toast('logged');
+  };
+  const drop = el('button', 'btn-secondary', 'clear'); drop.onclick = () => { sayDraft = null; render(); };
+  pair.appendChild(go); pair.appendChild(drop);
+  box.appendChild(pair);
+  return box;
+}
+
+// usual around now, and the same as yesterday's meal
+function fuelUsualCard(day) {
+  const log = state.fuel.log, now = new Date(), hour = now.getHours() + now.getMinutes() / 60;
+  const usual = FE().usualNow(log, hour, day, 6).map(x => ({ x: x, food: x.foodId ? foodFor(x.foodId) : null })).filter(y => y.food && y.x.last);
+  const meal = FE().mealOf(Date.now());
+  const yd = new Date(); yd.setDate(yd.getDate() - 1);
+  const yItems = FE().mealItems(log, fuelToday(yd), meal), already = FE().mealItems(log, day, meal);
+  if (!usual.length && !(yItems.length && !already.length)) return null;
+  const card = el('div', 'bx-card'); card.id = 'fx-usual';
+  card.appendChild(el('div', 'bx-eyebrow', 'usual around now'));
+  if (usual.length) {
+    const chips = el('div', 'fx-chips');
+    usual.forEach(({ x, food }) => {
+      const amt = amountOfItem(food, x.last);
+      const b = el('button', 'fx-chip', food.name + ' · ' + amt.label); b.type = 'button';
+      b.setAttribute('aria-label', 'log ' + food.name + ', ' + amt.label);
+      b.onclick = () => { logFood(food, amt); saveState(); render(); toast('logged · ' + food.name.toLowerCase()); };
+      chips.appendChild(b);
+    });
+    card.appendChild(chips);
+  }
+  if (yItems.length && !already.length) {
+    const t = dayTotals(yItems);
+    const b = el('button', 'btn-secondary', 'same as yesterday ' + meal + ' · ' + yItems.length + (yItems.length === 1 ? ' thing' : ' things') + ' · ' + r0(t.kcal) + ' kcal');
+    b.id = 'fx-yesterday'; b.style.width = '100%'; b.style.marginTop = '10px';
+    b.onclick = () => {
+      const nowTs = Date.now();
+      yItems.forEach((it, i) => { const c = Object.assign({}, it, { id: uid('log'), ts: nowTs + i }); fuelLogFor(day).push(c); });
+      saveState(); render(); toast('logged, as yesterday');
+    };
+    card.appendChild(b);
+  }
+  return card;
+}
+
 function renderFuelFoods() {
   const wrap = el('div');
-  const tgt = state.fuel.targets;
-
+  const fs = fuelStore(), byDay = fs.byDay !== false && !!FE();
   wrap.appendChild(el('div', 'today-eyebrow', 'fuel · daily targets'));
   const tcard = el('div', 'fuel-summary');
-  tcard.innerHTML = '<div class="target-grid">'
-    + '<div><div class="target-num">' + r0(tgt.calories) + '</div><div class="target-lbl">kcal</div></div>'
-    + '<div><div class="target-num protein">' + r0(tgt.protein) + '</div><div class="target-lbl">protein</div></div>'
-    + '<div><div class="target-num carbs">' + r0(tgt.carbs) + '</div><div class="target-lbl">carbs</div></div>'
-    + '<div><div class="target-num fat">' + r0(tgt.fat) + '</div><div class="target-lbl">fat</div></div>'
-    + '</div>';
+  const grid = (t, title) => '<div class="fx-tset">' + (title ? '<div class="fx-tset-name">' + title + '</div>' : '') + '<div class="target-grid">'
+    + '<div><div class="target-num">' + r0(t.calories) + '</div><div class="target-lbl">kcal</div></div>'
+    + '<div><div class="target-num protein">' + r0(t.protein) + '</div><div class="target-lbl">protein</div></div>'
+    + '<div><div class="target-num carbs">' + r0(t.carbs) + '</div><div class="target-lbl">carbs</div></div>'
+    + '<div><div class="target-num fat">' + r0(t.fat) + '</div><div class="target-lbl">fat</div></div></div></div>';
+  if (byDay) {
+    const D = FE().DEFAULT_TARGETS;
+    tcard.innerHTML = grid(fs.training && fs.training.calories ? fs.training : D.training, 'training day')
+      + grid(fs.rest && fs.rest.calories ? fs.rest : D.rest, 'rest day')
+      + '<div class="fx-sub">from the training plan: a slight deficit on training days, maintenance on rest days, protein first.</div>';
+  } else tcard.innerHTML = grid(state.fuel.targets, '');
   const edit = el('button', 'btn-secondary', 'edit targets');
   edit.style.width = '100%';
   edit.style.marginTop = '12px';
   edit.onclick = openTargetsModal;
   tcard.appendChild(edit);
   wrap.appendChild(tcard);
+
+  if (FE()) {
+    const mh = el('div', 'foods-head');
+    mh.appendChild(el('div', 'section-eyebrow', 'meals'));
+    const nm = el('button', 'btn-secondary', '+ new meal'); nm.id = 'fx-new-meal'; nm.onclick = () => openNewMealModal();
+    mh.appendChild(nm);
+    wrap.appendChild(mh);
+    const meals = fs.meals || [];
+    if (!meals.length) wrap.appendChild(el('div', 'subtle', 'a meal is a few foods you eat together, logged in one tap. keep one from today, or write one.'));
+    meals.forEach(m => {
+      const t = dayTotals(m.items);
+      const r = el('button', 'food-row pick fx-mealrow'); r.type = 'button';
+      r.innerHTML = '<div class="food-row-main"><div class="food-row-name">' + escapeHtml(m.name) + '</div>'
+        + '<div class="food-row-meta">' + m.items.length + (m.items.length === 1 ? ' food' : ' foods') + ' · ' + r0(t.kcal) + ' kcal · ' + r0(t.p) + 'p ' + r0(t.c) + 'c ' + r0(t.f) + 'f</div></div>';
+      r.onclick = () => openMealLogModal(m);
+      wrap.appendChild(r);
+    });
+  }
 
   const head = el('div', 'foods-head');
   head.appendChild(el('div', 'section-eyebrow', 'my foods'));
@@ -4306,11 +4611,16 @@ function renderFuelFoods() {
   foods.forEach(fd => {
     const r = el('div', 'food-row pick');
     r.innerHTML = '<div class="food-row-main"><div class="food-row-name">' + escapeHtml(fd.name) + '</div>'
-      + '<div class="food-row-meta">' + escapeHtml(fd.serving) + ' · ' + r0(fd.kcal) + ' kcal · ' + r0(fd.p) + 'p ' + r0(fd.c) + 'c ' + r0(fd.f) + 'f</div></div>';
+      + '<div class="food-row-meta">' + escapeHtml(fd.serving) + ' · ' + r0(fd.kcal) + ' kcal · ' + r0(fd.p) + 'p ' + r0(fd.c) + 'c ' + r0(fd.f) + 'f'
+      + (fd.src === 'off' ? ' · Open Food Facts' : fd.src === 'frida' ? ' · Frida' : '') + '</div></div>';
     r.onclick = () => openFoodModal(fd);
     wrap.appendChild(r);
   });
+  wrap.appendChild(fuelCredits());
   return wrap;
+}
+function fuelCredits() {
+  return el('div', 'fx-credit', 'Danish foods: Frida 5.5, the National Food Institute, DTU (CC BY 4.0)' + (fridaState === 'missing' ? ', not on this device yet' : '') + '. packaged products: Open Food Facts, open data (ODbL).');
 }
 
 function renderFuelHistory() {
@@ -4319,12 +4629,12 @@ function renderFuelHistory() {
   const keys = Object.keys(state.fuel.log).filter(k => (state.fuel.log[k] || []).length).sort().reverse();
   const today = fuelToday();
   if (!keys.length) { wrap.appendChild(el('div', 'subtle', 'no days logged yet.')); return wrap; }
-  const tgt = state.fuel.targets;
   keys.slice(0, 60).forEach(k => {
     const tot = dayTotals(state.fuel.log[k]);
+    const info = fuelTargetsInfo(k), tgt = info.t;
     const card = el('div', 'today-card');
     card.style.marginBottom = '10px';
-    const label = k === today ? 'today' : formatDate(k);
+    const label = (k === today ? 'today' : formatDate(k)) + (info.kind ? ' · ' + info.kind : '');
     const kpct = tgt.calories > 0 ? Math.min(100, Math.round(tot.kcal / tgt.calories * 100)) : 0;
     card.innerHTML = '<div class="hist-row"><span class="hist-date">' + label + '</span>'
       + '<span class="hist-kcal">' + r0(tot.kcal) + ' <span class="subtle-inline">/ ' + r0(tgt.calories) + ' kcal</span></span></div>'
@@ -4336,7 +4646,246 @@ function renderFuelHistory() {
 }
 
 // ── fuel modals ──
-function openLogFoodModal() {
+function openModalWith(html) {
+  document.getElementById('modal').innerHTML = html;
+  document.getElementById('modal-overlay').classList.add('open');
+  const c = document.getElementById('modal-close-btn'); if (c) c.onclick = closeModal;
+}
+const modalHead = (title) => '<div class="modal-header"><div class="modal-title">' + escapeHtml(title) + '</div><button class="modal-close" id="modal-close-btn" aria-label="close">×</button></div>';
+
+function openLogFoodModal(q0) {
+  if (!FE()) return openLogFoodModalPlain();
+  openModalWith(modalHead('log food')
+    + '<div class="library-search-wrap"><input id="fuel-search" placeholder="search your foods, Danish foods, products…" autocomplete="off"></div>'
+    + '<div class="fx-acts fx-acts-2"><button class="btn-secondary" id="fx-scan">scan a barcode</button><button class="btn-secondary" id="fuel-custom">quick entry</button></div>'
+    + '<div id="fuel-picker" class="fuel-picker"></div><div id="fx-off-zone"></div>');
+  const input = document.getElementById('fuel-search');
+  input.value = q0 || '';
+  const picker = document.getElementById('fuel-picker'), zone = document.getElementById('fx-off-zone');
+  const row = (food) => {
+    const r = el('button', 'food-row pick'); r.type = 'button';
+    r.innerHTML = '<div class="food-row-main"><div class="food-row-name">' + escapeHtml(food.name) + '</div><div class="food-row-meta">' + escapeHtml(foodMeta(food)) + '</div></div>';
+    r.onclick = () => openAmountModal(food);
+    return r;
+  };
+  const fill = () => {
+    const q = input.value.trim();
+    picker.innerHTML = ''; zone.innerHTML = '';
+    let list;
+    if (!q) {
+      const u = fuelUsage();
+      list = (state.fuel.foods || []).map(FE().fromMine).sort((a, b) => ((u[b.id] || {}).count || 0) - ((u[a.id] || {}).count || 0) || a.name.localeCompare(b.name)).slice(0, 40);
+      if (list.length) picker.appendChild(el('div', 'fx-sub', 'yours, the most eaten first'));
+    } else list = FE().search(fuelSources(), q, fuelUsage(), 30);
+    list.forEach(f => picker.appendChild(row(f)));
+    if (q && !list.length) picker.appendChild(el('div', 'subtle', 'nothing here by that name' + (fridaState === 'loading' ? ' yet: the Danish foods are still loading.' : '.')));
+    if (q.length >= 3) {
+      const b = el('button', 'btn-secondary', 'look for “' + q + '” on Open Food Facts'); b.id = 'fx-off-search'; b.style.width = '100%';
+      b.onclick = () => offSearch(q, zone, row);
+      zone.appendChild(b);
+    }
+  };
+  loadFrida(() => { if (document.getElementById('fuel-search') === input) fill(); });
+  fill();
+  input.addEventListener('input', fill);
+  document.getElementById('fuel-custom').onclick = () => openCustomLogModal();
+  document.getElementById('fx-scan').onclick = openScanModal;
+  if (!q0) setTimeout(() => { try { input.focus(); } catch (e) {} }, 50);
+}
+async function offSearch(q, zone, row) {
+  zone.innerHTML = '';
+  const say = el('div', 'subtle', 'asking Open Food Facts…'); zone.appendChild(say);
+  try {
+    const res = await fetch(FE().OFF.searchUrl(q), { headers: { Accept: 'application/json' } });
+    if (!res.ok) throw new Error('http ' + res.status);
+    const data = await res.json();
+    const foods = (data.products || []).map(FE().OFF.toFood).filter(Boolean);
+    foods.forEach(f => { if (!offFound.some(o => o.id === f.id)) offFound.push(f); });
+    say.textContent = foods.length ? 'from Open Food Facts, Danish products first:' : 'nothing there by that name.';
+    foods.forEach(f => zone.appendChild(row(f)));
+  } catch (e) {
+    say.textContent = 'Open Food Facts can’t be reached right now. your foods and the Danish ones still work offline.';
+  }
+}
+
+// how much: the one amount sheet (logging, changing a logged line)
+function openAmountModal(food, opt) {
+  opt = opt || {};
+  const pre = opt.preset || lastAmountOf(food) || (food.perServing ? { qty: 1, unit: 'serving' } : { qty: food.servingG || 100, unit: 'g' });
+  let qty = pre.qty, unit = pre.unit;
+  const keepable = food.src !== 'mine' && !opt.onDone;
+  openModalWith(modalHead(opt.title || food.name)
+    + '<div class="subtle fx-modal-meta">' + escapeHtml(foodMeta(food)) + '</div>'
+    + '<div id="fx-amt-zone"></div><div class="serving-preview" id="serv-preview"></div>'
+    + (keepable ? '<label class="save-toggle"><input type="checkbox" id="fx-keep"' + (food.src === 'off' ? ' checked' : '') + '> keep it in my foods (works offline after)</label>' : '')
+    + '<div class="editor-actions"><button class="btn-primary" id="serv-add">' + (opt.button || 'add to today') + '</button></div>');
+  const preview = document.getElementById('serv-preview');
+  const upd = () => { const a = FE().amountOf(food, qty, unit); preview.innerHTML = '<strong>' + r0(a.n.kcal) + '</strong> kcal · ' + r1(a.n.p) + 'p ' + r1(a.n.c) + 'c ' + r1(a.n.f) + 'f' + (a.n.fib ? ' · ' + r1(a.n.fib) + ' g fibre' : '') + '<div class="fx-sub">' + escapeHtml(a.label) + '</div>'; };
+  document.getElementById('fx-amt-zone').appendChild(amountControls(food, qty, unit, (q, u) => { qty = q; unit = u; upd(); }));
+  const sel = document.querySelector('#fx-amt-zone .fx-unit'); if (sel) unit = sel.value;
+  upd();
+  document.getElementById('serv-add').onclick = () => {
+    if (!(qty > 0)) { toast('how much?'); return; }
+    let f = food;
+    if (keepable && document.getElementById('fx-keep') && document.getElementById('fx-keep').checked) {
+      const same = (state.fuel.foods || []).find(m => (food.barcode && m.barcode === food.barcode) || FE().fold(m.name) === FE().fold(food.name));
+      const m = same || FE().toMine(food, uid('f'));
+      if (!same) state.fuel.foods.push(m);
+      f = FE().fromMine(m);
+    }
+    const amt = FE().amountOf(f, qty, unit);
+    if (opt.onDone) opt.onDone(f, amt);
+    else { logFood(f, amt); toast('logged'); }
+    saveState(); closeModal(); render();
+  };
+}
+function openEditLogModal(it, day) {
+  const food = foodOfItem(it);
+  openAmountModal(food, { title: it.name, preset: { qty: it.q || it.servings || 1, unit: it.u || 'serving' }, button: 'keep', onDone: (f, amt) => {
+    const fresh = FE().logItem(f, amt, it.id, it.ts);
+    const log = fuelLogFor(day), i = log.findIndex(l => l.id === it.id);
+    if (i > -1) log[i] = Object.assign(fresh, { name: it.name });
+    toast('kept');
+  } });
+}
+
+// the camera, the barcode, Open Food Facts
+let scanStream = null;
+function stopScan() { if (scanStream) { scanStream.getTracks().forEach(t => t.stop()); scanStream = null; } }
+function openScanModal() {
+  openModalWith(modalHead('scan a barcode')
+    + '<div class="fx-cam" id="fx-cam" hidden><video id="fx-video" playsinline muted></video></div>'
+    + '<div class="bx-say" id="fx-scan-say">hold the barcode in the frame.</div>'
+    + '<div class="bx-row"><input id="fx-code" inputmode="numeric" autocomplete="off" placeholder="or type the numbers under the bars" aria-label="barcode number"><button class="btn-secondary" id="fx-code-go">look it up</button></div>'
+    + '<div id="fx-scan-zone"></div>');
+  document.getElementById('modal-close-btn').onclick = () => { stopScan(); closeModal(); };
+  const say = document.getElementById('fx-scan-say');
+  document.getElementById('fx-code-go').onclick = () => { const c = String(document.getElementById('fx-code').value).replace(/\D/g, ''); if (c.length >= 6) { stopScan(); lookupBarcode(c); } };
+  const canCam = 'BarcodeDetector' in window && navigator.mediaDevices && navigator.mediaDevices.getUserMedia;
+  if (!canCam) { say.textContent = 'this browser can’t read barcodes with the camera. type the numbers under the bars.'; return; }
+  (async () => {
+    try {
+      const det = new window.BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e'] });
+      scanStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+      const v = document.getElementById('fx-video'); if (!v) { stopScan(); return; }
+      v.srcObject = scanStream; await v.play();
+      document.getElementById('fx-cam').hidden = false;
+      const tick = async () => {
+        if (!scanStream) return;
+        if (!document.getElementById('modal-overlay').classList.contains('open') || !document.getElementById('fx-video')) { stopScan(); return; }
+        try { const codes = await det.detect(v); if (codes && codes.length) { const c = codes[0].rawValue; stopScan(); try { navigator.vibrate && navigator.vibrate(30); } catch (e) {} lookupBarcode(c); return; } } catch (e) {}
+        setTimeout(tick, 250);
+      };
+      tick();
+    } catch (e) {
+      stopScan();
+      say.textContent = 'the camera isn’t open to this page. type the numbers under the bars instead.';
+    }
+  })();
+}
+async function lookupBarcode(code) {
+  const mine = (state.fuel.foods || []).find(f => f.barcode === code);
+  if (mine) { openAmountModal(FE().fromMine(mine)); return; }
+  const say = document.getElementById('fx-scan-say'), zone = document.getElementById('fx-scan-zone');
+  if (say) say.textContent = code + ': asking Open Food Facts…';
+  try {
+    const res = await fetch(FE().OFF.productUrl(code), { headers: { Accept: 'application/json' } });
+    const data = res.ok ? await res.json() : null;
+    const food = data && data.product ? FE().OFF.toFood(Object.assign({ code: code }, data.product)) : null;
+    if (food) { if (!offFound.some(o => o.id === food.id)) offFound.push(food); openAmountModal(food); return; }
+    if (say) say.textContent = code + ' isn’t on Open Food Facts yet, or has no numbers there.';
+    if (zone) { zone.innerHTML = ''; const b = el('button', 'btn-secondary', 'write it in from the label'); b.style.width = '100%'; b.onclick = () => openFoodModal(null, { barcode: code }); zone.appendChild(b); }
+  } catch (e) {
+    if (say) say.textContent = 'Open Food Facts can’t be reached right now. ' + code + ' can be looked up again when you’re online.';
+  }
+}
+
+// meals
+function mealItemOf(it) {
+  const o = {}; ['foodId', 'name', 'servings', 'kcal', 'p', 'c', 'f', 'fib', 'g', 'label', 'src', 'q', 'u'].forEach(k => { if (it[k] !== undefined) o[k] = it[k]; });
+  return o;
+}
+function openKeepMealModal(items, meal) {
+  openModalWith(modalHead('keep as a meal')
+    + '<div class="subtle fx-modal-meta">' + items.map(i => escapeHtml(i.name)).join(', ') + '</div>'
+    + '<div class="editor-field"><div class="editor-label">name</div><input id="fx-meal-name" value="' + escapeHtml('my ' + meal) + '"></div>'
+    + '<div class="editor-actions"><button class="btn-primary" id="fx-meal-keep">keep</button></div>');
+  document.getElementById('fx-meal-keep').onclick = () => {
+    const name = document.getElementById('fx-meal-name').value.trim(); if (!name) { toast('a name?'); return; }
+    changeFuelStore(o => { o.meals = (o.meals || []).concat([{ id: uid('m'), name: name, items: items.map(mealItemOf) }]); });
+    closeModal(); render(); toast('meal kept');
+  };
+}
+function openNewMealModal() {
+  openModalWith(modalHead('a new meal')
+    + '<div class="editor-field"><div class="editor-label">name</div><input id="fx-meal-name" placeholder="e.g. morning skyr bowl"></div>'
+    + '<div class="editor-field"><div class="editor-label">what’s in it</div><textarea id="fx-meal-text" rows="3" placeholder="e.g. 250 g skyr, 40 g havregryn, 1 banan"></textarea></div>'
+    + '<div id="fx-meal-read"></div>'
+    + '<div class="editor-actions"><button class="btn-secondary" id="fx-meal-parse">read it</button><button class="btn-primary" id="fx-meal-keep" disabled>keep</button></div>');
+  loadFrida();
+  let parts = [];
+  document.getElementById('fx-meal-parse').onclick = () => {
+    parts = readSay(document.getElementById('fx-meal-text').value).filter(x => x.food);
+    const z = document.getElementById('fx-meal-read'); z.innerHTML = '';
+    parts.forEach(x => { const a = FE().amountOf(x.food, x.qty, x.unit); z.appendChild(el('div', 'fx-sub', a.label + ' ' + x.food.name + ' · ' + r0(a.n.kcal) + ' kcal · ' + r1(a.n.p) + 'p')); });
+    if (!parts.length) z.appendChild(el('div', 'subtle', 'nothing found in that. a food per line or comma.'));
+    document.getElementById('fx-meal-keep').disabled = !parts.length;
+  };
+  document.getElementById('fx-meal-keep').onclick = () => {
+    const name = document.getElementById('fx-meal-name').value.trim(); if (!name) { toast('a name?'); return; }
+    const items = parts.map(x => mealItemOf(FE().logItem(x.food, FE().amountOf(x.food, x.qty, x.unit), 'x', 0)));
+    changeFuelStore(o => { o.meals = (o.meals || []).concat([{ id: uid('m'), name: name, items: items }]); });
+    closeModal(); render(); toast('meal kept');
+  };
+}
+function openMealsModal() {
+  const meals = fuelStore().meals || [];
+  openModalWith(modalHead('meals') + '<div id="fx-meal-list"></div><div class="editor-actions"><button class="btn-secondary" id="fx-meal-new">+ new meal</button></div>');
+  const z = document.getElementById('fx-meal-list');
+  if (!meals.length) z.appendChild(el('div', 'subtle', 'no meals kept yet. in today’s list, “keep as a meal” keeps a morning or an evening as one; or write one here.'));
+  meals.forEach(m => {
+    const t = dayTotals(m.items);
+    const r = el('button', 'food-row pick'); r.type = 'button';
+    r.innerHTML = '<div class="food-row-main"><div class="food-row-name">' + escapeHtml(m.name) + '</div><div class="food-row-meta">' + r0(t.kcal) + ' kcal · ' + r0(t.p) + 'p ' + r0(t.c) + 'c ' + r0(t.f) + 'f</div></div>';
+    r.onclick = () => openMealLogModal(m);
+    z.appendChild(r);
+  });
+  document.getElementById('fx-meal-new').onclick = openNewMealModal;
+}
+function openMealLogModal(m) {
+  let k = 1;
+  openModalWith(modalHead(m.name)
+    + '<div id="fx-meal-items"></div>'
+    + '<div class="fx-chips" id="fx-meal-k">' + [0.5, 1, 1.5, 2].map(x => '<button class="fx-chip" data-k="' + x + '" aria-pressed="' + (x === 1) + '">' + (x === 0.5 ? '½' : x === 1.5 ? '1½' : x) + ' ×</button>').join('') + '</div>'
+    + '<div class="serving-preview" id="fx-meal-total"></div>'
+    + '<div class="editor-actions"><button class="btn-primary" id="fx-meal-add">add to today</button><button class="btn-danger" id="fx-meal-del">delete</button></div>');
+  const draw = () => {
+    const z = document.getElementById('fx-meal-items'); z.innerHTML = '';
+    m.items.forEach(i => z.appendChild(el('div', 'fx-sub', (k === 1 ? (i.label || '') : (i.label || '') + ' × ' + k) + ' ' + i.name + ' · ' + r0(i.kcal * k) + ' kcal')));
+    const t = dayTotals(m.items);
+    document.getElementById('fx-meal-total').innerHTML = '<strong>' + r0(t.kcal * k) + '</strong> kcal · ' + r1(t.p * k) + 'p ' + r1(t.c * k) + 'c ' + r1(t.f * k) + 'f';
+    document.querySelectorAll('#fx-meal-k .fx-chip').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.k === k)));
+  };
+  document.querySelectorAll('#fx-meal-k .fx-chip').forEach(b => { b.onclick = () => { k = +b.dataset.k; draw(); }; });
+  draw();
+  document.getElementById('fx-meal-add').onclick = () => {
+    const now = Date.now();
+    m.items.forEach((i, n) => {
+      const s = (x) => x === undefined ? undefined : Math.round(x * k * 10) / 10;
+      fuelLogFor(fuelToday()).push(Object.assign({}, i, { id: uid('log'), ts: now + n, servings: s(i.servings), kcal: Math.round(i.kcal * k), p: s(i.p), c: s(i.c), f: s(i.f), fib: s(i.fib), g: i.g ? Math.round(i.g * k) : undefined,
+        q: i.q ? Math.round(i.q * k * 100) / 100 : undefined, label: k === 1 ? i.label : (i.label ? i.label + ' × ' + k : undefined) }));
+    });
+    saveState(); closeModal(); render(); toast('logged · ' + m.name);
+  };
+  document.getElementById('fx-meal-del').onclick = () => {
+    if (!confirm('Delete the meal ' + m.name + '? The foods in it stay.')) return;
+    changeFuelStore(o => { o.meals = (o.meals || []).filter(x => x.id !== m.id); });
+    closeModal(); render(); toast('deleted');
+  };
+}
+
+// the log sheet as it was, for a page without fuel_engine.js
+function openLogFoodModalPlain() {
   const modal = document.getElementById('modal');
   modal.innerHTML = '<div class="modal-header"><div class="modal-title">log food</div>'
     + '<button class="modal-close" id="modal-close-btn">×</button></div>'
@@ -4424,7 +4973,7 @@ function openCustomLogModal() {
   };
 }
 
-function openFoodModal(food) {
+function openFoodModal(food, extra) {
   const modal = document.getElementById('modal');
   const f = food || { name: '', serving: '', kcal: '', p: '', c: '', f: '' };
   modal.innerHTML = '<div class="modal-header"><div class="modal-title">' + (food ? 'edit food' : 'add food') + '</div>'
@@ -4452,7 +5001,7 @@ function openFoodModal(food) {
       f: parseFloat(document.getElementById('fd-f').value) || 0
     };
     if (food) { Object.assign(food, vals); }
-    else { state.fuel.foods.push(Object.assign({ id: uid('f') }, vals)); }
+    else { const nf = Object.assign({ id: uid('f') }, vals); if (extra && extra.barcode) nf.barcode = extra.barcode; state.fuel.foods.push(nf); }
     saveState(); closeModal(); render(); toast(food ? 'kept' : 'added');
   };
   if (food) {
@@ -4466,26 +5015,31 @@ function openFoodModal(food) {
 }
 
 function openTargetsModal() {
+  // 2026-11-16: by day (training / rest, body_fuel_v1) unless switched to one set for every day (body_temple_v1.fuel.targets)
   const modal = document.getElementById('modal');
-  const t = state.fuel.targets;
+  const fs = fuelStore(), smart = !!FE(), byDay = smart && fs.byDay !== false;
+  const D = smart ? FE().DEFAULT_TARGETS : null;
+  const set = (pre, t, title) => (title ? '<div class="fx-tset-name">' + title + '</div>' : '') + '<div class="macro-inputs">'
+    + '<div class="editor-field"><div class="editor-label">kcal</div><input id="' + pre + 'kcal" type="number" inputmode="numeric" value="' + r0(t.calories) + '"></div>'
+    + '<div class="editor-field"><div class="editor-label">protein</div><input id="' + pre + 'p" type="number" inputmode="numeric" value="' + r0(t.protein) + '"></div>'
+    + '<div class="editor-field"><div class="editor-label">carbs</div><input id="' + pre + 'c" type="number" inputmode="numeric" value="' + r0(t.carbs) + '"></div>'
+    + '<div class="editor-field"><div class="editor-label">fat</div><input id="' + pre + 'f" type="number" inputmode="numeric" value="' + r0(t.fat) + '"></div></div>';
+  const read = (pre) => ({ calories: parseFloat(document.getElementById(pre + 'kcal').value) || 0, protein: parseFloat(document.getElementById(pre + 'p').value) || 0,
+    carbs: parseFloat(document.getElementById(pre + 'c').value) || 0, fat: parseFloat(document.getElementById(pre + 'f').value) || 0 });
   modal.innerHTML = '<div class="modal-header"><div class="modal-title">daily targets</div>'
     + '<button class="modal-close" id="modal-close-btn">×</button></div>'
-    + '<div class="macro-inputs">'
-    + '<div class="editor-field"><div class="editor-label">kcal</div><input id="t-kcal" type="number" inputmode="numeric" value="' + r0(t.calories) + '"></div>'
-    + '<div class="editor-field"><div class="editor-label">protein</div><input id="t-p" type="number" inputmode="numeric" value="' + r0(t.protein) + '"></div>'
-    + '<div class="editor-field"><div class="editor-label">carbs</div><input id="t-c" type="number" inputmode="numeric" value="' + r0(t.carbs) + '"></div>'
-    + '<div class="editor-field"><div class="editor-label">fat</div><input id="t-f" type="number" inputmode="numeric" value="' + r0(t.fat) + '"></div></div>'
+    + (byDay ? set('tt-', fs.training && fs.training.calories ? fs.training : D.training, 'training day') + set('tr-', fs.rest && fs.rest.calories ? fs.rest : D.rest, 'rest day')
+             : set('t-', state.fuel.targets, ''))
+    + (smart ? '<label class="save-toggle"><input type="checkbox" id="t-byday"' + (byDay ? ' checked' : '') + '> by day: training days and rest days have their own</label>' : '')
     + '<div class="editor-actions"><button class="btn-primary" id="t-save">keep</button></div>';
   document.getElementById('modal-overlay').classList.add('open');
   document.getElementById('modal-close-btn').onclick = closeModal;
+  const flip = document.getElementById('t-byday');
+  if (flip) flip.onchange = () => { changeFuelStore(o => { o.byDay = flip.checked; }); openTargetsModal(); };
   document.getElementById('t-save').onclick = () => {
-    state.fuel.targets = {
-      calories: parseFloat(document.getElementById('t-kcal').value) || 0,
-      protein: parseFloat(document.getElementById('t-p').value) || 0,
-      carbs: parseFloat(document.getElementById('t-c').value) || 0,
-      fat: parseFloat(document.getElementById('t-f').value) || 0
-    };
-    saveState(); closeModal(); render(); toast('targets kept');
+    if (byDay) changeFuelStore(o => { o.byDay = true; o.training = read('tt-'); o.rest = read('tr-'); });
+    else { state.fuel.targets = read('t-'); saveState(); }
+    closeModal(); render(); toast('targets kept');
   };
 }
 
@@ -4729,6 +5283,43 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;}
 .food-row.pick:active{border-color:var(--fuel);}
 .food-row-main{flex:1;min-width:0;}
 .food-row-name{font-size:15px;margin-bottom:2px;}
+/* 2026-11-16 · Fuel, made smart (fx-) */
+:root{--fibre:#8fae8a;}
+.macro-fill.fibre{background:var(--fibre);} .macro-label.fibre{color:var(--fibre);}
+button.food-row-main{display:block;text-align:left;background:none;border:0;padding:0;margin:0;color:inherit;font:inherit;min-height:44px;cursor:pointer;}
+.fx-day{margin-top:12px;font-size:13px;line-height:1.45;color:var(--ink-dim);}
+.fx-acts{display:flex;gap:8px;margin:0 0 16px;flex-wrap:wrap;}
+.fx-acts>button{flex:1 1 30%;min-height:44px;margin:0;padding:0 10px;}
+.fx-acts-2>button{flex:1 1 45%;}
+.fx-sub{font-size:12px;line-height:1.4;color:var(--muted);margin-top:8px;}
+button.fx-idea{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;min-height:52px;margin-top:8px;padding:8px 12px;text-align:left;border:1px solid var(--leaf2);border-radius:12px;background:none;color:var(--ink);}
+.fx-idea-what{font-size:14px;line-height:1.35;}
+.fx-idea-n{font-size:12px;color:var(--fuel);font-variant-numeric:tabular-nums;}
+#fx-say{width:100%;min-height:64px;margin-top:8px;resize:vertical;font:inherit;font-size:15px;}
+#fx-read{width:100%;margin-top:8px;}
+.fx-preview{margin-top:12px;}
+.fx-prow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;padding:8px 0;border-top:1px solid var(--leaf2);}
+.fx-pname{flex:1 1 calc(100% - 56px);min-width:0;font-size:14px;color:var(--ink);}
+.fx-pname select{width:100%;min-height:44px;}
+.fx-pline{display:flex;align-items:center;gap:8px;flex:1 1 100%;flex-wrap:wrap;}
+.fx-amount{display:flex;gap:6px;}
+.fx-amount .fx-qty{width:84px;min-height:44px;text-align:center;font-variant-numeric:tabular-nums;}
+.fx-amount .fx-unit{min-height:44px;max-width:170px;}
+.fx-pn{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;}
+.fx-ptotal{margin-top:8px;font-size:13px;color:var(--ink);}
+.fx-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+button.fx-chip{min-height:44px;padding:0 12px;border:1px solid var(--leaf2);border-radius:99px;font-size:13px;color:var(--ink);background:none;}
+button.fx-chip[aria-pressed="true"]{border-color:var(--fuel);background:var(--t-faint);}
+.fx-meal{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 0 6px;font-size:13px;color:var(--muted);}
+button.fx-link{min-height:44px;padding:0 4px;font-size:13px;color:var(--muted);background:none;border:0;text-decoration:underline;text-decoration-color:var(--leaf);text-underline-offset:4px;}
+.fx-tset+.fx-tset{margin-top:14px;padding-top:12px;border-top:1px solid var(--border-soft);}
+.fx-tset-name{font-size:13px;color:var(--muted);margin-bottom:6px;}
+button.fx-mealrow{width:100%;text-align:left;color:inherit;font:inherit;}
+.fx-credit{margin:20px 0 8px;font-size:12px;line-height:1.45;color:var(--muted);}
+.fx-modal-meta{margin-bottom:12px;}
+.fx-cam{position:relative;border-radius:14px;overflow:hidden;margin-bottom:10px;background:#000;}
+.fx-cam video{display:block;width:100%;max-height:46vh;object-fit:cover;}
+.fx-cam[hidden]{display:none;}
 .food-row-meta{font-size:12px;color:var(--ink-dim);font-variant-numeric:tabular-nums;}
 .food-row-kcal{font-variant-numeric:tabular-nums;color:var(--fuel);font-size:15px;}
 .food-row-x{color:var(--ink-faint);font-size:20px;padding:0 4px;line-height:1;}
@@ -5327,7 +5918,7 @@ button.bx-sw { flex: none; min-height: 44px; padding: 0 4px; font-size: 13px; co
   }
   function fuelRings() {
     if (!C) return null;
-    var tot = dayTotals(state.fuel.log[fuelToday()] || []), tgt = state.fuel.targets || {};
+    var tot = dayTotals(state.fuel.log[fuelToday()] || []), tgt = (typeof fuelTargets === 'function' ? fuelTargets() : state.fuel.targets) || {};
     var card = el('div', 'bx-card'); card.id = 'bx-rings';
     var two = el('div', 'bx-rings');
     var ring = function (val, target, sub, word) { var d = el('div', 'ts-chart'); d.innerHTML = C.ring(target > 0 ? val / target : 0, { size: 104, label: String(r0(val)), sub: sub, aria: word + ' today: ' + r0(val) + ' of ' + r0(target) }); d.appendChild(document.createTextNode(word)); return d; };
@@ -5341,7 +5932,7 @@ button.bx-sw { flex: none; min-height: 44px; padding: 0 4px; font-size: 13px; co
     for (var i = 13; i >= 0; i--) { var x = new Date(now); x.setDate(now.getDate() - i); var items = state.fuel.log[fuelToday(x)] || []; if (items.length) { any = true; d.push(r0(dayTotals(items).kcal)); } else d.push(null); labels.push(i % 2 ? '' : String(x.getDate())); }
     if (!any) return null;
     var on = !!gopt('fuel').target, card = el('div', 'bx-card'); card.id = 'bx-fuel14';
-    card.appendChild(graph('fuel', 'fourteen days', C.bars(d, { labels: labels, target: on ? state.fuel.targets.calories : undefined, label: 'energy logged, fourteen days' }),
+    card.appendChild(graph('fuel', 'fourteen days', C.bars(d, { labels: labels, target: on ? (typeof fuelTargets === 'function' ? fuelTargets() : state.fuel.targets).calories : undefined, label: 'energy logged, fourteen days' }),
       'energy logged each day. a day with nothing written is a quiet line, not a zero.', sw('fuel', 'target', 'show the target', 'hide the target')));
     return card;
   }
