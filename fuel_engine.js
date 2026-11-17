@@ -71,7 +71,7 @@
     'avocado': 'avocado', 'broccoli': 'broccoli', 'gulerod': 'carrot', 'gulerødder': 'carrot', 'løg': 'onion', 'tomat': 'tomato',
     'agurk': 'cucumber', 'spinat': 'spinach', 'bær': 'berries', 'blåbær': 'blueberries', 'jordbær': 'strawberries', 'honning': 'honey',
     'yoghurt': 'yogurt', 'græsk yoghurt': 'greek yogurt', 'hytteost': 'cottage cheese', 'proteinpulver': 'whey protein', 'valle': 'whey',
-    'kaffe': 'coffee', 'te': 'tea', 'vand': 'water', 'øl': 'beer', 'vin': 'wine', 'rugbrød': 'rye bread', 'franskbrød': 'white bread'
+    'kaffe': 'coffee', 'te': 'tea', 'vand': 'water', 'kakao': 'cocoa', 'varm kakao': 'hot cocoa', 'varm chokolade': 'hot chocolate', 'øl': 'beer', 'vin': 'wine', 'rugbrød': 'rye bread', 'franskbrød': 'white bread'
   };
   var REVERSE = {}; Object.keys(ALIAS).forEach(function (k) { REVERSE[ALIAS[k]] = k; });
   function variants(q) {
@@ -79,7 +79,9 @@
     if (ALIAS[n]) out.push(ALIAS[n]);
     if (REVERSE[n]) out.push(REVERSE[n]);
     n.split(' ').forEach(function (w) { if (ALIAS[w]) out.push(n.replace(w, ALIAS[w])); if (REVERSE[w]) out.push(n.replace(w, REVERSE[w])); });
-    var SYN = { 'svinekød': 'grisekød', 'svin': 'gris', 'svinemørbrad': 'grisekød mørbrad', 'flæsk': 'grisekød', 'kartofler': 'kartoffel', 'kogte': 'kogt', 'stegte': 'stegt', 'rå': 'rå' };
+    var SYN = { 'svinekød': 'grisekød', 'svin': 'gris', 'svinemørbrad': 'grisekød mørbrad', 'flæsk': 'grisekød', 'kartofler': 'kartoffel', 'kogte': 'kogt', 'stegte': 'stegt', 'rå': 'rå',
+      'kakaomælk': 'cacaomælk', 'chokolademælk': 'cacaomælk', 'kakaoskummetmælk': 'cacaoskummetmælk', 'coco': 'cocoa', 'kakaoen': 'kakao',
+      'kakaopulver': 'kakao pulver', 'kaffepulver': 'kaffe pulver', 'kartoffelmospulver': 'kartoffelmos pulver' };
     n.split(' ').forEach(function (w) { if (SYN[w]) out.push(n.replace(w, SYN[w])); });
     // every word at once: "kartofler kogte" → "kartoffel kogt" (Frida's own wording)
     var all = n.split(' ').map(function (w) { return SYN[w] || (w.length > 5 && /er$/.test(w) ? w.slice(0, -1) : w.length > 4 && /e$/.test(w) ? w.slice(0, -1) : w); }).join(' ');
@@ -124,11 +126,17 @@
     [/^(ris|rice)$/, /^Ris, kogte/], [/^pasta$/, /^Pasta, kogt/], [/^(kartofl|kartoffel|kartofler|potato|potatoes)$/, /^Kartoffel, kogt/],
     [/^(laks|salmon)$/, /^Laks, atlantisk, opdræt, rå/], [/^(hakket oksekød|oksekød|minced beef)$/, /^Oksekød, hakket, 8-12% fedt/],
     [/^(smør|butter)$/, /^Smør, saltet/], [/^(ost|cheese)$/, /^Ost, fast, 45\+, alle typer/], [/^(kylling|chicken)$/, /^Kylling, kød og skind, rå/],
-    [/^(skyr)$/, /^Skyr/], [/^(æble|æbler|apple|apples)$/, /^Æble, uspec\., råt/], [/^(banan|bananer|banana)$/, /^Banan, rå/], [/^(havregryn|oats)$/, /^Havregryn, uspec/], [/^(hytteost|cottage cheese)$/, /^Hytteost, 5\+/]
+    [/^(skyr)$/, /^Skyr/], [/^(æble|æbler|apple|apples)$/, /^Æble, uspec\., råt/], [/^(banan|bananer|banana)$/, /^Banan, rå/], [/^(havregryn|oats)$/, /^Havregryn, uspec/], [/^(hytteost|cottage cheese)$/, /^Hytteost, 5\+/],
+    [/^(te|tea|the)$/, /^Te, drikkeklar/], [/^(øl|beer|pilsner|bajer)$/, /^Pilsner, almindelig/], [/^(kaffe|coffee)$/, /^Kaffe, drikkeklar/]
   ];
-  var DISH = /(sandwich|fastfood|burger|pizza|salat|med|i olie|dybfrost|konserves)/i;
+  // the same for a home dish: [what was searched, the dish it most likely means]
+  var USUAL_DISH = [
+    [/^frikadel/, /^Frikadeller$/],
+    [/^(kakao|cacao|cocoa|varm kakao|varm chokolade|hot coco|hot cocoa|hot chocolate|kakao med mælk)$/, /^Varm kakao$/]
+  ];
+  var DISH = /\b(sandwich|fastfood|burger|pizza|salat|med|i olie|dybfrost|konserves)\b/i;
   function usualBonus(food, q) {
-    if (food.src === 'dish') return /^frikadel/.test(fold(q)) && /^Frikadeller$/.test(food.name) ? 45 : 0;
+    if (food.src === 'dish') { var nq = fold(q); return USUAL_DISH.some(function (u) { return u[0].test(nq) && u[1].test(food.name); }) ? 45 : 0; }
     if (food.src !== 'frida') return 0;
     var n = fold(q), b = 0;
     USUAL.forEach(function (u) { if (u[0].test(n) && u[1].test(food.name)) b += 45; });
@@ -168,7 +176,7 @@
     spsk: ['tbsp', 15], tbsp: ['tbsp', 15], spiseske: ['tbsp', 15], spiseskefuld: ['tbsp', 15],
     tsk: ['tsp', 5], tsp: ['tsp', 5], teske: ['tsp', 5],
     scoop: ['scoop', 30], scoops: ['scoop', 30], skovl: ['scoop', 30], måleske: ['scoop', 30],
-    glas: ['glass', 200], glass: ['glass', 200], kop: ['cup', 240], kopper: ['cup', 240], cup: ['cup', 240], cups: ['cup', 240],
+    glas: ['glass', 200], glass: ['glass', 200], flaske: ['bottle', 330], flasker: ['bottle', 330], bottle: ['bottle', 330], bottles: ['bottle', 330], kop: ['cup', 240], kopper: ['cup', 240], cup: ['cup', 240], cups: ['cup', 240],
     håndfuld: ['handful', 28], handful: ['handful', 28], portion: ['portion', null], portioner: ['portion', null], serving: ['portion', null], servings: ['portion', null],
     dåse: ['can', null], can: ['can', null], bæger: ['tub', null], pakke: ['pack', null]
   };
@@ -178,9 +186,25 @@
     [/\b(æg|egg)/, 60], [/rugbrød|rye bread/, 45], [/franskbrød|toast|white bread|bolle|bun/, 30], [/knækbrød|crispbread/, 12],
     [/banan|banana/, 120], [/æble|apple/, 150], [/appelsin|orange/, 160], [/pære|pear/, 170], [/kiwi/, 75], [/mandarin|clementin/, 70],
     [/kartoffel|potato/, 100], [/gulerod|carrot/, 70], [/tomat|tomato/, 100], [/avocado/, 150], [/frikadelle/, 60], [/pålæg|ham|skinke|salami/, 15],
-    [/leverpostej|liver paste|pate/, 25], [/ost|cheese/, 20], [/kyllingebryst|chicken breast/, 150], [/pølse|sausage|hotdog/, 75], [/tortilla|wrap/, 60],
+    [/leverpostej|liver paste|pate/, 25], [/\bost\b|cheese/, 20], [/kyllingebryst|chicken breast/, 150], [/pølse|sausage|hotdog/, 75], [/tortilla|wrap/, 60],
     [/proteinbar|protein bar/, 55], [/riskage|rice cake/, 8]
   ];
+  // Dry things a drink is made from. A cup or a glass of one is the dose for one cup, never a cup of powder
+  // (Lek 2026-11-17: "hot coco is too high": "1 kop kakao" had been 240 g of cocoa powder, 972 kcal).
+  var DRY = /\b(pulver|powder|blade|leaves|formalet|ground)\b|kaffebønne|coffee bean/;
+  var DOSE = [[/protein|valle|whey/, 30], [/kaffe|coffee|^te\b|\btea\b/, 2], [/kakao|cocoa|cacao/, 20], [/./, 25]];
+  var DISH_PIECE = /^(frikadelle|æbleskive|hakkebøf)/;
+  // A drink's own measure when no amount was said: a cup of a hot one, a glass of a cold one
+  function drinkUnit(food) {
+    if (food.src === 'mine' || isDry(food)) return null;
+    var first = fold(String(food.name).split(',')[0]);
+    if (/^(kaffe|te|varm kakao|kakao|the)$/.test(first)) return 'cup';
+    if (/^(pilsner|\S*øl)$/.test(first)) return 'bottle';
+    if (/^(\S*mælk|\S*juice|\S*saft|\S* ?iste|sodavand|cola|\S*øl|\S*vin|vand|\S*kefir|smoothie|cacao\S*)$/.test(first) && !/mælkesnitte|mælkebøtte/.test(first)) return 'glass';
+    return null;
+  }
+  function isDry(food) { return food.src !== 'mine' && DRY.test(fold(food.name + ' ' + (food.alt || ''))); }
+  function doseOf(food) { var n = fold(food.name + ' ' + (food.alt || '')); for (var i = 0; i < DOSE.length; i++) if (DOSE[i][0].test(n)) return DOSE[i][1]; return 25; }
   // grams of one piece when the food's name says it comes in pieces (an egg, a slice of bread), else null
   function namedPiece(food) {
     var n = fold(food.name + ' ' + (food.alt || ''));
@@ -199,10 +223,13 @@
     qty = qty > 0 ? qty : 1;
     unit = unit || (food.src === 'mine' ? 'serving' : (food.per100 && !food.perServing ? 'g' : 'serving'));
     var g = null;
-    if (unit === 'g' || unit === 'ml') g = qty;
-    else if (unit !== 'serving') {
+    if (isDry(food) && (unit === 'cup' || unit === 'glass')) g = qty * doseOf(food);
+    else if (isDry(food) && unit === 'ml') g = Math.round(qty / 200 * doseOf(food) * 10) / 10;
+    else if (unit === 'g' || unit === 'ml') g = qty;
+    else if (unit !== 'serving' && g === null) {
       var u = null; Object.keys(UNITS).forEach(function (k) { if (UNITS[k][0] === unit && UNITS[k][1]) u = UNITS[k][1]; });
       var each = (unit === 'piece' || unit === 'slice' || unit === 'portion' || unit === 'can' || unit === 'tub' || unit === 'pack') ? pieceGrams(food, unit) : u;
+      if (unit === 'bottle' && /\b(\S*vin|wine|champagne|cava|prosecco)\b/.test(fold(food.name + ' ' + (food.alt || '')))) each = 750;   // wine comes in 75 cl
       if (each) g = qty * each;
       else unit = 'serving';
     }
@@ -214,9 +241,10 @@
     return { servings: servings, g: g, qty: qty, unit: unit, n: n, label: labelFor(food, qty, unit, g) };
   }
   var UNIT_WORD = { piece: ['piece', 'pieces'], slice: ['slice', 'slices'], tbsp: ['tbsp', 'tbsp'], tsp: ['tsp', 'tsp'], scoop: ['scoop', 'scoops'],
-    glass: ['glass', 'glasses'], cup: ['cup', 'cups'], handful: ['handful', 'handfuls'], portion: ['portion', 'portions'], can: ['can', 'cans'], tub: ['tub', 'tubs'], pack: ['pack', 'packs'] };
+    glass: ['glass', 'glasses'], bottle: ['bottle', 'bottles'], cup: ['cup', 'cups'], handful: ['handful', 'handfuls'], portion: ['portion', 'portions'], can: ['can', 'cans'], tub: ['tub', 'tubs'], pack: ['pack', 'packs'] };
   function num(x) { var r = Math.round(x * 10) / 10; return (r % 1 === 0 ? r.toFixed(0) : r.toFixed(1)).replace('.5', '½').replace(/^0½$/, '½'); }
   function labelFor(food, qty, unit, g) {
+    if (isDry(food) && (unit === 'cup' || unit === 'glass' || unit === 'ml') && g) return (unit === 'ml' ? Math.round(qty) + ' ml' : num(qty) + ' ' + (qty > 1 ? UNIT_WORD[unit][1] : UNIT_WORD[unit][0])) + ' · made with ' + (Math.round(g * 10) / 10) + ' g';
     if (unit === 'g' || unit === 'ml') return Math.round(qty) + ' ' + unit;
     if (unit === 'serving' && g && /^\s*\d+(?:[.,]\d+)?\s*(g|ml)\s*$/i.test(food.serving || '')) return Math.round(g) + ' ' + (/ml/i.test(food.serving) ? 'ml' : 'g');
     if (unit === 'serving') return num(qty) + ' × ' + (food.serving || 'serving') + (g && !/\d\s*(g|ml)\b/.test(food.serving || '') ? ' · ' + Math.round(g) + ' g' : '');
@@ -361,16 +389,26 @@
   // Each part with its best food and amount. A part with no food found comes back with food: null.
   function parseMeal(sources, text, usageMap, lastAmount) {
     return splitMeal(text).map(function (part) {
-      var hits = search(sources, part.query, usageMap, 4), food = hits[0] || null;
+      var hits = search(sources, part.query, usageMap, 6), food = hits[0] || null;
       if (!food) return { part: part, food: null, alts: [] };
+      if (isDry(food) && (part.unit === 'cup' || part.unit === 'glass' || part.unit === 'ml')) {
+        var wet = hits.filter(function (h) { return !isDry(h); })[0];
+        if (wet) { hits = [wet].concat(hits.filter(function (h) { return h !== wet; })); food = wet; }
+      }
+      else if (!isDry(food) && (part.unit === 'tsp' || part.unit === 'tbsp' || part.unit === 'scoop')) {   // "1 tsk kakao": a spoon is the powder
+        var dry = hits.filter(isDry)[0];
+        if (dry) { hits = [dry].concat(hits.filter(function (h) { return h !== dry; })); food = dry; }
+      }
+      hits = hits.slice(0, 4);
       var qty = part.qty, unit = part.unit;
       if (qty === null && unit === null && lastAmount) {                     // no amount said: what he had last time
         var la = lastAmount(food);
         if (la) { qty = la.qty; unit = la.unit; }
       }
       var named = PIECE.some(function (r) { return r[0].test(fold(part.query)); });   // "½ kyllingebryst": a piece, by what was said
+      if (unit === null && food.src === 'dish' && !(qty > 20)) unit = DISH_PIECE.test(fold(food.name)) ? 'piece' : 'portion';   // "kartoffelmos" is a plate, not a potato
+      if (unit === null && !(qty > 20) && drinkUnit(food)) unit = drinkUnit(food);                   // "te", "appelsinjuice", "en øl": a cup, a glass, a bottle
       if (unit === null && named && !(qty > 20) && !/^1 (large|medium|small|slice|stk|piece)/i.test(food.serving || '')) unit = 'piece';
-      if (unit === null && food.src === 'dish' && !(qty > 20)) unit = 'portion';
       if (unit === null) unit = (food.src === 'mine' && !(qty > 20)) ? 'serving' : (qty > 20 ? 'g' : (pieceGrams(food, 'piece') ? 'piece' : 'serving'));
       return { part: part, food: food, alts: hits.slice(1), amt: amountOf(food, qty === null ? 1 : qty, unit) };
     });
@@ -412,6 +450,6 @@
     norm: norm, fold: fold, nameScore: nameScore, fromMine: fromMine, fromFrida: fromFrida, scale: scale,
     UNITS: UNITS, amountOf: amountOf, pieceGrams: pieceGrams, namedPiece: namedPiece, logItem: logItem, search: search,
     usage: usage, usualNow: usualNow, mealOf: mealOf, mealItems: mealItems, suggest: suggest,
-    splitMeal: splitMeal, parseMeal: parseMeal, readQty: readQty, OFF: OFF, toMine: toMine, UNIT_WORD: UNIT_WORD
+    splitMeal: splitMeal, parseMeal: parseMeal, isDry: isDry, doseOf: doseOf, drinkUnit: drinkUnit, readQty: readQty, OFF: OFF, toMine: toMine, UNIT_WORD: UNIT_WORD
   };
 })(typeof window !== 'undefined' ? window : globalThis);

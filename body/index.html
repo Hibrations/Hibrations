@@ -4375,6 +4375,9 @@ function fuelLogRow(it, day) {
   if (FE()) { main.type = 'button'; main.setAttribute('aria-label', 'change the amount of ' + it.name); main.onclick = () => openEditLogModal(it, day); }
   main.innerHTML = '<div class="food-row-name">' + escapeHtml(it.name) + '</div>'
     + '<div class="food-row-meta">' + escapeHtml(it.label || (FE() ? amountOfItem(foodOfItem(it), it).label : r1(it.servings) + '×')) + ' · ' + r0(it.p) + 'p ' + r0(it.c) + 'c ' + r0(it.f) + 'f</div>';
+  // logged before 2026-11-17, a cup of a powder counted as a cup of powder: say so, and a tap does the sum again
+  if (FE() && FE().isDry && (it.u === 'cup' || it.u === 'glass' || it.u === 'ml') && it.g > 60 && FE().isDry({ name: it.name, alt: '', src: it.src || 'frida' }))
+    main.appendChild(el('div', 'fx-why', 'this counts ' + r0(it.g) + ' g of powder. one cup is made with about ' + FE().doseOf({ name: it.name, alt: '' }) + ' g: tap to count it again.'));
   r.appendChild(main);
   r.appendChild(el('div', 'food-row-kcal', String(r0(it.kcal))));
   const x = el('button', 'food-row-x', '×');
@@ -4557,6 +4560,11 @@ function unitChoices(food) {
   if (/whey|protein ?pulver|protein ?powder|kasein|casein/i.test(food.name)) out.push(['scoop', 'scoops']);
   if ((FE().namedPiece || FE().pieceGrams)(food, 'piece')) { out.push(['piece', 'pieces']); if (/brød|bread|ost|cheese|pålæg|skinke|ham|leverpostej/i.test(food.name + ' ' + (food.alt || ''))) out.push(['slice', 'slices']); }
   if (food.per100) { out.push(['tbsp', 'tbsp']); out.push(['tsp', 'tsp']); }
+  // a drink by its own measure; a dry thing a drink is made from, by the cup it makes (2026-11-17)
+  const du = FE().drinkUnit ? FE().drinkUnit(food) : null;
+  if (du || (FE().isDry && FE().isDry(food) && !/whey|protein/i.test(food.name))) { out.push(['cup', 'cups']); out.push(['glass', 'glasses']); }
+  if (du === 'bottle' || (du && /vin\b|wine/i.test(food.name))) out.push(['bottle', 'bottles']);
+  if (food.src === 'dish' && !out.some(c => c[0] === 'portion')) out.push(['portion', 'portions']);
   if (!out.length) out.push(['serving', '× serving']);
   return out;
 }
