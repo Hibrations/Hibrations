@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0e1a1f"><title>Pulse</title>
+<link rel="manifest" href="manifest.json"><link rel="icon" href="icon.svg"><link rel="apple-touch-icon" href="icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style>
+:root{--bg:#0e1a1f;--card:#16272e;--ink:#e8f4f2;--mute:#8fa9a8;--line:#2a4a50;--acc:#3fd0c0;--onacc:#04201d;--acc2:#f2b66d;--onacc2:#2b1a00;--orb1:#7ef0e2}
+:root[data-theme=light]{--bg:#f1f6f5;--card:#fff;--ink:#12262b;--mute:#587076;--line:#cfdcda;--acc:#0c8377;--onacc:#fff;--acc2:#b45f06;--onacc2:#fff;--orb1:#5fd6c8}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{font-size:16px}html.big{font-size:19px}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:1rem/1.4 system-ui,sans-serif;height:100%}
+body{display:flex;flex-direction:column;padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom)}
+button,input,select{font:inherit}
+nav{display:flex;gap:5px;padding:12px 0}
+nav button{flex:1;padding:11px 0;border:0;border-radius:12px;background:var(--card);color:var(--mute);font-size:.9rem;font-weight:600}
+nav button.on{background:var(--acc);color:var(--onacc)}
+main{flex:1;overflow-y:auto;padding-bottom:16px}
+section{display:none}section.on{display:block}
+.stage{display:flex;flex-direction:column;align-items:center;margin:8px 0 10px}
+.ring{width:min(66vw,280px,34vh);height:min(66vw,280px,34vh);border-radius:50%;border:2px solid var(--line);display:flex;align-items:center;justify-content:center}
+.orb{width:100%;height:100%;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--orb1),var(--acc));transform:scale(.3);box-shadow:0 0 50px #3fd0c044}
+.label{font-size:1.7rem;font-weight:700;margin-top:12px;min-height:2.3rem}
+.sub{color:var(--mute);min-height:1.4rem;font-variant-numeric:tabular-nums}
+.bar{width:100%;height:5px;border-radius:3px;background:var(--line);margin-top:10px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--acc)}
+.left{color:var(--mute);font-size:.8rem;margin-top:4px;min-height:1.1rem;font-variant-numeric:tabular-nums}
+.btns{display:flex;gap:8px}
+.go{flex:1;width:100%;padding:15px;border:0;border-radius:14px;background:var(--acc);color:var(--onacc);font-size:1.1rem;font-weight:700}
+.go.stop{background:var(--acc2);color:var(--onacc2)}
+.pause{display:none;flex:0 0 34%;padding:15px;border:1px solid var(--line);border-radius:14px;background:none;color:var(--ink);font-size:1.05rem;font-weight:600}
+.running .pause{display:block}
+.card{background:var(--card);border-radius:16px;padding:14px;margin:10px 0}
+.card h3{margin:0 0 8px;font-size:.95rem;color:var(--mute);font-weight:600}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0}
+.row label{color:var(--mute)}
+input[type=number],input[type=text],select{padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:1rem}
+input[type=number]{width:84px;text-align:center}
+input[type=text]{flex:1;min-width:0}
+input[type=range]{flex:1;accent-color:var(--acc);min-width:0}
+input[type=checkbox]{accent-color:var(--acc);width:1.1rem;height:1.1rem;vertical-align:-3px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button,.sm{padding:8px 12px;border-radius:20px;border:1px solid var(--line);background:none;color:var(--ink);font-size:.88rem}
+.chips .mine{border-color:var(--acc)}
+.chips .x{margin-left:8px;color:var(--mute)}
+.tog{display:flex;gap:14px;color:var(--mute);font-size:.9rem;flex-wrap:wrap;margin-top:6px}
+.hzrow{display:flex;align-items:baseline;justify-content:center;gap:8px;font-size:1.4rem;font-weight:700}
+#hz{width:9rem;font-size:2.6rem;font-weight:700;border:0;background:none;text-align:right;padding:0}
+.note{color:var(--mute);font-size:.85rem}
+.stats{display:flex;gap:8px}.stats div{flex:1;background:var(--bg);border-radius:12px;padding:10px;text-align:center}
+.stats b{display:block;font-size:1.6rem}.stats span{color:var(--mute);font-size:.8rem}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:10px}
+.grid i{aspect-ratio:1;border-radius:6px;background:var(--bg);border:1px solid var(--line);font-style:normal;font-size:.65rem;color:var(--mute);display:flex;align-items:center;justify-content:center}
+.grid i.hit{background:var(--acc);color:var(--onacc);border-color:var(--acc)}
+.grid i.today{outline:2px solid var(--acc2)}
+.hist div{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-top:1px solid var(--line);font-size:.9rem}
+.hist span{color:var(--mute)}
+#dim{position:fixed;inset:0;background:#000;color:#3a4a4a;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:9;font-size:1.3rem}
+#dim.on{display:flex}#dim small{margin-top:10px;font-size:.8rem;color:#263232}
+.hide{display:none!important}
+</style></head><body>
+<nav><button data-t="kegel" class="on">Kegel</button><button data-t="breath">Breath</button><button data-t="tone">Tone</button><button data-t="flow">Flow</button><button data-t="log">Log</button></nav>
+<main>
+<section id="kegel" class="on"></section>
+<section id="breath"></section>
+
+<section id="tone">
+ <div class="card">
+  <div class="hzrow"><input type="number" id="hz" data-tk="f" min="20" max="2000" step="1" value="432" inputmode="decimal" aria-label="Frequency in hertz"><span>Hz</span></div>
+  <div class="row"><input type="range" id="freq" min="20" max="2000" step="1" value="432" aria-label="Frequency slider"></div>
+  <div class="chips" id="fpre"></div>
+  <div class="left" id="tleft" style="text-align:center"></div>
+ </div>
+ <div class="btns"><button class="go" id="tgo">Start tone</button></div>
+ <div class="card"><h3>Sound</h3>
+  <div class="row"><label>Wave</label><select data-tk="w"><option>sine</option><option>triangle</option><option>square</option><option>sawtooth</option></select></div>
+  <div class="row"><label>Tone volume</label><input type="range" data-tk="v" min="0" max="1" step=".01" value=".25"></div>
+  <div class="row"><label>Noise</label><select data-tk="noise"><option value="none">none</option><option>white</option><option>pink</option><option>brown</option></select></div>
+  <div class="row"><label>Noise volume</label><input type="range" data-tk="nv" min="0" max="1" step=".01" value=".15"></div>
+ </div>
+ <div class="card"><h3>Movement</h3>
+  <div class="row"><label>Mode</label><select data-tk="mode"><option value="steady">Steady</option><option value="sweep">Sweep</option><option value="seq">Sequence</option></select></div>
+  <div class="row m-sweep"><label>Sweep to (Hz)</label><input type="number" data-tk="f2" min="20" max="2000" value="528"></div>
+  <div class="row m-sweep"><label>Sweep time (s)</label><input type="number" data-tk="sw" min="1" max="3600" value="30"></div>
+  <div class="row m-seq"><label>Tones</label><input type="text" data-tk="seq" value="396, 528, 639" inputmode="decimal"></div>
+  <div class="row m-seq"><label>Each tone (s)</label><input type="number" data-tk="step" min="1" max="3600" value="60"></div>
+  <div class="note m-sweep">Glides there and back, repeating.</div>
+ </div>
+ <div class="card"><h3>Beats</h3>
+  <div class="row"><label>Binaural beat (Hz)</label><input type="number" data-tk="beat" value="0" min="0" max="40" step=".5"></div>
+  <div class="row"><label>Pulse (Hz)</label><input type="number" data-tk="pulse" value="0" min="0" max="40" step=".5"></div>
+  <div class="note">Binaural needs headphones: each ear gets a slightly different pitch. Pulse switches the tone on and off and works on speakers.</div>
+ </div>
+ <div class="card"><h3>Timer</h3>
+  <div class="row"><label>Auto-stop (min, 0 = off)</label><input type="number" data-tk="stop" value="0" min="0" max="600"></div>
+  <div class="row"><label><input type="checkbox" data-tk="fade" checked> Fade out over the last minute</label></div>
+ </div>
+</section>
+
+<section id="flow">
+ <div id="flowstage"></div>
+ <div class="card"><h3>One run, in this order</h3>
+  <div class="row"><label><input type="checkbox" data-fk="b" checked> Breath</label><span class="note" id="fb"></span></div>
+  <div class="row"><label><input type="checkbox" data-fk="k" checked> Kegel</label><span class="note" id="fk"></span></div>
+  <div class="row"><label><input type="checkbox" data-fk="t" checked> Tone</label><span><input type="number" data-fk="tm" min="1" max="120" value="3"> min</span></div>
+  <div class="note">Each part uses the settings from its own tab. <span id="ftotal"></span></div>
+ </div>
+</section>
+
+<section id="log">
+ <div class="card">
+  <div class="stats"><div><b id="streak">0</b><span>day streak</span></div><div><b id="wkmin">0</b><span>min this week</span></div><div><b id="nsess">0</b><span>sessions</span></div></div>
+  <div class="grid" id="cal"></div>
+ </div>
+ <div class="card"><h3>Recent</h3><div class="hist" id="hist"></div>
+  <div class="chips" style="margin-top:10px"><button id="exp">Export</button><button id="imp">Import</button><button id="clr">Clear history</button></div>
+  <input type="file" id="impf" accept="application/json,.json" class="hide"><div class="note" id="logmsg"></div>
+ </div>
+ <div class="card"><h3>Settings</h3>
+  <div class="row"><label>Theme</label><select id="theme"><option value="auto">Auto</option><option value="dark">Dark</option><option value="light">Light</option></select></div>
+  <div class="row"><label><input type="checkbox" id="bigtxt"> Larger text</label></div>
+  <div class="row"><label><input type="checkbox" id="reduce"> Reduce motion</label></div>
+  <div class="row"><label><input type="checkbox" id="bg"> Background audio (experimental)</label></div>
+  <div class="note">Background audio tries to keep sound playing with the screen off. Reopen the app after changing it.</div>
+ </div>
+ <div class="note" style="padding:4px 2px">Pulse is a timing aid, not medical advice. Stop if anything hurts, and ask a clinician about pain or symptoms.</div>
+</section>
+</main>
+<div id="dim"><div id="dimlab"></div><small>tap to wake</small></div>
+<audio id="bgout" class="hide"></audio>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+/* ---------- state ---------- */
+const KEY='pulse_v2';
+let S={cues:{snd:true,voice:false,vib:true,dim:false,drone:false},kegel:{},breath:{},tone:{},flow:{},routines:{kegel:[],breath:[]},history:[],plan:null,theme:'auto',big:false,reduce:null,bg:false};
+try{Object.assign(S,JSON.parse(localStorage.getItem(KEY))||{})}catch(e){}
+if(S.reduce==null)S.reduce=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
+const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const mmss=s=>{s=Math.max(0,Math.round(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+const num=(v,d,min=0)=>{v=parseFloat(v);return isFinite(v)?Math.max(min,v):d};
+
+/* ---------- audio ---------- */
+let AC,OUT,wake;
+function ctx(){
+ if(!AC){AC=new (window.AudioContext||window.webkitAudioContext)();OUT=AC.createGain();
+  if(S.bg&&AC.createMediaStreamDestination){try{const d=AC.createMediaStreamDestination();OUT.connect(d);const a=$('#bgout');a.srcObject=d.stream;a.play().catch(()=>OUT.connect(AC.destination))}catch(e){OUT.connect(AC.destination)}}
+  else OUT.connect(AC.destination)}
+ if(AC.state==='suspended')AC.resume();return AC}
+async function lock(on){try{if(on){if(navigator.wakeLock&&!wake)wake=await navigator.wakeLock.request('screen')}else if(wake){await wake.release();wake=null}}catch(e){wake=null}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&(activeRuns>0||Tone.on)){wake=null;lock(true)}});
+let activeRuns=0;
+function beep(f,d=.14,v=.22){const a=ctx(),o=a.createOscillator(),g=a.createGain(),t=a.currentTime;o.frequency.value=f;
+ g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+d);
+ o.connect(g).connect(OUT);o.start();o.stop(t+d+.02)}
+function say(t){if(!('speechSynthesis' in window))return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.rate=1;speechSynthesis.speak(u)}catch(e){}}
+const buzz=p=>{try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}};
+
+/* ---------- theme / a11y ---------- */
+function applyLook(){const t=S.theme==='auto'?(window.matchMedia&&matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'):S.theme;
+ document.documentElement.dataset.theme=t;document.documentElement.classList.toggle('big',!!S.big);
+ document.querySelector('meta[name=theme-color]').content=t==='light'?'#f1f6f5':'#0e1a1f'}
+applyLook();
+
+/* ---------- tabs ---------- */
+$$('nav button').forEach(b=>b.onclick=()=>{$$('nav button,main>section').forEach(x=>x.classList.remove('on'));
+ b.classList.add('on');$('#'+b.dataset.t).classList.add('on');if(b.dataset.t==='log')renderLog();if(b.dataset.t==='flow')flowInfo();syncCues()});
+
+/* ---------- cue toggles (shared) ---------- */
+const cueHTML=d=>`<div class="tog"><label><input type="checkbox" data-c="snd"> Beeps</label><label><input type="checkbox" data-c="voice"> Voice</label><label><input type="checkbox" data-c="vib"> Vibrate</label><label><input type="checkbox" data-c="dim"> Dark screen</label>${d?'<label><input type="checkbox" data-c="drone"> Breath drone</label>':''}</div>`;
+function syncCues(){$$('input[data-c]').forEach(i=>{i.checked=!!S.cues[i.dataset.c];i.onchange=()=>{S.cues[i.dataset.c]=i.checked;persist();syncCues()}})}
+$('#dim').onclick=()=>$('#dim').classList.remove('on');
+
+/* ---------- history ---------- */
+function logSession(e){S.history.push(e);if(S.history.length>2000)S.history.splice(0,S.history.length-2000);persist()}
+const dayKey=t=>{const d=new Date(t);return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()};
+
+/* ---------- stage engine ---------- */
+function makeStage(host,kind){
+ host.innerHTML=`<div class="stage"><div class="ring"><div class="orb"></div></div><div class="label">Ready</div><div class="sub"></div>
+ <div class="bar"><i></i></div><div class="left"></div></div><div class="btns"><button class="pause">Pause</button><button class="go">Start</button></div>`;
+ const orb=host.querySelector('.orb'),lab=host.querySelector('.label'),sub=host.querySelector('.sub'),bar=host.querySelector('.bar i'),
+  left=host.querySelector('.left'),go=host.querySelector('.go'),pz=host.querySelector('.pause'),btns=host.querySelector('.btns');
+ let run=null,drone=null;
+ const setOrb=sc=>{if(S.reduce){orb.style.transform='scale(.85)';orb.style.opacity=(.2+.8*(sc-.3)/.7).toFixed(3)}else{orb.style.transform='scale('+sc.toFixed(4)+')';orb.style.opacity=1}};
+ function droneOff(){if(drone){const d=drone;drone=null;d.g.gain.setTargetAtTime(0,AC.currentTime,.1);setTimeout(()=>{try{d.o.stop()}catch(e){}},500)}}
+ function finish(done){const r=run;if(!r)return;run=null;activeRuns--;if(r.cur&&r.cur.exit)r.cur.exit();droneOff();lock(false);
+  try{speechSynthesis.cancel()}catch(e){}$('#dim').classList.remove('on');
+  const el=r.elapsed();if(done||el>=60)logSession({t:Date.now(),k:kind,n:r.name,s:Math.round(el),done:!!done});
+  btns.classList.remove('running');go.textContent='Start';go.classList.remove('stop');pz.textContent='Pause';setOrb(.3);bar.style.width=done?'100%':'0';
+  lab.textContent=done?'Done ✓':'Ready';sub.textContent=done?mmss(el)+' complete':'';left.textContent='';
+  if(done){if(S.cues.snd){beep(880,.18);setTimeout(()=>beep(1175,.35),200)}if(S.cues.voice)say('Done');if(S.cues.vib)buzz([80,60,80])}}
+ function start(seq,name){
+  if(!seq.length)return;ctx();lock(true);activeRuns++;
+  const total=seq.reduce((s,p)=>s+p.s,0),began=performance.now();let i=-1,t0=began,pausedAt=0,pausedTotal=0;
+  const r=run={name,cur:null,elapsed:()=>((pausedAt||performance.now())-began-pausedTotal)/1000};
+  btns.classList.add('running');go.textContent='Stop';go.classList.add('stop');
+  if(S.cues.dim)$('#dim').classList.add('on');
+  if(S.cues.drone&&seq.some(p=>p.dr)){const o=AC.createOscillator(),g=AC.createGain();o.type='triangle';o.frequency.value=174;g.gain.value=0;o.connect(g).connect(OUT);o.start();drone={o,g}}
+  function enter(quiet){if(r.cur&&r.cur.exit)r.cur.exit();i++;
+   if(i>=seq.length){r.cur=null;finish(true);return false}
+   const p=r.cur=seq[i];lab.textContent=p.n;$('#dimlab').textContent=p.n;if(p.enter)p.enter();
+   if(!quiet){if(S.cues.snd&&p.f)beep(p.f);if(S.cues.voice&&p.say&&p.s>=1.5)say(p.say);if(S.cues.vib&&p.v)buzz(p.v)}
+   return true}
+  enter();
+  r.pause=()=>{if(pausedAt){const d=performance.now()-pausedAt;t0+=d;pausedTotal+=d;pausedAt=0;pz.textContent='Pause'}
+   else{pausedAt=performance.now();pz.textContent='Resume';if(drone)drone.g.gain.setTargetAtTime(0,AC.currentTime,.05)}};
+  (function tick(){if(run!==r)return;requestAnimationFrame(tick);if(pausedAt)return;
+   const now=performance.now();let p=seq[i];
+   while(now-t0>=p.s*1000){t0+=p.s*1000;if(!enter(now-t0>600))return;p=seq[i]}
+   const k=Math.min(1,(now-t0)/(p.s*1000)),e=p.lin?k:(k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2),sc=p.from+(p.to-p.from)*e;
+   setOrb(sc);const rem=Math.ceil(p.s-(now-t0)/1000);sub.textContent=(p.sub?p.sub+' · ':'')+(p.s>=1?rem+'s':'');
+   const el=r.elapsed();bar.style.width=(100*el/total).toFixed(2)+'%';left.textContent=mmss(total-el)+' left';
+   if(drone){const t=AC.currentTime;drone.o.frequency.setTargetAtTime(174*(1+.5*(sc-.3)/.7),t,.05);drone.g.gain.setTargetAtTime(p.dr?.05:0,t,.2)}
+  })();
+ }
+ pz.onclick=()=>run&&run.pause();
+ return{start,stop:()=>finish(false),get running(){return !!run},go};
+}
+
+/* ---------- settings panel (kegel / breath) ---------- */
+function panel(id,{fields,presets,build,extra}){
+ const root=$('#'+id),vals=S[id];fields.forEach(f=>{if(vals[f.k]==null)vals[f.k]=f.d});
+ root.innerHTML=`<div class="st"></div><div class="card"><h3>Routines</h3><div class="chips pre"></div>
+ <div class="row"><input type="text" class="rname" placeholder="Name your own routine" maxlength="24"><button class="sm rsave">Save</button></div></div>
+ ${extra||''}
+ <div class="card">${fields.map(f=>`<div class="row"><label>${f.l}</label><input type="number" inputmode="decimal" data-k="${f.k}" min="${f.min??0}" max="${f.max??600}" step="${f.step??1}"></div>`).join('')}${cueHTML(id==='breath')}</div>`;
+ const stage=makeStage(root.querySelector('.st'),id);let name='Custom';
+ const ins=[...root.querySelectorAll('input[data-k]')];
+ const fill=()=>ins.forEach(i=>i.value=vals[i.dataset.k]);fill();
+ ins.forEach(i=>i.onchange=()=>{const f=fields.find(f=>f.k===i.dataset.k);vals[f.k]=num(i.value,f.d,f.min??0);i.value=vals[f.k];name='Custom';persist()});
+ const apply=(n,p)=>{Object.assign(vals,p);name=n;fill();persist()};
+ function chips(){const c=root.querySelector('.pre');c.innerHTML='';
+  Object.entries(presets).forEach(([n,p])=>{const b=document.createElement('button');b.textContent=n;b.onclick=()=>apply(n,p);c.appendChild(b)});
+  S.routines[id].forEach((r,ix)=>{const b=document.createElement('button');b.className='mine';b.textContent=r.name;b.onclick=()=>apply(r.name,r.vals);
+   const x=document.createElement('span');x.className='x';x.textContent='✕';x.setAttribute('aria-label','Delete '+r.name);
+   x.onclick=e=>{e.stopPropagation();S.routines[id].splice(ix,1);persist();chips()};b.appendChild(x);c.appendChild(b)})}
+ chips();
+ root.querySelector('.rsave').onclick=()=>{const i=root.querySelector('.rname'),n=i.value.trim();if(!n)return i.focus();
+  S.routines[id]=S.routines[id].filter(r=>r.name!==n);S.routines[id].push({name:n,vals:{...vals}});name=n;i.value='';persist();chips()};
+ stage.go.onclick=()=>stage.running?stage.stop():stage.start(build(vals),name);
+ return{vals,build,apply,root,total:()=>build(vals).reduce((s,p)=>s+p.s,0)};
+}
+
+/* ---------- KEGEL ---------- */
+const PLAN=[[1,3,3,8,2],[1,4,4,10,2],[2,5,5,10,3],[2,6,6,10,3],[2,7,7,10,3],[2,8,8,10,3],[2,9,9,10,3],[2,10,10,10,3]];
+function kegelBuild(v,noPrep){const s=[];if(!noPrep&&v.prep>0)s.push({n:'Get ready',s:v.prep,from:.3,to:.3});
+ const sets=Math.max(1,Math.round(v.sets)),reps=Math.max(1,Math.round(v.reps)),fl=Math.round(v.fl||0);
+ for(let st=1;st<=sets;st++){
+  for(let r=1;r<=reps;r++){const sub=`Set ${st}/${sets} · Rep ${r}/${reps}`;
+   if(v.sq>0)s.push({n:'Squeeze ↑',s:v.sq,from:.3,to:1,f:660,v:60,say:'Squeeze',sub});
+   if(v.hold>0)s.push({n:'Hold',s:v.hold,from:1,to:1,f:v.sq>0?0:660,say:v.sq>=1.5?'Hold':'Squeeze and hold',sub});
+   if(v.rel>0)s.push({n:'Release ↓',s:v.rel,from:1,to:.3,f:440,v:30,say:'Release',sub})}
+  for(let q=1;q<=fl;q++){const sub=`Set ${st}/${sets} · Flick ${q}/${fl}`;
+   s.push({n:'Flick',s:.5,from:.3,to:1,lin:1,f:880,v:25,sub});s.push({n:'Flick',s:.5,from:1,to:.3,lin:1,sub})}
+  if(st<sets&&v.rest>0)s.push({n:'Rest',s:v.rest,from:.3,to:.3,f:330,v:[200],say:'Rest',sub:`Set ${st} of ${sets} done`})}
+ return s}
+const K=panel('kegel',{
+ fields:[{k:'sq',l:'Squeeze (s)',d:2,step:.5},{k:'hold',l:'Hold (s)',d:5,step:.5},{k:'rel',l:'Release (s)',d:5,step:.5},{k:'reps',l:'Reps per set',d:10,min:1},{k:'sets',l:'Sets',d:3,min:1},{k:'fl',l:'Quick flicks after each set',d:0,max:50},{k:'rest',l:'Rest between sets (s)',d:30},{k:'prep',l:'Get ready (s)',d:5}],
+ presets:{'Beginner':{sq:1,hold:3,rel:3,reps:8,sets:2,fl:0,rest:30},'Standard':{sq:2,hold:5,rel:5,reps:10,sets:3,fl:0,rest:30},'Endurance':{sq:2,hold:10,rel:10,reps:8,sets:3,fl:0,rest:45},'Quick flicks':{sq:.5,hold:0,rel:.5,reps:20,sets:3,fl:0,rest:20},'Mix':{sq:2,hold:6,rel:6,reps:6,sets:3,fl:10,rest:30}},
+ build:kegelBuild,
+ extra:'<div class="card"><h3>8-week plan</h3><div class="note" id="planinfo"></div><div class="chips" style="margin-top:8px" id="planbtns"></div></div>'});
+function renderPlan(){const info=$('#planinfo'),bt=$('#planbtns');bt.innerHTML='';
+ const mk=(t,fn)=>{const b=document.createElement('button');b.textContent=t;b.onclick=fn;bt.appendChild(b)};
+ if(!S.plan){info.textContent='Holds grow from 3 s to 10 s over eight weeks. Each week loads as a ready-made routine.';
+  mk('Start the plan',()=>{S.plan={start:Date.now()};persist();renderPlan()});return}
+ const wk=Math.floor((Date.now()-S.plan.start)/6048e5)+1,w=Math.min(8,wk),p=PLAN[w-1];
+ info.textContent=(wk>8?'Plan finished. Week 8 is your maintenance routine: ':`Week ${w} of 8: `)+`hold ${p[1]} s, ${p[3]} reps, ${p[4]} sets.`;
+ mk(`Load week ${w}`,()=>K.apply('Plan week '+w,{sq:p[0],hold:p[1],rel:p[2],reps:p[3],sets:p[4],fl:0,rest:30}));
+ mk('Reset plan',()=>{S.plan=null;persist();renderPlan()})}
+renderPlan();
+
+/* ---------- BREATH ---------- */
+function breathBuild(v,noPrep){const s=[];if(!noPrep&&v.prep>0)s.push({n:'Get ready',s:v.prep,from:.3,to:.3});
+ const cyc=Math.max(1,Math.round(v.cyc)),st=Math.max(100,v.st||100)/100;
+ for(let c=1;c<=cyc;c++){const m=cyc>1?1+(st-1)*(c-1)/(cyc-1):1,sub=`Cycle ${c}/${cyc}`;
+  if(v.in>0)s.push({n:'Inhale',s:v.in*m,from:.3,to:1,f:528,v:40,say:'Breathe in',sub,dr:1});
+  if(v.h1>0)s.push({n:'Hold',s:v.h1*m,from:1,to:1,f:396,say:'Hold',sub,dr:1});
+  if(v.out>0)s.push({n:'Exhale',s:v.out*m,from:1,to:.3,f:396,v:[40,80,40],say:'Breathe out',sub,dr:1});
+  if(v.h2>0)s.push({n:'Hold',s:v.h2*m,from:.3,to:.3,f:330,say:'Hold',sub,dr:1})}
+ return s}
+const B=panel('breath',{
+ fields:[{k:'in',l:'Inhale (s)',d:4,step:.5},{k:'h1',l:'Hold full (s)',d:4,step:.5},{k:'out',l:'Exhale (s)',d:4,step:.5},{k:'h2',l:'Hold empty (s)',d:4,step:.5},{k:'cyc',l:'Cycles',d:8,min:1},{k:'st',l:'Slow down by the end (%)',d:100,min:100,max:300,step:5},{k:'prep',l:'Get ready (s)',d:3}],
+ presets:{'Box 4-4-4-4':{in:4,h1:4,out:4,h2:4,cyc:8,st:100},'4-7-8':{in:4,h1:7,out:8,h2:0,cyc:6,st:100},'Coherent 5.5':{in:5.5,h1:0,out:5.5,h2:0,cyc:20,st:100},'Calm 4-6':{in:4,h1:0,out:6,h2:0,cyc:15,st:100},'Wind down':{in:4,h1:0,out:6,h2:0,cyc:16,st:150}},
+ build:breathBuild});
+
+/* ---------- TONE ---------- */
+const Tone=(()=>{
+ const T=S.tone,D={f:432,w:'sine',v:.25,noise:'none',nv:.15,mode:'steady',f2:528,sw:30,seq:'396, 528, 639',step:60,beat:0,pulse:0,stop:0,fade:true};
+ for(const k in D)if(T[k]==null)T[k]=D[k];
+ const els=$$('[data-tk]'),fr=$('#freq');let n=null,iv,t0,opts={};
+ const fill=()=>{els.forEach(e=>{if(e.type==='checkbox')e.checked=!!T[e.dataset.tk];else e.value=T[e.dataset.tk]});fr.value=T.f;modeUI()};
+ const modeUI=()=>{$$('.m-sweep').forEach(e=>e.classList.toggle('hide',T.mode!=='sweep'));$$('.m-seq').forEach(e=>e.classList.toggle('hide',T.mode!=='seq'))};
+ const clampF=v=>Math.min(2000,Math.max(20,num(v,432)));
+ function read(e){const k=e.dataset.tk;if(e.type==='checkbox')T[k]=e.checked;else if(e.type==='text'||e.tagName==='SELECT')T[k]=e.value;
+  else T[k]=k==='f'||k==='f2'?clampF(e.value):num(e.value,D[k]);
+  if(k==='f')fr.value=T.f;persist();modeUI();apply()}
+ els.forEach(e=>{e.addEventListener(e.type==='range'||e.type==='checkbox'||e.tagName==='SELECT'?'input':'change',()=>read(e))});
+ fr.oninput=()=>{T.f=+fr.value;$('#hz').value=T.f;persist();apply()};
+ [110,174,222,285,396,432,528,639,741,852].forEach(f=>{const b=document.createElement('button');b.textContent=f;b.onclick=()=>{T.f=f;fill();persist();apply()};$('#fpre').appendChild(b)});
+ function noiseBuf(type){const a=AC,len=a.sampleRate*4,buf=a.createBuffer(2,len,a.sampleRate);
+  for(let c=0;c<2;c++){const d=buf.getChannelData(c);let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0,last=0;
+   for(let i=0;i<len;i++){const w=Math.random()*2-1;
+    if(type==='white')d[i]=w*.5;
+    else if(type==='pink'){b0=.99886*b0+w*.0555179;b1=.99332*b1+w*.0750759;b2=.969*b2+w*.153852;b3=.8665*b3+w*.3104856;b4=.55*b4+w*.5329522;b5=-.7616*b5-w*.016898;d[i]=(b0+b1+b2+b3+b4+b5+b6+w*.5362)*.11;b6=w*.115926}
+    else{last=(last+.02*w)/1.02;d[i]=last*3.5}}}
+  return buf}
+ function setNoise(){if(!n)return;if(n.ns){try{n.ns.stop()}catch(e){}n.ns=null}n.ntype=T.noise;
+  if(T.noise!=='none'){n.ns=AC.createBufferSource();n.ns.buffer=noiseBuf(T.noise);n.ns.loop=true;n.ns.connect(n.ng);n.ns.start()}}
+ function curF(t){if(T.mode==='sweep'){const sw=Math.max(1,T.sw),ph=(t/sw)%2,k=ph<1?ph:2-ph;return T.f*Math.pow(clampF(T.f2)/T.f,k)}
+  if(T.mode==='seq'){const l=String(T.seq).split(/[,\s]+/).map(parseFloat).filter(x=>x>=20&&x<=2000);if(l.length)return l[Math.floor(t/Math.max(1,T.step))%l.length]}
+  return T.f}
+ function apply(){if(!n)return;const t=AC.currentTime,f=curF((performance.now()-t0)/1000),b=T.beat>0;
+  n.o1.type=n.o2.type=T.w;n.o1.frequency.setTargetAtTime(f,t,.03);n.o2.frequency.setTargetAtTime(f+(T.beat||0),t,.03);
+  n.p1.pan.setTargetAtTime(b?-1:0,t,.03);n.p2.pan.setTargetAtTime(b?1:0,t,.03);n.g2.gain.setTargetAtTime(b?1:0,t,.03);
+  n.mix.gain.setTargetAtTime(T.v*(b?1:1),t,.03);n.ng.gain.setTargetAtTime(T.nv,t,.03);
+  const p=T.pulse>0;n.lfo.frequency.setTargetAtTime(p?T.pulse:1,t,.03);n.lfoG.gain.setTargetAtTime(p?.5:0,t,.03);n.pg.gain.setTargetAtTime(p?.5:1,t,.03);
+  if(n.ntype!==T.noise)setNoise();
+  if(T.mode!=='steady')$('#hz').value=Math.round(f)}
+ function start(o){if(n)return;opts=o||{};const a=ctx(),g=x=>{const q=a.createGain();q.gain.value=x;return q};
+  n={master:g(0),mix:g(T.v),pg:g(1),g2:g(0),ng:g(T.nv),lfoG:g(0),o1:a.createOscillator(),o2:a.createOscillator(),lfo:a.createOscillator(),p1:a.createStereoPanner(),p2:a.createStereoPanner()};
+  n.o1.connect(n.p1).connect(n.mix);n.o2.connect(n.g2).connect(n.p2).connect(n.mix);n.mix.connect(n.pg).connect(n.master);n.ng.connect(n.master);n.master.connect(OUT);
+  n.lfo.connect(n.lfoG).connect(n.pg.gain);n.o1.frequency.value=n.o2.frequency.value=T.f;
+  n.o1.start();n.o2.start();n.lfo.start();t0=performance.now();setNoise();apply();n.master.gain.setTargetAtTime(1,a.currentTime,.08);
+  $('#tgo').textContent='Stop tone';$('#tgo').classList.add('stop');lock(true);
+  if('mediaSession' in navigator){try{navigator.mediaSession.metadata=new MediaMetadata({title:'Pulse tone',artist:Math.round(T.f)+' Hz'});navigator.mediaSession.playbackState='playing';
+   ['pause','stop'].forEach(h=>navigator.mediaSession.setActionHandler(h,stop))}catch(e){}}
+  iv=setInterval(()=>{if(!n)return;const t=(performance.now()-t0)/1000;if(T.mode!=='steady')apply();
+   const lim=opts.flow?0:T.stop*60;
+   if(lim>0){const rem=lim-t;$('#tleft').textContent=mmss(rem)+' left';
+    if(T.fade){const fl=Math.min(60,lim/2);if(rem<fl)n.master.gain.setTargetAtTime(Math.max(0,rem/fl),AC.currentTime,.1)}
+    if(rem<=0)stop()}
+   else $('#tleft').textContent=opts.flow?'':mmss(t)},200)}
+ function stop(){if(!n)return;const x=n,el=(performance.now()-t0)/1000;n=null;clearInterval(iv);
+  x.master.gain.cancelScheduledValues(AC.currentTime);x.master.gain.setTargetAtTime(0,AC.currentTime,.06);
+  setTimeout(()=>{[x.o1,x.o2,x.lfo,x.ns].forEach(o=>{try{o&&o.stop()}catch(e){}});x.master.disconnect()},400);
+  $('#tgo').textContent='Start tone';$('#tgo').classList.remove('stop');$('#tleft').textContent='';if(T.mode!=='steady')$('#hz').value=T.f;
+  if(!opts.flow){lock(false);if(el>=60)logSession({t:Date.now(),k:'tone',n:Math.round(T.f)+' Hz'+(T.noise!=='none'?' + '+T.noise+' noise':''),s:Math.round(el),done:true})}
+  if('mediaSession' in navigator)try{navigator.mediaSession.playbackState='none'}catch(e){}}
+ $('#tgo').onclick=()=>n?stop():start();
+ fill();
+ return{start,stop,get on(){return !!n}};
+})();
+
+/* ---------- FLOW ---------- */
+const F=S.flow;Object.entries({b:true,k:true,t:true,tm:3}).forEach(([k,v])=>{if(F[k]==null)F[k]=v});
+const flowStage=makeStage($('#flowstage'),'flow');
+$('#flow .card').insertAdjacentHTML('beforeend',cueHTML(true));
+$$('[data-fk]').forEach(e=>{const k=e.dataset.fk;if(e.type==='checkbox')e.checked=F[k];else e.value=F[k];
+ e.onchange=()=>{F[k]=e.type==='checkbox'?e.checked:num(e.value,3,1);persist();flowInfo()}});
+function flowSeq(){let s=[];const gap=n=>({n:'Next: '+n,s:5,from:.3,to:.3,f:330,v:[150],say:'Next, '+n});
+ s.push({n:'Get ready',s:5,from:.3,to:.3});
+ if(F.b)s=s.concat(breathBuild(B.vals,true));
+ if(F.k){if(s.length>1)s.push(gap('Kegel'));s=s.concat(kegelBuild(K.vals,true))}
+ if(F.t){if(s.length>1)s.push(gap('Tone'));s.push({n:'Listen',s:F.tm*60,from:.55,to:.55,sub:'Tone',enter:()=>Tone.start({flow:true}),exit:()=>Tone.stop()})}
+ return s.length>1?s:[]}
+function flowInfo(){$('#fb').textContent=mmss(breathBuild(B.vals,true).reduce((a,p)=>a+p.s,0));$('#fk').textContent=mmss(kegelBuild(K.vals,true).reduce((a,p)=>a+p.s,0));
+ const t=flowSeq().reduce((a,p)=>a+p.s,0);$('#ftotal').textContent=t?'Total '+mmss(t)+'.':'Pick at least one part.'}
+flowStage.go.onclick=()=>{if(flowStage.running)return flowStage.stop();if(Tone.on)Tone.stop();
+ flowStage.start(flowSeq(),[F.b&&'Breath',F.k&&'Kegel',F.t&&'Tone'].filter(Boolean).join(' → '))};
+
+/* ---------- LOG ---------- */
+const KN={kegel:'Kegel',breath:'Breath',tone:'Tone',flow:'Flow'};
+function renderLog(){const H=S.history,days=new Set(H.map(h=>dayKey(h.t))),now=new Date();
+ let st=0,d=new Date(now);if(!days.has(dayKey(d)))d.setDate(d.getDate()-1);while(days.has(dayKey(d))){st++;d.setDate(d.getDate()-1)}
+ $('#streak').textContent=st;$('#nsess').textContent=H.length;
+ const wk=Date.now()-7*864e5;$('#wkmin').textContent=Math.round(H.filter(h=>h.t>=wk).reduce((a,h)=>a+h.s,0)/60);
+ const cal=$('#cal');cal.innerHTML='';for(let i=27;i>=0;i--){const x=new Date(now);x.setDate(x.getDate()-i);const c=document.createElement('i');
+  c.textContent=x.getDate();if(days.has(dayKey(x)))c.className='hit';if(i===0)c.classList.add('today');cal.appendChild(c)}
+ const hist=$('#hist');hist.innerHTML='';if(!H.length){hist.innerHTML='<div><span>No sessions yet. Finish one and it shows up here.</span></div>'}
+ H.slice(-25).reverse().forEach(h=>{const r=document.createElement('div'),a=document.createElement('b'),b=document.createElement('span');a.style.fontWeight='500';
+  a.textContent=(KN[h.k]||h.k)+(h.n&&h.n!=='Custom'?' · '+h.n:'')+(h.done?'':' (stopped early)');
+  b.textContent=new Date(h.t).toLocaleDateString(undefined,{month:'short',day:'numeric'})+' · '+mmss(h.s);r.append(a,b);hist.appendChild(r)});
+ $('#theme').value=S.theme;$('#bigtxt').checked=!!S.big;$('#reduce').checked=!!S.reduce;$('#bg').checked=!!S.bg}
+$('#theme').onchange=e=>{S.theme=e.target.value;persist();applyLook()};
+$('#bigtxt').onchange=e=>{S.big=e.target.checked;persist();applyLook()};
+$('#reduce').onchange=e=>{S.reduce=e.target.checked;persist()};
+$('#bg').onchange=e=>{S.bg=e.target.checked;persist()};
+const msg=t=>{$('#logmsg').textContent=t;setTimeout(()=>{if($('#logmsg').textContent===t)$('#logmsg').textContent=''},5000)};
+$('#exp').onclick=()=>{try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(S,null,1)],{type:'application/json'}));
+ a.download='pulse-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();msg('Backup file saved.')}catch(e){msg('Export is not available here.')}};
+$('#imp').onclick=()=>$('#impf').click();
+$('#impf').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);
+ if(!d||!Array.isArray(d.history))throw 0;const seen=new Set(S.history.map(h=>h.t));d.history.forEach(h=>{if(h&&h.t&&!seen.has(h.t))S.history.push(h)});S.history.sort((a,b)=>a.t-b.t);
+ ['kegel','breath'].forEach(k=>((d.routines||{})[k]||[]).forEach(x=>{if(x&&x.name&&!S.routines[k].some(y=>y.name===x.name))S.routines[k].push(x)}));
+ persist();location.reload()}catch(x){msg('That file is not a Pulse backup.')}};r.readAsText(f);e.target.value=''};
+let clrArm=0;$('#clr').onclick=e=>{if(Date.now()-clrArm<4000){S.history=[];persist();renderLog();e.target.textContent='Clear history';clrArm=0}else{clrArm=Date.now();e.target.textContent='Tap again to clear';setTimeout(()=>{e.target.textContent='Clear history'},4000)}};
+
+syncCues();persist();
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script></body></html>
