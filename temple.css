@@ -40,6 +40,11 @@
 [data-night] [data-temple="baby"]{--t:#C4897A;--t2:#E8C58A;--t-dim:#694B46;--t-faint:#2C2227;--t-faint-a:rgba(44,34,39,0.8);--t-text:#C4897A;--t2-text:#E8C58A;--t-btn:#C4897A;--on-btn:#0D0C12;--on-t:#0D0C12;--muted:#9C94A6}
 /* TOKENS:END */
 
+/* Pulse (2026-11-20). Added by hand after the generated block: make_tokens.js is not in this repo. Move the pair
+   (orchid #C08BB5, sea-glass #9FD3C7) into the generator when it is next run, and delete these two lines. */
+[data-temple="pulse"]{--t:#C08BB5;--t2:#9FD3C7;--t-dim:#684C66;--t-faint:#322837;--t-faint-a:rgba(50,40,55,0.8);--t-text:#C99BBF;--t2-text:#9FD3C7;--t-btn:#C08BB5;--on-btn:#15131B;--on-t:#15131B;--muted:#A79FB0}
+[data-night] [data-temple="pulse"]{--t:#C08BB5;--t2:#9FD3C7;--t-dim:#644862;--t-faint:#2A212E;--t-faint-a:rgba(42,33,46,0.8);--t-text:#C495BA;--t2-text:#9FD3C7;--t-btn:#C08BB5;--on-btn:#0D0C12;--on-t:#0D0C12;--muted:#9C94A6}
+
 :root{--tl-bottom:86px;--ts-bar:66px;--ts-skyh:290px;color-scheme:dark}
 
 /* ---------- the room ---------- */

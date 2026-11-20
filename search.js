@@ -43,6 +43,7 @@
     ['strings', 'The bench', 'chords, drills, metronome, tuner'], ['hibrations', 'The draft shelf', 'drafted, seen, yes, let go'],
     ['inner', 'The protective egg', 'a colour, a mark'], ['inner', 'Evening wind-down', 'the calm evening slot'],
     ['breath', 'Slow down', 'five in, five out, no clock'], ['beast', 'The five-minute door', 'rooting, the seal, the pool'], ['beast', 'The massage alcove', 'solo and partnered'],
+    ['pulse', 'Kegel timer', 'squeeze, hold, release', '#kegel'], ['pulse', 'Breath timer', 'in, hold, out', '#breath'], ['pulse', 'Tone', 'a steady tone, noise, beats', '#tone'], ['pulse', 'Flow', 'breath, kegel and tone in one run', '#flow'],
     ['vocal', 'Twelve weeks', 'steadiness, which weeks'], ['healing', 'Felt lines', 'what was kept after a practice'],
     ['village', 'Nagavar', 'the houses, the directors, the meeting table'],
   ];

@@ -1300,8 +1300,8 @@ const Shell = {
   current: 'portal',
   // Portal remake, step 4. A page that wears the new frame carries its own header and back button, so the Portal's
   // old bar is not drawn over it. Today that is Mirror alone; add a page here in the step that migrates it.
-  NEW_FRAME: ['mirror.html', 'strings.html', 'vocal.html', 'healing_temple.html', 'hibrations.html', 'kaching.html', 'baby.html', 'breath_temple.html', 'observatory/index.html', 'inner_temple.html', 'beast_temple.html', 'body/index.html'],   // step 8: the small temples; step 9: the mid temples; step 10: Body
-  DOORS: ['portal', 'body', 'inner', 'breath', 'beast', 'magnetic', 'hibrations', 'strings', 'grimoire', 'vocal', 'mirror', 'observatory', 'kaching', 'baby', 'village'],
+  NEW_FRAME: ['mirror.html', 'strings.html', 'vocal.html', 'healing_temple.html', 'hibrations.html', 'kaching.html', 'baby.html', 'breath_temple.html', 'observatory/index.html', 'inner_temple.html', 'beast_temple.html', 'body/index.html', 'pulse/index.html'],   // step 8: the small temples; step 9: the mid temples; step 10: Body
+  DOORS: ['portal', 'body', 'inner', 'breath', 'beast', 'magnetic', 'hibrations', 'strings', 'grimoire', 'vocal', 'mirror', 'observatory', 'kaching', 'baby', 'village', 'pulse'],
   goTo(app) {
     if (app === 'healing') app = 'grimoire';
     this.current = app;
@@ -1348,6 +1348,9 @@ const Shell = {
       return;
     } else if (app === 'baby') {
       Shell.openTemple('baby.html', 'baby');
+      return;
+    } else if (app === 'pulse') {
+      Shell.openTemple('pulse/index.html', 'pulse');
       return;
     } else if (app === 'village') {
       Shell.openTemple('village/index.html', 'the village');
@@ -3489,8 +3492,8 @@ const Portal = (function() {
   // ============================================================
   const SHELF_KEY = 'portal_shelf_v1';
   const CAPTURE_KEY = 'portal_capture_v1';
-  const HOME_ORDER = ['body', 'inner', 'breath', 'beast', 'observatory', 'village', 'healing', 'vocal', 'strings', 'hibrations', 'mirror', 'kaching', 'baby'];
-  const HOME_NAMES = { body: 'Body', inner: 'Inner', breath: 'Breath', beast: 'Beast', observatory: 'Observatory', village: 'Village', healing: 'Healing', vocal: 'Vocal', strings: 'Strings', hibrations: 'Hibrations', mirror: 'Mirror', kaching: 'Kaching', baby: 'Baby' };
+  const HOME_ORDER = ['body', 'inner', 'breath', 'beast', 'observatory', 'village', 'healing', 'vocal', 'pulse', 'strings', 'hibrations', 'mirror', 'kaching', 'baby'];
+  const HOME_NAMES = { pulse: 'Pulse', body: 'Body', inner: 'Inner', breath: 'Breath', beast: 'Beast', observatory: 'Observatory', village: 'Village', healing: 'Healing', vocal: 'Vocal', strings: 'Strings', hibrations: 'Hibrations', mirror: 'Mirror', kaching: 'Kaching', baby: 'Baby' };
   const STAR_ROUTE = { healing: 'grimoire' };                       // the Portal's own name for the Healing Temple
   const ROUTE_STAR = { grimoire: 'healing', magnetic: 'beast' };    // which star an offer lights
   let homeGrid = false;            // Lek, 11-14: the constellation first, the plain grid one tap away
