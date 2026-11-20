@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0e1a1f"><title>Pulse</title>
+<link rel="manifest" href="manifest.json"><link rel="icon" href="icon.svg">
+<style>
+:root{--bg:#0e1a1f;--card:#16272e;--ink:#e8f4f2;--mute:#8fa9a8;--acc:#3fd0c0;--acc2:#f2b66d}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,sans-serif;height:100%}
+body{display:flex;flex-direction:column;padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom)}
+nav{display:flex;gap:6px;padding:12px 0}
+nav button{flex:1;padding:12px 0;border:0;border-radius:12px;background:var(--card);color:var(--mute);font-size:16px;font-weight:600}
+nav button.on{background:var(--acc);color:#04201d}
+main{flex:1;overflow-y:auto;padding-bottom:16px}
+section{display:none}section.on{display:block}
+.stage{display:flex;flex-direction:column;align-items:center;margin:8px 0 14px}
+.ring{max-height:38vh;aspect-ratio:1}
+.ring{width:min(70vw,300px,38vh);height:min(70vw,300px,38vh);border-radius:50%;border:2px solid #2a4a50;display:flex;align-items:center;justify-content:center}
+.orb{width:100%;height:100%;border-radius:50%;background:radial-gradient(circle at 35% 30%,#7ef0e2,var(--acc));transform:scale(.3);box-shadow:0 0 50px #3fd0c055}
+.label{font-size:28px;font-weight:700;margin-top:14px;min-height:36px}
+.sub{color:var(--mute);min-height:22px}
+.card{background:var(--card);border-radius:16px;padding:14px;margin:10px 0}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0}
+.row label{color:var(--mute)}
+input[type=number]{width:80px;padding:8px;border-radius:10px;border:1px solid #2a4a50;background:#0e1a1f;color:var(--ink);font-size:16px;text-align:center}
+input[type=range]{flex:1;accent-color:var(--acc)}
+select{padding:8px;border-radius:10px;border:1px solid #2a4a50;background:#0e1a1f;color:var(--ink);font-size:16px}
+.go{width:100%;padding:16px;border:0;border-radius:14px;background:var(--acc);color:#04201d;font-size:18px;font-weight:700;margin-top:6px}
+.go.stop{background:var(--acc2)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{padding:8px 12px;border-radius:20px;border:1px solid #2a4a50;background:none;color:var(--ink);font-size:14px}
+.big{font-size:44px;font-weight:700;text-align:center;font-variant-numeric:tabular-nums}
+.tog{display:flex;gap:14px;color:var(--mute);font-size:14px;flex-wrap:wrap}
+</style></head><body>
+<nav><button data-t="kegel" class="on">Kegel</button><button data-t="breath">Breath</button><button data-t="tone">Tone</button></nav>
+<main>
+<section id="kegel" class="on"></section>
+<section id="breath"></section>
+<section id="tone">
+ <div class="card"><div class="big"><span id="hz">432</span> Hz</div>
+  <div class="row"><input type="range" id="freq" min="20" max="2000" step="1" value="432"></div>
+  <div class="chips" id="fpre"></div></div>
+ <div class="card">
+  <div class="row"><label>Wave</label><select id="wave"><option>sine</option><option>triangle</option><option>square</option><option>sawtooth</option></select></div>
+  <div class="row"><label>Volume</label><input type="range" id="vol" min="0" max="1" step=".01" value=".25"></div>
+  <div class="row"><label>Binaural beat (Hz)</label><input type="number" id="beat" value="0" min="0" max="40" step=".5"></div>
+  <div class="sub" id="beatnote">Use headphones when beat &gt; 0. Left = freq, right = freq + beat.</div>
+  <div class="row"><label>Auto-stop (min, 0=off)</label><input type="number" id="stopmin" value="0" min="0" max="180"></div>
+ </div>
+ <button class="go" id="tgo">Start tone</button>
+</section>
+</main>
+<script>
+const $=s=>document.querySelector(s);
+let AC,wake;
+function ctx(){if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();return AC}
+async function lock(on){try{if(on&&navigator.wakeLock)wake=await navigator.wakeLock.request('screen');else if(wake){wake.release();wake=null}}catch(e){}}
+function beep(f,d=.12,v=.2){const a=ctx(),o=a.createOscillator(),g=a.createGain();o.frequency.value=f;o.type='sine';
+ g.gain.setValueAtTime(0,a.currentTime);g.gain.linearRampToValueAtTime(v,a.currentTime+.01);g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+d);
+ o.connect(g).connect(a.destination);o.start();o.stop(a.currentTime+d+.02)}
+const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
+
+/* tabs */
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+ document.querySelectorAll('nav button,section').forEach(x=>x.classList.remove('on'));
+ b.classList.add('on');$('#'+b.dataset.t).classList.add('on')});
+
+/* generic phase-timer panel */
+function panel(id,{fields,presets,build,cues}){
+ const root=$('#'+id),cfg=load('pulse_'+id,{});
+ const vals={};fields.forEach(f=>vals[f.k]=cfg[f.k]??f.d);
+ root.innerHTML=`<div class="stage"><div class="ring"><div class="orb"></div></div>
+ <div class="label">Ready</div><div class="sub"></div></div>
+ <button class="go">Start</button>
+ ${presets?'<div class="card chips"></div>':''}
+ <div class="card">${fields.map(f=>`<div class="row"><label>${f.l}</label><input type="number" data-k="${f.k}" min="${f.min??0}" max="${f.max??600}" step="${f.step??1}" value="${vals[f.k]}"></div>`).join('')}
+ <div class="tog"><label><input type="checkbox" class="snd" checked> Sound</label><label><input type="checkbox" class="vib" checked> Vibrate</label></div></div>`;
+ const orb=root.querySelector('.orb'),lab=root.querySelector('.label'),sub=root.querySelector('.sub'),go=root.querySelector('.go');
+ const snd=root.querySelector('.snd'),vib=root.querySelector('.vib');
+ root.querySelectorAll('input[data-k]').forEach(i=>i.onchange=()=>{vals[i.dataset.k]=+i.value;save('pulse_'+id,vals)});
+ if(presets){const c=root.querySelector('.chips');Object.entries(presets).forEach(([n,p])=>{const b=document.createElement('button');b.textContent=n;
+  b.onclick=()=>{Object.assign(vals,p);root.querySelectorAll('input[data-k]').forEach(i=>i.value=vals[i.dataset.k]);save('pulse_'+id,vals)};c.appendChild(b)})}
+ let run=null;
+ function stop(msg){run=null;lock(false);go.textContent='Start';go.classList.remove('stop');orb.style.transform='scale(.3)';lab.textContent=msg||'Ready';if(!msg)sub.textContent=''}
+ go.onclick=()=>{
+  if(run){stop();return}
+  ctx();lock(true);go.textContent='Stop';go.classList.add('stop');
+  const seq=build(vals);let i=-1,t0=0,from=.3,t00=performance.now(),total=seq.reduce((s,p)=>s+p.s,0);
+  run={};const me=run;
+  const next=()=>{i++;if(i>=seq.length){stop('Done ✓');sub.textContent=Math.round(total/60*10)/10+' min complete';if(snd.checked){beep(880,.15);setTimeout(()=>beep(1175,.3),180)}if(vib.checked)navigator.vibrate?.([80,60,80]);return false}
+   const p=seq[i];t0=performance.now();lab.textContent=p.n;sub.textContent=p.sub||'';
+   if(snd.checked&&p.f)beep(p.f);if(vib.checked&&p.v)navigator.vibrate?.(p.v);return true};
+  next();
+  (function tick(){if(run!==me)return;const now=performance.now();let p=seq[i];
+   while(p&&now-t0>=p.s*1000){from=p.to;t0+=p.s*1000;if(!next())return;p=seq[i]}
+   const k=(now-t0)/(p.s*1000),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+   orb.style.transform=`scale(${p.from+(p.to-p.from)*(p.ease===false?k:e)})`;
+   const left=Math.ceil(p.s-(now-t0)/1000);sub.textContent=(p.sub?p.sub+' · ':'')+left+'s';
+   requestAnimationFrame(tick)})();
+ };
+}
+
+/* KEGEL */
+panel('kegel',{
+ fields:[{k:'sq',l:'Squeeze (s)',d:2,step:.5},{k:'hold',l:'Hold (s)',d:5,step:.5},{k:'rel',l:'Release (s)',d:5,step:.5},{k:'reps',l:'Reps per set',d:10},{k:'sets',l:'Sets',d:3},{k:'rest',l:'Rest between sets (s)',d:30},{k:'prep',l:'Get ready (s)',d:5}],
+ presets:{'Beginner':{sq:1,hold:3,rel:3,reps:8,sets:2,rest:30},'Standard':{sq:2,hold:5,rel:5,reps:10,sets:3,rest:30},'Endurance':{sq:2,hold:10,rel:10,reps:8,sets:3,rest:45},'Quick flicks':{sq:.5,hold:0,rel:.5,reps:20,sets:3,rest:20}},
+ build(v){const s=[];if(v.prep>0)s.push({n:'Get ready',s:v.prep,from:.3,to:.3});
+  for(let st=1;st<=v.sets;st++){for(let r=1;r<=v.reps;r++){const sub=`Set ${st}/${v.sets} · Rep ${r}/${v.reps}`;
+   s.push({n:'Squeeze ↑',s:v.sq,from:.3,to:1,f:660,v:60,sub});
+   if(v.hold>0)s.push({n:'Hold',s:v.hold,from:1,to:1,f:660,sub});
+   s.push({n:'Release ↓',s:v.rel,from:1,to:.3,f:440,v:30,sub})}
+   if(st<v.sets&&v.rest>0)s.push({n:'Rest',s:v.rest,from:.3,to:.3,f:330,v:[200],sub:`Set ${st} done`})}
+  return s}});
+
+/* BREATH */
+panel('breath',{
+ fields:[{k:'in',l:'Inhale (s)',d:4,step:.5},{k:'h1',l:'Hold full (s)',d:4,step:.5},{k:'out',l:'Exhale (s)',d:4,step:.5},{k:'h2',l:'Hold empty (s)',d:4,step:.5},{k:'cyc',l:'Cycles',d:8},{k:'prep',l:'Get ready (s)',d:3}],
+ presets:{'Box 4-4-4-4':{in:4,h1:4,out:4,h2:4,cyc:8},'4-7-8':{in:4,h1:7,out:8,h2:0,cyc:6},'Coherent 5.5':{in:5.5,h1:0,out:5.5,h2:0,cyc:20},'Calm 4-6':{in:4,h1:0,out:6,h2:0,cyc:15},'Long exhale 4-8':{in:4,h1:0,out:8,h2:0,cyc:10}},
+ build(v){const s=[];if(v.prep>0)s.push({n:'Get ready',s:v.prep,from:.3,to:.3});
+  for(let c=1;c<=v.cyc;c++){const sub=`Cycle ${c}/${v.cyc}`;
+   if(v.in>0)s.push({n:'Inhale',s:v.in,from:.3,to:1,f:528,v:40,sub});
+   if(v.h1>0)s.push({n:'Hold',s:v.h1,from:1,to:1,f:396,sub});
+   if(v.out>0)s.push({n:'Exhale',s:v.out,from:1,to:.3,f:396,v:40,sub});
+   if(v.h2>0)s.push({n:'Hold',s:v.h2,from:.3,to:.3,f:330,sub})}
+  return s}});
+
+/* TONE */
+(()=>{let o1,o2,g,m,on=false,tm;const $f=$('#freq'),pre=[110,174,222,285,396,432,528,639,741,852];
+ const hz=()=>+$f.value;
+ pre.forEach(f=>{const b=document.createElement('button');b.textContent=f;b.onclick=()=>{$f.value=f;upd()};$('#fpre').appendChild(b)});
+ const cfg=load('pulse_tone',{});if(cfg.f)$f.value=cfg.f;if(cfg.w)$('#wave').value=cfg.w;if(cfg.v!=null)$('#vol').value=cfg.v;if(cfg.b!=null)$('#beat').value=cfg.b;
+ function upd(){$('#hz').textContent=hz();save('pulse_tone',{f:hz(),w:$('#wave').value,v:$('#vol').value,b:$('#beat').value});
+  if(!on)return;const a=AC,t=a.currentTime,b=+$('#beat').value;o1.frequency.setTargetAtTime(hz(),t,.02);o2.frequency.setTargetAtTime(hz()+b,t,.02);
+  o1.type=o2.type=$('#wave').value;g.gain.setTargetAtTime(+$('#vol').value,t,.02);pan();}
+ function pan(){const b=+$('#beat').value;p1.pan.value=b>0?-1:0;p2.pan.value=b>0?1:0;m.gain.value=b>0?1:0}
+ let p1,p2;
+ function start(){const a=ctx();g=a.createGain();g.gain.value=0;m=a.createGain();
+  o1=a.createOscillator();o2=a.createOscillator();p1=a.createStereoPanner();p2=a.createStereoPanner();
+  o1.connect(p1).connect(g);o2.connect(p2);p2.connect(g);g.connect(a.destination);
+  o1.start();o2.start();on=true;upd();g.gain.setTargetAtTime(+$('#vol').value,a.currentTime,.05);
+  // without beat, o2 is silenced
+  const b=+$('#beat').value;if(!(b>0)){o2.disconnect();}
+  $('#tgo').textContent='Stop tone';$('#tgo').classList.add('stop');lock(true);
+  const mins=+$('#stopmin').value;if(mins>0)tm=setTimeout(stop,mins*60000)}
+ function stop(){if(!on)return;on=false;clearTimeout(tm);g.gain.setTargetAtTime(0,AC.currentTime,.05);const a=o1,b=o2;setTimeout(()=>{a.stop();b.stop()},300);
+  $('#tgo').textContent='Start tone';$('#tgo').classList.remove('stop');lock(false)}
+ $('#tgo').onclick=()=>on?stop():start();
+ ['freq','wave','vol'].forEach(i=>$('#'+i).oninput=upd);
+ $('#beat').onchange=()=>{upd();if(on){stop();setTimeout(start,350)}};
+ upd();
+})();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script></body></html>
