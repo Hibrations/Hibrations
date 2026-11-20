@@ -58,10 +58,11 @@
     hibrations:  { name: 'Hibrations', short: 'Hibrations', word: 'the page', sub: 'being seen', file: 'hibrations.html', dir: 'nokka' },
     mirror:      { name: 'Patterns', short: 'Patterns', word: 'the mirror', sub: 'what was there', file: 'mirror.html', dir: 'a' },   // step 7: the Weekly Mirror became Patterns; the key and the file keep their names
     kaching:     { name: 'Kaching', short: 'Kaching', word: 'the ledger', sub: 'leave sums, the tally', file: 'kaching.html', dir: 'ngoen' },
+    pulse:       { name: 'Pulse', short: 'Pulse', word: 'rhythm', sub: 'kegel, breath, tone', file: 'pulse/index.html', dir: 'garr' },   // 2026-11-20: the timers, in the frame
     baby:        { name: 'Baby', short: 'Baby', word: 'the lit window', sub: 'the night-shift board', file: 'baby.html', dir: 'malee' },   // step 8
     magnetic:    { name: 'Magnetic Temple', short: 'Magnetic', word: 'fire', sub: 'the older cut', file: 'magnetic_temple.html', dir: 'rak', hidden: true },
   };
-  const GRID = ['body', 'inner', 'breath', 'beast', 'observatory', 'village', 'healing', 'vocal', 'strings', 'hibrations', 'mirror', 'kaching', 'baby'];
+  const GRID = ['body', 'inner', 'breath', 'beast', 'observatory', 'village', 'healing', 'vocal', 'pulse', 'strings', 'hibrations', 'mirror', 'kaching', 'baby'];
   const BAR = ['portal', 'temples', 'mirror', 'village'];               // and the director's face as the fifth (Lek, 11-14)
   const DIRECTORS = {
     a: { name: 'A', house: null }, garr: { name: 'Garr', house: 'fitness' }, hekka: { name: 'Hekka', house: 'esoteric' },
